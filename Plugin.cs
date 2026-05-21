@@ -1,0 +1,24 @@
+﻿using UnityEngine;
+using System.Collections;
+using BepInEx;
+using BepInEx.Logging;
+
+namespace NeuroFTK;
+
+[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+[BepInProcess("FTK.exe")]
+public class Plugin : BaseUnityPlugin
+{
+    internal static new ManualLogSource Logger;
+    int test;
+        
+    private void Awake()
+    {
+        // Plugin startup logic
+        Logger = base.Logger;
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        test = 25;
+        Logger.LogInfo($"test: {test}");
+    }
+    
+}
