@@ -1,8 +1,10 @@
 ﻿using System;
 using BepInEx;
 using BepInEx.Logging;
-using NeuroSdk;
-using NeuroSdk.Actions;
+using HarmonyLib;
+// using NeuroSdk;
+// using NeuroSdk.Actions;
+using UnityEngine;
 
 namespace NeuroFTK;
 
@@ -12,19 +14,19 @@ public class Plugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger;
     readonly int test = 15;
-        
+
     private void Awake()
     {
         // Plugin startup logic
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
-        test2(null);
         Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", "ws://localhost:8000");
-        NeuroSdkSetup.Initialize("For the King");
-        
+        // NeuroSdkSetup.Initialize("For the King");
+        Test2();
     }
 
-    public void test2(ActionWindow window)
+    [HarmonyPrefix]
+    public void Test2()
     {
         Logger.LogInfo($"test: {test}");
         float new_test = 30f;
@@ -33,16 +35,15 @@ public class Plugin : BaseUnityPlugin
             new_test++;
         }
         Logger.LogMessage($"test: {new_test}");
+        Test3();
     }
 
-    public class TestClass
+    [HarmonyPatch(typeof(GameObject))]
+    public static void Test3()
     {
-        private int test;
-        public TestClass(int test)
-        {
-            this.test = test;
-        }
+        Logger.LogDebug("test3 harmony patch");
     }
+
     
 }
 

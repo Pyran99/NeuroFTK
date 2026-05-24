@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NeuroFTK")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.0.1.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.0.1+b24df48aaca82bbd988b6f31275f475f8fc1a8d7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.0.1+3612964f1b992f1a42e5373f13f25b1dcb8f4806")]
 [assembly: System.Reflection.AssemblyProductAttribute("Neuro For The King mod")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NeuroFTK")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.0.1.0")]

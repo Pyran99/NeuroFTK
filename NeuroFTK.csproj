@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyName>NeuroFTK</AssemblyName>
@@ -20,17 +19,16 @@
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
     <PackageReference Include="UnityEngine.Modules" Version="2017.2.3" IncludeAssets="compile" />
-    <PackageReference Include="VedalAI.NeuroSdk.Unity" Version="2.0.0" />
   </ItemGroup>
-  
+
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <ReferenceAssemblies Include="FTK">
+    <!-- <Reference Include="FTK">
       <HintPath>"lib\Game\Assembly-CSharp.dll"</HintPath>
-    </ReferenceAssemblies>
+    </Reference> -->
   </ItemGroup>
-
+  
 </Project>
