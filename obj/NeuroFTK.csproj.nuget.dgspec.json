@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "a:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj": {}
+    "A:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj": {}
   },
   "projects": {
-    "a:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj": {
+    "A:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj": {
       "version": "0.0.1",
       "restore": {
-        "projectUniqueName": "a:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj",
+        "projectUniqueName": "A:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj",
         "projectName": "NeuroFTK",
-        "projectPath": "a:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj",
+        "projectPath": "A:\\Programs\\Unity Modding\\mods\\NeuroFTK\\NeuroFTK.csproj",
         "packagesPath": "C:\\Users\\pyran\\.nuget\\packages\\",
-        "outputPath": "a:\\Programs\\Unity Modding\\mods\\NeuroFTK\\obj\\",
+        "outputPath": "A:\\Programs\\Unity Modding\\mods\\NeuroFTK\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -75,6 +75,10 @@
               "include": "Compile",
               "target": "Package",
               "version": "[2017.2.3, )"
+            },
+            "VedalAI.NeuroSdk.Unity": {
+              "target": "Package",
+              "version": "[2.0.0, )"
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301\\RuntimeIdentifierGraph.json"

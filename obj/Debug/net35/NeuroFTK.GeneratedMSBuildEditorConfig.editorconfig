@@ -1,6 +1,6 @@
 is_global = true
 build_property.RootNamespace = NeuroFTK
-build_property.ProjectDir = a:\Programs\Unity Modding\mods\NeuroFTK\
+build_property.ProjectDir = A:\Programs\Unity Modding\mods\NeuroFTK\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false
