@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyName>NeuroFTK</AssemblyName>
-    <Product>My first plugin</Product>
-    <Version>1.0.0</Version>
+    <Product>Neuro For the King</Product>
+    <Version>0.0.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -25,4 +25,11 @@
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ForTheKing">
+      <HintPath>lib\Game\Assembly-CSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
