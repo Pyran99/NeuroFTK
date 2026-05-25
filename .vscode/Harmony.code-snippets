@@ -7,7 +7,7 @@
 	"Patching a Method": {
 		"scope": "csharp",
 		"prefix": "harm",
-		"body": "[HarmonyPatch(typeof($1), nameof($2))]",
+		"body": "[HarmonyPatch(typeof($1), nameof($2))]\n[Harmony$3]",
 		"description": "Harmony patch method"
 	}
 }
