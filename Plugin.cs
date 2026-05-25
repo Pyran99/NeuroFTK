@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using UnityEngine;
 
 namespace NeuroFTK;
 
@@ -25,41 +22,13 @@ public class Plugin : BaseUnityPlugin
         // NeuroSdkSetup.Initialize("For the King");
     }
 
-
     // [HarmonyPatch(typeof(uiFTKButton), nameof(uiFTKButton.OnPointerEnter))]
     // [HarmonyPrefix]
-    // private static void TestMod(uiFTKButton __instance)
+    // private static void TestMod()
     // {
-    //     print($"print {__instance}");
-    //     Debug.Log($"debug log {__instance}");
     //     Logger.LogMessage("POINTER ENTERED TEST");
-    //     Logger.LogMessage($"sound = {__instance.m_ClickSound}");
-    //     if (__instance.m_ClickSound != null && __instance.m_ClickSound.m_EventID != 0)
-    //     {
-    //         AudioManager.Instance.AudioEvent(__instance.m_ClickSound.m_EventID);
-    //         Logger.LogMessage($"event id = {__instance.m_ClickSound.m_EventID}");
-    //     }
-    //     else
-    //     {
-    //         AudioManager.Instance.MainMenuButtonClick();
-    //         Logger.LogMessage("default click");
-    //     }
+//         AudioManager.Instance.MainMenuButtonClick();
+//         Logger.LogMessage("default click");
     // }
 
-    // [HarmonyPatch(typeof(uiFTKButton), nameof(uiFTKButton.OnPointerEnter))]
-    // [HarmonyPrefix]
-    // private static bool TestCoroutine(out IEnumerator __result)
-    // {
-    //     __result = Coroutine();
-    //     return false;
-        
-    //     static IEnumerator Coroutine()
-    //     {
-    //         Logger.LogMessage("BEFORE POINTER ENTERED TEST");
-    //         yield return new WaitForSeconds(1f);
-    //         Logger.LogMessage("WAITED POINTER ENTERED TEST");
-    //         yield break;
-    //     }
-
-    // }
 }
