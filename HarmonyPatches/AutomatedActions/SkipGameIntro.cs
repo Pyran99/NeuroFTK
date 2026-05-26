@@ -25,6 +25,7 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
         static bool SkipSplashScreen(ref bool __result)
         {
             __result = true;
+            Plugin.Logger.LogMessage("skipping splash screen");
             return false;
         }
 
@@ -32,13 +33,14 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
         [HarmonyPostfix]
         static void AfterStart(GameStart __instance)
         {
-            Plugin.Logger.LogMessage("game start");
+            Plugin.Logger.LogMessage("main menu shown");
             __instance.StartCoroutine(Wait());
         }
 
         static IEnumerator Wait()
         {
             yield return new WaitForSeconds(0.25f);
+            Plugin.Logger.LogMessage("skipping difficulty warning");
             uiStartGame.Instance.OnPrepareToDie();
         }
 

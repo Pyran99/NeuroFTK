@@ -7,13 +7,14 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
     [HarmonyPatch]
     public class StartNewGame
     {
+        // in MainMenu neuro actions, can remove later
         [HarmonyPatch(typeof(uiStartGame), nameof(uiStartGame.ShowStartPage))]
         [HarmonyPostfix]
         static void OnMainScreenShow(uiStartGame __instance)
         {
             __instance.StartCoroutine(Wait());
 
-            IEnumerator Wait()
+            static IEnumerator Wait()
             {
                 yield return new WaitForSeconds(5.0f);
                 NewGame();

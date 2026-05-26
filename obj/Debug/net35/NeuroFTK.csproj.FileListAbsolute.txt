@@ -10,3 +10,4 @@ a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net35\NeuroFTK.dll
 a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net35\NeuroFTK.pdb
 a:\Programs\Unity Modding\mods\NeuroFTK\bin\Debug\net35\Assembly-CSharp.dll
 a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net35\NeuroFTK.csproj.Up2Date
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net35\NeuroFTK.sourcelink.json
