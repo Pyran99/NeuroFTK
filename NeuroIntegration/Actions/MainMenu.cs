@@ -7,8 +7,8 @@ using System.Collections.Generic;
 using GridEditor;
 using NeuroFTK.HarmonyPatches.AutomatedActions;
 using System.Reflection;
-using System;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace NeuroFTK.NeuroIntegration.Actions
 {
@@ -28,7 +28,7 @@ namespace NeuroFTK.NeuroIntegration.Actions
         static void OnMainScreenShown(MainScreen __instance)
         {
             //TODO add a wait time before doing anything
-            int rand = UnityEngine.Random.Range(0, 1);
+            int rand = Random.Range(0, 1);
             if (rand == 0)
             {
                 OnNewGameAction(__instance);
@@ -37,7 +37,6 @@ namespace NeuroFTK.NeuroIntegration.Actions
             {
                 OnResumeGameAction(__instance);
             }
-            test4();
         }
 
         static void OnNewGameAction(MainScreen __instance)
@@ -98,7 +97,7 @@ namespace NeuroFTK.NeuroIntegration.Actions
                 }
             }
             Plugin.Logger.LogMessage($"valid names: {string.Join(", ", [.. names])}");
-            string chosen = names[UnityEngine.Random.Range(0, names.Count)];
+            string chosen = names[Random.Range(0, names.Count)];
             if (!GameCache.Cache.GameDefinitions.GetNames().Contains(chosen))
             {
                 Plugin.Logger.LogWarning($"could not find game def {chosen}, defaulting to KillVexor");
@@ -116,15 +115,7 @@ namespace NeuroFTK.NeuroIntegration.Actions
             Plugin.Logger.LogMessage($"selected adventure save file name: {__instance.GetCurrentGameDefPreview().m_SaveFileName}"); // "KillVexor"
         }
 
-        Dictionary<string, string> values = null;
 
-        static void test4()
-        {
-            //B:\Games\Epic Games\ForTheKing\BepInEx\plugins\NeuroFTK.dll
-            var loc = Assembly.GetExecutingAssembly().Location;
-            var dir = Path.GetDirectoryName(Application.dataPath);
-            Plugin.Logger.LogMessage($"loc: {loc} dir: {dir}");
-        }
         /*
         string assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         string filePathRelativeToAssembly = Path.Combine(assemblyPath, @"..\SomeFolder\SomeRelativeFile.txt");

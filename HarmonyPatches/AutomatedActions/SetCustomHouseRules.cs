@@ -5,20 +5,28 @@ using UnityEngine;
 using NeuroFTK.GameConfigs;
 using System.Collections.Generic;
 using GridEditor;
+using System.Reflection;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace NeuroFTK.HarmonyPatches.AutomatedActions
 {
-    /*TODO try making the custom rules a text json file that can be modified without rebuild*/
+    /*Sets the custom difficulty sliders for any adventure
+    The values can be customized in CustomHouseRules.json, located in the same directory as NeuroFTK.dll*/
     [HarmonyPatch]
     public class SetCustomHouseRules
     {
+        // // B:/Games/Epic Games/ForTheKing
+        // var dir = Path.GetDirectoryName(Application.dataPath);
         public static GameConfig configInstance;
+        public static Dictionary<string, CustomRuleValues> customRules;
 
         [HarmonyPatch(typeof(HouseRule), nameof(HouseRule.Show))]
         [HarmonyPostfix]
         static void OnRuleScreenShown(HouseRule __instance, Dictionary<FTK_gameParams.ID, HouseRuleSlider> ___m_Sliders)
         {
             Plugin.Logger.LogMessage("starting custom house rules");
+            LoadCustomRules();
             __instance.StartCoroutine(SetWithDelays(__instance, ___m_Sliders));
 
             static IEnumerator SetWithDelays(HouseRule instance, Dictionary<FTK_gameParams.ID, HouseRuleSlider> m_Sliders)
@@ -28,24 +36,25 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
                 {
                     yield return null;
                 }
-                CustomRuleValues selectedRules = CustomHouseRules.houseRules[configInstance.GetCurrentGameDefPreview().m_SaveFileName];
+                customRules ??= new Dictionary<string, CustomRuleValues>(CustomHouseRules.houseRules);
+                CustomRuleValues selectedRules = customRules[configInstance.GetCurrentGameDefPreview().m_SaveFileName];
                 LogValues(selectedRules);
 
-                yield return new WaitForSeconds(1.0f);
-                instance.UpdateChaos(GetNormalizedValue(selectedRules.chaosFrequency, FTK_gameParams.ID.chaos));
+                yield return new WaitForSeconds(0.5f);
+                instance.UpdateChaos(GetScaledValue(selectedRules.chaosFrequency, FTK_gameParams.ID.chaos));
 
-                yield return new WaitForSeconds(1.0f);
-                instance.UpdateLife(GetNormalizedValue(selectedRules.lifePool, FTK_gameParams.ID.lifepool));
+                yield return new WaitForSeconds(0.5f);
+                instance.UpdateLife(GetScaledValue(selectedRules.lifePool, FTK_gameParams.ID.lifepool));
 
-                yield return new WaitForSeconds(1.0f);
-                instance.UpdateInflation(GetNormalizedValue(selectedRules.economyInflation, FTK_gameParams.ID.inflation));
+                yield return new WaitForSeconds(0.5f);
+                instance.UpdateInflation(GetScaledValue(selectedRules.economyInflation, FTK_gameParams.ID.inflation));
 
                 foreach (KeyValuePair<FTK_gameParams.ID, HouseRuleSlider> _slider in m_Sliders)
                 {
                     if (_slider.Key == FTK_gameParams.ID.deliver_gold)
                     {
-                        yield return new WaitForSeconds(1.0f);
-                        instance.UpdateGold(GetNormalizedValue(selectedRules.goldTarget, FTK_gameParams.ID.deliver_gold));
+                        yield return new WaitForSeconds(0.5f);
+                        instance.UpdateGold(GetScaledValue(selectedRules.goldTarget, FTK_gameParams.ID.deliver_gold));
                         break;
                     }
                 }
@@ -56,22 +65,15 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
             }
         }
 
-        static float GetNormalizedValue(float value, FTK_gameParams.ID id)
+        static float GetScaledValue(float value, FTK_gameParams.ID id)
         {
             FTK_gameParams gameParams = FTK_gameParamsDB.Get(id);
-            float test = value * gameParams.m_SliderScale;
+            float result = value * gameParams.m_SliderScale;
             if (id == FTK_gameParams.ID.inflation)
             {
-                test = value / gameParams.m_SliderScale;
+                result = value / gameParams.m_SliderScale;
             }
-            Plugin.Logger.LogMessage($"test *: {test}");
-            Plugin.Logger.LogMessage($"scale {gameParams.m_SliderScale}");
-            return test;
-            // float min = gameParams.m_Min * gameParams.m_SliderScale; // HouseRules Show()
-            // float max = gameParams.m_Max * gameParams.m_SliderScale;
-            // float result = (value - min) / (max - min) * gameParams.m_SliderScale;
-            // Plugin.Logger.LogMessage($"min: {min} max: {max} value: {value} result: {result}");
-            // return result;
+            return result;
         }
 
         static void LogValues(CustomRuleValues rules)
@@ -82,12 +84,30 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
             Plugin.Logger.LogMessage($"gold: {rules.goldTarget}");
         }
 
-        /* slider values
-        Normalized is the percentage fill of the slider
-        chaos->min-3 max-25
-        life->min0 max-9
-        inflation->min-3 max-15
-        gold target->min-3 max-15
-        */
+        static void LoadCustomRules()
+        {
+            if (customRules != null) return;
+            // B:\Games\Epic Games\ForTheKing\BepInEx\plugins\NeuroFTK.dll
+            var loc = Assembly.GetExecutingAssembly().Location.Replace("NeuroFTK.dll", "");
+            if (File.Exists(Path.Combine(loc, "CustomHouseRules.json")))
+            {
+                string loadedJson = File.ReadAllText(Path.Combine(loc, "CustomHouseRules.json"));
+                Dictionary<string, CustomRuleValues> json = JsonConvert.DeserializeObject<Dictionary<string, CustomRuleValues>>(loadedJson);
+                foreach (KeyValuePair<string, CustomRuleValues> rule in CustomHouseRules.houseRules)
+                {
+                    if (!loadedJson.Contains(rule.Key))
+                    {
+                        json.Add(rule.Key, rule.Value);
+                    }
+                }
+                customRules = json;
+            }
+            else
+            {
+                string jsonString = JsonConvert.SerializeObject(CustomHouseRules.houseRules, Formatting.Indented);
+                File.WriteAllText(Path.Combine(loc, "CustomHouseRules.json"), jsonString);
+                customRules = new Dictionary<string, CustomRuleValues>(CustomHouseRules.houseRules);
+            }
+        }
     }
 }

@@ -30,9 +30,13 @@ namespace NeuroFTK.GameConfigs
     /// <param name="gold">for gold rush (GraveRobber) adventure only</param>
     public class CustomRuleValues(float chaos, float life, float inflation, float gold = 100f)
     {
+        //3-25
         public float chaosFrequency = chaos;
+        //0-9
         public float lifePool = life;
+        //3-15
         public float economyInflation = inflation;
+        //3-15
         public float goldTarget = gold;
     }
 }
