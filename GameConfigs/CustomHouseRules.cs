@@ -4,7 +4,7 @@ namespace NeuroFTK.GameConfigs
 {
     public class CustomHouseRules
     {
-        public const bool SET_CUSTOM_RULES = true;
+        public static bool SET_CUSTOM_RULES = true;
 
         public static Dictionary<string, CustomRuleValues> houseRules = new()
         {
