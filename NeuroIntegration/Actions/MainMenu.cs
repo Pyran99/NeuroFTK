@@ -5,6 +5,10 @@ using NeuroFTK.GameConfigs;
 using System.Collections;
 using System.Collections.Generic;
 using GridEditor;
+using NeuroFTK.HarmonyPatches.AutomatedActions;
+using System.Reflection;
+using System;
+using System.IO;
 
 namespace NeuroFTK.NeuroIntegration.Actions
 {
@@ -24,7 +28,7 @@ namespace NeuroFTK.NeuroIntegration.Actions
         static void OnMainScreenShown(MainScreen __instance)
         {
             //TODO add a wait time before doing anything
-            int rand = Random.Range(0, 1);
+            int rand = UnityEngine.Random.Range(0, 1);
             if (rand == 0)
             {
                 OnNewGameAction(__instance);
@@ -33,6 +37,7 @@ namespace NeuroFTK.NeuroIntegration.Actions
             {
                 OnResumeGameAction(__instance);
             }
+            test4();
         }
 
         static void OnNewGameAction(MainScreen __instance)
@@ -66,20 +71,19 @@ namespace NeuroFTK.NeuroIntegration.Actions
 
         static void SetRulesBeforeStartGame(GameConfig instance)
         {
-            if (!CustomHouseRules.SET_CUSTOM_RULES) return;
-            instance.OnHouseRule(); // will this wait? NOPE
+            bool useCustomRules = CustomHouseRules.SET_CUSTOM_RULES;
+            if (!useCustomRules) return;
+            SetCustomHouseRules.configInstance = instance;
+            instance.OnHouseRule();
         }
 
         static void SelectAdventure(GameConfig instance)
         {
-            // names: 1=KillVexor 2=FrostAdventure 3=Pirates 4=DungeonCrawl 5=HildebrantsCellar 6=GraveRobber 7=LostCiv -> DLC
-            Plugin.Logger.LogMessage("--adventure buttons--");
             List<string> names = [];
             instance.m_GameDefButtons.ForEach(btn => names.Add(btn.m_GameDefName));
-            names.ForEach(Plugin.Logger.LogMessage);
-            Plugin.Logger.LogMessage($"names joined list: {string.Join(", ", [.. names])}");
+            // names.ForEach(Plugin.Logger.LogMessage);
             List<string> search = [.. names];
-            foreach (string item in search) // Collection was modified; enumeration operation may not execute.
+            foreach (string item in search)
             {
                 if (FTK_dlcDB.GetDLCBySaveFileName(item) != null)
                 {
@@ -88,10 +92,46 @@ namespace NeuroFTK.NeuroIntegration.Actions
                         names.Remove(item);
                     }
                 }
+                if (!CustomHouseRules.houseRules.ContainsKey(item))
+                {
+                    names.Remove(item);
+                }
             }
             Plugin.Logger.LogMessage($"valid names: {string.Join(", ", [.. names])}");
-            instance.OnChangeValueGameDef("KillVexor"); // default select first -> first is the dev sandbox, dont send empty
+            string chosen = names[UnityEngine.Random.Range(0, names.Count)];
+            if (!GameCache.Cache.GameDefinitions.GetNames().Contains(chosen))
+            {
+                Plugin.Logger.LogWarning($"could not find game def {chosen}, defaulting to KillVexor");
+                chosen = "KillVexor";
+            }
+            instance.OnChangeValueGameDef(chosen); // default select first -> first is the dev sandbox, dont send empty
+            //TODO select the correct button
         }
-        
+
+        [HarmonyPatch(typeof(GameConfig), nameof(GameConfig.OnChangeValueGameDef))]
+        [HarmonyPostfix]
+        static void OnAdventureSelected(GameConfig __instance)
+        {
+            Plugin.Logger.LogMessage($"selected adventure: {__instance.GetCurrentGameDefPreview().GetDisplayName()}"); // "For the King"
+            Plugin.Logger.LogMessage($"selected adventure save file name: {__instance.GetCurrentGameDefPreview().m_SaveFileName}"); // "KillVexor"
+        }
+
+        Dictionary<string, string> values = null;
+
+        static void test4()
+        {
+            //B:\Games\Epic Games\ForTheKing\BepInEx\plugins\NeuroFTK.dll
+            var loc = Assembly.GetExecutingAssembly().Location;
+            var dir = Path.GetDirectoryName(Application.dataPath);
+            Plugin.Logger.LogMessage($"loc: {loc} dir: {dir}");
+        }
+        /*
+        string assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        string filePathRelativeToAssembly = Path.Combine(assemblyPath, @"..\SomeFolder\SomeRelativeFile.txt");
+        string normalizedPath = Path.GetFullPath(filePathRelativeToAssembly);
+        assemblyPath = "C:\Test"
+        filePathRelativeToAssembly = "C:\Test\..\SomeFolder\SomeRelativeFile.txt"
+        normalizedPath = "C:\Test\SomeFolder\SomeRelativeFile.txt"
+        */
     }
 }

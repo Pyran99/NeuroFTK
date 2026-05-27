@@ -16,7 +16,7 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
         static void AfterSplashScreenStart()
         {
             //TODO can send game context to neuro
-            Plugin.Logger.LogMessage("splash screen start");
+            Plugin.Logger.LogMessage("Send game context to Neuro");
         }
 
         // DisplayScene uses a button press to skip, always return true
