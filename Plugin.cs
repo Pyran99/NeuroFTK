@@ -45,7 +45,7 @@ public class Plugin : BaseUnityPlugin
         Logger.LogInfo($"Harmony patch applied {id}");
     }
 
-    private void GenerateConfigFile()
+    void GenerateConfigFile()
     {
         if (File.Exists(configPath))
         {

@@ -25,7 +25,7 @@ public class MainMenu
     static void OnMainScreenShown(MainScreen __instance)
     {
         //TODO add a wait time before doing anything
-        int rand = Random.Range(0, 1);
+        int rand = Random.Range(0, 2);
         if (rand == 0)
         {
             OnNewGameAction(__instance);

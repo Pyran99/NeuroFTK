@@ -12,7 +12,7 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
         static void AfterStorySequence(uiStoryIntroCycle __instance, int _index)
         {
             Plugin.Logger.LogMessage($"story sequence {_index}");
-            //TODO send neuro context of: __instance.m_TextBody.text or __instance.m_StoryEntries[_index]
+            // send neuro context of: __instance.m_TextBody.text or __instance.m_StoryEntries[_index]?
             // __instance.GoIntoGame(); // maybe immediate skip -- 
             Delay(__instance);
 
