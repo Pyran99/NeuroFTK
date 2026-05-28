@@ -10,8 +10,9 @@ using NeuroFTK.HarmonyPatches.AutomatedActions;
 using Newtonsoft.Json;
 
 namespace NeuroFTK;
-/*A mod for Neuro to play 'For the King'
-Customizable data can be found in CustomHouseRules.json & NeuroFTKConfig.json , located in the same directory as NeuroFTK.dll
+/*
+A mod for Neuro to play 'For the King'
+Customizable data can be found in NeuroFTKCustomHouseRules.json & NeuroFTKConfig.json , located in the same directory as NeuroFTK.dll
 */
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
@@ -28,12 +29,20 @@ public class Plugin : BaseUnityPlugin
         // Plugin startup logic
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
-        var harmony = new Harmony("Pyran."+MyPluginInfo.PLUGIN_GUID+".ForTheKing");
-        harmony.PatchAll();
+        InitializeHarmony();
         GenerateConfigFile();
         SetCustomHouseRules.LoadCustomRules();
+        SetSettingsOptions.InitializeCustomSettings();
         Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", (string)config["environmentWebSocket"]);
         // NeuroSdkSetup.Initialize("For the King");
+    }
+
+    void InitializeHarmony()
+    {
+        string id = "Pyran." + MyPluginInfo.PLUGIN_GUID + ".ForTheKing";
+        var harmony = new Harmony(id);
+        harmony.PatchAll();
+        Logger.LogInfo($"Harmony patch applied {id}");
     }
 
     private void GenerateConfigFile()
@@ -55,14 +64,5 @@ public class Plugin : BaseUnityPlugin
         File.WriteAllText(configPath, jsonString);
         config = new Dictionary<string, object>(_config);
     }
-
-    // [HarmonyPatch(typeof(uiFTKButton), nameof(uiFTKButton.OnPointerEnter))]
-    // [HarmonyPrefix]
-    // private static void TestMod()
-    // {
-    //     Logger.LogMessage("POINTER ENTERED TEST");
-    //         AudioManager.Instance.MainMenuButtonClick();
-    //         Logger.LogMessage("default click");
-    // }
 
 }

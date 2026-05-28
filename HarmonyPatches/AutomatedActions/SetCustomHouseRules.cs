@@ -17,7 +17,7 @@ public class SetCustomHouseRules
 {
     // // B:/Games/Epic Games/ForTheKing
     // var dir = Path.GetDirectoryName(Application.dataPath);
-    readonly static string rulesConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "CustomHouseRules.json");
+    readonly static string rulesConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "NeuroFTKCustomHouseRules.json");
     public static GameConfig configInstance;
     public static Dictionary<string, CustomRuleValues> customRules;
 
@@ -31,7 +31,7 @@ public class SetCustomHouseRules
 
         static IEnumerator SetWithDelays(HouseRule instance, Dictionary<FTK_gameParams.ID, HouseRuleSlider> m_Sliders)
         {
-            Plugin.Logger.LogMessage("Awaiting key input 'LeftBracket'");
+            Plugin.Logger.LogMessage("Awaiting key input 'LeftBracket'"); // PH before other option implemented
             while (!Input.GetKeyDown(KeyCode.LeftBracket))
             {
                 yield return null;
@@ -58,7 +58,7 @@ public class SetCustomHouseRules
                     break;
                 }
             }
-            Plugin.Logger.LogMessage("finished custom rules");
+            Plugin.Logger.LogMessage("Applied custom rules");
             yield return new WaitForSeconds(1.0f);
             instance.OnBack();
             yield return null;
@@ -78,17 +78,12 @@ public class SetCustomHouseRules
 
     static void LogValues(CustomRuleValues rules)
     {
-        Plugin.Logger.LogMessage($"chaos: {rules.chaosFrequency}");
-        Plugin.Logger.LogMessage($"life: {rules.lifePool}");
-        Plugin.Logger.LogMessage($"inflation: {rules.economyInflation}");
-        Plugin.Logger.LogMessage($"gold: {rules.goldTarget}");
+        Plugin.Logger.LogMessage($"chaos: {rules.chaosFrequency}\nlife: {rules.lifePool}\ninflation: {rules.economyInflation}\ngold: {rules.goldTarget}");
     }
 
     public static void LoadCustomRules()
     {
         if (customRules != null) return;
-        // B:\Games\Epic Games\ForTheKing\BepInEx\plugins\NeuroFTK.dll
-        // var loc = Assembly.GetExecutingAssembly().Location.Replace("NeuroFTK.dll", "");
         if (File.Exists(rulesConfigPath))
         {
             string loadedJson = File.ReadAllText(rulesConfigPath);

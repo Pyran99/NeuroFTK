@@ -10,7 +10,6 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
     [HarmonyPatch]
     public class SkipGameIntro
     {
-
         [HarmonyPatch(typeof(SplashScreen), "Start")]
         [HarmonyPostfix]
         static void AfterSplashScreenStart()
@@ -43,23 +42,5 @@ namespace NeuroFTK.HarmonyPatches.AutomatedActions
             Plugin.Logger.LogMessage("skipping difficulty warning");
             uiStartGame.Instance.OnPrepareToDie();
         }
-
-        // // test bs
-        // static IEnumerator FindPTDButton()
-        // {
-        //     float beforeFind = Time.realtimeSinceStartup;
-        //     GameObject screen = GameObject.Find("PrepareToDieScreen");
-        //     float afterFind = Time.realtimeSinceStartup;
-        //     Plugin.Logger.LogMessage($"found prepare to die screen in {afterFind - beforeFind} seconds");
-        //     uiFTKButton btn = screen.GetComponentInChildren<uiFTKButton>();
-        //     while (btn == null)
-        //     {
-        //         btn = screen.GetComponentInChildren<uiFTKButton>();
-        //         Plugin.Logger.LogError("failed to find button");
-        //         yield return new WaitForSeconds(1);
-        //     }
-        //     Plugin.Logger.LogMessage("found prepare to die button");
-        //     btn.OnControllerClick();
-        // }
     }
 }
