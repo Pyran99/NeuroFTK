@@ -6,6 +6,8 @@ using System.Collections;
 using System.Collections.Generic;
 using GridEditor;
 using NeuroFTK.HarmonyPatches.AutomatedActions;
+using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
 
 namespace NeuroFTK.NeuroIntegration.Actions;
 
@@ -52,6 +54,16 @@ public class MainMenu
     [HarmonyPostfix]
     static void OnGameConfigShown(GameConfig __instance)
     {
+        //TODO PH neuro action for testing
+        ActionWindow window = ActionWindow.Create(__instance.gameObject);
+        window.SetForce(0, "test action display", "", false, ActionsForce.Priority.Low);
+        window.AddAction(new TestAction());
+        window.Register();
+        // ActionWindow.Create(uiStartGame.Instance.gameObject)
+        //     .SetForce(0, "the lore store is showing", "", false, ActionsForce.Priority.Low)
+        //     .AddAction(new TestAction())
+        //     .Register();
+
         __instance.StartCoroutine(Wait(__instance));
         static IEnumerator Wait(GameConfig instance)
         {
