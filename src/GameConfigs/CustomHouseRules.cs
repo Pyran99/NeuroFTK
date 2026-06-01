@@ -14,9 +14,10 @@ public class CustomHouseRules
         { "DungeonCrawl", new CustomRuleValues(10f, 6f, 80f) },
         // Cellar cant customize
         // { "HildebrantsCellar", new CustomRuleValues(8f, 6f, 80f) },
-        // chaos & life dont change
-        { "GraveRobber", new CustomRuleValues(0f, 0f, 30f, 100f) },
-        { "LostCiv", new CustomRuleValues(8f, 6f, 80f, 100f) },
+        // chaos & life dont change | co-op only
+        // { "GraveRobber", new CustomRuleValues(0f, 0f, 30f, 100f) },
+        // DLC
+        // { "LostCiv", new CustomRuleValues(8f, 6f, 80f, 100f) },
     };
 
 }

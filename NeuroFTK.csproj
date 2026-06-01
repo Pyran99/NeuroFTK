@@ -13,8 +13,9 @@
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
     <RootNamespace>NeuroFTK</RootNamespace>
-    <!-- <OutputPath></OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath> -->
+    <!-- build directly to game folder -->
+    <OutputPath>B:\Games\Epic Games\ForTheKing\BepInEx\plugins\NeuroFTK</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,6 +35,10 @@
   <ItemGroup>
     <Reference Include="ForTheKing">
       <HintPath>lib\Game\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityUI">
+      <HintPath>lib\Game\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

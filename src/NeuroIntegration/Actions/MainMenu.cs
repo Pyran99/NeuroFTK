@@ -6,27 +6,17 @@ using System.Collections;
 using System.Collections.Generic;
 using GridEditor;
 using NeuroFTK.HarmonyPatches.AutomatedActions;
-using NeuroSdk.Actions;
-using NeuroSdk.Messages.Outgoing;
 
 namespace NeuroFTK.NeuroIntegration.Actions;
 
 [HarmonyPatch]
 public class MainMenu
 {
-    /*
-    press new game if not doing auto
-    press resume if doing saves (probably)
-    lore store items can afford (optional)
-    create game
-    */
-
-    // if this doesnt work try uiStartGame.ShowStartPage
     [HarmonyPatch(typeof(MainScreen), nameof(MainScreen.Show))]
     [HarmonyPostfix]
     static void OnMainScreenShown(MainScreen __instance)
     {
-        //TODO add a wait time before doing anything
+        //TODO add a wait time for neuro to respond to initial game context
         int rand = Random.Range(0, 2);
         if (rand == 0)
         {
@@ -50,47 +40,35 @@ public class MainMenu
         // __instance.OnResume();
     }
 
+    // select adventure button, set house rules then auto start or send neuro action to start
     [HarmonyPatch(typeof(GameConfig), nameof(GameConfig.Show))]
     [HarmonyPostfix]
     static void OnGameConfigShown(GameConfig __instance)
     {
-        //TODO PH neuro action for testing
-        ActionWindow window = ActionWindow.Create(__instance.gameObject);
-        window.SetForce(0, "test action display", "", false, ActionsForce.Priority.Low);
-        window.AddAction(new TestAction());
-        window.Register();
-        // ActionWindow.Create(uiStartGame.Instance.gameObject)
-        //     .SetForce(0, "the lore store is showing", "", false, ActionsForce.Priority.Low)
-        //     .AddAction(new TestAction())
-        //     .Register();
-
         __instance.StartCoroutine(Wait(__instance));
         static IEnumerator Wait(GameConfig instance)
         {
             yield return new WaitForSeconds(2.0f);
             SelectAdventure(instance);
             yield return new WaitForSeconds(2.0f);
+            SetDifficulty(instance);
+            SetGameMode(instance);
+            yield return new WaitForSeconds(2.0f);
             SetRulesBeforeStartGame(instance);
-            yield return new WaitForSeconds(10.0f);
-            //TODO change to auto call after closing/skipping house rules
-            // instance.OnStartGame();
-            Plugin.Logger.LogMessage("start game action " + nameof(instance.OnStartGame));
+            yield return new WaitForSeconds(2.0f);
+            GameDefinitionBase level = instance.GetCurrentGameDefPreview();
+            NeuroSdk.Messages.Outgoing.Context.Send($"Selected the adventure '{level.GetDisplayName()}'. The adventures description is '{level.GetDisplayInfoText()}'", false);
+            Plugin.Logger.LogMessage("NYI allow neuro to respond to adventure context & send action to move to party setup");
         }
-    }
-
-    static void SetRulesBeforeStartGame(GameConfig instance)
-    {
-        bool useCustomRules = CustomHouseRules.SET_CUSTOM_RULES;
-        if (!useCustomRules) return;
-        SetCustomHouseRules.configInstance = instance;
-        instance.OnHouseRule();
     }
 
     static void SelectAdventure(GameConfig instance)
     {
+        /*gold rush(GraveRobber) is co-op only
+        LostCiv is dlc
+        Cellar is journeyman only*/
         List<string> names = [];
         instance.m_GameDefButtons.ForEach(btn => names.Add(btn.m_GameDefName));
-        // names.ForEach(Plugin.Logger.LogMessage);
         List<string> search = [.. names];
         foreach (string item in search)
         {
@@ -113,28 +91,79 @@ public class MainMenu
             Plugin.Logger.LogWarning($"could not find game def {chosen}, defaulting to KillVexor");
             chosen = "KillVexor";
         }
-        instance.OnChangeValueGameDef(chosen); // default select first -> first is the dev sandbox, dont send empty
-        //TODO select the correct button
+        SelectAdventureButton(instance, chosen);
     }
 
-    [HarmonyPatch(typeof(GameConfig), nameof(GameConfig.OnChangeValueGameDef))]
-    [HarmonyPostfix]
-    static void OnAdventureSelected(GameConfig __instance)
+    static void SelectAdventureButton(GameConfig instance, string saveFileName)
     {
-        // "For the King"
-        Plugin.Logger.LogMessage($"selected adventure: {__instance.GetCurrentGameDefPreview().GetDisplayName()}");
-        // "KillVexor"
-        Plugin.Logger.LogMessage($"selected adventure save file name: {__instance.GetCurrentGameDefPreview().m_SaveFileName}");
+        bool invalid = true;
+        for (int i = 0; i < instance.m_GameDefButtons.Count; i++)
+        {
+            if (instance.m_GameDefButtons[i].m_GameDefName == saveFileName)
+            {
+                Plugin.Logger.LogMessage($"selected btn for {saveFileName}");
+                instance.m_GameDefButtons[i].OnClick();
+                invalid = false;
+                break;
+            }
+        }
+        if (invalid)
+        {
+            Plugin.Logger.LogWarning($"could not find game def {saveFileName}, defaulting to KillVexor");
+            SelectAdventureButton(instance, "KillVexor");
+        }
     }
 
+    // always choose apprentice for now
+    static void SetDifficulty(GameConfig instance)
+    {
+        LogDifficulties(instance);
+        instance.m_Difficulty.value = 0;
+        // MethodBase setPrefs = AccessTools.Method(typeof(GameConfig), "SetPrefsInt");
+        // MethodBase method = typeof(GameConfig).GetMethod("OnChangeValueDiff", BindingFlags.NonPublic | BindingFlags.Instance);
+        // method.Invoke(instance, new object[] { 0 });
+    }
 
-    /*
-    string assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-    string filePathRelativeToAssembly = Path.Combine(assemblyPath, @"..\SomeFolder\SomeRelativeFile.txt");
-    string normalizedPath = Path.GetFullPath(filePathRelativeToAssembly);
+    // always choose solo for now
+    static void SetGameMode(GameConfig instance)
+    {
+        LogGameModes(instance);
+        instance.m_GameType.value = 0;
+    }
 
-    assemblyPath = "C:\Test"
-    filePathRelativeToAssembly = "C:\Test\..\SomeFolder\SomeRelativeFile.txt"
-    normalizedPath = "C:\Test\SomeFolder\SomeRelativeFile.txt"
-    */
+    static void SetRulesBeforeStartGame(GameConfig instance)
+    {
+        bool useCustomRules = CustomHouseRules.SET_CUSTOM_RULES;
+        if (!useCustomRules) return;
+        SetCustomHouseRules.configInstance = instance;
+        instance.OnHouseRule();
+    }
+
+    static void LogDifficulties(GameConfig instance)
+    {
+        GameDefinitionPreview selected = instance.GetCurrentGameDefPreview();
+        foreach (KeyValuePair<GameDifficulty.DifficultyType, GameDifficulty> item in selected?.m_GameDifficulties)
+        {
+            Plugin.Logger.LogMessage($"{item.Key}: {item.Value.m_DisplayName}");
+            // Easy: STR_buttonEasy
+            // Medium: STR_buttonNormal
+            // Hard: STR_buttonHard
+        }
+    }
+
+    static void LogGameModes(GameConfig instance)
+    {
+        GameDefinitionPreview selected = instance.GetCurrentGameDefPreview();
+        string[] modes = GameDefinitionBase.GetSupportedGameModeString(selected.GetSupportedGameMode());
+        Plugin.Logger.LogMessage($"game modes: {string.Join(", ", modes)}");
+        //game modes: Solo Adventure, Online Co-Op, Local Co-Op
+    }
+    
+    // OnChangeValueGameDef
+    // static void OnAdventureSelected(GameConfig __instance)
+    // {
+    //     // "KillVexor"
+    //     // __instance.GetCurrentGameDefPreview().m_SaveFileName;
+    // }
+
 }
