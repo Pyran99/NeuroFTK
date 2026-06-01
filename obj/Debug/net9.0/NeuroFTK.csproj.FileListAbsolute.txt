@@ -1,0 +1,17 @@
+A:\Programs\Unity Modding\mods\NeuroFTK\bin\Debug\net9.0\NeuroFTK.deps.json
+a:\Programs\Unity Modding\mods\NeuroFTK\bin\Debug\net9.0\NeuroFTK.dll
+a:\Programs\Unity Modding\mods\NeuroFTK\bin\Debug\net9.0\NeuroFTK.pdb
+a:\Programs\Unity Modding\mods\NeuroFTK\bin\Debug\net9.0\Assembly-CSharp.dll
+a:\Programs\Unity Modding\mods\NeuroFTK\bin\Debug\net9.0\Newtonsoft.Json.dll
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.csproj.AssemblyReference.cache
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\MyPluginInfo.cs
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.GeneratedMSBuildEditorConfig.editorconfig
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.AssemblyInfoInputs.cache
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.AssemblyInfo.cs
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.csproj.CoreCompileInputs.cache
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.sourcelink.json
+A:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.csproj.Up2Date
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.dll
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\refint\NeuroFTK.dll
+a:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\NeuroFTK.pdb
+A:\Programs\Unity Modding\mods\NeuroFTK\obj\Debug\net9.0\ref\NeuroFTK.dll
