@@ -13,9 +13,12 @@
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
     <RootNamespace>NeuroFTK</RootNamespace>
-    <!-- build directly to game folder -->
-    <OutputPath>B:\Games\Epic Games\ForTheKing\BepInEx\plugins\NeuroFTK</OutputPath>
+    <!-- build directly to game folder. Create output_path.txt in root. Comment lines to build in bin -->
+    <CustomPathFromFile>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\output_path').Trim())</CustomPathFromFile> 
+    <OutputPath>$(CustomPathFromFile)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+    <!-- <WarningLevel>0</WarningLevel> -->
   </PropertyGroup>
 
   <ItemGroup>
