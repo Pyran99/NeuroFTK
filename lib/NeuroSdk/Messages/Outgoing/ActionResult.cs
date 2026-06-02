@@ -6,24 +6,18 @@ using Newtonsoft.Json;
 
 namespace NeuroSdk.Messages.Outgoing
 {
-    public sealed class ActionResult : OutgoingMessageBuilder
+    public sealed class ActionResult(string id, ExecutionResult result) : OutgoingMessageBuilder
     {
-        public ActionResult(string id, ExecutionResult result)
-        {
-            _id = id;
-            _success = result.Successful;
-            _message = result.Message;
-        }
 
         protected override string Command => "action/result";
 
         [JsonProperty("id", Order = 0)]
-        private readonly string _id;
+        private readonly string _id = id;
 
         [JsonProperty("success", Order = 10)]
-        private readonly bool _success;
+        private readonly bool _success = result.Successful;
 
         [JsonProperty("message", Order = 20)]
-        private readonly string? _message;
+        private readonly string? _message = result.Message;
     }
 }

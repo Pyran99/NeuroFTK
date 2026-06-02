@@ -6,6 +6,8 @@ using System.Collections;
 using System.Collections.Generic;
 using GridEditor;
 using Pyran.NeuroFTK.HarmonyPatches;
+using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions;
 
@@ -26,6 +28,16 @@ public class MainMenu
         {
             OnResumeGameAction(__instance);
         }
+        TestAction(__instance);
+    }
+
+    static void TestAction(MainScreen instance)
+    {
+        ActionWindow window = ActionWindow.Create(instance.gameObject);
+        window.SetForce(0, "test action query", "current state of game context", true, ActionsForce.Priority.Low);
+        window.AddAction(new MainMenuAction(instance, null, null, null));
+        window.Register();
+        Plugin.AddToMonitor(instance.gameObject, "Main menu actions");
     }
 
     static void OnNewGameAction(MainScreen __instance)
@@ -57,7 +69,7 @@ public class MainMenu
             SetRulesBeforeStartGame(instance);
             yield return new WaitForSeconds(2.0f);
             GameDefinitionBase level = instance.GetCurrentGameDefPreview();
-            NeuroSdk.Messages.Outgoing.Context.Send($"Selected the adventure '{level.GetDisplayName()}'. The adventures description is '{level.GetDisplayInfoText()}'", false);
+            Context.Send($"Selected the adventure '{level.GetDisplayName()}'. The adventures description is '{level.GetDisplayInfoText()}'", false);
             Plugin.Logger.LogMessage("NYI allow neuro to respond to adventure context & send action to move to party setup");
         }
     }
@@ -119,9 +131,6 @@ public class MainMenu
     {
         LogDifficulties(instance);
         instance.m_Difficulty.value = 0;
-        // MethodBase setPrefs = AccessTools.Method(typeof(GameConfig), "SetPrefsInt");
-        // MethodBase method = typeof(GameConfig).GetMethod("OnChangeValueDiff", BindingFlags.NonPublic | BindingFlags.Instance);
-        // method.Invoke(instance, new object[] { 0 });
     }
 
     // always choose solo for now
@@ -158,12 +167,28 @@ public class MainMenu
         Plugin.Logger.LogMessage($"game modes: {string.Join(", ", modes)}");
         //game modes: Solo Adventure, Online Co-Op, Local Co-Op
     }
-    
-    // OnChangeValueGameDef
-    // static void OnAdventureSelected(GameConfig __instance)
-    // {
-    //     // "KillVexor"
-    //     // __instance.GetCurrentGameDefPreview().m_SaveFileName;
-    // }
 
+    static void CheckLoreStoreAvailable()
+    {
+        // StartGameFE.MainScreen
+    }
+
+    static void GenerateAvailableActions(MainScreen instance)
+    {
+        // ActionWindow window = ActionWindow.Create(instance.gameObject);
+        // window.SetForce(0, "test action display", "", false, ActionsForce.Priority.Low);
+        // window.AddAction(new MainMenuAction());
+        // window.Register();
+    }
+
+// StartGameFE.MainScreen -> main screen panel
+/*base.OnPreSetFocus();
+    if (PlayerPrefs.GetInt(NEW_LORE, 0) != 0)
+    {
+        m_NewLore.gameObject.SetActive(value: true);
+    }
+    else
+    {
+        m_NewLore.gameObject.SetActive(value: false);
+    }*/
 }

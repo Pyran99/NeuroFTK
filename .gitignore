@@ -434,3 +434,4 @@ lib/Game
 *.csproj.user
 OutputPath
 output_path
+_tests
