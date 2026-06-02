@@ -5,12 +5,12 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using NeuroFTK.GameConfigs;
-using NeuroFTK.HarmonyPatches.AutomatedActions;
+using Pyran.NeuroFTK.GameConfigs;
+using Pyran.NeuroFTK.HarmonyPatches;
 using Newtonsoft.Json;
 using NeuroSdk;
 
-namespace NeuroFTK;
+namespace Pyran.NeuroFTK;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInProcess("FTK.exe")]

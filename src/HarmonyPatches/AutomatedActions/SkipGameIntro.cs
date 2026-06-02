@@ -3,7 +3,7 @@ using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
 
-namespace NeuroFTK.HarmonyPatches.AutomatedActions;
+namespace Pyran.NeuroFTK.HarmonyPatches;
 
 // skips the intro splash screen & prepare to die popup
 [HarmonyPatch]

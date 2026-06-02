@@ -1,13 +1,13 @@
 using HarmonyLib;
 using UnityEngine;
 using StartGameFE;
-using NeuroFTK.GameConfigs;
+using Pyran.NeuroFTK.GameConfigs;
 using System.Collections;
 using System.Collections.Generic;
 using GridEditor;
-using NeuroFTK.HarmonyPatches.AutomatedActions;
+using Pyran.NeuroFTK.HarmonyPatches;
 
-namespace NeuroFTK.NeuroIntegration.Actions;
+namespace Pyran.NeuroFTK.NeuroIntegration.Actions;
 
 [HarmonyPatch]
 public class MainMenu

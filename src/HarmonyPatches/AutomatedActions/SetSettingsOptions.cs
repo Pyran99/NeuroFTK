@@ -2,7 +2,7 @@ using FTKHelp;
 using HarmonyLib;
 using UnityEngine;
 
-namespace NeuroFTK.HarmonyPatches.AutomatedActions;
+namespace Pyran.NeuroFTK.HarmonyPatches;
 
 // Make sure some default options are set
 [HarmonyPatch]

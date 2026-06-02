@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace NeuroFTK.NeuroIntegration.Context;
+namespace Pyran.NeuroFTK.NeuroIntegration.Context;
 
 // [HarmonyPatch(typeof(uiOptionsMenu), nameof(uiOptionsMenu.PauseGame))]
 public class OnGamePaused

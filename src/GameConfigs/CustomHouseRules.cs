@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NeuroFTK.GameConfigs;
+namespace Pyran.NeuroFTK.GameConfigs;
 
 public class CustomHouseRules
 {

@@ -2,7 +2,7 @@ using System.Collections;
 using HarmonyLib;
 using UnityEngine;
 
-namespace NeuroFTK.HarmonyPatches.AutomatedActions
+namespace Pyran.NeuroFTK.HarmonyPatches
 {
     [HarmonyPatch]
     public class SkipIntroStory

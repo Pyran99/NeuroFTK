@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
     [HarmonyPatch]
     public class SetupParty

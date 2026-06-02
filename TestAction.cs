@@ -1,11 +1,10 @@
-
 using System.Collections.Generic;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 
-namespace NeuroFTK;
+namespace Pyran.NeuroFTK;
 
 public class TestAction : NeuroAction
 {

@@ -1,4 +1,4 @@
-namespace NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
     public class LoreStoreUnlocks
     {

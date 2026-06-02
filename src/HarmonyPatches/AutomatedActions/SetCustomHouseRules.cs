@@ -2,14 +2,14 @@ using System.Collections;
 using HarmonyLib;
 using StartGameFE;
 using UnityEngine;
-using NeuroFTK.GameConfigs;
+using Pyran.NeuroFTK.GameConfigs;
 using System.Collections.Generic;
 using GridEditor;
 using System.Reflection;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace NeuroFTK.HarmonyPatches.AutomatedActions;
+namespace Pyran.NeuroFTK.HarmonyPatches;
 /*Sets the custom difficulty sliders for any adventure
 The values can be customized in NeuroFTKCustomHouseRules.json, located in the same directory as NeuroFTK.dll*/
 [HarmonyPatch]

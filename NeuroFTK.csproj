@@ -12,13 +12,12 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>NeuroFTK</RootNamespace>
+    <RootNamespace>Pyran.NeuroFTK</RootNamespace>
     <!-- build directly to game folder. Create output_path.txt in root. Comment lines to build in bin -->
     <CustomPathFromFile>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\output_path').Trim())</CustomPathFromFile> 
     <OutputPath>$(CustomPathFromFile)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <NoWarn>$(NoWarn);NU1903</NoWarn>
-    <!-- <WarningLevel>0</WarningLevel> -->
+    <NoWarn>NU1903;IDE0130</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
