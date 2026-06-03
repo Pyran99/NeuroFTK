@@ -11,7 +11,6 @@ using Newtonsoft.Json;
 using NeuroSdk;
 using UnityEngine;
 using NeuroSdk.Actions;
-using System.Linq;
 
 namespace Pyran.NeuroFTK;
 
@@ -63,40 +62,5 @@ public class Plugin : BaseUnityPlugin
         string jsonString = JsonConvert.SerializeObject(_config, Formatting.Indented);
         File.WriteAllText(configPath, jsonString);
         config = new Dictionary<string, object>(_config);
-    }
-
-    public static Dictionary<GameObject, string> monitorActives = [];
-    static Dictionary<GameObject, string> toRemove = [];
-
-    private void Update()
-    {
-        // GameObject element = null;
-        // for (int i = 0; i < monitorActives.Count; i++)
-        // {
-        //     element = monitorActives.ElementAt(i).Key;
-        //     if (!element.activeSelf)
-        //     {
-        //         NeuroActionHandler.UnregisterActions(monitorActives[element]);
-        //         toRemove.Add(element, monitorActives.ElementAt(i).Value);
-        //     }
-        // }
-        foreach (KeyValuePair<GameObject, string> active in monitorActives)
-        {
-            if (!active.Key.activeSelf)
-            {
-                NeuroActionHandler.UnregisterActions(active.Value);
-                toRemove.Add(active.Key, active.Value);
-            }   
-        }
-        foreach (KeyValuePair<GameObject, string> remove in toRemove)
-        {
-            monitorActives.Remove(remove.Key);
-        }
-        toRemove.Clear();
-    }
-
-    public static void AddToMonitor(GameObject obj, string name)
-    {
-        monitorActives.Add(obj, name);
     }
 }

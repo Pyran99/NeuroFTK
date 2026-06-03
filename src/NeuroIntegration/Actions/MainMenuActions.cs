@@ -1,20 +1,20 @@
 using System.Collections.Generic;
+using System.Linq;
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using StartGameFE;
-using UnityEngine;
 
-namespace Pyran.NeuroFTK.NeuroIntegration
+namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
-    public class MainMenuAction(MainScreen mainMenu, uiFTKButton newGame, uiFTKButton resumeGame, uiFTKButton spendLore) : NeuroAction<string>
+    public class MainMenuAction(MainScreen mainMenu, uiFTKButton resumeGame, bool spendLore) : NeuroAction<string>
     {
         readonly MainScreen mainMenu = mainMenu;
-        readonly uiFTKButton newGame = newGame;
         readonly uiFTKButton resumeGame = resumeGame;
-        readonly uiFTKButton spendLore = spendLore;
+        readonly bool spendLore = spendLore;
 
-        public override string Name => "Main menu actions";
+        public override string Name => "main menu actions";
 
         protected override string Description => GetValidDescription();
 
@@ -23,30 +23,41 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             Plugin.Logger.LogMessage($"Executing main menu action {parsedData}");
-            // switch ((string?)ActionData?.Data)
-            // {
-            //     case "new game":
-            //         // MainMenu.OnNewGameAction(null);
-            //         break;
-            //     case "resume game":
-            //         // MainMenu.OnResumeGameAction(null);
-            //         break;
-            //     case "spend lore":
-            //         // MainMenu.OnSpendLoreAction(null);
-            //         break;
-            // }
+            switch (parsedData)
+            {
+                case "new game":
+                    StartNewGame();
+                    break;
+                case "resume game":
+                    ResumeLastSave();
+                    // resumeGame?.OnControllerClick();
+                    // mainMenu.OnResume();
+                    break;
+                case "spend lore":
+                    OpenLoreStore();
+                    break;
+                default:
+                    Plugin.Logger.LogError($"invalid main menu action {parsedData}");
+                    break;
+            }
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            Plugin.Logger.LogMessage("menu action data: " + actionData.Data);
+            Plugin.Logger.LogMessage("main menu action data: " + actionData.Data);
+            IEnumerable<string> choices = GetAvailableChoices();
+            bool present = choices.Contains((string)actionData.Data);
+            if (!present)
+            {
+                parsedData = null;
+                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("choices"));
+            }
             parsedData = (string)actionData.Data;
             return ExecutionResult.Success();
         }
 
         JsonSchema GenerateSchema()
         {
-            Debug.Log("Generating schema");
             return new JsonSchema
             {
                 Type = JsonSchemaType.String,
@@ -61,26 +72,35 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         IEnumerable<string> GetAvailableChoices()
         {
             List<string> availableActions = ["new game"];
-            if (resumeGame != null) availableActions.Add("Resume a saved game.");
-            if (spendLore != null) availableActions.Add("Spend lore points on unlocking various upgrades.");
+            if (resumeGame != null && resumeGame.enabled) availableActions.Add("resume saved game.");
+            if (spendLore) availableActions.Add("spend lore points");
             return availableActions;
         }
 
         string GetValidDescription()
         {
-            string availableActions = "Start a new game.";
-            if (resumeGame != null) availableActions += "Resume a saved game.";
-            if (spendLore != null) availableActions += "Spend lore points on unlocking various upgrades.";
+            string availableActions = "Start a new game. ";
+            if (resumeGame != null && resumeGame.enabled) availableActions += "Resume a saved game. ";
+            if (spendLore) availableActions += "Spend lore points on unlocking various upgrades. ";
             return availableActions;
         }
 
-        void OnMainScreenHide()
+        void StartNewGame()
         {
-            if (mainMenu.gameObject.activeSelf)
-            {
-                
-            }
-            mainMenu.gameObject.SetActive(false);
+            Plugin.Logger.LogMessage("new game press");
+            mainMenu.OnNewGame();
+        }
+
+        void OpenLoreStore()
+        {
+            Plugin.Logger.LogMessage("spend lore press");
+            mainMenu.ShowLoreStore();
+        }
+
+        void ResumeLastSave()
+        {
+            Plugin.Logger.LogMessage("resume match press");
+            mainMenu.OnResume();
         }
     }
 }
