@@ -18,10 +18,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.Show))]
         [HarmonyPostfix]
-        static void OnShow(uiLoreStore __instance)
+        static void OnShow(uiLoreStore __instance, List<uiLoreCard> ___m_AllCards)
         {
             Plugin.Logger.LogMessage("lore store shown");
-            CreateNeuroAction(__instance);
+            CreateNeuroAction(__instance, ___m_AllCards);
         }
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.OnClose))]
@@ -31,30 +31,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             UnityEngine.Object.Destroy(activeWindow);
         }
 
-        static void CreateNeuroAction(uiLoreStore instance)
+        static void CreateNeuroAction(uiLoreStore instance, List<uiLoreCard> allCards)
         {
-            string query = "Items that can be unlocked";
+            string json = JsonConvert.SerializeObject(GetCategoryData(), Formatting.None);
+
+            string query = "Items that can be unlocked. The categories are: " + json;
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             window.SetForce(2, query, "", true, ActionsForce.Priority.Low);
-            window.AddAction(new PurchaseLoreItems(instance));
+            window.AddAction(new PurchaseLoreItems(instance, allCards));
             window.SetContext("Purchase lore items or save for later if you dont want to purchase anything right now");
             window.Register();
             activeWindow = window;
         }
 
-        // get every item that can be purchased
-        List<FTK_loreItem> UnlockableLoreItems()
-        {
-            return [];
-        }
-
-        // desired: {"characters": {"description": "...", "purchasable": {"1", "2", "3"}}}
-        Dictionary<string, Dictionary<string, List<string>>> GetItemData()
-        {
-            return [];
-        }
-
-        Dictionary<string, string> GetCategoryData()
+        //TODO send as context OR create actions for each category, add all to window
+        static Dictionary<string, string> GetCategoryData()
         {
             List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];
             List<string> names = [.. categories.Select(c => c.m_DisplayName)];

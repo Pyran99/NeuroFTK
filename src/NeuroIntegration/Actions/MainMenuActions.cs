@@ -8,13 +8,14 @@ using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
-    public class MainMenuAction(MainScreen mainMenu, uiFTKButton resumeGame, bool spendLore) : NeuroAction<string>
+    public class MainMenuAction(MainScreen mainMenu, uiFTKButton resumeGame, bool canSpendLore, string name) : NeuroAction<string>
     {
         readonly MainScreen mainMenu = mainMenu;
         readonly uiFTKButton resumeGame = resumeGame;
-        readonly bool spendLore = spendLore;
+        readonly bool spendLore = canSpendLore;
 
-        public override string Name => "main menu actions";
+        public override string Name => name;
+        // public override string Name => "main menu actions";
 
         protected override string Description => GetValidDescription();
 
@@ -73,7 +74,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         {
             List<string> availableActions = ["new game"];
             if (resumeGame != null && resumeGame.enabled) availableActions.Add("resume saved game.");
-            if (spendLore) availableActions.Add("spend lore points");
+            if (spendLore) availableActions.Add("spend lore");
             return availableActions;
         }
 
