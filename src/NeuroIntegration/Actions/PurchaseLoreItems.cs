@@ -54,7 +54,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         List<string> GenerateSchema()
         {
-            return [.. UnlockableLoreItems().Select(l => l.Key)];
+            return [.. UnlockableLoreItems().Select(l => l.Key.ToLower())]; //TODO send all items data to neuro to instead of just keys
             // return [.. UnlockableLoreItems().Select(l => l.m_ID)];
         }
 
@@ -78,6 +78,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 item = card.m_LoreItem;
                 if (!item.IsRevealed()) continue;
+                Plugin.Logger.LogMessage(item.m_ID + " " + item.m_UnlockID);
                 // if (item.IsPurchased()) continue;
                 // if (!item.CanAfford()) continue;
                 if (item.m_Category != FTK_loreCategory.ID.items)
@@ -94,19 +95,19 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     entry = HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
                     // replace below
 
-                    if (FTK_itembase.IsPipeItem((FTK_itembase.ID)item.m_UnlockID)) 
-                    {
-                        Plugin.Logger.LogWarning("pipe item not implemented");
-                        continue;
-                    }
-                    FTKItem ftkItem = FTKItem.Get((FTK_itembase.ID)item.m_UnlockID);
-                    if (allLoreData.ContainsKey(trName))
-                    {
-                        Plugin.Logger.LogWarning($"duplicate item names {trName}");
-                        continue;
-                    }
-                    allLoreData.Add(trName, ftkItem.GetDescription(null));
-                    continue;
+                    // if (FTK_itembase.IsPipeItem((FTK_itembase.ID)item.m_UnlockID)) 
+                    // {
+                    //     Plugin.Logger.LogWarning("pipe item not implemented");
+                    //     continue;
+                    // }
+                    // FTKItem ftkItem = FTKItem.Get((FTK_itembase.ID)item.m_UnlockID);
+                    // if (allLoreData.ContainsKey(trName))
+                    // {
+                    //     Plugin.Logger.LogWarning($"duplicate item names {trName}");
+                    //     continue;
+                    // }
+                    // allLoreData.Add(trName, ftkItem.GetDescription(null));
+                    // continue;
                     //
                 }
                 if (allLoreData.ContainsKey(entry.Keys?.First())) continue;
@@ -233,8 +234,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             else if (itemBase.m_ObjectType == FTK_itembase.ObjectType.armor || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.helmet || itemBase.m_ObjectType == FTK_itembase.ObjectType.boots || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.trinket || itemBase.m_ObjectType == FTK_itembase.ObjectType.necklace)
             {
-                trDescription = CharacterSkills.GetModDisplay(FTK_characterModifierDB.Get(itemBase.m_ID), false);
-                trDescription.Replace("\n", ", ");
+                if (FTK_characterModifierDB.GetDB().IsContainID(itemBase.m_ID))
+                {
+                    trDescription = CharacterSkills.GetModDisplay(FTK_characterModifierDB.Get(itemBase.m_ID), false);
+                }
+                else
+                {
+                    Plugin.Logger.LogWarning("equipment database error");
+                    trDescription = "";
+                }
             }
             else if (FTK_itembase.IsPipeItem(itemId))
             {
@@ -244,6 +252,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 trDescription = FTKItem.Get(itemId)?.GetDescription(null);
             }
+            trDescription.Replace("\\n", ", ");
+            // trDescription.Replace("\n", ", ");
+            Plugin.Logger.LogMessage($"trName: {trName}, trDescription: {trDescription}");
             data.Add(trName, trDescription);
             return data;
         }
@@ -256,11 +267,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             switch (weaponStats._dmgtype)
             {
                 case FTK_weaponStats2.DamageType.physical:
-                    //FIXME  The requested value 'STR_charmodPhysicalDamage' was not found.
-                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charmodPhysicalDamage")].GetStringDataByIndex(0);
+                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModPhysicalDamage")].GetStringDataByIndex(0);
                     break;
                 case FTK_weaponStats2.DamageType.magic:
-                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charmodMagicDamage")].GetStringDataByIndex(0);
+                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModMagicDamage")].GetStringDataByIndex(0);
                     break;
                 default:
                     dmgType = "";
