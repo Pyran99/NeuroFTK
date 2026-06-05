@@ -6,6 +6,7 @@ using Google2u;
 using GridEditor;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Newtonsoft.Json;
 using StartGameFE;
@@ -16,33 +17,37 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     {
         public uiLoreStore uiLoreStore = store;
         public List<uiLoreCard> uiLoreCards = cards;
+        public Action<PurchaseLoreItems> itemPurchased;
+        static bool isPurchasing = false;
 
-        public override string Name => "lore store purchase items";
+        public override string Name => "purchase_lore_item";
 
-        protected override string Description => "NYI";
+        protected override string Description => "purchase an item from the store. these unlock various things that can appear in future runs.";
 
         protected override JsonSchema Schema => new()
         {
             Type = JsonSchemaType.String,
-            Required = ["test"],
+            Required = ["item"],
             Properties = new Dictionary<string, JsonSchema>()
             {
-                ["test"] = QJS.Enum(GenerateSchema()),
-                ["test2"] = new JsonSchema
-                {
-                    Enum = ["1", "2", "3"],
-                }
+                ["item"] = QJS.Enum(GenerateSchema()),
             }
         };
 
         protected override void Execute(string parsedData)
         {
+            if (isPurchasing) return;
+            isPurchasing = true;
             Plugin.Logger.LogMessage("execute purchase lore items action");
             if (parsedData == "1")
             {
                 Plugin.Logger.LogMessage("close store");
                 uiLoreStore.OnClose();
+                isPurchasing = false;
+                return;
             }
+            itemPurchased.Invoke(this);
+            isPurchasing = false;
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -54,15 +59,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         List<string> GenerateSchema()
         {
-            return [.. UnlockableLoreItems().Select(l => l.Key.ToLower())]; //TODO send all items data to neuro to instead of just keys
-            // return [.. UnlockableLoreItems().Select(l => l.m_ID)];
+            Dictionary<string, string> allLoreData = UnlockableLoreItems();
+            Context.Send($"Items and their descriptions you can afford: {JsonConvert.SerializeObject(allLoreData, Formatting.None)}");
+            return [.. allLoreData.Select(l => l.Key.ToLower())];
         }
 
         // get every item that can be purchased
         Dictionary<string, string> UnlockableLoreItems()
         {
             Dictionary<string, string> allLoreData = GetAllItemsDetails(uiLoreCards);
-            allLoreData.OrderBy(kvp => kvp.Key);
+            // allLoreData.OrderBy(kvp => kvp.Key);
+            allLoreData.OrderByDescending(kvp => kvp.Key);
             string json = JsonConvert.SerializeObject(allLoreData, Formatting.Indented);
             Plugin.Logger.LogMessage("card title: item description\n" + json);
             // GetCategoryData();
@@ -78,9 +85,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 item = card.m_LoreItem;
                 if (!item.IsRevealed()) continue;
-                Plugin.Logger.LogMessage(item.m_ID + " " + item.m_UnlockID);
-                // if (item.IsPurchased()) continue;
-                // if (!item.CanAfford()) continue;
+                if (item.IsPurchased()) continue;
+                if (!item.CanAfford()) continue;
                 if (item.m_Category != FTK_loreCategory.ID.items)
                 {
                     // ShowOtherLoreItem
@@ -90,25 +96,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 {
                     // this.m_ItemDetail.Show(_itemID, uiItemDetail.Mode.ItemDisplay, _cow, false, _forceFrontSide, _loreCard);
                     FTK_itembase itemBase = FTK_itembase.GetItemBase((FTK_itembase.ID)item.m_UnlockID);
-                    string trName = itemBase.GetLocalizedName();
-                    // if type is weapon, elif type is armors, elif pipe, else
+                    // string trName = itemBase.GetLocalizedName();
                     entry = HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
-                    // replace below
-
-                    // if (FTK_itembase.IsPipeItem((FTK_itembase.ID)item.m_UnlockID)) 
-                    // {
-                    //     Plugin.Logger.LogWarning("pipe item not implemented");
-                    //     continue;
-                    // }
-                    // FTKItem ftkItem = FTKItem.Get((FTK_itembase.ID)item.m_UnlockID);
-                    // if (allLoreData.ContainsKey(trName))
-                    // {
-                    //     Plugin.Logger.LogWarning($"duplicate item names {trName}");
-                    //     continue;
-                    // }
-                    // allLoreData.Add(trName, ftkItem.GetDescription(null));
-                    // continue;
-                    //
                 }
                 if (allLoreData.ContainsKey(entry.Keys?.First())) continue;
                 allLoreData.Add(entry.Keys?.First(), entry.Values?.First());
@@ -123,8 +112,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string description = TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), item.m_CardDescription)]?.GetStringDataByIndex(0);
             switch (item.m_Category)
             {
-                // manual translate => TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), category.m_DisplayName)];
-                // not usable translate => FTKHub.Localized<TextCharacters>(entry.m_Flavor);
                 case FTK_loreCategory.ID.classes:
                     FTK_playerGameStart entry = FTK_playerGameStartDB.GetDB().GetEntry((FTK_playerGameStart.ID)item.m_UnlockID);
                     id = entry.GetDisplayName();
@@ -252,9 +239,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 trDescription = FTKItem.Get(itemId)?.GetDescription(null);
             }
-            trDescription.Replace("\\n", ", ");
-            // trDescription.Replace("\n", ", ");
-            Plugin.Logger.LogMessage($"trName: {trName}, trDescription: {trDescription}");
+            trDescription.Replace(@"\\n", ", ");
             data.Add(trName, trDescription);
             return data;
         }
@@ -339,7 +324,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (FTK_characterModifierDB.GetDB().IsContainID(weaponStats.m_ID))
             {
                 text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
-                text2.Replace("\n", ", ");
+                text2.Replace(@"\n", ", ");
             }
             // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
             string final = $"weapon damage:{maxDmg} {dmgType}; attacks and proficiencies: {text1}; modifiers: {text2}";

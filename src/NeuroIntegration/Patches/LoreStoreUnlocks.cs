@@ -22,6 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             Plugin.Logger.LogMessage("lore store shown");
             CreateNeuroAction(__instance, ___m_AllCards);
+            // NewActionsTest(__instance, ___m_AllCards);
         }
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.OnClose))]
@@ -34,15 +35,27 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         static void CreateNeuroAction(uiLoreStore instance, List<uiLoreCard> allCards)
         {
             string json = JsonConvert.SerializeObject(GetCategoryData(), Formatting.None);
-
-            string query = "Items that can be unlocked. The categories are: " + json;
+            // Plugin.Logger.LogMessage(json);
+            // string query = "Items that can be unlocked. The categories are: " + json;
+            PurchaseLoreItems action = new(instance, allCards);
+            action.itemPurchased += OnItemPurchased;
             ActionWindow window = ActionWindow.Create(instance.gameObject);
-            window.SetForce(2, query, "", true, ActionsForce.Priority.Low);
-            window.AddAction(new PurchaseLoreItems(instance, allCards));
-            window.SetContext("Purchase lore items or save for later if you dont want to purchase anything right now");
+            window.SetForce(2, "purchase lore items from a category or save for later if you dont want to purchase anything right now", "You are in the lore store", true, ActionsForce.Priority.Low);
+            window.AddAction(action);
+            CancelAction cancelAction = new("purchase_lore_item");
+            cancelAction.OnCancelled += OnActionCancelled;
+            window.AddAction(cancelAction);
+            window.SetContext($"lore store category details: {json}");
             window.Register();
             activeWindow = window;
         }
+
+        //TODO a test
+        static void OnActionCancelled(NeuroAction action)
+        {
+            NeuroActionHandler.UnregisterActions(action);
+        }
+
 
         //TODO send as context OR create actions for each category, add all to window
         static Dictionary<string, string> GetCategoryData()
@@ -63,14 +76,50 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 trDescription = loreStoreRow.GetStringDataByIndex(0);
                 categoryData[trName] = trDescription;
             }
-            string json = JsonConvert.SerializeObject(categoryData, Formatting.Indented);
-            Plugin.Logger.LogMessage($"category data: {json}");
+            // string json = JsonConvert.SerializeObject(categoryData, Formatting.Indented);
+            // Plugin.Logger.LogMessage($"category data: {json}");
             return categoryData;
+        }
+
+        static void OnItemPurchased(PurchaseLoreItems action)
+        {
+            // action.itemPurchased -= OnItemPurchased;
+            Plugin.Logger.LogMessage("item was purchased");
+            // UnityEngine.Object.Destroy(activeWindow);
+            if (MainMenu.HasPurchasableLore())
+            {
+                // CreateNeuroAction(action.uiLoreStore, action.uiLoreCards); //TODO uncomment later
+            }
+        }
+
+        static void NewActionsTest(uiLoreStore instance, List<uiLoreCard> allCards)
+        {
+            List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];
+            ActionWindow window = ActionWindow.Create(instance.gameObject);
+            Dictionary<string, string> categoryData = GetCategoryData();
+            string context = "";
+            foreach (string Key in categoryData.Keys)
+            {
+                FTK_loreCategory.ID id = FTK_loreCategory.ID.None;
+                foreach (FTK_loreCategory cat in categories)
+                {
+                    if (cat.m_DisplayName == Key)
+                    {
+                        id = FTK_loreCategory.GetEnum(cat.m_ID);
+                        break;
+                    }
+                }
+                PurchaseLoreItemTest purchaseLoreItemTest = new(instance, allCards, Key, id);
+                window.AddAction(purchaseLoreItemTest);
+                context += $"{{{Key}: {categoryData[Key]}}},";
+            }
+            window.SetForce(3, "Purchase lore items from a category or save for later if you dont want to purchase anything right now", "You are in the lore store", true, ActionsForce.Priority.Low);
+            window.SetContext(context);
+            window.Register();
         }
 
     }
 }
-
 
 
 // public void OnClick()

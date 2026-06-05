@@ -9,8 +9,7 @@ using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Newtonsoft.Json;
 using NeuroSdk;
-using UnityEngine;
-using NeuroSdk.Actions;
+using UnityEngine.Assertions;
 
 namespace Pyran.NeuroFTK;
 
@@ -22,9 +21,12 @@ public class Plugin : BaseUnityPlugin
     internal static new ManualLogSource Logger;
     readonly string configPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "NeuroFTKConfig.json");
     public static Dictionary<string, object> config = [];
+    public static Plugin Instance { get; private set; }
 
     private void Awake()
     {
+        Assert.IsNull(Instance);
+        Instance = this;
         // Plugin startup logic
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
@@ -33,6 +35,10 @@ public class Plugin : BaseUnityPlugin
         SetCustomHouseRules.LoadCustomRules();
         SetSettingsOptions.InitializeCustomSettings();
         Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", (string)config["environmentWebSocket"]);
+    }
+
+    private void Start()
+    {
         NeuroSdkSetup.Initialize("For the King");
     }
 
