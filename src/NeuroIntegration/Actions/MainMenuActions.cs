@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NeuroSdk;
@@ -8,14 +9,15 @@ using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
-    public class MainMenuAction(MainScreen mainMenu, uiFTKButton resumeGame, bool canSpendLore, string name) : NeuroAction<string>
+    public class MainMenuAction(MainScreen mainMenu, bool _resumeGame, bool _canSpendLore) : NeuroAction<string>
     {
-        readonly MainScreen mainMenu = mainMenu;
-        readonly uiFTKButton resumeGame = resumeGame;
-        readonly bool spendLore = canSpendLore;
+        readonly MainScreen mainScreen = mainMenu;
+        readonly bool resumeGame = _resumeGame;
+        readonly bool spendLore = _canSpendLore;
+        public Action<string> ButtonSelected { get; set; }
 
-        public override string Name => name;
-        // public override string Name => "main menu actions";
+
+        public override string Name => "main_menu";
 
         protected override string Description => GetValidDescription();
 
@@ -27,15 +29,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             switch (parsedData)
             {
                 case "new game":
-                    StartNewGame();
+                    SelectedButton(MainMenu.newGameBtn);
                     break;
                 case "resume game":
-                    ResumeLastSave();
-                    // resumeGame?.OnControllerClick();
-                    // mainMenu.OnResume();
+                    SelectedButton(MainMenu.resumeBtn);
                     break;
                 case "spend lore":
-                    OpenLoreStore();
+                    SelectedButton(MainMenu.loreBtn);
                     break;
                 default:
                     Plugin.Logger.LogError($"invalid main menu action {parsedData}");
@@ -45,7 +45,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            Plugin.Logger.LogMessage("main menu action data: " + actionData.Data);
             IEnumerable<string> choices = GetAvailableChoices();
             bool present = choices.Contains((string)actionData.Data);
             if (!present)
@@ -73,35 +72,22 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         IEnumerable<string> GetAvailableChoices()
         {
             List<string> availableActions = ["new game"];
-            if (resumeGame != null && resumeGame.enabled) availableActions.Add("resume saved game.");
+            if (resumeGame) availableActions.Add("resume game.");
             if (spendLore) availableActions.Add("spend lore");
             return availableActions;
         }
 
         string GetValidDescription()
         {
-            string availableActions = "Start a new game. ";
-            if (resumeGame != null && resumeGame.enabled) availableActions += "Resume a saved game. ";
+            string availableActions = "Choose to start a new game. ";
+            if (resumeGame) availableActions += "Resume a saved game. ";
             if (spendLore) availableActions += "Spend lore points on unlocking various upgrades. ";
             return availableActions;
         }
 
-        void StartNewGame()
+        void SelectedButton(uiFTKButton button)
         {
-            Plugin.Logger.LogMessage("new game press");
-            mainMenu.OnNewGame();
-        }
-
-        void OpenLoreStore()
-        {
-            Plugin.Logger.LogMessage("spend lore press");
-            mainMenu.ShowLoreStore();
-        }
-
-        void ResumeLastSave()
-        {
-            Plugin.Logger.LogMessage("resume match press");
-            mainMenu.OnResume();
+            SelectButton.StartCoroutine(mainScreen, button, 1.0f);
         }
     }
 }

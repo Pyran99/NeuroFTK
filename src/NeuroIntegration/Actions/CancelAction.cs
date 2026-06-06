@@ -1,0 +1,32 @@
+using System;
+using NeuroSdk.Actions;
+using NeuroSdk.Json;
+using NeuroSdk.Websocket;
+
+namespace Pyran.NeuroFTK
+{
+    /// <summary>
+    /// invokes the OnCancelled callback that can be used to unregister an action
+    /// </summary>
+    /// <param name="name"></param>
+    public class CancelAction(string name) : NeuroAction
+    {
+        public Action<NeuroAction> OnCancelled { get; set; }
+
+        public override string Name => "cancel_action";
+
+        protected override string Description => $"Cancel the {name} action";
+
+        protected override JsonSchema Schema => new();
+
+        protected override void Execute()
+        {
+            OnCancelled?.Invoke(this);
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
+        }
+    }
+}

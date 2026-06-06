@@ -15,14 +15,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class LoreStoreUnlocks
     {
         static ActionWindow activeWindow = null;
+        static uiLoreStore uiLoreStore;
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.Show))]
         [HarmonyPostfix]
         static void OnShow(uiLoreStore __instance, List<uiLoreCard> ___m_AllCards)
         {
-            Plugin.Logger.LogMessage("lore store shown");
+            uiLoreStore = __instance;
             CreateNeuroAction(__instance, ___m_AllCards);
-            // NewActionsTest(__instance, ___m_AllCards);
         }
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.OnClose))]
@@ -35,8 +35,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         static void CreateNeuroAction(uiLoreStore instance, List<uiLoreCard> allCards)
         {
             string json = JsonConvert.SerializeObject(GetCategoryData(), Formatting.None);
-            // Plugin.Logger.LogMessage(json);
-            // string query = "Items that can be unlocked. The categories are: " + json;
+            json.Replace(@"\n", ", ");
             PurchaseLoreItems action = new(instance, allCards);
             action.itemPurchased += OnItemPurchased;
             ActionWindow window = ActionWindow.Create(instance.gameObject);
@@ -50,14 +49,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             activeWindow = window;
         }
 
-        //TODO a test
         static void OnActionCancelled(NeuroAction action)
         {
             NeuroActionHandler.UnregisterActions(action);
+            uiLoreStore?.OnClose();
         }
 
-
-        //TODO send as context OR create actions for each category, add all to window
         static Dictionary<string, string> GetCategoryData()
         {
             List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];
@@ -76,22 +73,23 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 trDescription = loreStoreRow.GetStringDataByIndex(0);
                 categoryData[trName] = trDescription;
             }
-            // string json = JsonConvert.SerializeObject(categoryData, Formatting.Indented);
-            // Plugin.Logger.LogMessage($"category data: {json}");
             return categoryData;
         }
 
         static void OnItemPurchased(PurchaseLoreItems action)
         {
+            Plugin.Logger.LogMessage("item was purchased, remake actions or go back to menu automatically");
             // action.itemPurchased -= OnItemPurchased;
-            Plugin.Logger.LogMessage("item was purchased");
             // UnityEngine.Object.Destroy(activeWindow);
             if (MainMenu.HasPurchasableLore())
             {
                 // CreateNeuroAction(action.uiLoreStore, action.uiLoreCards); //TODO uncomment later
+                return;
             }
+            uiLoreStore?.OnClose();
         }
 
+        // test idea to put each category into its own action
         static void NewActionsTest(uiLoreStore instance, List<uiLoreCard> allCards)
         {
             List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];

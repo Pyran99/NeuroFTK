@@ -13,11 +13,11 @@ public class CustomHouseRules
         { "Pirates", new CustomRuleValues(18f, 6f, 80f) }, // chaos is flood events
         { "DungeonCrawl", new CustomRuleValues(10f, 6f, 80f) },
         // Cellar cant customize
-        // { "HildebrantsCellar", new CustomRuleValues(8f, 6f, 80f) },
+        { "HildebrantsCellar", new CustomRuleValues(8f, 6f, 80f) },
         // chaos & life dont change | co-op only
-        // { "GraveRobber", new CustomRuleValues(0f, 0f, 30f, 100f) },
+        { "GraveRobber", new CustomRuleValues(0f, 0f, 30f, 100f) },
         // DLC
-        // { "LostCiv", new CustomRuleValues(8f, 6f, 80f, 100f) },
+        { "LostCiv", new CustomRuleValues(8f, 6f, 80f, 100f) },
     };
 
 }
@@ -25,10 +25,7 @@ public class CustomHouseRules
 /// <summary>
 /// values to set the house rule sliders
 /// </summary>
-/// <param name="chaos">higher = easier</param>
-/// <param name="life">higher = easier</param>
-/// <param name="inflation"> lower = easier</param>
-/// <param name="gold">for gold rush (GraveRobber) adventure only</param>
+/// <param name="chaos">higher = easier</param><param name="life">higher = easier</param><param name="inflation"> lower = easier</param><param name="gold">for gold rush (GraveRobber) adventure only</param>
 public class CustomRuleValues(float chaos, float life, float inflation, float gold = 100f)
 {
     //3-25

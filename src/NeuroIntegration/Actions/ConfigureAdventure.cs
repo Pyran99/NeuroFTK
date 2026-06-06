@@ -109,8 +109,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         static void SetRulesBeforeStartGame(GameConfig instance)
         {
-            bool useCustomRules = CustomHouseRules.SET_CUSTOM_RULES;
-            if (!useCustomRules) return;
+            // bool useCustomRules = CustomHouseRules.SET_CUSTOM_RULES;
+            // if (!useCustomRules) return;
             SetCustomHouseRules.configInstance = instance;
             instance.OnHouseRule();
         }

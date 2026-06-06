@@ -9,7 +9,7 @@ namespace Pyran.NeuroFTK
     /// </summary>
     public class UnregisterDisabledObject: MonoBehaviour
     {
-        public static UnregisterDisabledObject QuickCreate(GameObject owner, ActionWindow window, bool destroySelf = false)
+        public static UnregisterDisabledObject QuickCreate(GameObject owner, ActionWindow window, bool destroySelf = true)
         {
             UnregisterDisabledObject comp = owner.GetComponent<UnregisterDisabledObject>() ?? owner.AddComponent<UnregisterDisabledObject>();
             comp.window = window;
@@ -17,7 +17,7 @@ namespace Pyran.NeuroFTK
         }
 
         public ActionWindow window;
-        public bool destroySelf = false;
+        public bool destroySelf = true;
 
         private void OnDisable()
         {

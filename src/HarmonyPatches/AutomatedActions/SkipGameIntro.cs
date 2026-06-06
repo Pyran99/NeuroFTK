@@ -11,7 +11,7 @@ public class SkipGameIntro
 {
     static bool firstLoad = true;
     const string GAME_DESCRIPTION = "The King is dead, murdered by an unknown assailant. Now the once peaceful kingdom of Fahrul is in chaos. With nowhere left to turn and stretched beyond her means, the queen has put out a desperate plea to the citizens of the land to rise-up and help stem the tide of impending doom. Will you brave the relentless elements, fight the wicked creatures, sail the seas and delve into the dark underworld? None before you have returned from their journey. Can you be the one to put an end to the Chaos? For The King is a challenging blend of Strategy, JRPG Combat, and Roguelike elements.";
-    const string PREPARE_TO_DIE_MSG = "Do not set out on this quest with the expectation that you will succeed at first try. Your betters have gone before you, and fallen to the last. Yet do set out, and strive. Learn what you can. And when you fail and your light is extinguished forever, despair not, for many more answer the call each day.";
+    const string PREPARE_TO_DIE_MSG = "Warning: Do not set out on this quest with the expectation that you will succeed at first try. Your betters have gone before you, and fallen to the last. Yet do set out, and strive. Learn what you can. And when you fail and your light is extinguished forever, despair not, for many more answer the call each day.";
 
     [HarmonyPatch(typeof(SplashScreen), "Start")]
     [HarmonyPostfix]

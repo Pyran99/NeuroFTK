@@ -27,14 +27,12 @@ public class Plugin : BaseUnityPlugin
     {
         Assert.IsNull(Instance);
         Instance = this;
-        // Plugin startup logic
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
         InitializeHarmony();
         GenerateConfigFile();
         SetCustomHouseRules.LoadCustomRules();
         SetSettingsOptions.InitializeCustomSettings();
-        Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", (string)config["environmentWebSocket"]);
     }
 
     private void Start()
@@ -55,18 +53,33 @@ public class Plugin : BaseUnityPlugin
         if (File.Exists(configPath))
         {
             config = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(configPath));
-            // CustomHouseRules.SET_CUSTOM_RULES = bool.TryParse((string)config["useCustomRules"], out bool result) && result;
-            CustomHouseRules.SET_CUSTOM_RULES = (bool)config["useCustomRules"];
+            bool keyAdded = false;
+            foreach (KeyValuePair<string, object> entry in GlobalConfig.defaultConfig)
+            {
+                if (config.ContainsKey(entry.Key)) continue;
+                config.Add(entry.Key, entry.Value);
+                keyAdded = true;
+            }
+            if (keyAdded)
+            {
+                string json = JsonConvert.SerializeObject(config, Formatting.Indented);
+                File.WriteAllText(configPath, json);
+            }
+            SetConfigValues(config);
             return;
         }
-
-        Dictionary<string, dynamic> _config = new()
-        {
-            { "environmentWebSocket", "ws://localhost:8000" },
-            { "useCustomRules", CustomHouseRules.SET_CUSTOM_RULES },
-        };
+        Dictionary<string, object> _config = GlobalConfig.defaultConfig;
         string jsonString = JsonConvert.SerializeObject(_config, Formatting.Indented);
         File.WriteAllText(configPath, jsonString);
         config = new Dictionary<string, object>(_config);
+        SetConfigValues(config);
+    }
+
+    void SetConfigValues(Dictionary<string, object> _config)
+    {
+        CustomHouseRules.SET_CUSTOM_RULES = (bool)_config["use_custom_rules"];
+        GlobalConfig.debug_mode = (bool)_config["debug_mode"];
+        Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", (string)_config["environment_web_socket"]);
+        Logger.LogWarning($"debug_mode is {GlobalConfig.debug_mode}");
     }
 }

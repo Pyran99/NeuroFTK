@@ -25,7 +25,7 @@ public class SetCustomHouseRules
     [HarmonyPostfix]
     static void OnRuleScreenShown(HouseRule __instance, Dictionary<FTK_gameParams.ID, HouseRuleSlider> ___m_Sliders)
     {
-        Plugin.Logger.LogMessage("starting custom house rules");
+        Plugin.Logger.LogMessage($"setting house rules with `{CustomHouseRules.SET_CUSTOM_RULES}` custom rules");
         LoadCustomRules();
         __instance.StartCoroutine(SetWithDelays(__instance, ___m_Sliders));
 
@@ -54,13 +54,15 @@ public class SetCustomHouseRules
                 }
             }
             Plugin.Logger.LogMessage("Applied custom rules");
-            Plugin.Logger.LogMessage("Awaiting key input 'LeftBracket' to close\nREMOVE THIS BEFORE RELEASE"); //TODO PH to prevent window from auto closing
-            while (!Input.GetKeyDown(KeyCode.LeftBracket))
+            if (GlobalConfig.debug_mode)
             {
-                yield return null;
+                Plugin.Logger.LogMessage("Awaiting key input 'LeftBracket' to close");
+                while (!Input.GetKeyDown(KeyCode.LeftBracket))
+                {
+                    yield return null;
+                }
             }
             instance.OnBack();
-            yield return null;
         }
     }
 
@@ -82,24 +84,37 @@ public class SetCustomHouseRules
 
     public static void LoadCustomRules()
     {
-        if (customRules != null) return;
-        if (File.Exists(rulesConfigPath))
+        if (CustomHouseRules.SET_CUSTOM_RULES)
         {
-            string loadedJson = File.ReadAllText(rulesConfigPath);
-            Dictionary<string, CustomRuleValues> json = JsonConvert.DeserializeObject<Dictionary<string, CustomRuleValues>>(loadedJson);
-            foreach (KeyValuePair<string, CustomRuleValues> rule in CustomHouseRules.houseRules)
+            if (File.Exists(rulesConfigPath))
             {
-                if (!loadedJson.Contains(rule.Key))
+                string loadedJson = File.ReadAllText(rulesConfigPath);
+                Dictionary<string, CustomRuleValues> json = JsonConvert.DeserializeObject<Dictionary<string, CustomRuleValues>>(loadedJson);
+                bool keyAdded = false;
+                foreach (KeyValuePair<string, CustomRuleValues> rule in CustomHouseRules.houseRules)
                 {
-                    json.Add(rule.Key, rule.Value);
+                    if (!loadedJson.Contains(rule.Key))
+                    {
+                        json.Add(rule.Key, rule.Value);
+                        keyAdded = true;
+                    }
                 }
+                if (keyAdded)
+                {
+                    string jsonString = JsonConvert.SerializeObject(json, Formatting.Indented);
+                    File.WriteAllText(rulesConfigPath, jsonString);
+                }
+                customRules = json;
             }
-            customRules = json;
+            else
+            {
+                string jsonString = JsonConvert.SerializeObject(CustomHouseRules.houseRules, Formatting.Indented);
+                File.WriteAllText(rulesConfigPath, jsonString);
+                customRules = new Dictionary<string, CustomRuleValues>(CustomHouseRules.houseRules);
+            }
         }
         else
         {
-            string jsonString = JsonConvert.SerializeObject(CustomHouseRules.houseRules, Formatting.Indented);
-            File.WriteAllText(rulesConfigPath, jsonString);
             customRules = new Dictionary<string, CustomRuleValues>(CustomHouseRules.houseRules);
         }
     }
