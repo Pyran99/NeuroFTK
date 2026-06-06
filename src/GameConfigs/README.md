@@ -8,13 +8,15 @@ Life pool | 0-9 | higher = easier
 Economy inflation | 3-15 | lower = easier
 Gold target | 3-15 | lower = easier
 
-Frost adventure's chaos value is locked 0
-HildebrantsCellar can't be customized
-Grave robber is co-op only, Chaos & Life is locked
-Lost civ is the dlc
+Frost adventure's chaos value is locked 0  
+HildebrantsCellar can't be customized  
+Grave robber is co-op only, Chaos & Life is locked  
+Lost civ is the dlc. 
 
 ### Defaults
+
 Adventure | Chaos | Life | Economy | Gold
+--- | --- | --- | --- | ---
 KillVexor(for the king) | 8 | 6 | 80 | 0
 FrostAdventure | 0 | 6 | 80 | 0
 Pirates() | 18 | 6 | 80 | 0
