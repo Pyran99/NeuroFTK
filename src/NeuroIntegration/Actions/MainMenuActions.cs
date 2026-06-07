@@ -38,7 +38,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                     SelectedButton(MainMenu.loreBtn);
                     break;
                 default:
-                    Plugin.Logger.LogError($"invalid main menu action {parsedData}");
+                    Plugin.Logger.LogError($"invalid main menu action '{parsedData}'");
                     break;
             }
         }
@@ -72,7 +72,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         IEnumerable<string> GetAvailableChoices()
         {
             List<string> availableActions = ["new game"];
-            if (resumeGame) availableActions.Add("resume game.");
+            if (resumeGame) availableActions.Add("resume game");
             if (spendLore) availableActions.Add("spend lore");
             return availableActions;
         }

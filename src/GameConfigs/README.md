@@ -17,10 +17,10 @@ Lost civ is the dlc.
 
 Adventure | Chaos | Life | Economy | Gold
 --- | --- | --- | --- | ---
-KillVexor(for the king) | 8 | 6 | 80 | 0
+KillVexor (for the king) | 8 | 6 | 80 | 0
 FrostAdventure | 0 | 6 | 80 | 0
-Pirates() | 18 | 6 | 80 | 0
+Pirates (into the deep) | 18 | 6 | 80 | 0
 DungeonCrawl | 10 | 6 | 80 | 0
 HildebrantsCellar | 8 | 6 | 80 | 0
-GraveRobber | 0 | 0 | 30 | 100
+GraveRobber (gold rush) | 0 | 0 | 30 | 100
 LostCiv | 8 | 6 | 80 | 100
