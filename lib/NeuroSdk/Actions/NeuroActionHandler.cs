@@ -2,6 +2,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using NeuroSdk.Il2Cpp;
 using NeuroSdk.Messages.Outgoing;
@@ -27,7 +28,7 @@ namespace NeuroSdk.Actions
             _currentlyRegisteredActions = null!;
         }
 
-        public static void RegisterActions(List<INeuroAction> newActions)
+        public static void RegisterActions(IEnumerable<INeuroAction> newActions)
         // public static void RegisterActions(IReadOnlyCollection<INeuroAction> newActions)
         {
             _currentlyRegisteredActions.RemoveAll(oldAction => newActions.Any(newAction => oldAction.Name == newAction.Name));
@@ -37,11 +38,16 @@ namespace NeuroSdk.Actions
         }
 
         public static void RegisterActions(params INeuroAction[] newActions)
-            => RegisterActions(newActions);
+            => RegisterActions(new ReadOnlyCollection<INeuroAction>(newActions));
             // => RegisterActions((IReadOnlyCollection<INeuroAction>) newActions);
 
         public static void UnregisterActions(IEnumerable<string> removeActionsList)
         {
+            if (_currentlyRegisteredActions == null)
+            {
+                Debug.LogError("_currentlyRegisteredActions is null");
+                return;
+            }
             INeuroAction[] actionsToRemove = _currentlyRegisteredActions.Where(oldAction => removeActionsList.Any(removeAction => oldAction.Name == removeAction)).ToArray();
 
             _currentlyRegisteredActions.RemoveAll(actionsToRemove.Contains);
@@ -64,11 +70,11 @@ namespace NeuroSdk.Actions
             => UnregisterActions(removeActionsList.Select(a => a.Name));
 
         public static void UnregisterActions(params INeuroAction[] removeActionsList)
-            => UnregisterActions((IEnumerable<INeuroAction>) removeActionsList);
+            => UnregisterActions(new ReadOnlyCollection<INeuroAction>(removeActionsList));
             // => UnregisterActions((IReadOnlyCollection<INeuroAction>) removeActionsList);
 
         public static void UnregisterActions(params string[] removeActionNamesList)
-            => UnregisterActions((IEnumerable<string>) removeActionNamesList);
+            => UnregisterActions(new ReadOnlyCollection<string>(removeActionNamesList));
             // => UnregisterActions((IReadOnlyCollection<string>) removeActionNamesList);
 
         public static void ResendRegisteredActions()

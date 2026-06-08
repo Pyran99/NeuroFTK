@@ -21,6 +21,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         [HarmonyPostfix]
         static void OnShow(uiLoreStore __instance, List<uiLoreCard> ___m_AllCards)
         {
+            PurchaseLoreItems.isPurchasing = false;
             uiLoreStore = __instance;
             CreateNeuroAction(__instance, ___m_AllCards);
         }
@@ -39,7 +40,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             PurchaseLoreItems action = new(instance, allCards);
             action.itemPurchased += OnItemPurchased;
             ActionWindow window = ActionWindow.Create(instance.gameObject);
-            window.SetForce(2, "purchase lore items from a category or save for later if you dont want to purchase anything right now", "You are in the lore store", true, ActionsForce.Priority.Low);
+            window.SetForce(2, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks", true, ActionsForce.Priority.Low);
             window.AddAction(action);
             CancelAction cancelAction = new("purchase_lore_item");
             cancelAction.OnCancelled += OnActionCancelled;
@@ -52,7 +53,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         static void OnActionCancelled(NeuroAction action)
         {
             NeuroActionHandler.UnregisterActions(action);
-            uiLoreStore?.OnClose();
+            uiLoreStore.OnClose();
         }
 
         static Dictionary<string, string> GetCategoryData()
@@ -78,15 +79,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         static void OnItemPurchased(PurchaseLoreItems action)
         {
-            Plugin.Logger.LogMessage("item was purchased, remake actions or go back to menu automatically");
+            PurchaseLoreItems.isPurchasing = false;
             // action.itemPurchased -= OnItemPurchased;
             // UnityEngine.Object.Destroy(activeWindow);
-            if (MainMenu.HasPurchasableLore())
+            if (MainMenu.GetPurchasableLoreCount() > 0)
             {
-                // CreateNeuroAction(action.uiLoreStore, action.uiLoreCards); //TODO uncomment later
+                MainMenu.HasPurchasableLore();
+                CreateNeuroAction(action.uiLoreStore, action.uiLoreCards);
                 return;
             }
-            uiLoreStore?.OnClose();
+            uiLoreStore.OnClose();
         }
 
         // test idea to put each category into its own action

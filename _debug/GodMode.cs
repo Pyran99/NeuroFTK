@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Pyran.NeuroFTK.ModDebug
 {
+    //TODO check dmg calls to see if both calls are made
     [HarmonyPatch]
     public class GodMode
     {

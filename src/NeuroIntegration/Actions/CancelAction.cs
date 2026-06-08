@@ -8,14 +8,14 @@ namespace Pyran.NeuroFTK
     /// <summary>
     /// invokes the OnCancelled callback that can be used to unregister an action
     /// </summary>
-    /// <param name="name"></param>
-    public class CancelAction(string name) : NeuroAction
+    /// <param name="_name"></param>
+    public class CancelAction(string _name) : NeuroAction
     {
         public Action<NeuroAction> OnCancelled { get; set; }
 
         public override string Name => "cancel_action";
 
-        protected override string Description => $"Cancel the {name} action";
+        protected override string Description => $"Cancel the {_name} action";
 
         protected override JsonSchema Schema => new();
 

@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         public uiLoreStore uiLoreStore = store;
         public List<uiLoreCard> uiLoreCards = cards;
         public Action<PurchaseLoreItems> itemPurchased;
-        static bool isPurchasing = false;
+        public static bool isPurchasing = false;
         // {"night market": {"description": "", "card": LoreCard}}
         readonly Dictionary<string, Dictionary<string, object>> availableLoreData = [];
 
@@ -78,31 +78,40 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return ExecutionResult.Success(successMsg);
         }
 
-        List<string> GenerateSchema()
+        private List<string> GenerateSchema()
         {
-            Dictionary<string, string> schemaData = UnlockableLoreItems();
+            // Dictionary<string, string> schemaData = UnlockableLoreItems();
+            Dictionary<string, string> schemaData = GetAllItemsDetails(uiLoreCards);
             string json = JsonConvert.SerializeObject(schemaData, Formatting.None);
+            json.Replace(@"\n", ", ");
             Context.Send($"Items and their descriptions you can afford: {json}");
             return [.. schemaData.Select(l => l.Key)];
         }
 
-        IEnumerator DoPurchase(uiLoreCard card, float delay = 1.0f)
+        private IEnumerator DoPurchase(uiLoreCard card, float delay = 1.0f)
         {
             card.Select();
+            bool failedPurchase = false;
             if (card.m_LoreItem.IsPurchased())
             {
                 Plugin.Logger.LogWarning($"card {card.m_LoreItem.m_ID} is already purchased");
-                uiLoreStore.OnClose();
-                isPurchasing = false;
-                Context.Send($"there was an issue purchasing the store item{NeuroSdkStrings.ModFaultSuffix}");
-                yield break;
+                failedPurchase = true;
             }
             if (!card.m_LoreItem.CanAfford())
             {
                 Plugin.Logger.LogWarning($"cannot afford {card.m_LoreItem.m_ID}");
+                failedPurchase = true;
+            }
+            if (!card.m_LoreItem.IsRevealed())
+            {
+                Plugin.Logger.LogWarning($"card {card.m_LoreItem.m_ID} is not revealed");
+                failedPurchase = true;
+            }
+            if (failedPurchase)
+            {
+                Context.Send($"there was an issue purchasing the store item, going back to the main menu{NeuroSdkStrings.ModFaultSuffix}");
                 uiLoreStore.OnClose();
                 isPurchasing = false;
-                Context.Send($"there was an issue purchasing the store item{NeuroSdkStrings.ModFaultSuffix}");
                 yield break;
             }
             yield return new WaitForSeconds(delay);
@@ -113,16 +122,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
 
         // get every item that can be purchased
-        Dictionary<string, string> UnlockableLoreItems()
-        {
-            Dictionary<string, string> loreData = GetAllItemsDetails(uiLoreCards);
-            // loreData.OrderByDescending(kvp => kvp.Key);
-            string json = JsonConvert.SerializeObject(loreData, Formatting.Indented);
-            Plugin.Logger.LogMessage("card title: item description\n" + json);
-            return loreData;
-        }
-
-        Dictionary<string, string> GetAllItemsDetails(List<uiLoreCard> cards)
+        private Dictionary<string, string> GetAllItemsDetails(List<uiLoreCard> cards)
         {
             Dictionary<string, string> loreData = [];
             Dictionary<string, string> entry;
@@ -144,6 +144,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     entry = HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
                 }
                 string key = entry.Keys?.First().ToLower();
+                // some item sets use the same name
                 if (item.m_Category == FTK_loreCategory.ID.extraArmor || item.m_Category == FTK_loreCategory.ID.extraBackpack || item.m_Category == FTK_loreCategory.ID.extraHelmet || item.m_Category == FTK_loreCategory.ID.extraSkin)
                 {
                     key = item.m_ID;
@@ -153,8 +154,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     Plugin.Logger.LogWarning($"duplicate key found {key}");
                     continue;
                 }
-                string value = entry.Values?.First().Replace(@"\n", ", ").Replace("\n", ", ");
+                key = FixName(key);
+                string value = entry.Values?.First().Replace(@"\n", ", ");
                 loreData.Add(key, value);
+                Plugin.Logger.LogMessage($"{key}: {value}"); //TODO compare items to visible cards
                 Dictionary<string, object> _value = new()
                 {
                     {"description", value},
@@ -165,7 +168,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return loreData;
         }
 
-        Dictionary<string, string> GetItemIdAndDescription(FTK_loreItem item)
+        private Dictionary<string, string> GetItemIdAndDescription(FTK_loreItem item)
         {
             Dictionary<string, string> data = [];
             string id = "";
@@ -264,7 +267,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return data;
         }
 
-        Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
+        // {name: description}
+        private Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
         {
             Dictionary<string, string> data = [];
             FTK_itembase itemBase = FTK_itembase.GetItemBase(itemId);
@@ -298,8 +302,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return data;
         }
 
-        // returns that values of a weapon
-        string GetWeaponDetails(FTK_weaponStats2 weaponStats)
+        // returns that description/values of a weapon
+        private string GetWeaponDetails(FTK_weaponStats2 weaponStats)
         {
             string maxDmg = weaponStats._maxdmg.ToString();
             string dmgType;
@@ -375,14 +379,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (FTK_characterModifierDB.GetDB().IsContainID(weaponStats.m_ID))
             {
                 text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
-                text2.Replace(@"\n", ", ");
             }
             // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
             string final = $"weapon damage:{maxDmg} {dmgType}; attacks and proficiencies: {text1}; modifiers: {text2}";
             return final;
         }
 
-        string GetTrItemDescription(FTK_loreItem item)
+        private string GetTrItemDescription(FTK_loreItem item)
         {
             if (item.m_Category == FTK_loreCategory.ID.items) return "";
             if (item.m_Category == FTK_loreCategory.ID.classes)
@@ -391,6 +394,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return TextCharacters.Instance.Rows[(int)Enum.Parse(typeof(TextCharacters.rowIds), entry.m_Flavor)]?.GetStringDataByIndex(0);
             }
             return TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), item.m_CardDescription)]?.GetStringDataByIndex(0);
+        }
+
+        private string FixName(string name)
+        {
+            return name switch
+            {
+                "HelmetMask01" => "HelmetBeastman",
+                "HelmetMask02" => "HelmetOwlbear",
+                "HelmetMask03" => "HelmetTriclops",
+                _ => name,
+            };
         }
 
     }
@@ -454,3 +468,4 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 //     }
 // }
 #endregion
+

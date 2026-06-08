@@ -287,7 +287,6 @@ namespace NeuroSdk.Actions
         public void End()
         {
             if (CurrentState >= State.Ended) return;
-
             NeuroActionHandler.UnregisterActions(_actions);
             _shouldForceFunc = null;
             _shouldEndFunc = null;
