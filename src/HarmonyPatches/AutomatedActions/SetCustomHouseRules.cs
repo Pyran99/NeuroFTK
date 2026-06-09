@@ -8,6 +8,7 @@ using GridEditor;
 using System.Reflection;
 using System.IO;
 using Newtonsoft.Json;
+using Pyran.NeuroFTK.NeuroIntegration.Actions;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
 /*Sets the custom difficulty sliders for any adventure
@@ -27,6 +28,7 @@ public class SetCustomHouseRules
     {
         Plugin.Logger.LogMessage($"setting house rules with `{CustomHouseRules.SET_CUSTOM_RULES}` custom rules");
         LoadCustomRules();
+
         __instance.StartCoroutine(SetWithDelays(__instance, ___m_Sliders));
 
         static IEnumerator SetWithDelays(HouseRule instance, Dictionary<FTK_gameParams.ID, HouseRuleSlider> m_Sliders)
@@ -35,20 +37,20 @@ public class SetCustomHouseRules
             CustomRuleValues selectedRules = customRules[configInstance.GetCurrentGameDefPreview().m_SaveFileName];
             LogValues(selectedRules);
 
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.25f);
             instance.UpdateChaos(GetScaledValue(selectedRules.chaosFrequency, FTK_gameParams.ID.chaos));
 
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.25f);
             instance.UpdateLife(GetScaledValue(selectedRules.lifePool, FTK_gameParams.ID.lifepool));
 
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.25f);
             instance.UpdateInflation(GetScaledValue(selectedRules.economyInflation, FTK_gameParams.ID.inflation));
 
             foreach (KeyValuePair<FTK_gameParams.ID, HouseRuleSlider> _slider in m_Sliders)
             {
                 if (_slider.Key == FTK_gameParams.ID.deliver_gold)
                 {
-                    yield return new WaitForSeconds(0.5f);
+                    yield return new WaitForSeconds(0.25f);
                     instance.UpdateGold(GetScaledValue(selectedRules.goldTarget, FTK_gameParams.ID.deliver_gold));
                     break;
                 }
@@ -56,18 +58,21 @@ public class SetCustomHouseRules
             Plugin.Logger.LogMessage("Applied custom rules");
             if (GlobalConfig.debug_mode)
             {
-                Plugin.Logger.LogMessage("Awaiting key input 'LeftBracket' to close");
-                while (!Input.GetKeyDown(KeyCode.LeftBracket))
+                Plugin.Logger.LogMessage("Awaiting key input 'RightBracket' to close. from debug_mode");
+                while (!Input.GetKeyDown(KeyCode.RightBracket))
                 {
                     yield return null;
                 }
             }
             instance.OnBack();
+            yield return new WaitForSeconds(1.0f);
+            ConfigureAdventure.CreateGame();
         }
     }
 
     static float GetScaledValue(float value, FTK_gameParams.ID id)
     {
+        // chaos-1, life-1, inflation-10, gold-0.04
         FTK_gameParams gameParams = FTK_gameParamsDB.Get(id);
         float result = value * gameParams.m_SliderScale;
         if (id == FTK_gameParams.ID.inflation)
@@ -79,7 +84,7 @@ public class SetCustomHouseRules
 
     static void LogValues(CustomRuleValues rules)
     {
-        Plugin.Logger.LogMessage($"\n>>chaos: {rules.chaosFrequency}\n>>life: {rules.lifePool}\n>>inflation: {rules.economyInflation}\n>>gold: {rules.goldTarget}");
+        Plugin.Logger.LogMessage($">>chaos: {rules.chaosFrequency}>>life: {rules.lifePool}>>inflation: {rules.economyInflation}>>gold: {rules.goldTarget}");
     }
 
     public static void LoadCustomRules()

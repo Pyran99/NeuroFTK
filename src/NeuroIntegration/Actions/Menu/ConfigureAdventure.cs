@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using GridEditor;
 using HarmonyLib;
+using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 using UnityEngine;
@@ -13,85 +13,88 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
     [HarmonyPatch]
     public class ConfigureAdventure
     {
-        // select adventure button, set house rules then auto start or send neuro action to start
+        static GameConfig instance;
+
         [HarmonyPatch(typeof(GameConfig), nameof(GameConfig.Show))]
         [HarmonyPostfix]
         static void OnGameConfigShown(GameConfig __instance)
         {
-            __instance.StartCoroutine(Wait(__instance));
-            static IEnumerator Wait(GameConfig instance)
-            {
-                yield return new WaitForSeconds(2.0f);
-                SelectAdventure(instance);
-                yield return new WaitForSeconds(2.0f);
-                SetDifficulty(instance);
-                SetGameMode(instance);
-                yield return new WaitForSeconds(2.0f);
-                SetRulesBeforeStartGame(instance);
-                yield return new WaitForSeconds(2.0f);
-                GameDefinitionBase level = instance.GetCurrentGameDefPreview();
-                Context.Send($"Selected the adventure '{level.GetDisplayName()}'. The adventures description is '{level.GetDisplayInfoText()}'", false);
-                Plugin.Logger.LogMessage("NYI allow neuro to respond to adventure context & send action to move to party setup");
-            }
+            instance = __instance;
+            ActionWindow window = ActionWindow.Create(__instance.gameObject);
+            window.SetContext(AdventuresContext(__instance));
+            window.AddAction(new ChooseAdventure(__instance));
+            CancelAction cancelAction = new(window, "return to the main menu");
+            cancelAction.OnCancelled += OnActionCancelled;
+            window.AddAction(cancelAction);
+            window.SetForce(5, "select an adventure to play", "you are in the adventure select screen", true);
+            window.Register();
         }
 
-        static void NeuroSelectAdventure(GameConfig instance)
+        private static void OnActionCancelled(ActionWindow window)
         {
-            //TODO create action
+            Object.Destroy(window);
+            instance.OnBack();
         }
 
-        static void SelectAdventure(GameConfig instance)
+        public static void NeuroSelectAdventure(GameConfig instance, string name)
         {
-            /*gold rush(GraveRobber) is co-op only
-            LostCiv is dlc
-            Cellar is journeyman only*/
-            List<string> names = [];
-            instance.m_GameDefButtons.ForEach(btn => names.Add(btn.m_GameDefName));
-            List<string> search = [.. names];
-            foreach (string item in search)
+            instance.StartCoroutine(SelectAdventureButton(instance, name));
+        }
+
+        static string AdventuresContext(GameConfig instance)
+        {
+            string details = "Adventure details: ";
+            bool forceFirst = (bool)Plugin.config["force_first_adventure"];
+            foreach (GameDefButton btn in instance.m_GameDefButtons)
             {
-                if (FTK_dlcDB.GetDLCBySaveFileName(item) != null)
+                GameDefinitionBase prev = btn.GetPreview();
+                if (forceFirst)
                 {
-                    if (!FTK_dlcDB.GetDLCBySaveFileName(item).IsPurchased())
+                    if (prev.GetDisplayName() == "For the King")
                     {
-                        names.Remove(item);
+                        details += $"{{name: {prev.GetDisplayName()}, description: {prev.GetDisplayInfoText()}}}";
+                        break;
                     }
+                    continue;
                 }
-                if (!CustomHouseRules.houseRules.ContainsKey(item))
-                {
-                    names.Remove(item);
-                }
+                if (!FTK_dlcDB.HasDLCBySaveFileName(prev.m_SaveFileName)) continue;
+                // gold rush is multiplayer only
+                if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
+                details += $"{{name: {prev.GetDisplayName()}, description: {prev.GetDisplayInfoText()}}}; ";
             }
-            Plugin.Logger.LogMessage($"valid names: {string.Join(", ", [.. names])}");
-            string chosen = names[Random.Range(0, names.Count)];
-            if (!GameCache.Cache.GameDefinitions.GetNames().Contains(chosen))
-            {
-                Plugin.Logger.LogWarning($"could not find game def {chosen}, defaulting to KillVexor");
-                Context.Send($"{chosen} is an invalid adventure, defaulting to For the King");
-                chosen = "KillVexor";
-            }
-            SelectAdventureButton(instance, chosen);
+            return details;
         }
 
-        static void SelectAdventureButton(GameConfig instance, string saveFileName)
+        static IEnumerator SelectAdventureButton(GameConfig instance, string saveFileName)
         {
             bool invalid = true;
-            for (int i = 0; i < instance.m_GameDefButtons.Count; i++)
+            foreach (GameDefButton btn in instance.m_GameDefButtons)
             {
-                if (instance.m_GameDefButtons[i].m_GameDefName == saveFileName)
+                string shownName = btn.GetPreview().GetDisplayName();
+                if (shownName == saveFileName)
                 {
-                    Plugin.Logger.LogMessage($"selected btn for {saveFileName}");
-                    instance.m_GameDefButtons[i].OnClick();
+                    btn.OnClick();
                     invalid = false;
                     break;
                 }
             }
             if (invalid)
             {
-                Plugin.Logger.LogWarning($"could not find game def {saveFileName}, defaulting to KillVexor");
-                SelectAdventureButton(instance, "KillVexor");
+                Plugin.Logger.LogError($"could not find game def {saveFileName}");
+                Context.Send($"there was an issue selecting the adventure {saveFileName}");
+                OnGameConfigShown(instance);
+                yield return null;
             }
+            GameDefinitionBase level = instance.GetCurrentGameDefPreview();
+            Context.Send($"Selected the adventure '{level.GetDisplayName()}', '{level.GetDisplayInfoText()}'; please wait while it is being setup", true);
+            yield return new WaitForSeconds(1f);
+            SetDifficulty(instance);
+            SetGameMode(instance);
+            yield return new WaitForSeconds(1f);
+            SetRulesBeforeStartGame(instance);
         }
+
+        public static void CreateGame() => instance.OnStartGame();
 
         // always choose apprentice for now
         static void SetDifficulty(GameConfig instance)
@@ -109,8 +112,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         static void SetRulesBeforeStartGame(GameConfig instance)
         {
-            // bool useCustomRules = CustomHouseRules.SET_CUSTOM_RULES;
-            // if (!useCustomRules) return;
             SetCustomHouseRules.configInstance = instance;
             instance.OnHouseRule();
         }

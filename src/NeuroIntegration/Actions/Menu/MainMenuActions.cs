@@ -16,16 +16,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         readonly bool spendLore = _canSpendLore;
         public Action<string> ButtonSelected { get; set; }
 
-
         public override string Name => "main_menu";
-
         protected override string Description => GetValidDescription();
-
         protected override JsonSchema Schema => GenerateSchema();
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogMessage($"Executing main menu action {parsedData}");
             switch (parsedData)
             {
                 case "new game":
@@ -50,7 +46,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             if (!present)
             {
                 parsedData = null;
-                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("choices"));
+                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("enum"));
             }
             parsedData = (string)actionData.Data;
             return ExecutionResult.Success();
@@ -58,15 +54,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         JsonSchema GenerateSchema()
         {
-            return new JsonSchema
-            {
-                Type = JsonSchemaType.String,
-                Required = ["choices"],
-                Properties = new Dictionary<string, JsonSchema>
-                {
-                    ["choices"] = QJS.Enum(GetAvailableChoices())
-                }
-            };
+            JsonSchema schema = QJS.Enum(GetAvailableChoices());
+            schema.Required = ["enum"];
+            return schema;
         }
 
         IEnumerable<string> GetAvailableChoices()

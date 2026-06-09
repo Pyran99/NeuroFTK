@@ -11,6 +11,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             { "environment_web_socket", "ws://localhost:8000" },
             { "debug_mode", false },
             { "use_custom_rules", CustomHouseRules.SET_CUSTOM_RULES },
+            { "force_first_adventure", false },
         };
     }
 }

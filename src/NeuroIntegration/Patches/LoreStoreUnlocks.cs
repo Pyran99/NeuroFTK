@@ -42,7 +42,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             window.SetForce(2, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks", true, ActionsForce.Priority.Low);
             window.AddAction(action);
-            CancelAction cancelAction = new("purchase_lore_item", "returning to the main menu");
+            CancelAction cancelAction = new(window, "return to main menu");
             cancelAction.OnCancelled += OnActionCancelled;
             window.AddAction(cancelAction);
             window.SetContext($"lore store category details: {json}");
@@ -50,9 +50,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             activeWindow = window;
         }
 
-        static void OnActionCancelled(NeuroAction action)
+        static void OnActionCancelled(ActionWindow window)
         {
-            NeuroActionHandler.UnregisterActions(action);
+            UnityEngine.Object.Destroy(window);
             uiLoreStore.OnClose();
         }
 

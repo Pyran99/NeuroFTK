@@ -34,12 +34,12 @@ public class MainMenu
         loreBtn = instance.transform.Find("ButtonRoot/Lore")?.GetChild(0)?.GetComponent<uiFTKButton>();
         bool purchase = HasPurchasableLore();
         ActionWindow window = ActionWindow.Create(instance.gameObject);
-        window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "the games main menu", true, ActionsForce.Priority.Low);
         window.SetContext("you are in the main menu");
         window.AddAction(new MainMenuAction(instance, resumeBtn.isActiveAndEnabled, purchase));
-        // UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
-        window.Register();
+        window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "the games main menu", true, ActionsForce.Priority.Low);
+        UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
         activeWindow = window;
+        window.Register();
     }
 
     public static bool HasPurchasableLore()
@@ -83,14 +83,4 @@ public class MainMenu
         Assert.IsNotNull(button);
         button?.OnControllerClick();
     }
-    
-    static void GenerateTestAction(GameObject owner)
-    {
-        ActionWindow window = ActionWindow.Create(owner);
-        window.AddAction(new TestAction());
-        window.SetContext("This is a test action window send context");
-        window.SetForce(5, "", "", true, ActionsForce.Priority.Low);
-        window.Register();
-    }
-
 }

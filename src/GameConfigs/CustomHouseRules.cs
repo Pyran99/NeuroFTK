@@ -17,7 +17,7 @@ public class CustomHouseRules
         // chaos & life dont change | co-op only
         { "GraveRobber", new CustomRuleValues(0f, 0f, 30f, 100f) },
         // DLC
-        { "LostCiv", new CustomRuleValues(8f, 6f, 80f, 100f) },
+        { "LostCiv", new CustomRuleValues(11f, 6f, 80f, 100f) },
     };
 
 }

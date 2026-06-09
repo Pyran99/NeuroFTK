@@ -30,15 +30,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override string Description => "purchase an item from the store. these unlock various things that can appear in future runs.";
 
-        protected override JsonSchema Schema => new()
-        {
-            Type = JsonSchemaType.String,
-            Required = ["item"],
-            Properties = new Dictionary<string, JsonSchema>()
-            {
-                ["item"] = QJS.Enum(GenerateSchema()),
-            }
-        };
+        protected override JsonSchema Schema => QJS.Enum(GenerateSchema());
+        // protected override JsonSchema Schema => new()
+        // {
+        //     Type = JsonSchemaType.String,
+        //     Required = ["item"],
+        //     Properties = new Dictionary<string, JsonSchema>()
+        //     {
+        //         ["item"] = QJS.Enum(GenerateSchema()),
+        //     }
+        // };
 
         protected override void Execute(string parsedData)
         {
@@ -82,8 +83,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             // Dictionary<string, string> schemaData = UnlockableLoreItems();
             Dictionary<string, string> schemaData = GetAllItemsDetails(uiLoreCards);
-            string json = JsonConvert.SerializeObject(schemaData, Formatting.None);
-            json.Replace(@"\n", ", ");
+            string json = JsonConvert.SerializeObject(schemaData);
+            json.Replace("\\n", ", ");
             Context.Send($"Items and their descriptions you can afford: {json}");
             return [.. schemaData.Select(l => l.Key)];
         }
@@ -157,7 +158,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 key = FixName(key);
                 string value = entry.Values?.First().Replace(@"\n", ", ");
                 loreData.Add(key, value);
-                Plugin.Logger.LogMessage($"{key}: {value}"); //TODO compare items to visible cards
                 Dictionary<string, object> _value = new()
                 {
                     {"description", value},
