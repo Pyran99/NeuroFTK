@@ -15,10 +15,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         public override string Name => "select_adventure";
         protected override string Description => "select the map to play";
-        protected override JsonSchema Schema => QJS.Enum(GetAdventureNames());
+        protected override JsonSchema Schema => GetSchema();
 
         protected override void Execute(string parsedData)
         {
+            Plugin.Logger.LogMessage($"chosen adventure {parsedData}");
             ConfigureAdventure.NeuroSelectAdventure(instance, parsedData);
         }
 
@@ -30,7 +31,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 parsedData = "";
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("enum"));
             }
-            Plugin.Logger.LogMessage($"chosen adventure {actionData.Data}");
             parsedData = (string)actionData.Data;
             return ExecutionResult.Success();
         }
@@ -40,7 +40,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             if (instance == null)
             {
                 Plugin.Logger.LogError("instance is null");
-                return [];
+                return ["For the King"];
             }
             List<string> names = [];
             if ((bool)Plugin.config["force_first_adventure"] == true) names.Add("For the King");
@@ -59,6 +59,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             Plugin.Logger.LogMessage($"valid adventures: {string.Join(", ", [.. names])}");
             validAdventures = [.. names];
             return names;
+        }
+
+        JsonSchema GetSchema()
+        {
+            JsonSchema schema = QJS.Enum(GetAdventureNames());
+            schema.Required = ["enum"];
+            return schema;
         }
     }
 }

@@ -4,6 +4,7 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 using UnityEngine;
@@ -23,9 +24,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             ActionWindow window = ActionWindow.Create(__instance.gameObject);
             window.SetContext(AdventuresContext(__instance));
             window.AddAction(new ChooseAdventure(__instance));
-            CancelAction cancelAction = new(window, "return to the main menu");
-            cancelAction.OnCancelled += OnActionCancelled;
-            window.AddAction(cancelAction);
+            // CancelAction cancelAction = new(window, "return to the main menu");
+            // cancelAction.OnCancelled += OnActionCancelled;
+            // window.AddAction(cancelAction);
             window.SetForce(5, "select an adventure to play", "you are in the adventure select screen", true);
             window.Register();
         }
@@ -86,27 +87,31 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 yield return null;
             }
             GameDefinitionBase level = instance.GetCurrentGameDefPreview();
-            Context.Send($"Selected the adventure '{level.GetDisplayName()}', '{level.GetDisplayInfoText()}'; please wait while it is being setup", true);
-            yield return new WaitForSeconds(1f);
+            Context.Send($"Selected the adventure '{level.GetDisplayName()}', '{level.GetDisplayInfoText()}'; please wait while it is being setup");
+            yield return new WaitForSeconds(0.5f);
             SetDifficulty(instance);
             SetGameMode(instance);
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.5f);
             SetRulesBeforeStartGame(instance);
         }
 
-        public static void CreateGame() => instance.OnStartGame();
+        public static void CreateGame()
+        {
+            uiFTKButton btn = instance.gameObject.transform.Find("Background/ButtonRoot/HostGame").GetComponent<uiFTKButton>();
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
+        }
 
         // always choose apprentice for now
         static void SetDifficulty(GameConfig instance)
         {
-            LogDifficulties(instance);
+            if(GlobalConfig.debug_mode) LogDifficulties(instance);
             instance.m_Difficulty.value = 0;
         }
 
         // always choose solo for now
         static void SetGameMode(GameConfig instance)
         {
-            LogGameModes(instance);
+            if(GlobalConfig.debug_mode) LogGameModes(instance);
             instance.m_GameType.value = 0;
         }
 

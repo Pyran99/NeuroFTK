@@ -23,7 +23,7 @@ public class MainMenu
     [HarmonyPostfix]
     static void OnSetFocus(MainScreen __instance)
     {
-        __instance?.StartCoroutine(DelayMainMenuAction(__instance));
+        __instance.StartCoroutine(DelayMainMenuAction(__instance));
     }
 
     static IEnumerator DelayMainMenuAction(MainScreen instance)
@@ -46,7 +46,6 @@ public class MainMenu
     {
         int lorePoints = LorePersistence.Instance.GetLore();
         int purchasableItemsCount = GetPurchasableLoreCount();
-        //FIXME count says 26, only 25 cards can be bought?
         Context.Send($"You have {lorePoints} lore points and there are {purchasableItemsCount} items you can afford. These can be used in the lore store to unlock new events, characters, equipment, and cosmetics, if you have enough points, or saved for another time.");
         return purchasableItemsCount > 0;
     }
@@ -68,19 +67,5 @@ public class MainMenu
         if (item.IsPurchased()) return false;
         if (!item.IsRevealed()) return false; // dlc is also checked here
         return true;
-    }
-
-    public static IEnumerator SelectButtonWithDelay(uiFTKButton button, float wait = 1.0f)
-    {
-        if (button == null) yield break;
-        if (!button.isActiveAndEnabled)
-        {
-            Plugin.Logger.LogWarning($"button {button.name} is disabled");
-            yield break;
-        }
-        button.OnPointerEnter(null);
-        yield return new WaitForSeconds(wait);
-        Assert.IsNotNull(button);
-        button?.OnControllerClick();
     }
 }

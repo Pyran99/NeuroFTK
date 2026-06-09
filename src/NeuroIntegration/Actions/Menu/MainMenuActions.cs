@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         public override string Name => "main_menu";
         protected override string Description => GetValidDescription();
-        protected override JsonSchema Schema => GenerateSchema();
+        protected override JsonSchema Schema => GetSchema();
 
         protected override void Execute(string parsedData)
         {
@@ -52,7 +52,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             return ExecutionResult.Success();
         }
 
-        JsonSchema GenerateSchema()
+        JsonSchema GetSchema()
         {
             JsonSchema schema = QJS.Enum(GetAvailableChoices());
             schema.Required = ["enum"];

@@ -32,8 +32,8 @@ public class CustomRuleValues(float chaos, float life, float inflation, float go
     public float chaosFrequency = chaos;
     //0-9
     public float lifePool = life;
-    //3-15
+    //30-150
     public float economyInflation = inflation;
-    //3-15
+    //25-1500
     public float goldTarget = gold;
 }

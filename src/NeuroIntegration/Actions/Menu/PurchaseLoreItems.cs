@@ -27,37 +27,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         readonly Dictionary<string, Dictionary<string, object>> availableLoreData = [];
 
         public override string Name => "purchase_lore_item";
-
         protected override string Description => "purchase an item from the store. these unlock various things that can appear in future runs.";
-
-        protected override JsonSchema Schema => QJS.Enum(GenerateSchema());
-        // protected override JsonSchema Schema => new()
-        // {
-        //     Type = JsonSchemaType.String,
-        //     Required = ["item"],
-        //     Properties = new Dictionary<string, JsonSchema>()
-        //     {
-        //         ["item"] = QJS.Enum(GenerateSchema()),
-        //     }
-        // };
+        protected override JsonSchema Schema => GetSchema();
 
         protected override void Execute(string parsedData)
         {
-            if (parsedData == "") return;
             if (isPurchasing)
             {
                 Plugin.Logger.LogWarning("duplicate store purchase");
                 return;
             }
             isPurchasing = true;
-            if (parsedData == "1")
-            {
-                Plugin.Logger.LogMessage("close store");
-                isPurchasing = false;
-                uiLoreStore.OnClose();
-                return;
-            }
-            uiLoreStore.StartCoroutine(DoPurchase(availableLoreData[parsedData]["card"] as uiLoreCard));
+            uiLoreStore.StartCoroutine(DoPurchase(availableLoreData[parsedData]["card"] as uiLoreCard, parsedData));
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -68,28 +49,30 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));
             }
             parsedData = (string)actionData.Data;
-            string successMsg = $"you purchased {parsedData}";
-            foreach (KeyValuePair<string, Dictionary<string, object>> item in availableLoreData)
-            {
-                if (item.Key.ToLower() != parsedData.ToLower()) continue;
-                successMsg = $"you purchased: {item.Key.ToLower()}; {item.Value["description"]}";
-                break;
-            }
-            // NeuroActionHandler.UnregisterActions(this);
-            return ExecutionResult.Success(successMsg);
+            return ExecutionResult.Success();
         }
 
-        private List<string> GenerateSchema()
+        JsonSchema GetSchema()
         {
-            // Dictionary<string, string> schemaData = UnlockableLoreItems();
+            List<string> data;
             Dictionary<string, string> schemaData = GetAllItemsDetails(uiLoreCards);
             string json = JsonConvert.SerializeObject(schemaData);
-            json.Replace("\\n", ", ");
+            json.Replace(@"\n", ", ");
             Context.Send($"Items and their descriptions you can afford: {json}");
-            return [.. schemaData.Select(l => l.Key)];
+            data = [.. schemaData.Select(l => l.Key)];
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.String,
+                Required = ["item"],
+                Properties = new Dictionary<string, JsonSchema>()
+                {
+                    ["item"] = QJS.Enum(data),
+                }
+            };
+            return schema;
         }
 
-        private IEnumerator DoPurchase(uiLoreCard card, float delay = 1.0f)
+        private IEnumerator DoPurchase(uiLoreCard card, string itemName, float delay = 1.0f)
         {
             card.Select();
             bool failedPurchase = false;
@@ -110,13 +93,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             if (failedPurchase)
             {
-                Context.Send($"there was an issue purchasing the store item, going back to the main menu{NeuroSdkStrings.ModFaultSuffix}");
+                Context.Send($"there was an issue purchasing the store item {itemName}, going back to the main menu{NeuroSdkStrings.ModFaultSuffix}");
                 uiLoreStore.OnClose();
                 isPurchasing = false;
                 yield break;
             }
+            string successMsg = $"you purchased {itemName}";
+            foreach (KeyValuePair<string, Dictionary<string, object>> item in availableLoreData)
+            {
+                if (item.Key.ToLower() != itemName.ToLower()) continue;
+                successMsg = $"you purchased: {item.Key}; {item.Value["description"]}";
+                break;
+            }
+            Context.Send(successMsg);
             yield return new WaitForSeconds(delay);
-            if (!GlobalConfig.debug_mode) card.CommitToLorePurchase(); // skips confirm popup
+            if (!GlobalConfig.debug_mode) card.CommitToLorePurchase(); // skips confirm popup, debug_mode skips purchase fully
             yield return new WaitForSeconds(delay);
             itemPurchased.Invoke(this);
             isPurchasing = false;

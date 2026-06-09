@@ -40,12 +40,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             PurchaseLoreItems action = new(instance, allCards);
             action.itemPurchased += OnItemPurchased;
             ActionWindow window = ActionWindow.Create(instance.gameObject);
-            window.SetForce(2, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks", true, ActionsForce.Priority.Low);
+            window.SetContext($"lore store category details: {json}");
+            window.SetForce(2, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks");
             window.AddAction(action);
             CancelAction cancelAction = new(window, "return to main menu");
             cancelAction.OnCancelled += OnActionCancelled;
             window.AddAction(cancelAction);
-            window.SetContext($"lore store category details: {json}");
             window.Register();
             activeWindow = window;
         }
