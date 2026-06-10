@@ -9,7 +9,6 @@ using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Newtonsoft.Json;
 using NeuroSdk;
-using UnityEngine.Assertions;
 
 namespace Pyran.NeuroFTK;
 
@@ -25,7 +24,6 @@ public class Plugin : BaseUnityPlugin
 
     private void Awake()
     {
-        Assert.IsNull(Instance);
         Instance = this;
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");

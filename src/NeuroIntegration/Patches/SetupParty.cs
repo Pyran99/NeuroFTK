@@ -1,19 +1,14 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
-using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
-    /*
-    send current characters class info context to neuro
-    randomize for new classes
-    when finished choose 3 names
-    start game
-    */
+    /// <summary>
+    /// Party setup screen
+    /// </summary>
     [HarmonyPatch]
     public class SetupParty
     {
@@ -29,7 +24,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         {
             shownOnce = false;
             characterCreateRoot = __instance;
-            Plugin.Logger.LogMessage("character create scene shown");
         }
 
         [HarmonyPatch(typeof(uiQuickPlayerCreate), nameof(uiQuickPlayerCreate.Show))]
@@ -46,23 +40,29 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         [HarmonyPostfix]
         static void OnPartyRandomized()
         {
-            Plugin.Logger.LogMessage("after random party");
+            Context.Send("your party has been randomized", true);
             SendPartyDetails();
+            ConfigueParty.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
         }
 
 
         static void OnPartyVisible()
         {
-            Plugin.Logger.LogMessage("party screen visible ready");
             SendPartyDetails();
-            ChoosePartyNames.RegisterAction(characterCreateRoot.gameObject);
+            ConfigueParty.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
         }
 
         static void SendPartyDetails()
         {
-            Context.Send("NYI party details");
-            Plugin.Logger.LogMessage(string.Join(", ", [.. GetCharacterNames()]));
-            Plugin.Logger.LogMessage(string.Join(", ", [.. GetCharacterClasses()]));
+            // { "Player 1: class: Hunter },
+            List<string> names = GetCharacterNames();
+            List<string> classes = GetCharacterClasses();
+            string data = "your party setup is: ";
+            foreach (string name in names)
+            {
+                data += $"{{ {name}: class: {classes[names.IndexOf(name)]}}}, ";
+            }
+            Context.Send(data);
         }
 
 // [Message:Neuro For the King] Player 1, Player 2, Player 3
@@ -95,13 +95,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 data += $"name:'{character.Value["name"]}', description: {character.Value["description"]};\n";
             }
             return data;
-            // return data.Split('\n');
         }
 
-        static void ActionStartGame(uiStartGame _instance)
+        static void ActionStartGame()
         {
-            Plugin.Logger.LogMessage("start game action " + nameof(_instance.EnterGame));
+            uiStartGame instance = uiStartGame.Instance;
+            Plugin.Logger.LogMessage("NYI start game action " + nameof(instance.EnterGame));
             // _instance.EnterGame();
+        }
+
+        public static void NeuroRandomizeParty()
+        {
+            characterCreateRoot.RandomParty();
         }
 
         public static void NeuroSetCharacterNames(List<string> names)
@@ -111,11 +116,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         static IEnumerator ChangeNames(List<string> names)
         {
-            if (names.Count < 3)
-            {
-                Context.Send("not enough names");
-                yield break;
-            }
             foreach (uiQuickPlayerCreate player in players)
             {
                 string name = names[players.IndexOf(player)];
@@ -131,7 +131,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             }
             Plugin.Logger.LogMessage(msg);
             Context.Send(msg);
-            Plugin.Logger.LogMessage(string.Join(", ", [.. GetCharacterNames()]));
+            SendPartyDetails();
+            Context.Send("tell chat about your party members while the game begins");
+            yield return new WaitForSeconds(10f);
+            ActionStartGame();
         }
 
         // wait for player canvas to be visible
@@ -151,8 +154,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             yield return new WaitForEndOfFrame();
             shownOnce = false;
         }
-
-
     }
 }
 
