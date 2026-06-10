@@ -61,17 +61,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];
             List<string> names = [.. categories.Select(c => c.m_DisplayName)];
             Dictionary<string, string> categoryData = [];
-            TextMiscRow miscRow = null;
-            TextLoreStoreRow loreStoreRow = null;
+            // TextMiscRow miscRow = null;
+            // TextLoreStoreRow loreStoreRow = null;
             string trName = "";
             string trDescription = "";
             foreach (FTK_loreCategory category in categories)
             {
                 if (categoryData.ContainsKey(category.m_DisplayName)) continue;
-                miscRow = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), category.m_DisplayName)];
-                trName = miscRow.GetStringDataByIndex(0);
-                loreStoreRow = TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), category.m_CategoryDescription)];
-                trDescription = loreStoreRow.GetStringDataByIndex(0);
+                // miscRow = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), category.m_DisplayName)];
+                // loreStoreRow = TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), category.m_CategoryDescription)];
+                trName = FTKHub.Localized<TextMisc>(category.m_DisplayName);
+                trDescription = FTKHub.Localized<TextLoreStore>(category.m_CategoryDescription);
                 categoryData[trName] = trDescription;
             }
             return categoryData;

@@ -39,6 +39,10 @@
       <HintPath>lib\Game\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="ForTheKingTR">
+      <HintPath>lib\Game\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityUI">
       <HintPath>lib\Game\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>

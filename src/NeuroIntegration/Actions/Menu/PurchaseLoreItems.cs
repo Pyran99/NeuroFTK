@@ -188,15 +188,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                         case FTK_lorePois.POIType.Utility:
                         {
                             FTK_utility.ID unlockID = (FTK_utility.ID)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_Utility" + unlockID + "Display")].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextLore>("STR_Utility" + unlockID + "Display");
+                            // id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_Utility" + unlockID + "Display")].GetStringDataByIndex(0);
+                            id = FTKHub.Localized<TextLore>("STR_Utility" + unlockID + "Display");
                             break;
                         }
                         case FTK_lorePois.POIType.POIs:
                         {
                             MiniHexInfo.MiniHexType unlockID2 = (MiniHexInfo.MiniHexType)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID2 + "Display")].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextLore>("STR_" + unlockID2 + "Display");
+                            // id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID2 + "Display")].GetStringDataByIndex(0);
+                            id = FTKHub.Localized<TextLore>("STR_" + unlockID2 + "Display");
                             break;
                         }
                         case FTK_lorePois.POIType.MiniEncounter:
@@ -208,17 +208,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                         case FTK_lorePois.POIType.StoneHero:
                         {
                             MiniHexStoneHero.StoneHeroType unlockID3 = (MiniHexStoneHero.StoneHeroType)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID3 + "Display")].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextLore>("STR_" + unlockID3 + "Display");
+                            // id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID3 + "Display")].GetStringDataByIndex(0);
+                            id = FTKHub.Localized<TextLore>("STR_" + unlockID3 + "Display");
                             break;
                         }
                         case FTK_lorePois.POIType.Sanctum:
                         {
                             FTK_sanctumStats.ID unlockID4 = (FTK_sanctumStats.ID)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID4 + "Display")].GetStringDataByIndex(0);
-                            id = string.Format(TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_sanctumGrand")].GetStringDataByIndex(0), id);
-                            // id = FTKHub.Localized<TextLore>("STR_" + unlockID4 + "Display");
-                            // id = string.Format(FTKHub.Localized<TextMisc>("STR_sanctumGrand"), id);
+                            // id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID4 + "Display")].GetStringDataByIndex(0);
+                            // id = string.Format(TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_sanctumGrand")].GetStringDataByIndex(0), id);
+                            id = FTKHub.Localized<TextLore>("STR_" + unlockID4 + "Display");
+                            id = string.Format(FTKHub.Localized<TextMisc>("STR_sanctumGrand"), id);
                             break;
                         }
                     }
@@ -236,16 +236,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                             break;
                         case FTK_loreExtraUnlock.ExtraType.BackPack:
                             id = FTK_customizeBackpackDB.Get((FTK_customizeBackpack.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
-                            id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextMenu>(id);
+                            // id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+                            id = FTKHub.Localized<TextMenu>(id);
                             break;
                         case FTK_loreExtraUnlock.ExtraType.Helmet:
                             id = FTK_customizeHelmetDB.Get((FTK_customizeHelmet.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
-                            id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+                            // id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+                            id = FTKHub.Localized<TextMenu>(id);
                             break;
                         case FTK_loreExtraUnlock.ExtraType.Armor:
                             id = FTK_customizeArmorDB.Get((FTK_customizeArmor.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
-                            id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+                            // id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+                            id = FTKHub.Localized<TextMenu>(id);
                             break;
                     }
                     break;
@@ -301,10 +303,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             switch (weaponStats._dmgtype)
             {
                 case FTK_weaponStats2.DamageType.physical:
-                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModPhysicalDamage")].GetStringDataByIndex(0);
+                    // dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModPhysicalDamage")].GetStringDataByIndex(0);
+                    dmgType = FTKHub.Localized<TextMisc>("STR_charModPhysicalDamage");
                     break;
                 case FTK_weaponStats2.DamageType.magic:
-                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModMagicDamage")].GetStringDataByIndex(0);
+                    // dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModMagicDamage")].GetStringDataByIndex(0);
+                    dmgType = FTKHub.Localized<TextMisc>("STR_charModMagicDamage");
                     break;
                 default:
                     dmgType = "";
@@ -382,9 +386,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (item.m_Category == FTK_loreCategory.ID.classes)
             {
                 FTK_playerGameStart entry = FTK_playerGameStartDB.GetDB().GetEntry((FTK_playerGameStart.ID)item.m_UnlockID);
-                return TextCharacters.Instance.Rows[(int)Enum.Parse(typeof(TextCharacters.rowIds), entry.m_Flavor)]?.GetStringDataByIndex(0);
+                return FTKHub.Localized<TextCharacters>(entry.m_Flavor);
+                // return TextCharacters.Instance.Rows[(int)Enum.Parse(typeof(TextCharacters.rowIds), entry.m_Flavor)]?.GetStringDataByIndex(0);
             }
-            return TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), item.m_CardDescription)]?.GetStringDataByIndex(0);
+            return FTKHub.Localized<TextLoreStore>(item.m_CardDescription);
+            // return TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), item.m_CardDescription)]?.GetStringDataByIndex(0);
         }
 
         private string FixName(string name)
