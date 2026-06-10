@@ -6,7 +6,6 @@ using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using GridEditor;
-using UnityEngine.Assertions;
 
 namespace Pyran.NeuroFTK.NeuroIntegration;
 

@@ -14,7 +14,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         List<string> validAdventures;
 
         public override string Name => "select_adventure";
-        protected override string Description => "select the map to play";
+        protected override string Description => "select the adventure to play";
         protected override JsonSchema Schema => GetSchema();
 
         protected override void Execute(string parsedData)

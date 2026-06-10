@@ -28,6 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             // cancelAction.OnCancelled += OnActionCancelled;
             // window.AddAction(cancelAction);
             window.SetForce(5, "select an adventure to play", "you are in the adventure select screen", true);
+            UnregisterDisabledObject.QuickCreate(__instance.gameObject, window);
             window.Register();
         }
 
