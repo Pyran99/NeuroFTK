@@ -28,17 +28,17 @@ public class MainMenu
     static IEnumerator DelayMainMenuAction(MainScreen instance)
     {
         yield return new WaitForSeconds(1.0f);
+        FindButtons(instance);
+        bool purchase = HasPurchasableLore();
+        activeWindow = MainMenuAction.RegisterAction(instance, resumeBtn.isActiveAndEnabled, purchase);
+        // UnregisterDisabledObject.QuickCreate(instance.gameObject, activeWindow);
+    }
+
+    static void FindButtons(MainScreen instance)
+    {
         newGameBtn = instance.transform.Find("ButtonRoot/New")?.GetChild(0)?.GetComponent<uiFTKButton>();
         resumeBtn = instance.transform.Find("ButtonRoot/Resume")?.GetChild(0)?.GetComponent<uiFTKButton>();
         loreBtn = instance.transform.Find("ButtonRoot/Lore")?.GetChild(0)?.GetComponent<uiFTKButton>();
-        bool purchase = HasPurchasableLore();
-        ActionWindow window = ActionWindow.Create(instance.gameObject);
-        window.SetContext("you are in the main menu");
-        window.AddAction(new MainMenuAction(instance, resumeBtn.isActiveAndEnabled, purchase));
-        window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "the games main menu", true, ActionsForce.Priority.Low);
-        UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
-        activeWindow = window;
-        window.Register();
     }
 
     public static bool HasPurchasableLore()

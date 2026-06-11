@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using Google2u;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
@@ -45,6 +47,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             ConfigueParty.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
         }
 
+        [HarmonyPatch(typeof(FTKHub), nameof(FTKHub.EnterFahrul))]
+        [HarmonyPostfix]
+        static void EnteringWorld()
+        {
+            Context.Send("entering the world of Fahrul", true);
+        }
 
         static void OnPartyVisible()
         {
@@ -54,15 +62,25 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         static void SendPartyDetails()
         {
+            FTK_playerGameStartDB db = FTK_playerGameStartDB.GetDB();
+            string data = "";
+            foreach (uiQuickPlayerCreate player in players)
+            {
+                List<string> details = GetClassDetails((FTK_playerGameStart.ID)player.m_ClassID, db);
+                string joined = string.Join(", ", [.. details]).Replace(@"\n", " ");
+                data += joined;
+            }
+            Context.Send($"details about the classes: {data}");
             // { "Player 1: class: Hunter },
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
-            string data = "your party setup is: ";
+            data = "your party setup is: ";
             foreach (string name in names)
             {
                 data += $"{{ {name}: class: {classes[names.IndexOf(name)]}}}, ";
             }
             Context.Send(data);
+
         }
 
 // [Message:Neuro For the King] Player 1, Player 2, Player 3
@@ -87,6 +105,44 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             return names;
         }
 
+
+        static List<string> GetClassDetails(FTK_playerGameStart.ID id, FTK_playerGameStartDB db)
+        {
+            FTK_playerGameStart entry = db.GetEntry(id);
+            List<string> msg = [];
+            string name = entry.GetDisplayName();
+            float statBonus = GameFlow.Instance.GameDif.m_StatBonus;
+            string toughness = FTKUtil.RoundToInt((entry._toughness + statBonus) * 100f).ToString();
+            string fortitude = FTKUtil.RoundToInt((entry._fortitude + statBonus) * 100f).ToString();
+            string talent = FTKUtil.RoundToInt((entry._talent + statBonus) * 100f).ToString();
+            string awareness = FTKUtil.RoundToInt((entry._awareness + statBonus) * 100f).ToString();
+            string quickness = FTKUtil.RoundToInt((entry._quickness + statBonus) * 100f).ToString();
+            string vitality = FTKUtil.RoundToInt((entry._vitality + statBonus) * 100f).ToString();
+            string classFlavor = FTKHub.Localized<TextCharacters>(entry.m_Flavor);
+            string classAbility = entry.m_CharacterSkills.GetSkillDisplay(false);
+            msg.Add($"{{name: {name}");
+            msg.Add($"class description: {classFlavor}");
+            msg.Add($"gold: {entry._startinggold + GameFlow.Instance.GameDif.m_ExtraGold}");
+            if (entry.m_StartWeapon != FTK_itembase.ID.None)
+            {
+                msg.Add($"starting weapon: {FTKHub.Instance.GetItemDisplayName(entry.m_StartWeapon)}");
+            }
+            string items = "";
+            foreach (FTK_itembase.ID _id in entry.m_StartItems)
+            {
+                items += $"{FTKHub.Instance.GetItemDisplayName(_id)}, ";
+            }
+            msg.Add($"starting items: {{{items}}}");
+            msg.Add($"toughness: {toughness}");
+            msg.Add($"fortitude: {fortitude}");
+            msg.Add($"talent: {talent}");
+            msg.Add($"awareness: {awareness}");
+            msg.Add($"quickness: {quickness}");
+            msg.Add($"vitality: {vitality}");
+            msg.Add($"class abilities: {classAbility}}}. ");
+            return msg;
+        }
+
         static string GetClassesDescriptions()
         {
             string data = "";
@@ -99,9 +155,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         static void ActionStartGame()
         {
-            uiStartGame instance = uiStartGame.Instance;
-            Plugin.Logger.LogMessage("NYI start game action " + nameof(instance.EnterGame));
-            // _instance.EnterGame();
+            uiFTKButton btn = characterCreateRoot.transform.Find("UIRoot/ButtonRoot/StartButton").GetComponent<uiFTKButton>();
+            SelectButton.StartCoroutine(characterCreateRoot, btn, 0.5f);
+            // uiStartGame.Instance.EnterGame(); // maybe EnterFahrul()?
+            //  KeyNotFoundException: The given key was not present in the dictionary.
         }
 
         public static void NeuroRandomizeParty()
@@ -131,6 +188,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             }
             Plugin.Logger.LogMessage(msg);
             Context.Send(msg);
+            yield return new WaitForSeconds(0.5f);
             SendPartyDetails();
             Context.Send("tell chat about your party members while the game begins");
             yield return new WaitForSeconds(10f);

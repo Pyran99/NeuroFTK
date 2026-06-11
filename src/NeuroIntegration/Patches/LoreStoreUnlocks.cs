@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Google2u;
@@ -23,7 +22,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             PurchaseLoreItems.isPurchasing = false;
             uiLoreStore = __instance;
-            CreateNeuroAction(__instance, ___m_AllCards);
+            PurchaseLoreItems.RegisterAction(uiLoreStore, ___m_AllCards);
+            // CreateNeuroAction(__instance, ___m_AllCards);
         }
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.OnClose))]
@@ -50,26 +50,22 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             activeWindow = window;
         }
 
-        static void OnActionCancelled(ActionWindow window)
+        public static void OnActionCancelled(ActionWindow window)
         {
             UnityEngine.Object.Destroy(window);
             uiLoreStore.OnClose();
         }
 
-        static Dictionary<string, string> GetCategoryData()
+        public static Dictionary<string, string> GetCategoryData()
         {
             List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];
             List<string> names = [.. categories.Select(c => c.m_DisplayName)];
             Dictionary<string, string> categoryData = [];
-            // TextMiscRow miscRow = null;
-            // TextLoreStoreRow loreStoreRow = null;
             string trName = "";
             string trDescription = "";
             foreach (FTK_loreCategory category in categories)
             {
                 if (categoryData.ContainsKey(category.m_DisplayName)) continue;
-                // miscRow = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), category.m_DisplayName)];
-                // loreStoreRow = TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), category.m_CategoryDescription)];
                 trName = FTKHub.Localized<TextMisc>(category.m_DisplayName);
                 trDescription = FTKHub.Localized<TextLoreStore>(category.m_CategoryDescription);
                 categoryData[trName] = trDescription;
@@ -77,7 +73,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return categoryData;
         }
 
-        static void OnItemPurchased(PurchaseLoreItems action)
+        public static void OnItemPurchased(PurchaseLoreItems action)
         {
             PurchaseLoreItems.isPurchasing = false;
             // action.itemPurchased -= OnItemPurchased;
@@ -85,7 +81,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (MainMenu.GetPurchasableLoreCount() > 0)
             {
                 MainMenu.HasPurchasableLore();
-                CreateNeuroAction(action.uiLoreStore, action.uiLoreCards);
+                PurchaseLoreItems.RegisterAction(action.uiLoreStore, action.uiLoreCards);
+                // CreateNeuroAction(action.uiLoreStore, action.uiLoreCards);
                 return;
             }
             uiLoreStore.OnClose();
@@ -139,35 +136,5 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
 // public void UnpurchaseAll()
 // {
-//     foreach (FTK_loreItem ftk_loreItem in FTK_loreItemDB.GetDB().m_Array)
-//     {
-//         FTK_statistic statistic = ftk_loreItem.GetStatistic();
-//         global::StatsAchievements.StatsAchievements.TryPlayerStatisticSetValue(statistic.m_ID, 0);
-//     }
 // }
 
-// FTK_statistic statistic = ftk_loreItem.GetStatistic();
-// FTK_statistic ftk_statistic = FTK_statisticDB.Get(FTK_statistic.GetEnum(statistic.m_RevealStat));
-
-// public List<string> m_UnlockedItems = new List<string>();
-
-// [Info   : Unity Log] Lorestore item ArmorStPatrick available == True
-
-
-// Dictionary<string, List<string>> purchasableItems = [];
-// foreach (FTK_loreItem loreItem in FTK_loreItemDB.GetDB().m_Array)
-// {
-//     if (loreItem.IsPurchased()) continue;
-//     if (!loreItem.IsRevealed()) continue;
-//     if (loreItem.CanAfford())
-//     {
-//         if (!purchasableItems.ContainsKey(loreItem.m_Category.ToString()))
-//         {
-//             purchasableItems[loreItem.m_Category.ToString()] = [];
-//             purchasableItems.Add(FTK_loreCategory.GetEnum());
-//         }
-//         purchasableItems[loreItem.m_Category.ToString()].Add(loreItem.m_ID);
-//         FTK_loreCategory.ID.classes.ToString();
-//     }
-// }
-    // List<FTK_loreItem> allLoreItems = FTK_loreItemDB.GetDB().GetArray();
