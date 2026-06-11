@@ -9,7 +9,7 @@ Config files are automatically generated in the same folder as the dll
 Name | Default | Description
 --- | --- | ---
 `environment_web_socket` | ws://localhost:8000 | Websocket url
-`debug_mode` | false | some actions will be handled differently when `true`
+`debug_mode` | false | some actions will be handled differently when `true`. Enables god mode toggle with KeyCode.LeftBracket
 `use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. 
 `force_first_adventure` | false | only let neuro choose the first adventure map For the King
 

@@ -67,7 +67,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             foreach (uiQuickPlayerCreate player in players)
             {
                 List<string> details = GetClassDetails((FTK_playerGameStart.ID)player.m_ClassID, db);
-                string joined = string.Join(", ", [.. details]).Replace(@"\n", " ");
+                string joined = string.Join(", ", [.. details]);
+                joined = StringReplace.ReplaceNewLine(joined);
                 data += joined;
             }
             Context.Send($"details about the classes: {data}");
@@ -104,7 +105,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             }
             return names;
         }
-
 
         static List<string> GetClassDetails(FTK_playerGameStart.ID id, FTK_playerGameStartDB db)
         {
@@ -191,7 +191,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             yield return new WaitForSeconds(0.5f);
             SendPartyDetails();
             Context.Send("tell chat about your party members while the game begins");
-            yield return new WaitForSeconds(10f);
+            yield return new WaitForSeconds(8f);
             ActionStartGame();
         }
 
@@ -214,26 +214,4 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         }
     }
 }
-
-
-        // [HarmonyPatch(typeof(uiStartGame), "CreateAllCreatePlayerUIs")]
-        // [HarmonyPostfix]
-        // static void PH3()
-        // {
-        //     Plugin.Logger.LogMessage("after create UIs"); // 2
-        // }
-
-        // [HarmonyPatch(typeof(uiStartGame), nameof(uiStartGame.ShowCreateCharacter))]
-        // [HarmonyPostfix]
-        // static void PH()
-        // {
-        //     Plugin.Logger.LogMessage("after show create character"); // 3
-        // }
-
-        // [HarmonyPatch(typeof(uiStartGame), "WaitUntilPanningFinished")]
-        // [HarmonyPostfix]
-        // static void PH2()
-        // {
-        //     Plugin.Logger.LogMessage("after panning finished"); // 4 => called when panning starts
-        // }
 

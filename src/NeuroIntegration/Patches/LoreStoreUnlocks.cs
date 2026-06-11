@@ -5,7 +5,6 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
-using Newtonsoft.Json;
 using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -22,8 +21,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             PurchaseLoreItems.isPurchasing = false;
             uiLoreStore = __instance;
-            PurchaseLoreItems.RegisterAction(uiLoreStore, ___m_AllCards);
-            // CreateNeuroAction(__instance, ___m_AllCards);
+            activeWindow = PurchaseLoreItems.RegisterAction(uiLoreStore, ___m_AllCards);
+            UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
         }
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.OnClose))]
@@ -31,23 +30,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         static void OnClosed()
         {
             UnityEngine.Object.Destroy(activeWindow);
-        }
-
-        static void CreateNeuroAction(uiLoreStore instance, List<uiLoreCard> allCards)
-        {
-            string json = JsonConvert.SerializeObject(GetCategoryData(), Formatting.None);
-            json.Replace(@"\n", ", ");
-            PurchaseLoreItems action = new(instance, allCards);
-            action.itemPurchased += OnItemPurchased;
-            ActionWindow window = ActionWindow.Create(instance.gameObject);
-            window.SetContext($"lore store category details: {json}");
-            window.SetForce(2, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks");
-            window.AddAction(action);
-            CancelAction cancelAction = new(window, "return to main menu");
-            cancelAction.OnCancelled += OnActionCancelled;
-            window.AddAction(cancelAction);
-            window.Register();
-            activeWindow = window;
         }
 
         public static void OnActionCancelled(ActionWindow window)
@@ -81,8 +63,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (MainMenu.GetPurchasableLoreCount() > 0)
             {
                 MainMenu.HasPurchasableLore();
-                PurchaseLoreItems.RegisterAction(action.uiLoreStore, action.uiLoreCards);
-                // CreateNeuroAction(action.uiLoreStore, action.uiLoreCards);
+                activeWindow = PurchaseLoreItems.RegisterAction(action.uiLoreStore, action.uiLoreCards);
+                UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
                 return;
             }
             uiLoreStore.OnClose();

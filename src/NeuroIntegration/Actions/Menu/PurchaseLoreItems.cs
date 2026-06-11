@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         public static ActionWindow RegisterAction(uiLoreStore instance, List<uiLoreCard> cards)
         {
             string json = JsonConvert.SerializeObject(LoreStoreUnlocks.GetCategoryData(), Formatting.None);
-            json.Replace(@"\n", ", ");
+            json = StringReplace.ReplaceNewLine(json);
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             PurchaseLoreItems action = new(instance, cards);
             action.itemPurchased += LoreStoreUnlocks.OnItemPurchased;
@@ -74,7 +74,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             List<string> data;
             Dictionary<string, string> schemaData = GetAllItemsDetails(uiLoreCards);
             string json = JsonConvert.SerializeObject(schemaData);
-            json.Replace(@"\n", ", ");
+            json = StringReplace.ReplaceNewLine(json);
             Context.Send($"Items and their descriptions you can afford: {json}");
             data = [.. schemaData.Select(l => l.Key)];
             JsonSchema schema = new()
@@ -164,7 +164,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     continue;
                 }
                 key = FixName(key);
-                string value = entry.Values?.First().Replace(@"\n", ", ");
+                string value = entry.Values?.First();
+                value = StringReplace.ReplaceNewLine(value);
                 loreData.Add(key, value);
                 Dictionary<string, object> _value = new()
                 {
@@ -412,62 +413,4 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     }
 }
 
-#region WEAPON DETAILS
-// string text = string.Empty;
-// string text2 = string.Empty;
-// List<FTK_proficiencyTable.ID> list = new List<FTK_proficiencyTable.ID>(uiWeaponDetail.GetWeaponProfIDs(ftk_weaponStats));
-// if (!ftk_weaponStats.m_NoRegularAttack)
-// {
-//     list.Insert(0, FTK_proficiencyTable.ID.None);
-// }
-// bool flag = false;
-// bool flag2 = false;
-// for (int i = 0; i < list.Count; i++)
-// {
-//     FTK_proficiencyTable ftk_proficiencyTable = null;
-//     if (list[i] == FTK_proficiencyTable.ID.None)
-//     {
-//         text += ftk_weaponStats.GetAttackDisplay();
-//     }
-//     else
-//     {
-//         text += FTK_proficiencyTableDB.GetDB().GetEntry(list[i]).GetLocalizedDisplayTitle();
-//         ftk_proficiencyTable = FTK_proficiencyTableDB.Get(list[i]);
-//     }
-//     if (i < list.Count - 1)
-//     {
-//         text += ", ";
-//     }
-//     if (ftk_proficiencyTable != null && !ftk_proficiencyTable.m_TargetFriendly)
-//     {
-//         CharacterDummy.TargetType target = ftk_proficiencyTable.m_Target;
-//         if (target != CharacterDummy.TargetType.Aoe)
-//         {
-//             if (target != CharacterDummy.TargetType.Splash)
-//             {
-//                 if (target == CharacterDummy.TargetType.None)
-//                 {
-//                     this.m_SingleTargetIcon.SetActive(true);
-//                 }
-//             }
-//             else
-//             {
-//                 this.m_SplashIcon.SetActive(true);
-//             }
-//         }
-//         else
-//         {
-//             this.m_AoeIcon.SetActive(true);
-//         }
-//         if (ftk_proficiencyTable.m_DmgMultiplier > 1f)
-//         {
-//             flag = true;
-//         }
-//         if (ftk_proficiencyTable.m_IgnoresArmor)
-//         {
-//             flag2 = true;
-//         }
-//     }
-// }
-#endregion
 

@@ -21,18 +21,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         static void OnGameConfigShown(GameConfig __instance)
         {
             instance = __instance;
-            ActionWindow window = ActionWindow.Create(__instance.gameObject);
-            window.SetContext(AdventuresContext(__instance));
-            window.AddAction(new ChooseAdventure(__instance));
-            // CancelAction cancelAction = new(window, "return to the main menu");
-            // cancelAction.OnCancelled += OnActionCancelled;
-            // window.AddAction(cancelAction);
+            CreateActionWindow(__instance);
+        }
+
+        static void CreateActionWindow(GameConfig instance)
+        {
+            ActionWindow window = ActionWindow.Create(instance.gameObject);
+            string context = AdventuresContext(instance);
+            window.SetContext(context);
+            window.AddAction(new ChooseAdventure(instance));
             window.SetForce(5, "select an adventure to play", "you are in the adventure select screen", true);
-            UnregisterDisabledObject.QuickCreate(__instance.gameObject, window);
+            UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
             window.Register();
         }
 
-        private static void OnActionCancelled(ActionWindow window)
+        static void OnActionCancelled(ActionWindow window)
         {
             Object.Destroy(window);
             instance.OnBack();
@@ -47,6 +50,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         {
             string details = "Adventure details: ";
             bool forceFirst = (bool)Plugin.config["force_first_adventure"];
+            string description;
             foreach (GameDefButton btn in instance.m_GameDefButtons)
             {
                 GameDefinitionBase prev = btn.GetPreview();
@@ -54,7 +58,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 {
                     if (prev.GetDisplayName() == "For the King")
                     {
-                        details += $"{{name: {prev.GetDisplayName()}, description: {prev.GetDisplayInfoText()}}}";
+                        description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
+                        details += $"{{name: {prev.GetDisplayName()}, description: {description}}}; ";
                         break;
                     }
                     continue;
@@ -62,7 +67,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 if (!FTK_dlcDB.HasDLCBySaveFileName(prev.m_SaveFileName)) continue;
                 // gold rush is multiplayer only
                 if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
-                details += $"{{name: {prev.GetDisplayName()}, description: {prev.GetDisplayInfoText()}}}; ";
+                description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
+                details += $"{{name: {prev.GetDisplayName()}, description: {description}}}; ";
             }
             return details;
         }
