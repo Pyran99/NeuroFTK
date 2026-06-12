@@ -73,9 +73,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             List<string> data;
             Dictionary<string, string> schemaData = GetAllItemsDetails(uiLoreCards);
-            string json = JsonConvert.SerializeObject(schemaData);
-            json = StringReplace.ReplaceNewLine(json);
-            Context.Send($"Items and their descriptions you can afford: {json}");
+            string context = "";
+            foreach (string key in schemaData.Keys)
+            {
+                context += $"{{name: {key}, description: {StringReplace.ReplaceNewLine(schemaData[key])}}}. ";
+            }
+            // string json = JsonConvert.SerializeObject(schemaData);
+            // json = StringReplace.ReplaceNewLine(json);
+            // Context.Send($"Items and their descriptions you can afford: {json}");
+            Context.Send($"Items and their descriptions you can afford: {context}");
             data = [.. schemaData.Select(l => l.Key)];
             JsonSchema schema = new()
             {
@@ -165,7 +171,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 }
                 key = FixName(key);
                 string value = entry.Values?.First();
-                value = StringReplace.ReplaceNewLine(value);
                 loreData.Add(key, value);
                 Dictionary<string, object> _value = new()
                 {

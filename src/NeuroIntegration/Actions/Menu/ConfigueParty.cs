@@ -33,7 +33,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
     public class ChoosePartyNames : NeuroAction<List<string>>
     {
         public override string Name => "choose_party_names";
-        protected override string Description => "pick 3 names for you party members then begin the game";
+        protected override string Description => "pick 3 names for your party members then begin the game";
         protected override JsonSchema Schema => GetSchema();
 
         readonly int min = 3;

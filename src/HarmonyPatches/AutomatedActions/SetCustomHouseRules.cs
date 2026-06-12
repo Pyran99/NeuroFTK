@@ -81,7 +81,7 @@ public class SetCustomHouseRules
         return result;
     }
 
-    static void LogValues(CustomRuleValues rules) => Plugin.Logger.LogMessage($">>chaos: {rules.chaosFrequency}>>life: {rules.lifePool}>>inflation: {rules.economyInflation}>>gold: {rules.goldTarget}");
+    static void LogValues(CustomRuleValues rules) => Plugin.Logger.LogMessage($">chaos: {rules.chaosFrequency} >life: {rules.lifePool} >inflation: {rules.economyInflation} >gold: {rules.goldTarget}");
 
     public static void LoadCustomRules()
     {

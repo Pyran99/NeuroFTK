@@ -94,7 +94,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 yield return null;
             }
             GameDefinitionBase level = instance.GetCurrentGameDefPreview();
-            Context.Send($"Selected the adventure '{level.GetDisplayName()}', '{level.GetDisplayInfoText()}'; please wait while it is being setup");
+            Context.Send($"Selected the adventure '{level.GetDisplayName()}', '{level.GetDisplayInfoText()}'");
             yield return new WaitForSeconds(0.5f);
             SetDifficulty(instance);
             SetGameMode(instance);

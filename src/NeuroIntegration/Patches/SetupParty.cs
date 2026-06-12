@@ -18,6 +18,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         static Dictionary<string, Dictionary<string, object>> characters = [];
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
+        static readonly float waitTime = 0.1f;
 
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.Show))]
@@ -71,14 +72,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 joined = StringReplace.ReplaceNewLine(joined);
                 data += joined;
             }
-            Context.Send($"details about the classes: {data}");
+            Context.Send($"details about the current shown classes: {data}");
             // { "Player 1: class: Hunter },
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
             data = "your party setup is: ";
             foreach (string name in names)
             {
-                data += $"{{ {name}: class: {classes[names.IndexOf(name)]}}}, ";
+                data += $"{{ {name}: class; {classes[names.IndexOf(name)]}}}. ";
             }
             Context.Send(data);
 
@@ -191,7 +192,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             yield return new WaitForSeconds(0.5f);
             SendPartyDetails();
             Context.Send("tell chat about your party members while the game begins");
-            yield return new WaitForSeconds(8f);
+            yield return new WaitForSeconds(waitTime);
             ActionStartGame();
         }
 

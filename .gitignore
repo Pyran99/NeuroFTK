@@ -435,3 +435,5 @@ lib/Game
 OutputPath
 output_path
 _tests
+tony-config.json
+tony-config.schema.json

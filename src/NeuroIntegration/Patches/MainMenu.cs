@@ -31,7 +31,7 @@ public class MainMenu
         FindButtons(instance);
         bool purchase = HasPurchasableLore();
         activeWindow = MainMenuAction.RegisterAction(instance, resumeBtn.isActiveAndEnabled, purchase);
-        // UnregisterDisabledObject.QuickCreate(instance.gameObject, activeWindow);
+        UnregisterDisabledObject.QuickCreate(instance.gameObject, activeWindow);
     }
 
     static void FindButtons(MainScreen instance)

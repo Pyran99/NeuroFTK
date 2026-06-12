@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using HarmonyLib;
+using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -9,25 +11,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         [HarmonyPatch(typeof(uiStoryIntroCycle), "ShowNextStorySequence")]
         [HarmonyPostfix]
-        static void AfterStorySequence(uiStoryIntroCycle __instance, int _index)
+        static void AfterStorySequence(uiStoryIntroCycle __instance, int _index, ref List<string> ___m_StoryEntries)
         {
             Plugin.Logger.LogMessage($"story sequence {_index}");
-            // send neuro context of: __instance.m_TextBody.text or __instance.m_StoryEntries[_index]?
-            // __instance.GoIntoGame(); // maybe immediate skip -- 
-            Delay(__instance);
+            Context.Send($"story sequence {_index}: {___m_StoryEntries[_index]}");
+            __instance.StartCoroutine(Delay(__instance));
 
             static IEnumerator Delay(uiStoryIntroCycle __instance)
             {
-                yield return new WaitForSeconds(2.0f);
+                yield return new WaitForSeconds(5.0f);
                 __instance.FadeNextPage();
             }
         }
-
-        // missing assembly
-        // static void ImmediateSkip(uiStoryIntroCycle __instance)
-        // {
-        //     new FTKUI.ScreenFadeInfo(0f, 1f, 0.5f, new ContinueFSM(new Action(__instance.GoIntoGame), ContinueFSM.WaitClients.Self));
-        // }
-        
     }
 }
