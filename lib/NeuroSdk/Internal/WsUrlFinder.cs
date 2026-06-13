@@ -44,13 +44,11 @@ namespace NeuroSdk.Internal
 
         private static IEnumerator TryGetWsUrlFromServer(string? url, Action<string> callback)
         {
-            Debug.Log("try url from server");
             if (url is not null && url is not "") yield break;
 
             UnityWebRequest request;
             try
             {
-                Debug.Log("trying url from unity web request");
                 Uri uri = new(Application.absoluteURL);
                 string requestUrl = $"{uri.Scheme}://{uri.Host}:{uri.Port}/$env/NEURO_SDK_WS_URL";
                 request = UnityWebRequest.Get(requestUrl);
@@ -73,7 +71,6 @@ namespace NeuroSdk.Internal
 
         private static void TryGetWsUrlFromEnvironment(ref string? url)
         {
-            Debug.Log("try url from environment");
             if (url is not null && url is not "") return;
 
             url = Environment.GetEnvironmentVariable("NEURO_SDK_WS_URL", EnvironmentVariableTarget.Process);

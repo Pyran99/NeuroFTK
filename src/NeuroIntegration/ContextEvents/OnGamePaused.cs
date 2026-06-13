@@ -14,7 +14,7 @@ public class OnGamePaused
         }
         if (___m_Paused)
         {
-            Context.Send("Game is paused");
+            Context.Send("Game is paused", true);
         }
         else
         {

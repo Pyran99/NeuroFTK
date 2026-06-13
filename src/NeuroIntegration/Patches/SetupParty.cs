@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         static Dictionary<string, Dictionary<string, object>> characters = [];
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
-        static readonly float waitTime = 0.1f;
+        static readonly float waitTime = 1.0f;
 
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.Show))]

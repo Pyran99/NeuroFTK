@@ -60,12 +60,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            if (!availableLoreData.ContainsKey((string)actionData.Data))
+            parsedData = "";
+            if (!actionData.Data.Contains("item")) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(["item"]));
+            string result = actionData.Data.Value<string>("item");
+            if (!availableLoreData.ContainsKey(result))
             {
-                parsedData = "";
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));
             }
-            parsedData = (string)actionData.Data;
+            parsedData = result;
             return ExecutionResult.Success();
         }
 
@@ -78,16 +80,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 context += $"{{name: {key}, description: {StringReplace.ReplaceNewLine(schemaData[key])}}}. ";
             }
-            // string json = JsonConvert.SerializeObject(schemaData);
-            // json = StringReplace.ReplaceNewLine(json);
-            // Context.Send($"Items and their descriptions you can afford: {json}");
             Context.Send($"Items and their descriptions you can afford: {context}");
             data = [.. schemaData.Select(l => l.Key)];
             JsonSchema schema = new()
             {
-                Type = JsonSchemaType.String,
+                Type = JsonSchemaType.Object,
                 Required = ["item"],
-                Properties = new Dictionary<string, JsonSchema>()
+                Properties = new()
                 {
                     ["item"] = QJS.Enum(data),
                 }
@@ -125,7 +124,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             foreach (KeyValuePair<string, Dictionary<string, object>> item in availableLoreData)
             {
                 if (item.Key.ToLower() != itemName.ToLower()) continue;
-                successMsg = $"you purchased: {item.Key}; {item.Value["description"]}";
+                successMsg = $"you purchased: '{item.Key}' '{item.Value["description"]}'";
                 break;
             }
             Context.Send(successMsg);
@@ -389,7 +388,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
             }
             // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
-            string final = $"weapon damage:{maxDmg} {dmgType}; attacks and proficiencies: {text1}; modifiers: {text2}";
+            string final = $"'weapon damage:{maxDmg} {dmgType}' 'attacks and proficiencies: {text1}' 'modifiers: {text2}'";
             return final;
         }
 

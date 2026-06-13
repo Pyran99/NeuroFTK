@@ -42,20 +42,28 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             IEnumerable<string> choices = GetAvailableChoices();
-            bool present = choices.Contains((string)actionData.Data);
+            string result = (string)actionData.Data["action"];
+            bool present = choices.Contains(result);
             if (!present)
             {
                 parsedData = null;
-                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("enum"));
+                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
             }
-            parsedData = (string)actionData.Data;
+            parsedData = result;
             return ExecutionResult.Success();
         }
 
         JsonSchema GetSchema()
         {
-            JsonSchema schema = QJS.Enum(GetAvailableChoices());
-            schema.Required = ["enum"];
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["action"],
+                Properties = new()
+                {
+                    ["action"] = QJS.Enum(GetAvailableChoices())
+                }
+            };
             return schema;
         }
 
@@ -84,8 +92,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         {
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             window.AddAction(new MainMenuAction(instance, _resumeGame, _canSpendLore));
-            window.SetContext("you are in the main menu");
-            window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "you are in the games main menu", true);
+            window.SetContext("you are at the main menu");
+            window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "you are at the games main menu", true);
             window.Register();
             return window;
         }

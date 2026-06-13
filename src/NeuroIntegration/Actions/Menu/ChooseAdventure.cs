@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
@@ -25,13 +26,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            if (!validAdventures.Contains((string)actionData.Data))
+            parsedData = "";
+            if (!actionData.Data.Contains("adventure")) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(["adventure"]));
+            string result = actionData.Data.Value<string>("adventure");
+            if (!validAdventures.Contains(result))
             {
-                Plugin.Logger.LogWarning($"could not find game def {(string)actionData.Data}");
-                parsedData = "";
-                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("enum"));
+                Plugin.Logger.LogWarning($"could not find game def {result}");
+                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("adventure"));
             }
-            parsedData = (string)actionData.Data;
+            parsedData = result;
             return ExecutionResult.Success();
         }
 
@@ -63,8 +66,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         JsonSchema GetSchema()
         {
-            JsonSchema schema = QJS.Enum(GetAdventureNames());
-            schema.Required = ["enum"];
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["adventure"],
+                Properties = new()
+                {
+                    ["adventure"] = QJS.Enum(GetAdventureNames()),
+                }
+            };
             return schema;
         }
     }

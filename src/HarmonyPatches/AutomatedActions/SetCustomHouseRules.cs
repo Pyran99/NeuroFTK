@@ -37,20 +37,20 @@ public class SetCustomHouseRules
             CustomRuleValues selectedRules = customRules[configInstance.GetCurrentGameDefPreview().m_SaveFileName];
             LogValues(selectedRules);
 
-            yield return new WaitForSeconds(0.25f);
+            yield return new WaitForSeconds(0.3f);
             instance.UpdateChaos(GetScaledValue(selectedRules.chaosFrequency, FTK_gameParams.ID.chaos));
 
-            yield return new WaitForSeconds(0.25f);
+            yield return new WaitForSeconds(0.3f);
             instance.UpdateLife(GetScaledValue(selectedRules.lifePool, FTK_gameParams.ID.lifepool));
 
-            yield return new WaitForSeconds(0.25f);
+            yield return new WaitForSeconds(0.3f);
             instance.UpdateInflation(GetScaledValue(selectedRules.economyInflation, FTK_gameParams.ID.inflation));
 
             foreach (KeyValuePair<FTK_gameParams.ID, HouseRuleSlider> _slider in m_Sliders)
             {
                 if (_slider.Key == FTK_gameParams.ID.deliver_gold)
                 {
-                    yield return new WaitForSeconds(0.25f);
+                    yield return new WaitForSeconds(0.3f);
                     instance.UpdateGold(GetScaledValue(selectedRules.goldTarget, FTK_gameParams.ID.deliver_gold));
                     break;
                 }
@@ -69,9 +69,11 @@ public class SetCustomHouseRules
         }
     }
 
+    /// <summary>
+    /// chaos-1, life-1, inflation-10, gold-0.04
+    /// </summary>
     static float GetScaledValue(float value, FTK_gameParams.ID id)
     {
-        // chaos-1, life-1, inflation-10, gold-0.04
         FTK_gameParams gameParams = FTK_gameParamsDB.Get(id);
         float result = value * gameParams.m_SliderScale;
         if (id == FTK_gameParams.ID.inflation)

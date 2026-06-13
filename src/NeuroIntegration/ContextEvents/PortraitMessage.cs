@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using GridEditor;
 using HarmonyLib;
+using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
 
@@ -11,7 +12,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
     [HarmonyPatch]
     public class PortraitMessage
     {
-        // npc talking => send context to neuro
+        static bool doOnce = false;
+        static ActionWindow activeWindow;
+
+        // npc talking
         [HarmonyPatch(typeof(uiPortraitMessageHud), nameof(uiPortraitMessageHud.InitializeMessage))]
         [HarmonyPatch([typeof(FTK_talkingHead), typeof(string), typeof(Action), typeof(float), typeof(bool), typeof(bool), typeof(GameObject), typeof(string)])]
         [HarmonyPostfix]
@@ -37,13 +41,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
 
         static void ContinueAfterMessageSent(uiPortraitMessageHud instance)
         {
+            if (activeWindow != null) return;
             doOnce = false;
-            instance.StartCoroutine(Continue(instance));
+            activeWindow = ContinueMessageHud.RegisterAction(instance.gameObject);
+            // instance.StartCoroutine(Continue(instance));
         }
 
-        static bool doOnce = false;
-        
-        //TODO this could be replaced with a forced action
         static IEnumerator Continue(uiPortraitMessageHud instance)
         {
             if (doOnce) yield break;
@@ -55,13 +58,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             doOnce = false;
         }
 
-        // start skip coroutine or send action => this assumes always called--not guaranteed
+        // this may not always be called
         [HarmonyPatch(typeof(uiPortraitMessageHud), nameof(uiPortraitMessageHud.ZoomInFinished))]
         [HarmonyPostfix]
         static void AfterZoom(uiPortraitMessageHud __instance)
         {
             Plugin.Logger.LogMessage("portrait after zoom in");
-            __instance.StartCoroutine(Continue(__instance));
+            ContinueAfterMessageSent(__instance);
         }
 
         [HarmonyPatch(typeof(uiPortraitMessageHud), nameof(uiPortraitMessageHud.UseOkayButton))]

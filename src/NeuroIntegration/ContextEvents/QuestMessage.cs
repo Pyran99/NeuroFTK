@@ -12,7 +12,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         {
             //quest confirm hud: Go to <color=#FBB060>Woodsmoke</color> in <color=#FBB060>The Guardian Forest</color>
             string msg = StringReplace.RemoveStyling(__instance.m_Message.text);
-            Context.Send("quest accepted: " + msg);
+            Context.Send("quest objective: " + msg);
             __instance.StartCoroutine(Close(__instance));
         }
 

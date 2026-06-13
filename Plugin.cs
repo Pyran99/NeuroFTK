@@ -31,10 +31,6 @@ public class Plugin : BaseUnityPlugin
         GenerateConfigFile();
         SetCustomHouseRules.LoadCustomRules();
         SetSettingsOptions.InitializeCustomSettings();
-    }
-
-    private void Start()
-    {
         NeuroSdkSetup.Initialize("For the King");
     }
 

@@ -89,7 +89,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             if (invalid)
             {
                 Plugin.Logger.LogError($"could not find game def {saveFileName}");
-                Context.Send($"there was an issue selecting the adventure {saveFileName}");
+                Context.Send($"there was an issue selecting the adventure {saveFileName}, try something else");
                 OnGameConfigShown(instance);
                 yield return null;
             }
