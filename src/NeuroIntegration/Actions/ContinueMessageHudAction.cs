@@ -5,12 +5,12 @@ using UnityEngine;
 
 namespace Pyran.NeuroFTK
 {
-    public class ContinueMessageHud : NeuroAction
+    public class ContinueMessageHudAction : NeuroAction
     {
         public static ActionWindow RegisterAction(GameObject owner)
         {
             ActionWindow window = ActionWindow.Create(owner);
-            window.AddAction(new ContinueMessageHud());
+            window.AddAction(new ContinueMessageHudAction());
             window.SetForce(1, "continue to the next message", "a message has appeared on screen", true);
             window.Register();
             return window;

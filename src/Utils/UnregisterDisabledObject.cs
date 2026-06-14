@@ -1,7 +1,7 @@
 using NeuroSdk.Actions;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.Utils
 {
     /// <summary>
     /// This is mainly for making game actions yourself without using the ActionWindow where your action would only disable the object holding the ActionWindow. (press button that only hides window without an unregister call instead of sending an action)

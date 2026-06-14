@@ -43,7 +43,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         {
             if (activeWindow != null) return;
             doOnce = false;
-            activeWindow = ContinueMessageHud.RegisterAction(instance.gameObject);
+            activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject);
             // instance.StartCoroutine(Continue(instance));
         }
 

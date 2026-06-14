@@ -29,7 +29,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             string context = AdventuresContext(instance);
             window.SetContext(context);
-            window.AddAction(new ChooseAdventure(instance));
+            window.AddAction(new ChooseAdventureAction(instance));
             window.SetForce(5, "select an adventure to play", "you are in the adventure select screen", true);
             UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
             window.Register();

@@ -9,7 +9,7 @@ using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
-    public class ChooseAdventure(GameConfig _instance) : NeuroAction<string>
+    public class ChooseAdventureAction(GameConfig _instance) : NeuroAction<string>
     {
         readonly GameConfig instance = _instance;
         List<string> validAdventures;

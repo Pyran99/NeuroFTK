@@ -7,13 +7,13 @@ using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
-    public class ConfigueParty : NeuroAction
+    public class ConfiguePartyAction : NeuroAction
     {
         public static void RegisterConfigurePartyActions(GameObject owner)
         {
             ActionWindow window = ActionWindow.Create(owner);
-            window.AddAction(new ConfigueParty());
-            window.AddAction(new ChoosePartyNames());
+            window.AddAction(new ConfiguePartyAction());
+            window.AddAction(new ChoosePartyNamesAction());
             window.SetForce(5, "choose to randomize the classes of your party or give 3 names for them and begin the game", "you are at the character party creation screen");
             window.Register();
         }
@@ -30,7 +30,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         }
     }
 
-    public class ChoosePartyNames : NeuroAction<List<string>>
+    public class ChoosePartyNamesAction : NeuroAction<List<string>>
     {
         public override string Name => "choose_party_names";
         protected override string Description => "pick 3 names for your party members then begin the game";

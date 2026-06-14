@@ -45,7 +45,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         {
             Context.Send("your party has been randomized", true);
             SendPartyDetails();
-            ConfigueParty.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
+            ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
         }
 
         [HarmonyPatch(typeof(FTKHub), nameof(FTKHub.EnterFahrul))]
@@ -58,7 +58,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         static void OnPartyVisible()
         {
             SendPartyDetails();
-            ConfigueParty.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
+            ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
         }
 
         static void SendPartyDetails()

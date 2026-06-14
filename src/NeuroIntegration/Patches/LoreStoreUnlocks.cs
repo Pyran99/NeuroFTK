@@ -19,9 +19,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         [HarmonyPostfix]
         static void OnShow(uiLoreStore __instance, List<uiLoreCard> ___m_AllCards)
         {
-            PurchaseLoreItems.isPurchasing = false;
+            PurchaseLoreItemAction.isPurchasing = false;
             uiLoreStore = __instance;
-            activeWindow = PurchaseLoreItems.RegisterAction(uiLoreStore, ___m_AllCards);
+            activeWindow = PurchaseLoreItemAction.RegisterAction(uiLoreStore, ___m_AllCards);
             UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
         }
 
@@ -55,15 +55,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return categoryData;
         }
 
-        public static void OnItemPurchased(PurchaseLoreItems action)
+        public static void OnItemPurchased(PurchaseLoreItemAction action)
         {
-            PurchaseLoreItems.isPurchasing = false;
+            PurchaseLoreItemAction.isPurchasing = false;
             // action.itemPurchased -= OnItemPurchased;
             // UnityEngine.Object.Destroy(activeWindow);
             if (MainMenu.GetPurchasableLoreCount() > 0)
             {
                 MainMenu.HasPurchasableLore();
-                activeWindow = PurchaseLoreItems.RegisterAction(action.uiLoreStore, action.uiLoreCards);
+                activeWindow = PurchaseLoreItemAction.RegisterAction(action.uiLoreStore, action.uiLoreCards);
                 UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
                 return;
             }

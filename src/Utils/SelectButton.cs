@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.Utils
 {
     /// <summary>
     /// Utility class to select a button, then wait before clicking

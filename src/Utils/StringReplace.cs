@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.Utils
 {
     public class StringReplace
     {
