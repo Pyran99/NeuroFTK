@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
@@ -27,8 +26,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            if (!actionData.Data.Contains("adventure")) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(["adventure"]));
             string result = actionData.Data.Value<string>("adventure");
+            if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("adventure"));
             if (!validAdventures.Contains(result))
             {
                 Plugin.Logger.LogWarning($"could not find game def {result}");
@@ -66,6 +65,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         JsonSchema GetSchema()
         {
+            // JsonSchema schema = QJS.Enum(GetAdventureNames());
+            // schema.Type = JsonSchemaType.Object;
+            // schema.Required = ["enum"];
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,

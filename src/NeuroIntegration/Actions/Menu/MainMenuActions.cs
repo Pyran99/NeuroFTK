@@ -5,6 +5,7 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
 using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
@@ -42,7 +43,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             IEnumerable<string> choices = GetAvailableChoices();
-            string result = (string)actionData.Data["action"];
+            string result = actionData.Data.Value<string>("action");
             bool present = choices.Contains(result);
             if (!present)
             {

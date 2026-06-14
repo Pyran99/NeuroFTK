@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK
 
         public override string Name => "continue_message";
         protected override string Description => "continue to the next message";
-        protected override JsonSchema Schema => QJS.ConstNull;
+        protected override JsonSchema Schema => null;
 
         protected override void Execute()
         {

@@ -1,6 +1,7 @@
 using System.Collections;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents

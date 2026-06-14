@@ -15,7 +15,7 @@ namespace Pyran.NeuroFTK
 
         public override string Name => "cancel_action";
         protected override string Description => _description;
-        protected override JsonSchema Schema => QJS.ConstNull;
+        protected override JsonSchema Schema => null;
 
         protected override void Execute()
         {

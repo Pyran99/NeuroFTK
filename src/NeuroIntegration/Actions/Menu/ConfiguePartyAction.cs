@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
@@ -20,7 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         public override string Name => "randomize_party";
         protected override string Description => "randomize the classes of your party. you can choose names afterwards";
-        protected override JsonSchema Schema => QJS.ConstNull;
+        protected override JsonSchema Schema => null;
 
         protected override void Execute() => SetupParty.NeuroRandomizeParty();
 
@@ -47,11 +49,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         protected override ExecutionResult Validate(ActionJData actionData, out List<string> parsedData)
         {
-            Plugin.Logger.LogMessage(actionData.Data);
-            List<string> result = actionData.Data.Value<List<string>>("names");
+            parsedData = [];
+            JToken token = actionData.Data.SelectToken("names");
+            Plugin.Logger.LogMessage(token);
+            if (token == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("names"));
+            List<string> test = [];
+            foreach (JToken name in token)
+            {
+                if (name.Type != JTokenType.String) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("names"));
+                // if (name.Value<string>() is null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("names"));
+                test.Add(name.Value<string>());
+
+            }
+            List<string> result = token.ToObject<List<string>>();
             if (!result.Count().Equals(3))
             {
-                parsedData = null;
                 return ExecutionResult.Failure("choose_party_names action requires 3 names, you sent " + result.Count());
             }
             List<string> build = [];
@@ -59,7 +71,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             {
                 if (name.Length < min || name.Length > max)
                 {
-                    parsedData = null;
                     return ExecutionResult.Failure($"name {name} is not between {min} and {max} characters long");
                 }
                 build.Add(name);

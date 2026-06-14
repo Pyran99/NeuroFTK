@@ -5,6 +5,7 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 {
