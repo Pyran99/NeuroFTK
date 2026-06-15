@@ -9,6 +9,7 @@ namespace Pyran.NeuroFTK
     public class ToggleOverworldActions
     {
         static List<INeuroAction> registeredActions = [];
+        public static uiGameTrackerHUD.GameTrackerMode mode;
 
         static void EnteredOverworld()
         {
@@ -63,6 +64,7 @@ namespace Pyran.NeuroFTK
         [HarmonyPostfix]
         static void Test6(uiGameTrackerHUD.GameTrackerMode _mode)
         {
+            mode = _mode;
             string name = Enum.GetName(typeof(uiGameTrackerHUD.GameTrackerMode), _mode);
             var test = Enum.Parse(typeof(uiGameTrackerHUD.GameTrackerMode), name);
             Plugin.Logger.LogMessage($"game track mode changed to {name} - {_mode} - {test}"); // game track mode changed to Overworld - Overworld - Overworld

@@ -5,6 +5,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Newtonsoft.Json.Linq;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
@@ -17,6 +18,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             window.AddAction(new ConfiguePartyAction());
             window.AddAction(new ChoosePartyNamesAction());
             window.SetForce(5, "choose to randomize the classes of your party or give 3 names for them and begin the game", "you are at the character party creation screen");
+            UnregisterDisabledObject.QuickCreate(owner, window);
             window.Register();
         }
 
