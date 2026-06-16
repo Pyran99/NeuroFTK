@@ -9,6 +9,7 @@ using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Newtonsoft.Json;
 using NeuroSdk;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK;
 
@@ -21,6 +22,11 @@ public class Plugin : BaseUnityPlugin
     readonly string configPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "NeuroFTKConfig.json");
     public static Dictionary<string, object> config = [];
     public static Plugin Instance { get; private set; }
+    /// <summary>
+    /// toggle message spam from update related calls
+    /// </summary>
+    public static bool doSpam = false;
+
 
     private void Awake()
     {
@@ -32,6 +38,14 @@ public class Plugin : BaseUnityPlugin
         SetCustomHouseRules.LoadCustomRules();
         SetSettingsOptions.InitializeCustomSettings();
         NeuroSdkSetup.Initialize("For the King");
+    }
+
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Equals))
+        {
+            if (!GlobalConfig.debug_mode) return;
+            doSpam = !doSpam;
+        }
     }
 
     void InitializeHarmony()

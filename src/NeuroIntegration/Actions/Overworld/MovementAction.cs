@@ -1,0 +1,93 @@
+using System.Collections.Generic;
+using System.Linq;
+using NeuroSdk;
+using NeuroSdk.Actions;
+using NeuroSdk.Json;
+using NeuroSdk.Websocket;
+using UnityEngine;
+
+namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+{
+    public class MovementAction() : NeuroAction<HexLand>
+    {
+        public static ActionWindow RegisterAction(GameObject owner, List<HexLand> _tiles)
+        {
+            hexPositions.Clear();
+            ActionWindow window = ActionWindow.Create(owner);
+            window.AddAction(new MovementAction());
+            window.SetForce(5, "choose a tile index to move to", "awaiting movement action", true);
+            window.SetContext(GetContext(_tiles));
+            window.Register();
+            return window;
+        }
+
+        // readonly List<HexLand> tiles = [.. _tiles];
+        public static Dictionary<string, HexLand> hexPositions = [];
+
+        public override string Name => "overworld_movement";
+        protected override string Description => "choose a tile position to move the current character to";
+        protected override JsonSchema Schema => GetSchema();
+
+        JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["tile"],
+                Properties = new()
+                {
+                    ["tile"] = QJS.Enum(hexPositions.Select(x => x.Key).ToList()),
+                    // ["tile"] = QJS.Enum(tiles.Select(x => x.GetHexLandID().m_BigIndex + "-" + x.GetHexLandID().m_SmallIndex).ToList()),
+                }
+            };
+            return schema;
+        }
+
+        protected override void Execute(HexLand parsedData)
+        {
+            // FTKHex.Instance.GetHexLand(int, int);
+            if (parsedData == null)
+            {
+                Plugin.Logger.LogError($"did not find {parsedData} in tiles");
+                return;
+            }
+            Plugin.Logger.LogMessage($"executing movement action to {parsedData}");
+            OverworldMovement.tiles.Clear();
+            Movement.Instance.m_CursorHex = parsedData; // needs to be set
+            OverworldMovement.ReverseCheckClickPath(Movement.Instance, parsedData, false, false, false);
+        }
+
+
+        protected override ExecutionResult Validate(ActionJData actionData, out HexLand parsedData)
+        {
+            parsedData = null;
+            //"(x, y, z)"
+            Plugin.Logger.LogMessage(actionData.Data);
+            string data = actionData.Data.Value<string>("tile");
+            if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("tile"));
+            if (!hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("tile"));
+            parsedData = hexPositions[data];
+            return ExecutionResult.Success();
+        }
+
+        /// <summary>
+        /// display as ({name}: {position})
+        /// </summary>
+        static string GetContext(List<HexLand> tiles)
+        {
+            string context = "these are the tiles you can move to, displayed as ({name}: {position}): ";
+            string name;
+            // string id;
+            Vector3 pos;
+            foreach (HexLand item in tiles)
+            {
+                name = item.ToString().Replace(" (HexLand)", "");
+                // id = $"{item.GetHexLandID().m_BigIndex}-{item.GetHexLandID().m_SmallIndex}";
+                pos = item.GetPosition();
+                context += $"({{{name}}}: {{{pos}}}) ";
+                hexPositions.Add(pos.ToString(), item);
+            }
+            return context;
+        }
+    }
+}

@@ -58,6 +58,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         static void OnPartyVisible()
         {
+            if (uiStartGame.Instance.m_IsResuming)
+            {
+                ActionStartGame();
+                return;
+            }
             SendPartyDetails();
             ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
         }
@@ -73,7 +78,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 joined = StringReplace.ReplaceNewLine(joined);
                 data += joined;
             }
-            Context.Send($"details about the current shown classes: {data}");
+            Context.Send($"details about your current party classes: {data}");
             // { "Player 1: class: Hunter },
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
