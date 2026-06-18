@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using UnityEngine;
 
@@ -11,27 +13,33 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     [HarmonyPatch]
     public class OverworldMovement
     {
-        public static List<HexLand> tiles = [];
-        static int rollCount;
         static ActionWindow window;
-        static bool isFirst = true;
-        static bool isRunning = false;
         static CharacterOverworld current;
+        static int rollCount;
+        static bool isSearching = false;
+        static bool hasChoices = false;
+
+        public static List<HexLand> tiles = [];
+        public static bool isTracking = false;
 
         // enumerator to show the rolled values
         [HarmonyPatch(typeof(SlotControl), "DisplaySlots")]
         [HarmonyPostfix]
         static IEnumerator SlotResults(IEnumerator __result)
         {
-            tiles.Clear();
+            isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
-            isRunning = false;
+            if (hasChoices)
+            {
+                Plugin.Logger.LogMessage("displaySlots; already have choices");
+                yield break;
+            }
             switch (ToggleOverworldActions.mode)
             {
                 case uiGameTrackerHUD.GameTrackerMode.Overworld:
                     current = GameLogic.Instance.GetCurrentCOW();
                     rollCount = current.m_CharacterStats.m_ActionPoints;
-                    Plugin.Logger.LogMessage($"rolled {rollCount}");
+                    Plugin.Logger.LogMessage($"display slots finished; rolled {rollCount}");
                     GetValidMoveTiles(HexLand.SelectType.Land, current);
                     break;
                 case uiGameTrackerHUD.GameTrackerMode.Combat:
@@ -39,7 +47,60 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     Plugin.Logger.LogWarning("combat slot display");
                     break;
             }
-            isFirst = false;
+        }
+
+        // when movement choice starts
+        [HarmonyPatch(typeof(Movement), nameof(Movement.StartTracking))]
+        [HarmonyPostfix]
+        static void StartTracking()
+        {
+            isTracking = true;
+            Plugin.Logger.LogWarning("START tracking");
+            if (hasChoices)
+            {
+                Plugin.Logger.LogMessage("tracking; already have choices");
+                return;
+            }
+            current = GameLogic.Instance.GetCurrentCOW();
+            current.StartCoroutine(Wait());
+
+            static IEnumerator Wait()
+            {
+                yield return new WaitForSeconds(1.5f);
+                GetValidMoveTiles(HexLand.SelectType.Land, current);
+            }
+        }
+
+        // when movement begins
+        [HarmonyPatch(typeof(Movement), nameof(Movement.StopTracking))]
+        [HarmonyPostfix]
+        static void StopTracking()
+        {
+            isTracking = false;
+            Plugin.Logger.LogWarning("STOP tracking");
+            Object.Destroy(window);
+        }
+
+        [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")]
+        [HarmonyPostfix]
+        static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame)
+        {
+            GameDefinition gameDef = GameLogic.Instance.GetGameDef();
+            Context.Send($"game round: {GameFlow.Instance.m_RoundCount}, stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}, stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}, player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
+            while (__result.MoveNext()) yield return __result.Current;
+            Plugin.Logger.LogMessage("begin turn transition finished");
+            hasChoices = false;
+            isTracking = false;
+            isSearching = false;
+        }
+
+        [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.EndTurn))]
+        [HarmonyPostfix]
+        static void EndTurn()
+        {
+            hasChoices = false;
+            isTracking = false;
+            isSearching = false;
         }
 
         // when the character stops moving
@@ -47,31 +108,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         [HarmonyPostfix]
         static void PlayerStopped(CharacterOverworld __instance)
         {
-            // TODO need to check if stopped at something (town)
-            // uiLocationMenuDisplay | uiLocationMenuEntry | ServiceButton
-            if (uiStartGame.Instance.m_IsResuming && isFirst)
-            {
-                Plugin.Logger.LogWarning("resume game isFirst");
-                isFirst = false;
-                current = __instance;
-                rollCount = __instance.m_CharacterStats.m_ActionPoints;
-                if (rollCount == 0) return;
-                GetValidMoveTiles(HexLand.SelectType.Land, current);
-                return;
-            }
-            if (current != __instance)
-            {
-                current = __instance;
-                Plugin.Logger.LogMessage("new character: stopped");
-                return;
-            }
-            if (isFirst) return;
-            rollCount = __instance.m_CharacterStats.m_ActionPoints;
-            Plugin.Logger.LogMessage($"player stopped: rolls: {rollCount}");
-            if (rollCount > 0)
-            {
-                GetValidMoveTiles(HexLand.SelectType.Land, current);
-            }
+            hasChoices = false;
+            Plugin.Logger.LogMessage("stop at hex");
         }
 
         // when the characters actions points change. This occurs with each tile passed
@@ -79,21 +117,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         [HarmonyPostfix]
         static void UpdatePlayerAction(CharacterOverworld __instance)
         {
-            if (current != __instance)
-            {
-                current = __instance;
-                Plugin.Logger.LogMessage("new character: update"); //TODO this is called before stop when new character selected
-                return;
-            }
-            if (isFirst) return;
-            if (__instance.m_IsMoving) return;
-            if (rollCount == current.m_CharacterStats.m_ActionPoints)
-            {
-                Plugin.Logger.LogMessage("no change: update");
-                return;
-            }
-            Plugin.Logger.LogWarning("update action points " + rollCount);
-            GetValidMoveTiles(HexLand.SelectType.Land, current);
+            Plugin.Logger.LogMessage("update player action");
         }
 
         // spending focus for more actions
@@ -101,12 +125,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         [HarmonyPostfix]
         static void OnFocusAction()
         {
-            if (rollCount == current.m_CharacterStats.m_ActionPoints)
-            {
-                Plugin.Logger.LogMessage("no change: focus");
-                return;
-            }
-            Plugin.Logger.LogMessage($"movement focus added");
+            if (rollCount == current.m_CharacterStats.m_ActionPoints) return; // no change
+            Plugin.Logger.LogMessage("movement focus added");
             GetValidMoveTiles(HexLand.SelectType.Land, current);
         }
 
@@ -121,32 +141,35 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         /// </summary>
         static void GetValidMoveTiles(HexLand.SelectType type, MonoBehaviour routineOwner)
         {
-            // routineOwner.StartCoroutine(GetValidMoveTilesRoutine(type));
+            if (!isTracking)
+            {
+                Plugin.Logger.LogWarning("not tracking");
+                return;
+            }
             routineOwner.StartCoroutine(GetValidTiles(type));
         }
 
-        //TODO add type checking
         static IEnumerator GetValidTiles(HexLand.SelectType type = HexLand.SelectType.Same)
         {
-            if (isRunning) yield break;
-            isRunning = true;
+            if (isSearching) yield break;
+            isSearching = true;
+            hasChoices = false;
             tiles.Clear();
             Object.Destroy(window);
             CharacterOverworld currentCOW = GameLogic.Instance.GetCurrentCOW();
             int points = currentCOW.m_CharacterStats.m_ActionPoints;
             rollCount = points;
-            Plugin.Logger.LogWarning($"Begin loop: {Time.time}");
+            double startTime = Time.time;
             Task task = Task.Factory.StartNew(() => tiles = [.. LoopNeighbors(currentCOW, points)]);
             yield return task.IsCompleted;
-            Plugin.Logger.LogWarning($"end loop: {Time.time}");
+            Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
             current.StartCoroutine(Wait());
 
             static IEnumerator Wait()
             {
                 yield return new WaitForSeconds(0.5f);
-                if (tiles.Count == 0) Plugin.Logger.LogError("no tiles found");
                 window = MovementAction.RegisterAction(current.gameObject, tiles);
-                isRunning = false;
+                isSearching = false;
             }
         }
 
@@ -181,67 +204,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 loopCount++;
             }
             if (validNeighbors.Count == 0) Plugin.Logger.LogError("no valid neighbors found");
-            Plugin.Logger.LogMessage($"loop count: {validNeighbors.Count}");
+            hasChoices = true;
             return validNeighbors;
         }
-
-        // unused due to GetRange issues
-        static IEnumerator GetValidMoveTilesRoutine(HexLand.SelectType type)
-        {
-            if (isRunning)
-            {
-                yield break;
-            }
-            isRunning = true;
-            tiles.Clear();
-            Object.Destroy(window);
-            CharacterOverworld current = GameLogic.Instance.GetCurrentCOW();
-            int points = current.m_CharacterStats.m_ActionPoints;
-            rollCount = points;
-            // if (points > 6) points = 6;// to many tiles to check may cause issues
-            Plugin.Logger.LogWarning($"current {points}");
-            HexLand hex = current.GetHexLand();
-            List<HexLand> tempList = [];
-            Task task = Task.Factory.StartNew(()=> hex.GetRange(points, type, tempList)); // GetRange can give tiles out of range
-            Plugin.Logger.LogMessage("start:" + (double)Time.time);
-            // yield return new WaitUntil(new System.Func<bool>(() => task.IsCompleted));
-            yield return task.IsCompleted;
-            Plugin.Logger.LogMessage("end: " + (double)Time.time);
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                Plugin.Logger.LogError("move task failed");
-                yield break;
-            }
-            if (tempList.Contains(hex)) tempList.Remove(hex);
-            Plugin.Logger.LogMessage($"{tempList.Count} hexes found"); // incorrect numbers 21 found - 19 counted | works with smaller rolls (1=3)
-            tiles = [.. tempList];
-            current.StartCoroutine(Wait());
-
-            IEnumerator Wait()
-            {
-                yield return new WaitForSeconds(0.5f);
-                window = MovementAction.RegisterAction(current.gameObject, tiles);
-                isRunning = false;
-            }
-        }
-
-
-        [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.Disengage))]// not called with movement or combat
-        [HarmonyPostfix]
-        static void MoveSlotsFadeOut()
-        {
-            Plugin.Logger.LogWarning("move slots fading out, dont know when called");
-        }
-
-
-        // [HarmonyPatch(typeof(Movement), nameof(Movement.StopTracking))] // not needed?
-        // [HarmonyPostfix]
-        // static void StopTracking()
-        // {
-        //     Plugin.Logger.LogMessage("stop tracking"); // end action?
-        //     tiles.Clear();
-        // }
-
     }
 }
 

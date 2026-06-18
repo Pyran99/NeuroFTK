@@ -11,16 +11,6 @@ namespace Pyran.NeuroFTK
         static List<INeuroAction> registeredActions = [];
         public static uiGameTrackerHUD.GameTrackerMode mode;
 
-        static void EnteredOverworld()
-        {
-            
-        }
-
-        static void ExitedOverworld()
-        {
-            
-        }
-
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DungeonEncounter))]
         [HarmonyPrefix]
         static void Test1(CharacterOverworld __instance)
@@ -71,12 +61,7 @@ namespace Pyran.NeuroFTK
             if (_mode == uiGameTrackerHUD.GameTrackerMode.Overworld) EnableOverworldActions();
             else DisableOverworldActions();
         }
-
-        static void Test7()
-        {
-            
-        }
-
+        
         public static void EnableOverworldActions()
         {
             NeuroAction queryLocation = new QueryCurrentCOWLocation();

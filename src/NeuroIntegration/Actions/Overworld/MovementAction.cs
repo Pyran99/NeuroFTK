@@ -3,6 +3,7 @@ using System.Linq;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using UnityEngine;
 
@@ -15,13 +16,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             hexPositions.Clear();
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new MovementAction());
-            window.SetForce(5, "choose a tile index to move to", "awaiting movement action", true);
+            window.SetForce(5, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
             window.SetContext(GetContext(_tiles));
             window.Register();
             return window;
         }
 
-        // readonly List<HexLand> tiles = [.. _tiles];
         public static Dictionary<string, HexLand> hexPositions = [];
 
         public override string Name => "overworld_movement";
@@ -37,7 +37,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 Properties = new()
                 {
                     ["tile"] = QJS.Enum(hexPositions.Select(x => x.Key).ToList()),
-                    // ["tile"] = QJS.Enum(tiles.Select(x => x.GetHexLandID().m_BigIndex + "-" + x.GetHexLandID().m_SmallIndex).ToList()),
                 }
             };
             return schema;
@@ -54,6 +53,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             Plugin.Logger.LogMessage($"executing movement action to {parsedData}");
             OverworldMovement.tiles.Clear();
             Movement.Instance.m_CursorHex = parsedData; // needs to be set
+            if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
+                Context.Send($"an issue occurred with the {Name} action", true);
+                return;
+            }
             OverworldMovement.ReverseCheckClickPath(Movement.Instance, parsedData, false, false, false);
         }
 
@@ -71,23 +76,33 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         }
 
         /// <summary>
-        /// display as ({name}: {position})
+        /// display as ({name}(quest name): {position})
         /// </summary>
         static string GetContext(List<HexLand> tiles)
         {
-            string context = "these are the tiles you can move to, displayed as ({name}: {position}): ";
+            string context = "these are the tiles you can move to, displayed as ({name}{quest name}: {position}): ";
             string name;
-            // string id;
+            string questName = "";
             Vector3 pos;
             foreach (HexLand item in tiles)
             {
                 name = item.ToString().Replace(" (HexLand)", "");
-                // id = $"{item.GetHexLandID().m_BigIndex}-{item.GetHexLandID().m_SmallIndex}";
                 pos = item.GetPosition();
-                context += $"({{{name}}}: {{{pos}}}) ";
+                if (TileHasQuestObjective(item))
+                {
+                    questName = "has quest";
+                }
+                context += $"({{{name}}}{{{questName}}}: {{{pos}}}) ";
                 hexPositions.Add(pos.ToString(), item);
             }
             return context;
+        }
+
+        //TODO
+        static bool TileHasQuestObjective(HexLand hex)
+        {
+
+            return false;
         }
     }
 }
