@@ -117,7 +117,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         [HarmonyPostfix]
         static void UpdatePlayerAction(CharacterOverworld __instance)
         {
-            Plugin.Logger.LogMessage("update player action");
+            // Plugin.Logger.LogMessage("update player action");
         }
 
         // spending focus for more actions
@@ -130,15 +130,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             GetValidMoveTiles(HexLand.SelectType.Land, current);
         }
 
+        // manual movement call
         [HarmonyPatch(typeof(Movement), "TrackCheckClickPath")]
         [HarmonyReversePatch]
         public static void ReverseCheckClickPath(object instance, HexLand _hexland, bool _forceMove, bool _rightClick, bool _isController)
         {
         }
 
-        /// <summary>
-        /// need to find data for boat&air
-        /// </summary>
         static void GetValidMoveTiles(HexLand.SelectType type, MonoBehaviour routineOwner)
         {
             if (!isTracking)
@@ -173,7 +171,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
         }
 
-        // alternate to GetValideMoveTiles
         static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points)
         {
             HexLand initialHex = owner.GetHexLand();

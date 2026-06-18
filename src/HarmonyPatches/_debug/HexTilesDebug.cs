@@ -12,7 +12,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         // left or right clicks
         [HarmonyPatch(typeof(Movement), "TrackCheckClickPath")]
         [HarmonyPostfix]
-        static void Test1(HexLand _hexland)
+        static void ClickTarget(HexLand _hexland)
         {
             currentHover = _hexland;
             Plugin.Logger.LogMessage($"check click path: {_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex}");
@@ -20,7 +20,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]
         [HarmonyPostfix]
-        static void Test6(HexLand _hexland)
+        static void ValidOnHover(HexLand _hexland)
         {
             if (currentHover == _hexland) return;
             currentHover = _hexland;
@@ -31,43 +31,24 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
         }
 
-        // // only some occupied
-        // [HarmonyPatch(typeof(HexLand), nameof(HexLand.HighLight))]
+        // // no calls, maybe controller?
+        // [HarmonyPatch(typeof(Movement), "TrackHexPickHover")]
         // [HarmonyPostfix]
-        // static void Test4(HexLand __instance)
+        // static void Test2(HexLand hexLand)
         // {
-        //     Plugin.Logger.LogMessage($"hex HIGHLIGHT: {__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex}");
+        //     if (hexLand != currentHover)
+        //     {
+        //         currentHover = hexLand;
+        //         Plugin.Logger.LogWarning($"hex pick HOVER {hexLand.GetHexLandID().m_BigIndex} - {hexLand.GetHexLandID().m_SmallIndex}");
+        //     }
         // }
 
-
-        // no calls, maybe controller?
-        [HarmonyPatch(typeof(Movement), "TrackHexPickHover")]
-        [HarmonyPostfix]
-        static void Test2(HexLand hexLand)
-        {
-            if (hexLand != currentHover)
-            {
-                currentHover = hexLand;
-                Plugin.Logger.LogWarning($"hex pick HOVER {hexLand.GetHexLandID().m_BigIndex} - {hexLand.GetHexLandID().m_SmallIndex}");
-            }
-        }
-
-        [HarmonyPatch(typeof(Movement), "TrackHexPickClick")]
-        [HarmonyPostfix]
-        static void Test3()
-        {
-            Plugin.Logger.LogWarning("hex pick click");
+        // [HarmonyPatch(typeof(Movement), "TrackHexPickClick")]
+        // [HarmonyPostfix]
+        // static void Test3()
+        // {
+        //     Plugin.Logger.LogWarning("hex pick click");
             
-        }
+        // }
     }
 }
-
-
-// [HarmonyPatch(typeof(uiHexStatusOverworld), nameof(uiHexStatusOverworld.HexMouseOver))]
-// [HarmonyPostfix]
-// static void Test4()
-// {
-//     Plugin.Logger.LogMessage("hex status overworld MOUSE OVER"); // when hover tile with object, spam
-    
-// }
-
