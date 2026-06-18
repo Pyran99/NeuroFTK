@@ -15,11 +15,11 @@ namespace Pyran.NeuroFTK
         {
             CharacterOverworld current = GameLogic.Instance.GetCurrentCOW();
             string name = current.m_CharacterStats.m_CharacterName;
-            if (current.IsInDungeon())
-            {
-                Context.Send($"{name} is in a duungeon");
-                return;
-            }
+            // if (current.IsInDungeon())
+            // {
+            //     Context.Send($"{name} is in a dungeon");
+            //     return;
+            // }
             HexLand hex = current.GetHexLand();
             Context.Send($"{name} is at {hex.GetPosition()} - {hex}");
         }
