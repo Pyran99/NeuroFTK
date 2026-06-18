@@ -15,18 +15,31 @@ namespace Pyran.NeuroFTK
         {
             CharacterOverworld current = GameLogic.Instance.GetCurrentCOW();
             string name = current.m_CharacterStats.m_CharacterName;
-            // if (current.IsInDungeon())
-            // {
-            //     Context.Send($"{name} is in a dungeon");
-            //     return;
-            // }
             HexLand hex = current.GetHexLand();
-            Context.Send($"{name} is at {hex.GetPosition()} - {hex}");
+            Context.Send($"{name} is at {hex.GetPosition()} - {hex}. This tile contains {hex.GetPOI()?.GetIDString()}");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
         {
             return ExecutionResult.Success();
+        }
+
+        //TODO NYI
+        string GetHexData(HexLand hex)
+        {
+            string data = "";
+            MiniHexInfo poi = hex.GetPOI();
+            if (poi != null)
+            {
+                data += $"POI: {poi.GetIDString()}\n";
+                if (poi.HasEncounterQuest())
+                {
+                    QuestLogicBase quest = poi.GetEncounterQuest();
+                    data += $"Encounter Quest: {quest.GetLocalizedOneLineDesc()}\n";
+                }
+                
+            }
+            return data;
         }
     }
 }

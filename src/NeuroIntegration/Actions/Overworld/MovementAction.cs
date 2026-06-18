@@ -16,7 +16,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             hexPositions.Clear();
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new MovementAction());
-            window.SetForce(5, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
+            window.AddAction(new EndTurnAction());
+            // window.SetForce(5, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
             window.SetContext(GetContext(_tiles));
             window.Register();
             return window;
@@ -103,6 +104,29 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         {
 
             return false;
+        }
+    }
+
+    public class EndTurnAction : NeuroAction
+    {
+        public override string Name => "end_turn";
+        protected override string Description => "end the current turn early and recover HP from the remaining movement points.";
+        protected override JsonSchema Schema => new();
+
+        protected override void Execute()
+        {
+            if (uiEndTurnButton.Instance.interactable) uiEndTurnButton.Instance.onClick.Invoke();
+            else
+            {
+                Context.Send("cannot end turn right now");
+                MovementAction.RegisterAction(GameLogic.Instance.GetCurrentCOW().gameObject, OverworldMovement.tiles);
+            }
+            
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
         }
     }
 }
