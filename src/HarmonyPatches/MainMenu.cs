@@ -8,7 +8,7 @@ using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using GridEditor;
 using Pyran.NeuroFTK.Utils;
 
-namespace Pyran.NeuroFTK.NeuroIntegration;
+namespace Pyran.NeuroFTK.HarmonyPatches;
 
 [HarmonyPatch]
 public class MainMenu

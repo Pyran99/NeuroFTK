@@ -12,13 +12,7 @@ public class OnGamePaused
         {
             return;
         }
-        if (___m_Paused)
-        {
-            Context.Send("Game is paused", true);
-        }
-        else
-        {
-            Context.Send("Game is unpaused", true);
-        }
+        if (___m_Paused) Context.Send("Game is paused", true);
+        else Context.Send("Game is unpaused", true);
     }
 }

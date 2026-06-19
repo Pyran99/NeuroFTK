@@ -7,8 +7,9 @@ using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using StartGameFE;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.NeuroIntegration;
 
-namespace Pyran.NeuroFTK.NeuroIntegration
+namespace Pyran.NeuroFTK.HarmonyPatches
 {
     [HarmonyPatch]
     public class LoreStoreUnlocks

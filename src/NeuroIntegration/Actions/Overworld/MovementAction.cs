@@ -5,6 +5,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions

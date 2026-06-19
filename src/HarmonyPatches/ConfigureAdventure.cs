@@ -5,12 +5,12 @@ using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.GameConfigs;
-using Pyran.NeuroFTK.HarmonyPatches;
+using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using Pyran.NeuroFTK.Utils;
 using StartGameFE;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.HarmonyPatches
 {
     [HarmonyPatch]
     public class ConfigureAdventure

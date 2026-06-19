@@ -8,7 +8,7 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK.NeuroIntegration
+namespace Pyran.NeuroFTK.HarmonyPatches
 {
     [HarmonyPatch]
     public class OverworldMovement
