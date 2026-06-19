@@ -9,7 +9,7 @@ namespace Pyran.NeuroFTK
     {
         public override string Name => "query_current_location";
         protected override string Description => "returns the location of the current active overworld character";
-        protected override JsonSchema Schema => new();
+        protected override JsonSchema Schema => null;
 
         protected override void Execute()
         {
