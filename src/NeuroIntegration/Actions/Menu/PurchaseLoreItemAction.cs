@@ -13,6 +13,7 @@ using Pyran.NeuroFTK.GameConfigs;
 using StartGameFE;
 using UnityEngine;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {

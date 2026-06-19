@@ -6,6 +6,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Newtonsoft.Json.Linq;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions

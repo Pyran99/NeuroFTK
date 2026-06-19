@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Google2u;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
@@ -14,17 +13,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class LocationEncounter
     {
         static ActionWindow window;
-
-        [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
-        [HarmonyPostfix]
-        static void GenerateLocationMenuEntry(uiLocationMenu __instance)
-        {
-            List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
-            foreach (uiLocationMenu.Entry entry in entries)
-            {
-                Plugin.Logger.LogMessage($"text0 = {FTKHub.Localized<TextMenu>(entry.m_Text0)} || text1 = {entry.m_Text1}");
-            }
-        }
+        static MiniHexInfo miniHexInfo;
+        static MiniHexInfo.MenuPOIDisplayValues menuDisplayValues;
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), "Shutdown2")]
         [HarmonyPrefix]
@@ -38,6 +28,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void StartShutdown()
         {
             Object.Destroy(window);
+            menuDisplayValues = null;
+            miniHexInfo = null;
+        }
+
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
+        [HarmonyPrefix]
+        static void Show(MiniHexInfo _miniHexInfo)
+        {
+            miniHexInfo = _miniHexInfo;
+            menuDisplayValues = _miniHexInfo.GetMenuDisplayValues(); // translates
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), "SlideIn")]
@@ -45,11 +45,30 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator LocationMenuDisplayShow(IEnumerator __result)
         {
             while (__result.MoveNext()) yield return __result.Current;
-            window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, GetLocEncounterButtons(), GetLocEncounterFlavorText(), GetLocEncounterLoreDescription());
+            string info = $"{GetLocEncounterName()}: {GetLocEncounterFlavorText()}";
+            window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, GetLocEncounterButtons(), info, GetLocEncounterLoreDescription());
+        }
+
+        public static string GetLocEncounterName()
+        {
+            if (menuDisplayValues != null)
+            {
+                return menuDisplayValues.m_Title;
+            }
+            GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
+            GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
+            GameObject header = menu2.transform.Find("LocationHeader").gameObject;
+            Text comp = header.GetComponentInChildren<Text>();
+            if (comp != null) return comp.text;
+            return "";
         }
 
         public static string GetLocEncounterFlavorText()
         {
+            if (menuDisplayValues != null)
+            {
+                return StringReplace.RemoveStyling(menuDisplayValues.m_Top);
+            }
             GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
             GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
             string text = menu2.transform.Find("FlavorPopup").GetComponent<Text>().text;
@@ -58,10 +77,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static string GetLocEncounterLoreDescription()
         {
+            if (menuDisplayValues != null)
+            {
+                return StringReplace.RemoveStyling(menuDisplayValues.m_Bottom);
+            }
             GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
             GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
             string text = menu2.transform.Find("LoreDescription").GetComponent<Text>().text;
-            return text;
+            return StringReplace.RemoveStyling(text);
         }
 
         public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()
@@ -78,5 +101,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             return buttons;
         }
+
+        // [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
+        // [HarmonyPostfix]
+        // static void GenerateLocationMenuEntry(uiLocationMenu __instance)
+        // {
+        //     List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
+        //     foreach (uiLocationMenu.Entry entry in entries)
+        //     {
+        //         Plugin.Logger.LogMessage($"text0 = {FTKHub.Localized<TextMenu>(entry.m_Text0)} || text1 = {entry.m_Text1}");
+        //     }
+        // }
     }
 }

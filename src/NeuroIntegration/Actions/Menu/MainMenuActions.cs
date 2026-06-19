@@ -6,6 +6,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.Actions
