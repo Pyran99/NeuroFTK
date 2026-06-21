@@ -28,36 +28,36 @@ namespace Pyran.NeuroFTK
             bool canHealParty = instance.m_PartyHealButton != null && instance.m_PartyHealButton.isActiveAndEnabled && instance.m_PartyHealButton.m_CanUse;
             if (canFlee)
             {
-                var data = GetActionDetails2(instance.m_FleeButton, m_Proficiencies);
+                var data = GetActionDetails(instance.m_FleeButton, m_Proficiencies);
                 context += AddContext(data);
                 Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatFleeAction(instance, instance.m_FleeButton));
             } 
             if (canRevive)
             {
-                var data = GetActionDetails2(instance.m_ReviveButton, m_Proficiencies);
-                context += AddContext(data);
+                var data = GetActionDetails(instance.m_ReviveButton, m_Proficiencies);
+                context += AddContext(data, false);
                 Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatReviveAction(instance, instance.m_ReviveButton));
             }
             if (canTaunt)
             {
-                var data = GetActionDetails2(instance.m_ShieldTauntButton, m_Proficiencies);
+                var data = GetActionDetails(instance.m_ShieldTauntButton, m_Proficiencies);
                 context += AddContext(data);
                 Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatTauntAction(instance, instance.m_ShieldTauntButton));
             }
             if (canChangeWeapon)
             {
-                var data = GetActionDetails2(instance.m_EquipWeaponButton, m_Proficiencies);
-                context += AddContext(data);
+                var data = GetActionDetails(instance.m_EquipWeaponButton, m_Proficiencies);
+                context += AddContext(data, false);
                 Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatChangeWeaponAction(instance, instance.m_EquipWeaponButton));
             }
             if (canHealParty)
             {
-                var data = GetActionDetails2(instance.m_PartyHealButton, m_Proficiencies);
-                context += AddContext(data);
+                var data = GetActionDetails(instance.m_PartyHealButton, m_Proficiencies);
+                context += AddContext(data, false);
                 Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatPartyHealAction(instance, instance.m_PartyHealButton));
             }
@@ -67,32 +67,49 @@ namespace Pyran.NeuroFTK
             return window;
         }
 
-        private static string AddContext(Dictionary<string, Dictionary<string, string>> data)
+        private static string AddContext(Dictionary<string, Dictionary<string, string>> data, bool hasRolls = true)
         {
             string key = data.Keys.First();
             string type = data[key]["type"];
             string description = data[key]["description"];
-            return $"[{key}, {type}, {description}]\n";
+            string rollChance = data[key]["per_roll_chance"];
+            string context = $"[[{key}][{type}][{description}]]\n";
+            if (hasRolls) context = $"[[{key}][{type}][{description}][success chance for each roll slot {rollChance}]\n";
+            return context;
+        }
+
+        private static string AddAttackContext(Dictionary<string, Dictionary<string, string>> data)
+        {
+            string key = data.Keys.First();
+            string type = data[key]["type"];
+            string description = data[key]["description"];
+            string rollChance = data[key]["per_roll_chance"];
+            string dmg = data[key]["damage"];
+            string context = $"[[{key}][damage: {dmg}][{type}][{description}][success chance for each roll slot {rollChance}]\n";
+            return context;
         }
 
         /// <summary>
-        /// dictionary style: "name": {"type": "target self", "description": "perfect(56%) = leave combat"}
+        /// dictionary style: "name": {"type": "target self", "description": "perfect(56%) = leave combat", "per_roll_chance": "50", "damage": "10"}
         /// </summary>
-        public static Dictionary<string, Dictionary<string, string>> GetActionDetails2(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        public static Dictionary<string, Dictionary<string, string>> GetActionDetails(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
         {
+            // from => public void DisplayBattleActionInfo(uiBattleButton _button, bool _on)
             Dictionary<string, Dictionary<string, string>> data = [];
             CharacterOverworld current = GameLogic.Instance.GetCurrentCombatCOW();
+            CharacterStats stats = current.m_CharacterStats;
 			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
 			FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
             FTK_weaponStats2.SkillType skillType;
             int maxRollSlots = GameFlow.Instance.m_DefaultSlots;
-            string text;
+            string text = "";
             string[] array = [null, FTKHub.Localized<TextMenu>("STR_battleButtonsStandardAttack")];
+
             switch (btn.m_ButtonType)
             {
                 case uiBattleButton.BattleButtonType.flee:
                     skillType = FTK_weaponStats2.SkillType.quickness;
-                    if (current.m_CharacterStats.m_CharacterSkills.m_Flee)
+                    if (stats.m_CharacterSkills.m_Flee)
                     {
                         maxRollSlots = 1;
                         text = FTKHub.Localized<TextMenu>("STR_battleButtonsEliteFlee");
@@ -104,7 +121,7 @@ namespace Pyran.NeuroFTK
                     array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
                     if (EncounterSession.Instance.CanPlayerFlee(current))
                     {
-                        float num4 = current.m_CharacterStats.CalculateFullSkillChance(skillType, maxRollSlots, 0f);
+                        float num4 = stats.CalculateFullSkillChance(skillType, maxRollSlots, 0f);
                         string text2 = FTKHub.Localized<TextMenu>("STR_battleButtonsLeaveCombat");
                         array[1] = FTKUI.GetPerfectDescriptionFormatted(num4, text2);
                     }
@@ -112,9 +129,6 @@ namespace Pyran.NeuroFTK
                     {
                         array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsNoFlee");
                     }
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
                     break;
                 case uiBattleButton.BattleButtonType.shieldtaunt:
                     text = FTKHub.Localized<TextMisc>("STR_profTaunt");
@@ -123,17 +137,11 @@ namespace Pyran.NeuroFTK
                     float fullSkillChance = current.m_CharacterStats.CalculateFullSkillChance(skillType, maxRollSlots, 0f);
                     array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
                     array[1] = FTKUI.GetPerfectDescriptionFormatted(fullSkillChance, FTKHub.Localized<TextMenu>("STR_battleButtonsDrawAttention"));
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
                     break;
                 case uiBattleButton.BattleButtonType.attack:
                     maxRollSlots = entry._slots;
                     text = entry.GetAttackDisplay();
                     array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsSingleTarget");
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
                     break;
                 case uiBattleButton.BattleButtonType.proficiency:
                     foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
@@ -156,18 +164,12 @@ namespace Pyran.NeuroFTK
 					}
 					text = entry3.GetLocalizedDisplayTitle();
 					array = entry3.GetBattleButtonInfo(current);
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
 
                     break;
                 case uiBattleButton.BattleButtonType.equipweapon:
                     text = FTKHub.Localized<TextMenu>("STR_battleButtonsEquipWeapon");
                     array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
                     array[1] = FTKHub.Localized<TextMenu>("STR_equipWeaponDescription");
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
                     break;
                 case uiBattleButton.BattleButtonType.partyheal:
                     text = FTKHub.Localized<TextMenu>("STR_battleButtonsPartyHeal");
@@ -180,9 +182,6 @@ namespace Pyran.NeuroFTK
                     {
                         array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsPartyHealNoGodsbeard");
                     }
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
                     break;
                 case uiBattleButton.BattleButtonType.reload:
                     text = FTKHub.Localized<TextMenu>("STR_battleButtonsReloadWeapon");
@@ -195,31 +194,32 @@ namespace Pyran.NeuroFTK
                     {
                         array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsNoReload");
                     }
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
                     break;
                 case uiBattleButton.BattleButtonType.revive:
                     text = FTKHub.Localized<TextMenu>("STR_RevivePlayer");
                     array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetFriendly");
                     array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsReviveInfo");
-                    data.Add(text, []);
-                    data[text]["type"] = array[0];
-                    data[text]["description"] = array[1];
                     break;
                 default:
                     Plugin.Logger.LogError("invalid button type or standard attack");
                     break;
             }
             maxRolls = maxRollSlots;
+            data.Add(text, []);
+            data[text]["type"] = array[0];
+            data[text]["description"] = array[1];
+            data[text]["per_roll_chance"] = "";
+            float accuracy = GetAccuracy(btn, m_Proficiencies);
+            if (accuracy > -1f) data[text]["per_roll_chance"] = FTKUtil.RoundToInt(accuracy * 100f).ToString() + "%";
+            data[text]["damage"] = GetAttackDamage(btn, m_Proficiencies).ToString();
             return data;
         }
-
 
         public static int GetAttackDamage(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
         {
             int dmg = GameLogic.Instance.GetCurrentCombatCOW().m_CharacterStats.GetWeaponMaxDamage();
             FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
+
             if (btn.m_ButtonType == uiBattleButton.BattleButtonType.proficiency)
             {
 				foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
@@ -242,23 +242,25 @@ namespace Pyran.NeuroFTK
         public static float GetAccuracy(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
         {
             CharacterOverworld current = GameLogic.Instance.GetCurrentCombatCOW();
-            float acc = -1;
+            CharacterStats stats = current.m_CharacterStats;
 			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
-			FTK_weaponStats2.SkillType skillType = entry._skilltest;
+			FTK_weaponStats2.SkillType skillType;
             FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
+            float acc = -1;
+
             switch (btn.m_ButtonType)
             {
                 case uiBattleButton.BattleButtonType.flee:
                     skillType = FTK_weaponStats2.SkillType.quickness;
-                    acc = current.m_CharacterStats.GetSkillValue(skillType, true, 0f);
+                    acc = stats.GetSkillValue(skillType, true, 0f);
                     break;
                 case uiBattleButton.BattleButtonType.shieldtaunt:
                     skillType = FTK_weaponStats2.SkillType.vitality;
                     FTK_proficiencyTable entry2 = FTK_proficiencyTableDB.GetDB().GetEntry(FTK_proficiencyTable.ID.taunt);
-                    acc = current.m_CharacterStats.GetSkillValue(skillType, true, entry2.m_PerSlotSkillRoll);
+                    acc = stats.GetSkillValue(skillType, true, entry2.m_PerSlotSkillRoll);
                     break;
                 case uiBattleButton.BattleButtonType.attack:
-                    acc = current.m_CharacterStats.GetSkillValue(entry._skilltest, true, 0f);
+                    acc = stats.GetSkillValue(entry._skilltest, true, 0f);
                     break;
                 case uiBattleButton.BattleButtonType.proficiency:
                     foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
@@ -271,7 +273,7 @@ namespace Pyran.NeuroFTK
                     }
                     if (id != FTK_proficiencyTable.ID.None)
                     {
-                        acc = current.m_CharacterStats.GetSkillValue(entry._skilltest, true, FTK_proficiencyTableDB.GetDB().GetEntry(id).m_PerSlotSkillRoll);
+                        acc = stats.GetSkillValue(entry._skilltest, true, FTK_proficiencyTableDB.GetDB().GetEntry(id).m_PerSlotSkillRoll);
                     }
                     break;
                 default:
@@ -348,7 +350,19 @@ namespace Pyran.NeuroFTK
                 btns.Clear();
                 foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
                 {
-                    if (prof.m_Button != null && prof.m_Button.m_CanUse) btns.Add($"{prof.m_Prof}", prof.m_Button);
+                    switch (prof.m_Button.m_ButtonType)
+                    {
+                        case uiBattleButton.BattleButtonType.flee:
+                        case uiBattleButton.BattleButtonType.shieldtaunt:
+                        case uiBattleButton.BattleButtonType.equipweapon:
+                        case uiBattleButton.BattleButtonType.revive:
+                        case uiBattleButton.BattleButtonType.partyheal:
+                            continue;
+                    }
+                    if (prof.m_Prof == FTK_proficiencyTable.ID.None) continue;
+                    FTK_proficiencyTable entry = FTK_proficiencyTableDB.GetDB().GetEntry(prof.m_Prof);
+                    string name = entry.GetLocalizedDisplayTitle();
+                    if (prof.m_Button != null && prof.m_Button.m_CanUse) btns.Add($"{name}", prof.m_Button);
                 }
                 Plugin.Logger.LogMessage($"player attacks [{string.Join(", ", [.. btns.Keys.Select(v => v)])}]");
                 return btns;
@@ -444,8 +458,19 @@ namespace Pyran.NeuroFTK
                 if (canReload) btns.Add("reload gun", instance.m_ReloadButton);
                 foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
                 {
-                    //TODO get actual name
-                    if (prof.m_Button != null && prof.m_Button.m_CanUse && prof.m_Button.isActiveAndEnabled) btns.Add($"{prof.m_Prof}", prof.m_Button);
+                    switch (prof.m_Button.m_ButtonType)
+                    {
+                        case uiBattleButton.BattleButtonType.flee:
+                        case uiBattleButton.BattleButtonType.shieldtaunt:
+                        case uiBattleButton.BattleButtonType.equipweapon:
+                        case uiBattleButton.BattleButtonType.revive:
+                        case uiBattleButton.BattleButtonType.partyheal:
+                            continue;
+                    }
+                    if (prof.m_Prof == FTK_proficiencyTable.ID.None) continue;
+                    FTK_proficiencyTable entry = FTK_proficiencyTableDB.GetDB().GetEntry(prof.m_Prof);
+                    string name = entry.GetLocalizedDisplayTitle();
+                    if (prof.m_Button != null && prof.m_Button.m_CanUse && prof.m_Button.isActiveAndEnabled) btns.Add($"{name}", prof.m_Button);
                 }
                 Plugin.Logger.LogMessage($"enemy attacks [{string.Join(", ", [.. btns.Keys.Select(v => v)])}]");
                 return btns;
