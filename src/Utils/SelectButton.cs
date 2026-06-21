@@ -8,6 +8,23 @@ namespace Pyran.NeuroFTK.Utils
     /// </summary>
     public class SelectButton
     {
+        public static void InstantClick(uiFTKButton button)
+        {
+            if (button == null)
+            {
+                Plugin.Logger.LogError($"button is null");
+                return;
+            }
+            if (!button.isActiveAndEnabled)
+            {
+                Plugin.Logger.LogWarning($"button {button.name} is disabled");
+                return;
+            }
+            button.OnPointerEnter(null);
+            button.Select();
+            button.OnControllerClick();
+        }
+
         public static void StartCoroutine(MonoBehaviour instance, uiFTKButton button, float wait = 1.0f)
         {
             instance.StartCoroutine(SelectButtonWithDelay(instance, button, wait));
@@ -27,6 +44,12 @@ namespace Pyran.NeuroFTK.Utils
             }
             button.OnPointerEnter(null);
             yield return new WaitForSeconds(wait);
+            if (!button.isActiveAndEnabled)
+            {
+                Plugin.Logger.LogError($"button is disabled after waiting {button.name}");
+                yield break;
+            }
+            button.Select();
             button.OnControllerClick();
         }
     

@@ -2,9 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Google2u;
 using GridEditor;
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK
 {
@@ -24,63 +26,53 @@ namespace Pyran.NeuroFTK
             bool canTaunt = instance.m_ShieldTauntButton != null && instance.m_ShieldTauntButton.isActiveAndEnabled && instance.m_ShieldTauntButton.m_CanUse;
             bool canChangeWeapon = instance.m_EquipWeaponButton != null && instance.m_EquipWeaponButton.isActiveAndEnabled && instance.m_EquipWeaponButton.m_CanUse;
             bool canHealParty = instance.m_PartyHealButton != null && instance.m_PartyHealButton.isActiveAndEnabled && instance.m_PartyHealButton.m_CanUse;
-            string key;
-            string type;
-            string description;
             if (canFlee)
             {
                 var data = GetActionDetails2(instance.m_FleeButton, m_Proficiencies);
-                key = data.Keys.First();
-                type = data[key]["type"];
-                description = data[key]["description"];
-                context += $"[{key}, {type}, {description}]\n";
+                context += AddContext(data);
                 Plugin.Logger.LogMessage(context);
-                window.AddAction(new CombatFleeAction(instance.m_FleeButton));
+                window.AddAction(new CombatFleeAction(instance, instance.m_FleeButton));
             } 
             if (canRevive)
             {
                 var data = GetActionDetails2(instance.m_ReviveButton, m_Proficiencies);
-                key = data.Keys.First();
-                type = data[key]["type"];
-                description = data[key]["description"];
-                context += $"[{key}, {type}, {description}]\n";
+                context += AddContext(data);
                 Plugin.Logger.LogMessage(context);
-                window.AddAction(new CombatReviveAction(instance.m_ReviveButton));
+                window.AddAction(new CombatReviveAction(instance, instance.m_ReviveButton));
             }
             if (canTaunt)
             {
                 var data = GetActionDetails2(instance.m_ShieldTauntButton, m_Proficiencies);
-                key = data.Keys.First();
-                type = data[key]["type"];
-                description = data[key]["description"];
-                context += $"[{key}, {type}, {description}]\n";
+                context += AddContext(data);
                 Plugin.Logger.LogMessage(context);
-                window.AddAction(new CombatTauntAction(instance.m_ShieldTauntButton));
+                window.AddAction(new CombatTauntAction(instance, instance.m_ShieldTauntButton));
             }
             if (canChangeWeapon)
             {
                 var data = GetActionDetails2(instance.m_EquipWeaponButton, m_Proficiencies);
-                key = data.Keys.First();
-                type = data[key]["type"];
-                description = data[key]["description"];
-                context += $"[{key}, {type}, {description}]\n";
+                context += AddContext(data);
                 Plugin.Logger.LogMessage(context);
-                window.AddAction(new CombatChangeWeaponAction(instance.m_EquipWeaponButton));
+                window.AddAction(new CombatChangeWeaponAction(instance, instance.m_EquipWeaponButton));
             }
             if (canHealParty)
             {
                 var data = GetActionDetails2(instance.m_PartyHealButton, m_Proficiencies);
-                key = data.Keys.First();
-                type = data[key]["type"];
-                description = data[key]["description"];
-                context += $"[{key}, {type}, {description}]\n";
+                context += AddContext(data);
                 Plugin.Logger.LogMessage(context);
-                window.AddAction(new CombatPartyHealAction(instance.m_PartyHealButton));
+                window.AddAction(new CombatPartyHealAction(instance, instance.m_PartyHealButton));
             }
             window.SetContext(context);
             window.SetForce(5, "choose a combat action", "NYI combat state context");
             window.Register();
             return window;
+        }
+
+        private static string AddContext(Dictionary<string, Dictionary<string, string>> data)
+        {
+            string key = data.Keys.First();
+            string type = data[key]["type"];
+            string description = data[key]["description"];
+            return $"[{key}, {type}, {description}]\n";
         }
 
         /// <summary>
@@ -294,9 +286,10 @@ namespace Pyran.NeuroFTK
         /// <summary>
         /// actions to target friendly units
         /// </summary>
-        private class CombatFriendlyAction(uiBattleStanceButtons instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies) : NeuroAction
+        private class CombatFriendlyAction(uiBattleStanceButtons instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies) : NeuroAction<string[]>
         {
             readonly Dictionary<string, uiBattleButton> btns = [];
+            List<string> names = [];
 
             public override string Name => "ally_target";
             protected override string Description => "heal or buff an ally";
@@ -317,20 +310,30 @@ namespace Pyran.NeuroFTK
                 return schema;
             }
 
-            protected override void Execute()
+            protected override void Execute(string[] parsedData)
             {
-                Plugin.Logger.LogWarning("NYI combat ally");
+                Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
+                //TODO pick target
+                btns.TryGetValue(parsedData[1], out uiBattleButton btn);
+                SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
-            protected override ExecutionResult Validate(ActionJData actionData)
+            protected override ExecutionResult Validate(ActionJData actionData, out string[] parsedData)
             {
+                parsedData = new string[2];
                 Plugin.Logger.LogMessage(actionData.Data);
+                string target = actionData.Data.Value<string>("target");
+                string ability = actionData.Data.Value<string>("ability");
+                if (!names.Contains(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
+                if (!btns.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+                parsedData[0] = target;
+                parsedData[1] = ability;
                 return ExecutionResult.Success();
             }
 
             List<string> GetListOfPlayers()
             {
-                List<string> names = [];
+                names = [];
                 Dictionary<FTKPlayerID, CharacterDummy> players = new(EncounterSession.Instance.m_PlayerDummies);
                 foreach (var player in players)
                 {
@@ -342,6 +345,7 @@ namespace Pyran.NeuroFTK
 
             Dictionary<string, uiBattleButton> GetListOfButtons()
             {
+                btns.Clear();
                 foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
                 {
                     if (prof.m_Button != null && prof.m_Button.m_CanUse) btns.Add($"{prof.m_Prof}", prof.m_Button);
@@ -373,9 +377,10 @@ namespace Pyran.NeuroFTK
         /// <summary>
         /// actions to target enemies
         /// </summary>
-        private class CombatAttackAction(uiBattleStanceButtons instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies) : NeuroAction
+        private class CombatAttackAction(uiBattleStanceButtons instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies) : NeuroAction<string[]>
         {
             readonly Dictionary<string, uiBattleButton> btns = [];
+            List<string> names = [];
             
             public override string Name => "attack_enemy";
             protected override string Description => "attack an enemy";
@@ -396,22 +401,32 @@ namespace Pyran.NeuroFTK
                 return schema;
             }
 
-            protected override void Execute()
+            protected override void Execute(string[] parsedData)
             {
-                Plugin.Logger.LogWarning("NYI combat enemy");
+                Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
+                //TODO pick target
+                btns.TryGetValue(parsedData[1], out uiBattleButton btn);
+                SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
-            protected override ExecutionResult Validate(ActionJData actionData)
+            protected override ExecutionResult Validate(ActionJData actionData, out string[] parsedData)
             {
+                parsedData = new string[2];
                 Plugin.Logger.LogMessage(actionData.Data);
+                string target = actionData.Data.Value<string>("target");
+                string ability = actionData.Data.Value<string>("ability");
+                if (!names.Contains(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
+                if (!btns.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+                parsedData[0] = target;
+                parsedData[1] = ability;
                 return ExecutionResult.Success();
             }
 
             //TODO get enemy name as displayed on ui: Enemy 1 (Timberwolf)
             List<string> GetListOfEnemies()
             {
+                names = [];
                 Dictionary<FTKPlayerID, EnemyDummy> enemies = new(EncounterSession.Instance.m_EnemyDummies);
-                List<string> names = [];
                 foreach (var enemy in enemies)
                 {
                     names.Add(enemy.Value.GetEnemyInfo().GameLogID + ", ");
@@ -422,6 +437,7 @@ namespace Pyran.NeuroFTK
 
             Dictionary<string, uiBattleButton> GetListOfButtons()
             {
+                btns.Clear();
                 bool useDefault = instance.m_AttackButton != null && instance.m_AttackButton.m_CanUse && instance.m_AttackButton.isActiveAndEnabled;
                 bool canReload = instance.m_ReloadButton != null && instance.m_ReloadButton.m_CanUse && instance.m_ReloadButton.isActiveAndEnabled;
                 if (useDefault) btns.Add("attack", instance.m_AttackButton);
@@ -439,18 +455,15 @@ namespace Pyran.NeuroFTK
         /// <summary>
         /// try to flee combat
         /// </summary>
-        private class CombatFleeAction(uiBattleButton btn): NeuroAction
+        private class CombatFleeAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
         {
             public override string Name => "flee_combat";
-            protected override string Description => "try to run away from combat";
+            protected override string Description => "try to run away from combat. only the character this is used with will exit combat.";
             protected override JsonSchema Schema => null;
 
             protected override void Execute()
             {
-                Plugin.Logger.LogWarning("NYI flee action");
-                btn.OnPointerEnter(null);
-                btn.Select();
-                // btn.OnControllerClick();
+                SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
             protected override ExecutionResult Validate(ActionJData actionData)
@@ -462,30 +475,19 @@ namespace Pyran.NeuroFTK
         /// <summary>
         /// try to revive a character
         /// </summary>
-        private class CombatReviveAction(uiBattleButton btn): NeuroAction
+        private class CombatReviveAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
         {
             public override string Name => "revive_ally";
             protected override string Description => "revive a fallen party member";
             protected override JsonSchema Schema => null;
 
-            private JsonSchema GetSchema()
-            {
-                // if multiple targets?
-                JsonSchema schema = new();
-                return schema;
-            }
-
             protected override void Execute()
             {
-                Plugin.Logger.LogWarning("NYI revive ally");
-                btn.OnPointerEnter(null);
-                btn.Select();
-                // btn.OnControllerClick();
+                SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
             protected override ExecutionResult Validate(ActionJData actionData)
             {
-                // Plugin.Logger.LogMessage(actionData.Data);
                 return ExecutionResult.Success();
             }
         }
@@ -493,7 +495,7 @@ namespace Pyran.NeuroFTK
         /// <summary>
         /// force enemies to attack this unit
         /// </summary>
-        private class CombatTauntAction(uiBattleButton btn) : NeuroAction
+        private class CombatTauntAction(uiBattleStanceButtons instance, uiBattleButton btn) : NeuroAction
         {
             public override string Name => "taunt";
             protected override string Description => "force enemies to attack this unit";
@@ -501,10 +503,7 @@ namespace Pyran.NeuroFTK
 
             protected override void Execute()
             {
-                Plugin.Logger.LogWarning("execute taunt action");
-                btn.OnPointerEnter(null);
-                btn.Select();
-                // btn.OnControllerClick();
+                SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
             protected override ExecutionResult Validate(ActionJData actionData)
@@ -517,7 +516,7 @@ namespace Pyran.NeuroFTK
         /// switch to another weapon
         /// TODO get weapons from inventory
         /// </summary>
-        private class CombatChangeWeaponAction(uiBattleButton btn): NeuroAction<string>
+        private class CombatChangeWeaponAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction<string>
         {
             public override string Name => "change_weapon";
             protected override string Description => "equip a different weapon. this will end your turn";
@@ -540,9 +539,7 @@ namespace Pyran.NeuroFTK
             protected override void Execute(string parsedData)
             {
                 Plugin.Logger.LogWarning("execute change weapon action " + parsedData);
-                btn.OnPointerEnter(null);
-                btn.Select();
-                // btn.OnControllerClick();
+                SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
             protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -556,7 +553,7 @@ namespace Pyran.NeuroFTK
         /// <summary>
         /// heal all party members
         /// </summary>
-        private class CombatPartyHealAction(uiBattleButton btn): NeuroAction
+        private class CombatPartyHealAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
         {
             public override string Name => "party_heal";
             protected override string Description => "heal all party members";
@@ -564,10 +561,7 @@ namespace Pyran.NeuroFTK
 
             protected override void Execute()
             {
-                Plugin.Logger.LogWarning("execute party heal action");
-                btn.OnPointerEnter(null);
-                btn.Select();
-                // btn.OnControllerClick();
+                SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
             protected override ExecutionResult Validate(ActionJData actionData)
