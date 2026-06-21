@@ -9,6 +9,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class CombatEncounter
     {
 
+        static ActionWindow window;
+
 #region Main
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EnableMenu))]
@@ -42,8 +44,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Test48()
         {
             Plugin.Logger.LogMessage("10 EnableBattleStanceButtons => NeuroAction");
-
-            ActionWindow window = CombatActions.RegisterActions(instance, m_Proficiencies);
+            window = CombatActions.RegisterActions(instance, m_Proficiencies);
 
             // ActionWindow window = ActionWindow.Create(GameLogic.Instance.GetCurrentCombatCOW().gameObject);
             // Weapon wpn = GameLogic.Instance.GetCurrentCombatCOW().m_CurrentDummy.m_EventListener.m_Weapon;
@@ -158,11 +159,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #region may have uses
 
-        [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.BattleButtonsOff))]
+        [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.BattleButtonsOff))] // called after attacks
         [HarmonyPostfix]
         static void Test14()
         {
             Plugin.Logger.LogMessage("14 BattleButtonsOff");
+            UnityEngine.Object.Destroy(window);
         }
 
         // [HarmonyPatch(typeof(EncounterSessionMC), "CommenceBattle")]
