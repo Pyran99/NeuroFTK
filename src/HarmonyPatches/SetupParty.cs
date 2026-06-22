@@ -77,19 +77,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 List<string> details = GetClassDetails((FTK_playerGameStart.ID)player.m_ClassID, db);
                 string joined = string.Join(", ", [.. details]);
                 joined = StringReplace.ReplaceNewLine(joined);
-                data += joined;
+                data += joined + "\n";
             }
+            // name: Hunter, class description:
             Context.Send($"details about your current party classes: {data}");
-            // { "Player 1: class: Hunter },
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
             data = "your party setup is: ";
             foreach (string name in names)
             {
-                data += $"{{ {name}: class; {classes[names.IndexOf(name)]}}}. ";
+                data += $"[{name}: class; {classes[names.IndexOf(name)]}], ";
             }
             Context.Send(data);
-
         }
 
 // [Message:Neuro For the King] Player 1, Player 2, Player 3

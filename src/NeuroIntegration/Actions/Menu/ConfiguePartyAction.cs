@@ -95,6 +95,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                         Type = JsonSchemaType.Array,
                         MinItems = 3,
                         MaxItems = 3,
+                        UniqueItems = true,
                         Items = new()
                         {
                             Type = JsonSchemaType.String,
