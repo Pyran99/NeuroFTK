@@ -15,7 +15,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ClickTarget(HexLand _hexland)
         {
             currentHover = _hexland;
-            Plugin.Logger.LogMessage($"check click path: {_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex}");
+            Plugin.Logger.LogMessage($"check click path: ({_hexland.GetPosition()}) ({_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex})");
         }
 
         [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]

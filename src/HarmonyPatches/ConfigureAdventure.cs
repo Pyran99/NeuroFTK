@@ -60,7 +60,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     if (prev.GetDisplayName() == "For the King")
                     {
                         description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                        details += $"{{name: {prev.GetDisplayName()}, description: {description}}}; ";
+                        details += $"[name: {prev.GetDisplayName()}, description: {description}]\n";
                         break;
                     }
                     continue;
@@ -69,7 +69,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // gold rush is multiplayer only
                 if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
                 description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                details += $"{{name: {prev.GetDisplayName()}, description: {description}}}; ";
+                details += $"[name: {prev.GetDisplayName()}, description: {description}]\n";
             }
             return details;
         }
@@ -95,7 +95,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield return null;
             }
             GameDefinitionBase level = instance.GetCurrentGameDefPreview();
-            Context.Send($"Selected the adventure '{level.GetDisplayName()}', '{level.GetDisplayInfoText()}'");
+            Context.Send($"Selected the adventure [{level.GetDisplayName()}, {level.GetDisplayInfoText()}]");
             yield return new WaitForSeconds(0.5f);
             SetDifficulty(instance);
             SetGameMode(instance);

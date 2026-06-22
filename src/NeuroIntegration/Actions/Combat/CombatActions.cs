@@ -53,39 +53,34 @@ namespace Pyran.NeuroFTK
             {
                 var data = GetActionDetails(_instance.m_FleeButton, m_Proficiencies);
                 context += AddContext(data);
-                Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatFleeAction(_instance, _instance.m_FleeButton));
             } 
             if (canRevive)
             {
                 var data = GetActionDetails(_instance.m_ReviveButton, m_Proficiencies);
                 context += AddContext(data, false);
-                Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatReviveAction(_instance, _instance.m_ReviveButton));
             }
             if (canTaunt)
             {
                 var data = GetActionDetails(_instance.m_ShieldTauntButton, m_Proficiencies);
                 context += AddContext(data);
-                Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatTauntAction(_instance, _instance.m_ShieldTauntButton));
             }
             if (canChangeWeapon)
             {
                 var data = GetActionDetails(_instance.m_EquipWeaponButton, m_Proficiencies);
                 context += AddContext(data, false);
-                Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatChangeWeaponAction(_instance, _instance.m_EquipWeaponButton));
             }
             if (canHealParty)
             {
                 var data = GetActionDetails(_instance.m_PartyHealButton, m_Proficiencies);
                 context += AddContext(data, false);
-                Plugin.Logger.LogMessage(context);
                 window.AddAction(new CombatPartyHealAction(_instance, _instance.m_PartyHealButton));
             }
             window.SetContext(context);
-            window.SetForce(5, "choose a combat action", "it is your turn to act");
+            window.SetForce(0, "choose a combat action", "it is your turn to act");
             window.Register();
             return window;
         }
@@ -96,8 +91,8 @@ namespace Pyran.NeuroFTK
             string type = data[key]["type"];
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
-            string context = $"[[{key}][{type}][{description}]]\n";
-            if (hasRolls) context = $"[[{key}][{type}][{description}][success chance for each roll slot {rollChance}]\n";
+            string context = $"[{key}]{type}; {description}\n";
+            if (hasRolls) context = $"[{key}]{type}; {description}; success chance for each roll slot {rollChance}]\n";
             return context;
         }
 
@@ -108,7 +103,7 @@ namespace Pyran.NeuroFTK
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
             string dmg = data[key]["damage"];
-            string context = $"[[{key}][damage: {dmg}][{type}][{StringReplace.RemoveStyling(description)}][success chance for each roll slot {rollChance}]\n";
+            string context = $"[{key}]damage: {dmg}; {type}; {StringReplace.RemoveStyling(description)}; success chance for each roll slot {rollChance}\n";
             return context;
         }
 
@@ -304,7 +299,6 @@ namespace Pyran.NeuroFTK
             return acc;
         }
 
-
         public static void GetOffenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
         {
             Dictionary<string, uiBattleButton> btns = [];
@@ -380,7 +374,6 @@ namespace Pyran.NeuroFTK
 
 
 
-
 #region Actions
 
         /// <summary>
@@ -446,7 +439,6 @@ namespace Pyran.NeuroFTK
                 {
                     names.Add(player.Key, player.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
                 }
-                Plugin.Logger.LogMessage($"players [{string.Join(", ", [.. names.Select(v => v.Value)])}] ");
                 return names;
             }
         }
@@ -512,7 +504,6 @@ namespace Pyran.NeuroFTK
                 foreach (var enemy in enemies)
                 {
                     if (!enemy.Value.m_IsAlive) continue;
-                    // string name = $"{enemy.Value.GetEnemyInfo().name}" + $" ({enemy.Value.GetEnemyInfo().m_EnemyCombat.GetEnemyDisplay()})"; // Enemy 1 (Timberwolf)
                     string name = $"{enemy.Value.GetEnemyInfo().m_EnemyCombat.GetEnemyDisplay()}"; // Timberwolf 1
                     if (names.ContainsValue(name))
                     {

@@ -31,7 +31,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("adventure"));
             if (!validAdventures.Contains(result))
             {
-                Plugin.Logger.LogWarning($"could not find game def {result}");
+                Plugin.Logger.LogError($"could not find game def {result}");
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("adventure"));
             }
             parsedData = result;
@@ -66,9 +66,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         JsonSchema GetSchema()
         {
-            // JsonSchema schema = QJS.Enum(GetAdventureNames());
-            // schema.Type = JsonSchemaType.Object;
-            // schema.Required = ["enum"];
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,

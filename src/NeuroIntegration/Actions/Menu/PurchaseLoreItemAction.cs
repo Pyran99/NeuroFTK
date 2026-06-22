@@ -26,7 +26,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             PurchaseLoreItemAction action = new(instance, cards);
             action.itemPurchased += LoreStoreUnlocks.OnItemPurchased;
-            window.SetContext($"lore store category details: {json}");
+            window.SetContext($"description of each category in the store: {json}");
             window.SetForce(4, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks");
             window.AddAction(action);
             CancelAction cancelAction = new(window, "return to main menu");
@@ -54,7 +54,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string context = "";
             foreach (string key in schemaData.Keys)
             {
-                context += $"{{name: {key}, description: {StringReplace.ReplaceNewLine(schemaData[key])}}}. ";
+                context += $"[name: {key}, description: {StringReplace.ReplaceNewLine(schemaData[key])}]\n";
             }
             Context.Send($"Items and their descriptions you can afford: {context}");
             data = [.. schemaData.Select(l => l.Key)];
@@ -100,17 +100,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             bool failedPurchase = false;
             if (card.m_LoreItem.IsPurchased())
             {
-                Plugin.Logger.LogWarning($"card {card.m_LoreItem.m_ID} is already purchased");
+                Plugin.Logger.LogError($"card {card.m_LoreItem.m_ID} is already purchased");
                 failedPurchase = true;
             }
             if (!card.m_LoreItem.CanAfford())
             {
-                Plugin.Logger.LogWarning($"cannot afford {card.m_LoreItem.m_ID}");
+                Plugin.Logger.LogError($"cannot afford {card.m_LoreItem.m_ID}");
                 failedPurchase = true;
             }
             if (!card.m_LoreItem.IsRevealed())
             {
-                Plugin.Logger.LogWarning($"card {card.m_LoreItem.m_ID} is not revealed");
+                Plugin.Logger.LogError($"card {card.m_LoreItem.m_ID} is not revealed");
                 failedPurchase = true;
             }
             if (failedPurchase)
@@ -120,11 +120,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 isPurchasing = false;
                 yield break;
             }
-            string successMsg = $"you purchased {itemName}";
+            string successMsg = $"you purchased [{itemName}]";
             foreach (KeyValuePair<string, Dictionary<string, object>> item in availableLoreData)
             {
                 if (item.Key.ToLower() != itemName.ToLower()) continue;
-                successMsg = $"you purchased: '{item.Key}' '{item.Value["description"]}'";
+                successMsg = $"you purchased [{item.Key}: {item.Value["description"]}]";
                 break;
             }
             Context.Send(successMsg);

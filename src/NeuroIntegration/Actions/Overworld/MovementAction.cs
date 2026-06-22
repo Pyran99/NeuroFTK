@@ -82,7 +82,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         /// </summary>
         static string GetContext(List<HexLand> tiles)
         {
-            string context = "these are the tiles you can move to, displayed as ({name}{quest name}: {position}): ";
+            string context = "these are the tiles you can move to (displayed as [(position(as x,y,z)): (name)(quest name)]): ";
             string name;
             string questName = "";
             Vector3 pos;
@@ -94,7 +94,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 {
                     questName = "has quest";
                 }
-                context += $"({{{name}}}{{{questName}}}: {{{pos}}}) ";
+                context += $"[({pos}): ({name})({questName})]";
                 hexPositions.Add(pos.ToString(), item);
             }
             return context;
