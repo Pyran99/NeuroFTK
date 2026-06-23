@@ -8,7 +8,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
     {
         static void Postfix(uiDidYouKnow __instance)
         {
-            Context.Send($"Did you know: {__instance.m_Content.text}");
+            Context.Send($"[Did you know] {__instance.m_Content.text}");
         }
     }
 }

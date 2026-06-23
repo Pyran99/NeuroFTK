@@ -16,7 +16,7 @@ namespace Pyran.NeuroFTK
             CharacterOverworld current = GameLogic.Instance.GetCurrentCOW();
             string name = current.m_CharacterStats.m_CharacterName;
             HexLand hex = current.GetHexLand();
-            Context.Send($"{name} is at {hex.GetPosition()} - {hex}. This tile contains {hex.GetPOI()?.GetIDString()}");
+            Context.Send($"[{name}] is at {hex.GetPosition()} {hex}. This tile contains {hex.GetPOI()?.GetIDString()}");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

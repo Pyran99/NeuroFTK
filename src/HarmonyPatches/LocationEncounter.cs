@@ -45,6 +45,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator LocationMenuDisplayShow(IEnumerator __result)
         {
             while (__result.MoveNext()) yield return __result.Current;
+            //TODO 1 uiLocationMenuDisplay SwitchToSubMenu
+            if (uiLocationMenuDisplay.Instance.m_SubMenu != null) yield return null;
             string info = $"{GetLocEncounterName()}: {GetLocEncounterFlavorText()}";
             window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, GetLocEncounterButtons(), info, GetLocEncounterLoreDescription());
         }
@@ -100,6 +102,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 buttons.Add(comp.text, child.GetComponent<uiLocationMenuEntry>());
             }
             return buttons;
+        }
+
+        
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.SwitchToSubMenu))]
+        [HarmonyPostfix]
+        static void Test1()
+        {
+            Plugin.Logger.LogMessage("1 uiLocationMenuDisplay SwitchToSubMenu");
         }
 
         // [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]

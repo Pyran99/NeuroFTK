@@ -22,7 +22,6 @@ namespace Pyran.NeuroFTK
 
         protected override void Execute()
         {
-            Plugin.Logger.LogMessage("message hud continue");
             FTKClickAnywhere.Instance.OnClick();
         }
 
