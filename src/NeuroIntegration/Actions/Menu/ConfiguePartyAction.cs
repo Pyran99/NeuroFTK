@@ -37,13 +37,38 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
     public class ChoosePartyNamesAction : NeuroAction<List<string>>
     {
+        readonly int min = 3;
+        readonly int max = 16;
+
         public override string Name => "choose_party_names";
         protected override string Description => "pick 3 names for your party members then begin the game";
         protected override JsonSchema Schema => GetSchema();
 
-        readonly int min = 3;
-        readonly int max = 16;
-
+        JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["names"],
+                Properties = new()
+                {
+                    ["names"] = new()
+                    {
+                        Type = JsonSchemaType.Array,
+                        MinItems = 3,
+                        MaxItems = 3,
+                        UniqueItems = true,
+                        Items = new()
+                        {
+                            Type = JsonSchemaType.String,
+                            MinLength = min,
+                            MaxLength = max
+                        }
+                    }
+                }
+            };
+            return schema;
+        }
 
         protected override void Execute(List<string> parsedData)
         {
@@ -80,32 +105,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
             }
             parsedData = build;
             return ExecutionResult.Success();
-        }
-
-        JsonSchema GetSchema()
-        {
-            JsonSchema schema = new()
-            {
-                Type = JsonSchemaType.Object,
-                Required = ["names"],
-                Properties = new()
-                {
-                    ["names"] = new()
-                    {
-                        Type = JsonSchemaType.Array,
-                        MinItems = 3,
-                        MaxItems = 3,
-                        UniqueItems = true,
-                        Items = new()
-                        {
-                            Type = JsonSchemaType.String,
-                            MinLength = min,
-                            MaxLength = max
-                        }
-                    }
-                }
-            };
-            return schema;
         }
     }
 }

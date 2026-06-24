@@ -6,6 +6,7 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK
@@ -526,6 +527,11 @@ namespace Pyran.NeuroFTK
 
             protected override void Execute()
             {
+                if (GlobalConfig.debug_mode)
+                {
+                    Plugin.Logger.LogWarning("debug skip flee combat");
+                    return;
+                }
                 SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 
@@ -602,6 +608,11 @@ namespace Pyran.NeuroFTK
             protected override void Execute(string parsedData)
             {
                 Plugin.Logger.LogWarning("execute change weapon action " + parsedData);
+                if (GlobalConfig.debug_mode)
+                {
+                    Plugin.Logger.LogWarning("debug skip change weapon");
+                    return;
+                }
                 SelectButton.StartCoroutine(instance, btn, 1.0f);
             }
 

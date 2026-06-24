@@ -15,8 +15,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
         {
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new LocationEncounterAction(_buttons));
-            window.SetContext($"location encountered \n{flavorText} \ndescription: {loreDescription}");
-            // window.SetForce(5, "choose an action", "you are at a location");
+            window.SetContext($"[location encountered] {flavorText} \ndescription: {loreDescription}");
+            window.SetForce(3, "choose an action", "you encountered something while moving");
             window.Register();
             return window;
         }

@@ -43,6 +43,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             timer.Start();
         }
 
+        [HarmonyPatch(typeof(VoteButtonContainer), nameof(VoteButtonContainer.Hide))]
+        [HarmonyPrefix]
+        static void VoteContainerHide(VoteButtonContainer __instance)
+        {
+            voteButtons.Clear();
+            isShowing = false;
+            Object.Destroy(activeWindow);
+        }
+
         static void CreateAction()
         {
             activeWindow = ActionWindow.Create(instance.gameObject);
@@ -55,22 +64,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             activeWindow.Register();
         }
 
-        [HarmonyPatch(typeof(VoteButtonContainer), "_showFadeIn")] // not called
-        [HarmonyPostfix]
-        static System.Collections.IEnumerator FadeIn(System.Collections.IEnumerator __result)
-        {
-            while (__result.MoveNext()) yield return __result.Current;
-            Plugin.Logger.LogWarning("voteContainerShowFadeIn");
-        }
-
-        [HarmonyPatch(typeof(VoteButtonContainer), nameof(VoteButtonContainer.Hide))]
-        [HarmonyPrefix]
-        static void VoteContainerHide(VoteButtonContainer __instance)
-        {
-            voteButtons.Clear();
-            isShowing = false;
-            Object.Destroy(activeWindow);
-        }
+        // [HarmonyPatch(typeof(VoteButtonContainer), "_showFadeIn")] // not called
+        // [HarmonyPostfix]
+        // static System.Collections.IEnumerator FadeIn(System.Collections.IEnumerator __result)
+        // {
+        //     while (__result.MoveNext()) yield return __result.Current;
+        //     Plugin.Logger.LogWarning("voteContainerShowFadeIn");
+        // }
 
         // [HarmonyPatch(typeof(VoteButtonContainer), nameof(VoteButtonContainer.RefreshVoteButtons))] // calls both hide & show
         // [HarmonyPatch([])]

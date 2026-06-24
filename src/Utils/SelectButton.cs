@@ -49,7 +49,6 @@ namespace Pyran.NeuroFTK.Utils
                 Plugin.Logger.LogError($"button is disabled after waiting {button.name}");
                 yield break;
             }
-            button.Select();
             button.OnControllerClick();
         }
     
