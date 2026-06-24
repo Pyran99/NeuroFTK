@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
@@ -7,10 +9,10 @@ using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK
 {
-    public class CharacterDecisionAction(string _key, List<string> _values) : NeuroAction<string>
+    public class CharacterDecisionAction(string _key, List<VoteButton> _values) : NeuroAction<string>
     {
         public override string Name => $"{_key.Replace(" ", "_")}_decision";
-        protected override string Description => $"make a decision for {_key}";
+        protected override string Description => $"make the decision for {_key}";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -21,7 +23,7 @@ namespace Pyran.NeuroFTK
                 Required = ["decision"],
                 Properties = new()
                 {
-                    ["decision"] = QJS.Enum(_values)
+                    ["decision"] = QJS.Enum(_values.Select(v => v.m_Option.ToString()))
                 },
             };
             return schema;
@@ -29,8 +31,7 @@ namespace Pyran.NeuroFTK
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogMessage("execute vote btns action");
-            foreach (VoteButton btn in CharacterDecisionButtons.voteButtons[_key])
+            foreach (VoteButton btn in _values)
             {
                 if (btn.m_Option.ToString() == parsedData)
                 {
@@ -44,7 +45,14 @@ namespace Pyran.NeuroFTK
         {
             Plugin.Logger.LogWarning($"chosen action {actionData.Data}");
             parsedData = actionData.Data.Value<string>("decision");
-            return ExecutionResult.Success();
+            foreach (VoteButton btn in _values)
+            {
+                if (btn.m_Option.ToString() == parsedData)
+                {
+                    return ExecutionResult.Success();
+                }
+            }
+            return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("decision"));
         }
     }
 }

@@ -91,8 +91,8 @@ namespace Pyran.NeuroFTK
             string type = data[key]["type"];
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
-            string context = $"[{key}]{type}; {description}\n";
-            if (hasRolls) context = $"[{key}]{type}; {description}; success chance for each roll slot {rollChance}]\n";
+            string context = $"[{key}]{type}, {description}\n";
+            if (hasRolls) context = $"[{key}]{type}, {description}, success chance for each roll slot {rollChance}\n";
             return context;
         }
 
@@ -103,7 +103,7 @@ namespace Pyran.NeuroFTK
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
             string dmg = data[key]["damage"];
-            string context = $"[{key}]damage: {dmg}; {type}; {StringReplace.RemoveStyling(description)}; success chance for each roll slot {rollChance}\n";
+            string context = $"[{key}]damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll slot {rollChance}\n";
             return context;
         }
 
