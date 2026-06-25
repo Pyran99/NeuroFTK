@@ -24,7 +24,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ButtonsEnabled()
         {
-            Plugin.Logger.LogMessage("EnableBattleStanceButtons");
             window = CombatActions.RegisterActions(StanceButtonsInstance, m_Proficiencies);
         }
 
@@ -35,19 +34,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             m_Proficiencies = [.. ___m_Proficiencies];
         }
 
-        [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.BattleButtonsOff))] // called after attacks
-        [HarmonyPostfix]
-        static void Test14()
-        {
-            Plugin.Logger.LogMessage("14 BattleButtonsOff");
-            UnityEngine.Object.Destroy(window);
-        }
-
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.StartNextCombatRound2))] // before stance btns enable
         [HarmonyPostfix]
         static void Test42()
         {
-            Plugin.Logger.LogMessage("42 StartNextCombatRound2");
+            Plugin.Logger.LogMessage("StartNextCombatRound2");
         }
 
 
@@ -146,8 +137,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         //     string dmg = info.m_DamageValue.text;
         //     string desc = info.m_Description[0]?.text ?? "null";
         //     string desc2 = info.m_Description[1]?.text ?? "null";
-        //     //TODO per slot ACC
         //     Plugin.Logger.LogMessage($"DisplayBattleActionInfo: value: {dmg}; dmg title:{type}; desc:{desc} || {desc2}");
+        // }
+
+        // [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.BattleButtonsOff))] // called after attacks & game start
+        // [HarmonyPostfix]
+        // static void Test14()
+        // {
+        //     Plugin.Logger.LogMessage("14 BattleButtonsOff");
+        //     UnityEngine.Object.Destroy(window);
         // }
     }
 
