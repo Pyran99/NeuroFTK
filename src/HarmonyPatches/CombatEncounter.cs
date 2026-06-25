@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Google2u;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
+using Newtonsoft.Json;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -101,15 +104,44 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<SubPanelBaseBase.ButtonID, uiPoiButton> kvp in buttons)
             {
                 if (!kvp.Value.isActiveAndEnabled) continue;
+                if (activeButtons.ContainsKey(kvp.Key)) continue;
                 activeButtons.Add(kvp.Key, kvp.Value);
             }
             Plugin.Logger.LogWarning($"active buttons: {string.Join(", ", [.. activeButtons.Select(x => x.Value.m_ButtonText.text)])}");
             Dictionary<string, string> data = [];
+            Dictionary<string, object> outcomes = [];
             foreach (uiPoiButton btn in activeButtons.Values)
             {
+                if (data.ContainsKey(btn.m_ButtonText.text))
+                {
+                    Plugin.Logger.LogError("data dupe");
+                    continue;
+                }
                 data.Add(btn.m_ButtonText.text, EncounterButtonFlavor.GetString(btn.m_ButtonInfo.m_ButtonType));
+                FTK_slotOutput.ID id = FTK_slotOutput.ID.None;
+                if (btn.m_ButtonText.text == "Ambush")
+                {
+                    id = RollSlotOutcomes._getAmbushType((MiniHexEnemy)instance.m_ThisMiniHex, GameLogic.Instance.GetCurrentCOW());
+                }
+                else if (btn.m_ButtonText.text == "Sneak")
+                {
+                    id = RollSlotOutcomes._getSneakType((MiniHexEnemy)instance.m_ThisMiniHex, GameLogic.Instance.GetCurrentCOW());
+                }
+                if (id == FTK_slotOutput.ID.None) continue;
+                Dictionary<string, Dictionary<string, string>> outcome = RollSlotOutcomes.GetOutcomes(id);
+                string conv = JsonConvert.SerializeObject(outcome, Formatting.Indented);
+                Plugin.Logger.LogMessage(conv);
+                // { "ambush": { 0: {5%: failure} }, { 1: {5%: success} }
+                outcomes.Add(btn.m_ButtonText.text, outcome);
             }
-            Plugin.Logger.LogWarning($"active buttons: {string.Join("\n", [.. data.Select(x => x.Key + ": " + x.Value)])}");
+            // string key = data.Keys.First();
+            // List<float> values = outcomes[key];
+            // Context.Send($"{key} {string.Join(", ", [.. values.Select(x => x.ToString())])}");
+        }
+
+// public void InitializeLegendLocal(bool _close, FTKPlayerID _cowID, int _spentFocus, FTK_slotOutput.ID _output, FTK_weaponStats2.SkillType _skill)
+        static void GetRollChances(FTK_slotOutput.ID id)
+        {
             
         }
 
