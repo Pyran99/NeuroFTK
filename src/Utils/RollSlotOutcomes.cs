@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Google2u;
 using GridEditor;
 using UnityEngine;
 
@@ -7,7 +6,11 @@ namespace Pyran.NeuroFTK.Utils
 {
     public class RollSlotOutcomes
     {
-        // { 0: {5%: failure} }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_id"></param>
+        /// <returns>{roll: {chance: result}}<br/>{ 1: { 95%: Success } }</returns>
         public static Dictionary<string, Dictionary<string, string>> GetOutcomes(FTK_slotOutput.ID _id)
         {
             Dictionary<string, Dictionary<string, string>> result = [];
@@ -16,7 +19,6 @@ namespace Pyran.NeuroFTK.Utils
             FTK_progressionTier.ID progID = FTK_progressionTier.ID.None;
             FTK_weaponStats2.SkillType _skill = entry.m_TestSkill;
             FTK_slotOutput entry2 = FTK_slotOutputDB.GetDB().GetEntry(_id);
-            string displayTitle = FTKHub.Localized<TextMisc>(entry2.m_LegendTitle);
             int slotAmount = entry2.m_SlotAmount + 1;
             uiSlotLegend.SlotOutput[] outputs = new uiSlotLegend.SlotOutput[slotAmount];
 

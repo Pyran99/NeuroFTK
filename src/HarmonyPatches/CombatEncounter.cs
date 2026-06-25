@@ -5,7 +5,6 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
-using Newtonsoft.Json;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -17,6 +16,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static uiEncounterMenu instance;
         static readonly Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> activeButtons = [];
+        static string buttonsContext = "";
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EnableMenu))]
         [HarmonyPostfix]
@@ -24,24 +24,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             activeButtons.Clear();
             ToggleOverworldActions.DisableOverworldActions();
-            Type(__instance.m_ThisMiniHex);
             instance = __instance;
+            // Type(__instance.m_ThisMiniHex);
+            // GetActiveWindow();
             QuickTimerCallback timerCallback = new(CreateAction, 2000f);
-            GameObject first = __instance?.transform.Find("MainPanel")?.gameObject;
-            GameObject menu = first?.transform.Find("MenuPanel")?.gameObject;
-            GameObject slots = menu?.transform.Find("SlotsAndSubPanels")?.gameObject;
-            GameObject subMenu = slots?.transform.Find("SubPanels")?.gameObject;
-            if (subMenu == null) return;
-            // foreach (Transform child in subMenu.transform)
-            // {
-            //     Plugin.Logger.LogMessage(child.name);
-            //     if (child.gameObject.activeInHierarchy)
-            //     {
-            //         Plugin.Logger.LogWarning($"encounter = {child.name}");
-            //         subPanelBase = child.GetComponent<SubPanelBaseBase>();
-            //         break;
-            //     }
-            // }
+            GetContext(__instance.m_PoiName.text, __instance.m_LoreDescription.text);
+            //TODO [context1] tasks
         }
 
         static void CreateAction()
@@ -50,7 +38,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             window.AddAction(new EncounterAction(instance, [.. activeButtons.Values]));
             // window.SetForce(3, "choose an action", "you encountered an enemy");
-            window.SetContext(GetContext(instance.m_PoiName.text, instance.m_LoreDescription.text));
+            window.SetContext(buttonsContext);
             window.Register();
         }
 
@@ -83,15 +71,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static string GetContext(string name, string description)
         {
-            Plugin.Logger.LogMessage($"{instance?.m_ThisMiniHex?.GetMenuDisplayValues().m_Top}");
-            return $"[Encounter] {name}: {description}";//\n{flavor}"; // flavor is btn description
-        }
-
-        [HarmonyPatch(typeof(SubPanelBaseBase), nameof(SubPanelBaseBase.GenerateMenu))]
-        [HarmonyPostfix]
-        static void MenuGenerated()
-        {
-            Plugin.Logger.LogWarning("menu generated");
+            // Plugin.Logger.LogMessage($"{instance?.m_ThisMiniHex?.GetMenuDisplayValues().m_Top}");
+            return $"[Encounter] {name}: {description}";
         }
 
 
@@ -107,17 +88,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (activeButtons.ContainsKey(kvp.Key)) continue;
                 activeButtons.Add(kvp.Key, kvp.Value);
             }
-            Plugin.Logger.LogWarning($"active buttons: {string.Join(", ", [.. activeButtons.Select(x => x.Value.m_ButtonText.text)])}");
-            Dictionary<string, string> data = [];
-            Dictionary<string, object> outcomes = [];
+            Plugin.Logger.LogMessage($"active buttons: {string.Join(", ", [.. activeButtons.Select(x => x.Value.m_ButtonText.text)])}");
+            Dictionary<string, string> flavorData = [];
+            Dictionary<string, object> rollData = [];
             foreach (uiPoiButton btn in activeButtons.Values)
             {
-                if (data.ContainsKey(btn.m_ButtonText.text))
-                {
-                    Plugin.Logger.LogError("data dupe");
-                    continue;
-                }
-                data.Add(btn.m_ButtonText.text, EncounterButtonFlavor.GetString(btn.m_ButtonInfo.m_ButtonType));
+                if (flavorData.ContainsKey(btn.m_ButtonText.text)) continue;
+                flavorData.Add(btn.m_ButtonText.text, EncounterButtonFlavor.GetString(btn.m_ButtonInfo.m_ButtonType));
                 FTK_slotOutput.ID id = FTK_slotOutput.ID.None;
                 if (btn.m_ButtonText.text == "Ambush")
                 {
@@ -129,20 +106,46 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 if (id == FTK_slotOutput.ID.None) continue;
                 Dictionary<string, Dictionary<string, string>> outcome = RollSlotOutcomes.GetOutcomes(id);
-                string conv = JsonConvert.SerializeObject(outcome, Formatting.Indented);
-                Plugin.Logger.LogMessage(conv);
                 // { "ambush": { 0: {5%: failure} }, { 1: {5%: success} }
-                outcomes.Add(btn.m_ButtonText.text, outcome);
+                rollData.Add(btn.m_ButtonText.text, outcome);
             }
-            // string key = data.Keys.First();
-            // List<float> values = outcomes[key];
-            // Context.Send($"{key} {string.Join(", ", [.. values.Select(x => x.ToString())])}");
+            string context = "(this encounters actions displayed as [action (description)] total successful rolls(chance for this result) = outcome result)\n";
+            foreach (KeyValuePair<string, object> data in rollData)
+            {
+                // [ambush](ambush flavor) 
+                context += $"[{data.Key} ({flavorData[data.Key]})] \n";
+                foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
+                {
+                    // 0(2%) = Failure
+                    context += $"{outcome.Key}({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}\n";
+                    // string value = JsonConvert.SerializeObject(outcome.Value);
+                    // context += $"{outcome.Key} = {value}\n";
+                }
+            }
+            buttonsContext = context;
+            // Context.Send(context);
         }
 
-// public void InitializeLegendLocal(bool _close, FTKPlayerID _cowID, int _spentFocus, FTK_slotOutput.ID _output, FTK_weaponStats2.SkillType _skill)
-        static void GetRollChances(FTK_slotOutput.ID id)
+        // alternate way to get the active window. unsure how to specify the type
+        static void GetActiveWindow()
         {
-            
+            SubPanelBaseBase subPanelBase = null;
+            GameObject first = instance?.transform.Find("MainPanel")?.gameObject;
+            GameObject menu = first?.transform.Find("MenuPanel")?.gameObject;
+            GameObject slots = menu?.transform.Find("SlotsAndSubPanels")?.gameObject;
+            GameObject subMenu = slots?.transform.Find("SubPanels")?.gameObject;
+            if (subMenu == null) return;
+            foreach (Transform child in subMenu.transform)
+            {
+                Plugin.Logger.LogMessage(child.name);
+                if (child.gameObject.activeInHierarchy)
+                {
+                    Plugin.Logger.LogWarning($"encounter = {child.name}");
+                    subPanelBase = child.GetComponent<SubPanelBaseBase>();
+                    break;
+                }
+            }
+            Plugin.Logger.LogWarning(subPanelBase.gameObject.name);
         }
 
 
