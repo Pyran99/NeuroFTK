@@ -8,6 +8,7 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -83,8 +84,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             // 0 {"name","level"}
             string encounter = $"[Encounter] {name}: {description}\n";
-            string _players = $"[characters involved] {string.Join(", ", [.. players.Select(x => x)])}\n";
-            string _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}\n";
+            string _players = "";
+            if (players.Count > 0)
+            {
+                _players = $"[characters involved] {string.Join(", ", [.. players.Select(x => x)])}\n";
+            }
+            string _enemies = "";
+            if (enemies.Count > 0)
+            {
+                _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}\n";
+            }
             return $"{encounter}{_players}{_enemies}";
         }
 
@@ -93,8 +102,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PortraitInitEnemy(string _enemyId)
         {
+            Plugin.Logger.LogMessage(_enemyId);
+            if (_enemyId.IsNullOrEmpty() || _enemyId == "None")
+            {
+                Plugin.Logger.LogError("enemy: " + _enemyId);
+                return;
+            }
             FTK_enemyCombat.ID id = FTK_enemyCombat.GetEnum(_enemyId);
+            Plugin.Logger.LogMessage("2 " + id.ToString());
             FTK_enemyCombat entry = FTK_enemyCombatDB.Get(id);
+            Plugin.Logger.LogMessage("3 " + entry.m_ID);
             string lvl = "";
             if (id != FTK_enemyCombat.ID.None && HauntManager.IsScourgeActive(HauntManager.Scourge.Deimos) && entry.CanBeRandomized())
             {
@@ -137,12 +154,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (flavorData.ContainsKey(btn.m_ButtonText.text)) continue;
                 flavorData.Add(btn.m_ButtonText.text, EncounterButtonFlavor.GetString(btn.m_ButtonInfo.m_ButtonType));
+// this.m_Owner.m_SlotPanel.PrepareSlots(base.CurrentCow, base.ThisHex().GetDBEntry().m_SlotRoll, base.ThisHex().m_SkillRoll, true);
+                FTK_slotOutput slot = FTK_slotOutputDB.GetDB().GetEntry((instance.m_ThisMiniHex as MiniEncounter).GetDBEntry().m_SlotRoll);
                 FTK_slotOutput.ID id = FTK_slotOutput.ID.None;
-                if (btn.m_ButtonText.text == "Ambush")
+                // FTK_slotOutput.ID id = FTK_slotOutput.ID.None; //FIXME
+                // if (btn.m_ButtonText.text == "Ambush")
+                if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Ambush)
                 {
                     id = RollSlotOutcomes._getAmbushType((MiniHexEnemy)instance.m_ThisMiniHex, GameLogic.Instance.GetCurrentCOW());
                 }
-                else if (btn.m_ButtonText.text == "Sneak")
+                else if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Sneak)
                 {
                     id = RollSlotOutcomes._getSneakType((MiniHexEnemy)instance.m_ThisMiniHex, GameLogic.Instance.GetCurrentCOW());
                 }
@@ -168,6 +189,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
 
         #region menus
+
+        static FTK_slotOutput.ID slotID = FTK_slotOutput.ID.None;
 
         // alternate way to get the active window. unsure how to specify the type
         static void GetActiveWindow()
@@ -227,12 +250,24 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             SetButtonData(__instance.m_Buttons);
         }
 
+        public static class EncounterMenuType<T> // TODO maybe way of storing each __instance
+        {
+            public static T test;
+        }
+
         [HarmonyPatch(typeof(uiSkillTestMenu), nameof(uiSkillTestMenu.GenerateMenu))]
         [HarmonyPostfix]
         static void SkillTestPanel(uiSkillTestMenu __instance)
         {
-            Plugin.Logger.LogWarning("SkillTestPanel");
+            Plugin.Logger.LogWarning("SkillTestPanel"); //TODO
             instance = __instance.m_Owner;
+            // FTK_slotOutput slot = FTK_slotOutputDB.Get(__instance.ThisHex().GetDBEntry().m_SlotRoll);
+            FTK_slotOutput.ID id = __instance.ThisHex().GetDBEntry().m_SlotRoll;
+            EncounterMenuType<uiSkillTestMenu>.test = __instance; // testing
+            // FTK_slotOutput.ID id = FTK_slotOutput.GetEnum(slot.m_ID);
+            Plugin.Logger.LogWarning($"id: {id}");
+            FTK_weaponStats2.SkillType skillType = __instance.ThisHex().m_SkillRoll;
+            Plugin.Logger.LogWarning($"skill: {skillType}");
             SetButtonData(__instance.m_Buttons);
         }
 

@@ -14,7 +14,7 @@ namespace Pyran.NeuroFTK.Utils
             Start(method, ms);
         }
 
-        private event Action Callback;
+        public event Action Callback;
 
         private void Start(Action method, float ms = 1000f)
         {

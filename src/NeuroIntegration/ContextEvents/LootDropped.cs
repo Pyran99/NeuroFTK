@@ -56,7 +56,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             }
             else
             {
-                description = FTKItem.Get(id)?.GetDescription(GameLogic.Instance.GetCurrentCombatCOW());
+                CharacterOverworld cow = GameLogic.Instance.GetCurrentCombatCOW() ?? GameLogic.Instance.GetCurrentCOW();
+                // if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+                // {
+                //     cow = GameLogic.Instance.GetCurrentCOW();
+                // }
+                // else if(ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Combat || ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon || ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.MultiEncounter)
+                // {
+                //     cow = GameLogic.Instance.GetCurrentCombatCOW();
+                // }
+                if (cow == null)
+                {
+                    Plugin.Logger.LogError("null cow");
+                    return;
+                }
+                description = FTKItem.Get(id)?.GetDescription(cow);
             }
 
             Context.Send($"[the loot item to decide on]{name}{amount} [Rarity]{StringReplace.RemoveStyling(rarity)} [Description]{StringReplace.RemoveStyling(description)}");
