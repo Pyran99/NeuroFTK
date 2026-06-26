@@ -37,7 +37,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                 if (btn.m_ButtonText.text == parsedData)
                 {
                     SelectButton.StartCoroutine(instance, btn, 1.0f);
-                    break;
+                    return;
                 }
             }
             Plugin.Logger.LogError("failed to select button " + parsedData);

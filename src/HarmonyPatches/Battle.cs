@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -36,9 +37,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.StartNextCombatRound2))] // before stance btns enable
         [HarmonyPostfix]
-        static void Test42()
+        static void NextCombatRound()
         {
             Plugin.Logger.LogMessage("StartNextCombatRound2");
+            Object.Destroy(window);
         }
 
 

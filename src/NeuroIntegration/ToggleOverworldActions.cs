@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK
 {
     [HarmonyPatch]
     public class ToggleOverworldActions
     {
-        static List<INeuroAction> registeredActions = [];
+        static readonly List<INeuroAction> registeredActions = [];
         public static uiGameTrackerHUD.GameTrackerMode mode;
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DungeonEncounter))]
@@ -58,7 +59,10 @@ namespace Pyran.NeuroFTK
             string name = Enum.GetName(typeof(uiGameTrackerHUD.GameTrackerMode), _mode);
             var test = Enum.Parse(typeof(uiGameTrackerHUD.GameTrackerMode), name);
             Plugin.Logger.LogMessage($"game track mode changed to {name} - {_mode} - {test}"); // game track mode changed to Overworld - Overworld - Overworld
-            if (_mode == uiGameTrackerHUD.GameTrackerMode.Overworld) EnableOverworldActions();
+            if (_mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                QuickTimerCallback timer = new(EnableOverworldActions, 1000f);
+            }
             else DisableOverworldActions();
         }
         
