@@ -307,12 +307,12 @@ namespace Pyran.NeuroFTK
             bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.isActiveAndEnabled;
             if (useDefault)
             {
-                Plugin.Logger.LogMessage(AddAttackContext(GetActionDetails(_instance.m_AttackButton, m_Proficiencies)));
+                // AddAttackContext(GetActionDetails(_instance.m_AttackButton, m_Proficiencies));
                 btns.Add("attack", _instance.m_AttackButton);
             }
             if (canReload)
             {
-                Plugin.Logger.LogMessage(AddAttackContext(GetActionDetails(_instance.m_ReloadButton, m_Proficiencies)));
+                // AddAttackContext(GetActionDetails(_instance.m_ReloadButton, m_Proficiencies));
                 btns.Add("reload gun", _instance.m_ReloadButton);
             }
             foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)

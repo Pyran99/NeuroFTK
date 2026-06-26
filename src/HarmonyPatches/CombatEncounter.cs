@@ -83,8 +83,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             // 0 {"name","level"}
             string encounter = $"[Encounter] {name}: {description}\n";
-            string _players = $"[characters involved]{string.Join(", ", [.. players.Select(x => x)])}\n";
-            string _enemies = $"[enemies involved]{string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}\n";
+            string _players = $"[characters involved] {string.Join(", ", [.. players.Select(x => x)])}\n";
+            string _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}\n";
             return $"{encounter}{_players}{_enemies}";
         }
 

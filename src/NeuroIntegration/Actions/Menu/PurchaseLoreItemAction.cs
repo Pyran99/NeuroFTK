@@ -54,7 +54,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string context = "";
             foreach (string key in schemaData.Keys)
             {
-                context += $"[name: {key}, description: {StringReplace.ReplaceNewLine(schemaData[key])}]\n";
+                context += $"[{key}] {StringReplace.ReplaceNewLine(schemaData[key])}.\n";
             }
             Context.Send($"Items and their descriptions you can afford: {context}");
             data = [.. schemaData.Select(l => l.Key)];

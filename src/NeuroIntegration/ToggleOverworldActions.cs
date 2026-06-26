@@ -61,7 +61,7 @@ namespace Pyran.NeuroFTK
             Plugin.Logger.LogMessage($"game track mode changed to {name} - {_mode} - {test}"); // game track mode changed to Overworld - Overworld - Overworld
             if (_mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
-                QuickTimerCallback timer = new(EnableOverworldActions, 1000f);
+                QuickTimerCallback timer = new(EnableOverworldActions, 1000f); // maybe not. is set at end of battle during loot
             }
             else DisableOverworldActions();
         }
