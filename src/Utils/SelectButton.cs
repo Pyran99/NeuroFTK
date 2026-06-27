@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -50,6 +51,33 @@ namespace Pyran.NeuroFTK.Utils
                 yield break;
             }
             button.OnControllerClick();
+        }
+
+        public static void StartUnityBtnCoroutine(MonoBehaviour instance, Button button, float wait = 1.0f)
+        {
+            instance.StartCoroutine(SelectUnityButtonWithDelay(instance, button, wait));
+        }
+
+        static IEnumerator SelectUnityButtonWithDelay(MonoBehaviour instance, Button button, float wait = 1.0f)
+        {
+            if (button == null)
+            {
+                Plugin.Logger.LogError($"button is null from {instance}");
+                yield break;
+            }
+            if (!button.isActiveAndEnabled)
+            {
+                Plugin.Logger.LogWarning($"button {button.name} is disabled");
+                yield break;
+            }
+            button.OnPointerEnter(null);
+            yield return new WaitForSeconds(wait);
+            if (!button.isActiveAndEnabled)
+            {
+                Plugin.Logger.LogError($"button is disabled after waiting {button.name}");
+                yield break;
+            }
+            button.OnSubmit(null);
         }
     
         
