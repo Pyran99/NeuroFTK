@@ -55,7 +55,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             yield return new WaitForSeconds(6f);
             // this holds an event to current click anywhere that would call its close
             // FTKClickAnywhere.Instance.OnClick();
-            Plugin.Logger.LogMessage("portrait click continue");
             doOnce = false;
         }
 
@@ -66,13 +65,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         {
             Plugin.Logger.LogMessage("portrait after zoom in");
             ContinueAfterMessageSent(__instance);
-        }
-
-        [HarmonyPatch(typeof(uiPortraitMessageHud), nameof(uiPortraitMessageHud.UseOkayButton))]
-        [HarmonyPostfix]
-        static void OnClickToContinue()
-        {
-            Plugin.Logger.LogMessage("continue btn pressed");
         }
 
         // this could be used to grab quest data => is set to m_Quest
@@ -91,14 +83,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             // quest.GetLocalizedOneLineDesc();
             //MessagePresenter.Instance.PresentMessage(_mi.m_ID, closeFunc, closePartFunc, questByID, questMessageType, flag);
             //base.StartCoroutine(this.WaitPortraitToClose(_msgInstanceID, _messageCloseCallback, _msgPartCloseCB, _quest, _questMsgType, _enableButton));
-        }
-
-        [HarmonyPatch(typeof(FTKUI), nameof(FTKUI.EnableGlobalMessage))]
-        [HarmonyPostfix]
-        static void AfterEnableGlobalMessage(string _message)
-        {
-            Plugin.Logger.LogMessage("enable global message");
-            Plugin.Logger.LogMessage(_message);
         }
     }
 }

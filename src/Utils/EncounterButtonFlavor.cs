@@ -4,7 +4,7 @@ namespace Pyran.NeuroFTK.Utils
 {
     public class EncounterButton
     {
-        public static string GetString(SubPanelBaseBase.ButtonID id, MiniHexInfo hex)
+        public static string GetString(SubPanelBaseBase.ButtonID id)
         {
             return id switch
             {

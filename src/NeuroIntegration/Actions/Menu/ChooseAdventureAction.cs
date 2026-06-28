@@ -20,7 +20,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogMessage($"chosen adventure {parsedData}");
             ConfigureAdventure.NeuroSelectAdventure(instance, parsedData);
         }
 
@@ -59,7 +58,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.Actions
                     names.Add(prev.GetDisplayName());
                 }
             }
-            Plugin.Logger.LogMessage($"valid adventures: {string.Join(", ", [.. names])}");
             validAdventures = [.. names];
             return names;
         }

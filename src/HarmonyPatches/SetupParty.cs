@@ -17,7 +17,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class SetupParty
     {
         static bool shownOnce = false;
-        static Dictionary<string, Dictionary<string, object>> characters = [];
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
         static readonly float waitTime = 1.0f;
@@ -80,13 +79,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 data += joined + "\n";
             }
             // name: Hunter, class description:
-            Context.Send($"details about your current party classes: {data}");
+            Context.Send($"[current party classes] {data}");
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
-            data = "your party setup is: ";
+            data = "[party setup is] ";
             foreach (string name in names)
             {
-                data += $"[{name}: class; {classes[names.IndexOf(name)]}], ";
+                data += $"{name}: {classes[names.IndexOf(name)]}; ";
             }
             Context.Send(data);
         }
@@ -127,45 +126,32 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string vitality = FTKUtil.RoundToInt((entry._vitality + statBonus) * 100f).ToString();
             string classFlavor = FTKHub.Localized<TextCharacters>(entry.m_Flavor);
             string classAbility = entry.m_CharacterSkills.GetSkillDisplay(false);
-            msg.Add($"{{name: {name}");
-            msg.Add($"class description: {classFlavor}");
-            msg.Add($"gold: {entry._startinggold + GameFlow.Instance.GameDif.m_ExtraGold}");
+            msg.Add($"{{[{name}] {classFlavor}");
+            msg.Add($"[gold] {entry._startinggold + GameFlow.Instance.GameDif.m_ExtraGold}");
             if (entry.m_StartWeapon != FTK_itembase.ID.None)
             {
-                msg.Add($"starting weapon: {FTKHub.Instance.GetItemDisplayName(entry.m_StartWeapon)}");
+                msg.Add($"[starting weapon] {FTKHub.Instance.GetItemDisplayName(entry.m_StartWeapon)}");
             }
             string items = "";
             foreach (FTK_itembase.ID _id in entry.m_StartItems)
             {
                 items += $"{FTKHub.Instance.GetItemDisplayName(_id)}, ";
             }
-            msg.Add($"starting items: {{{items}}}");
-            msg.Add($"toughness: {toughness}");
-            msg.Add($"fortitude: {fortitude}");
-            msg.Add($"talent: {talent}");
-            msg.Add($"awareness: {awareness}");
-            msg.Add($"quickness: {quickness}");
-            msg.Add($"vitality: {vitality}");
-            msg.Add($"class abilities: {classAbility}}}. ");
+            msg.Add($"[starting items] {{{items}}}");
+            msg.Add($"[toughness] {toughness}");
+            msg.Add($"[fortitude] {fortitude}");
+            msg.Add($"[talent] {talent}");
+            msg.Add($"[awareness] {awareness}");
+            msg.Add($"[quickness] {quickness}");
+            msg.Add($"[vitality] {vitality}");
+            msg.Add($"[class abilities] {classAbility}}}. ");
             return msg;
-        }
-
-        static string GetClassesDescriptions()
-        {
-            string data = "";
-            foreach (KeyValuePair<string, Dictionary<string, object>> character in characters)
-            {
-                data += $"name:'{character.Value["name"]}', description: {character.Value["description"]};\n";
-            }
-            return data;
         }
 
         static void ActionStartGame()
         {
             uiFTKButton btn = characterCreateRoot.transform.Find("UIRoot/ButtonRoot/StartButton").GetComponent<uiFTKButton>();
             SelectButton.StartCoroutine(characterCreateRoot, btn, 0.5f);
-            // uiStartGame.Instance.EnterGame(); // maybe EnterFahrul()?
-            //  KeyNotFoundException: The given key was not present in the dictionary.
         }
 
         public static void NeuroRandomizeParty()
@@ -193,7 +179,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 msg += $"'{name}' ";
             }
-            Plugin.Logger.LogMessage(msg);
             Context.Send(msg);
             yield return new WaitForSeconds(0.5f);
             SendPartyDetails();

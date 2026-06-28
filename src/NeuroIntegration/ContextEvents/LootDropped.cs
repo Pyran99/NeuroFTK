@@ -73,7 +73,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                 description = FTKItem.Get(id)?.GetDescription(cow);
             }
 
-            Context.Send($"[the loot item to decide on]{name}{amount} [Rarity]{StringReplace.RemoveStyling(rarity)} [Description]{StringReplace.RemoveStyling(description)}");
+            Context.Send($"[Loot] {name}{amount} [Rarity] {StringReplace.RemoveStyling(rarity)} [Description] {StringReplace.RemoveStyling(description)}");
             // [the loot item to decide on]Gold Coins [Rarity]Common [Description]Currency of Fahrul. Each coin worth its weight in gold.
         }
     }

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -18,7 +19,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
             StanceButtonsInstance = __instance;
-            Plugin.Logger.LogMessage("uiBattleStanceButtons Initialize");
         }
 
         [HarmonyPatch(typeof(FTKUI), nameof(FTKUI.EnableBattleStanceButtons))]
@@ -46,69 +46,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
 #region new
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))]
-        [HarmonyPostfix]
-        static void Test30()
-        {
-            Plugin.Logger.LogMessage("30 InitiateEncounterSessionRPC");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateNextEncounter))]
-        [HarmonyPostfix]
-        static void Test31()
-        {
-            Plugin.Logger.LogMessage("31 InitiateNextEncounter");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceRevealBattle))]
-        [HarmonyPostfix]
-        static void Test35()
-        {
-            Plugin.Logger.LogMessage("35 CommenceRevealBattle");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceMiniEncounterBattle))]
-        [HarmonyPostfix]
-        static void Test36()
-        {
-            Plugin.Logger.LogMessage("36 CommenceMiniEncounterBattle");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceStair))]
-        [HarmonyPostfix]
-        static void Test37()
-        {
-            Plugin.Logger.LogMessage("37 CommenceStair");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), "CommenceVoteEncounter")]
-        [HarmonyPostfix]
-        static void Test38()
-        {
-            Plugin.Logger.LogMessage("38 CommenceVoteEncounter");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
-        [HarmonyPostfix]
-        static void Test39()
-        {
-            Plugin.Logger.LogMessage("39 CommenceBattleRPC");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerVictory))]
-        [HarmonyPostfix]
-        static void Test46()
-        {
-            Plugin.Logger.LogMessage("46 CombatPlayerVictory");
-        }
-
-        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.DisplayLootItem))]
-        [HarmonyPostfix]
-        static void Test47(string _item)
-        {
-            Plugin.Logger.LogMessage("47 DisplayLootItem: " + _item);
-        }
-
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyFlee))] // context
         [HarmonyPostfix]
         static void Test44()
@@ -122,7 +59,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Test45()
         {
             Plugin.Logger.LogMessage("45 CombatEnemyDie");
-            Context.Send("the enemy has died");
+            Context.Send("an enemy has died");
         }
 
 #endregion

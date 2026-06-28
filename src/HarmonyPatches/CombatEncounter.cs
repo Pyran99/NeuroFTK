@@ -21,6 +21,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> activeButtons = [];
         static string buttonsContext = "";
         static int count = 0;
+        static bool generating = false;
 
         #region patches
 
@@ -32,32 +33,42 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             players.Clear();
             enemies.Clear();
             count = 0;
-            _ = instance?.m_ActiveSubPanel;
         }
 
         [HarmonyPatch(typeof(SubPanelBaseBase), nameof(SubPanelBaseBase.GenerateMenu))]
         [HarmonyPostfix]
-        static void Temp(SubPanelBaseBase __instance)
+        static void SubMenuGenerated(SubPanelBaseBase __instance)
         {
-            __instance.StartCoroutine(Wait(__instance.m_Owner, __instance.m_Buttons));
+            if (generating)
+            {
+                Plugin.Logger.LogWarning("multiple calls");
+                return;
+            }
+            generating = true;
+            Plugin.Logger.LogWarning("1 sub menu generated");
+            instance = __instance.m_Owner;
+            ToggleOverworldActions.DisableOverworldActions();
+            __instance.StartCoroutine(Wait(__instance.m_Buttons));
         }
 
-        static IEnumerator Wait(uiEncounterMenu _instance, Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
+        static IEnumerator Wait(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
         {
             // wait for lower class to finish setup
             yield return new WaitForEndOfFrame();
-            OnMenuOpened(_instance, _buttons);
+            Plugin.Logger.LogWarning("2 sub menu generated");
+            Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance?.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
+            QuickTimerCallback timer = new (CreateAction, 2000f);
+            OnMenuOpened(instance, _buttons);
         }
 
-        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EnableMenu))]
+        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EnableMenu))] // TODO not called from wishing well throw coin, generate is
         [HarmonyPostfix]
         static void EncounterMenuEnabled(uiEncounterMenu __instance)
         {
-            ToggleOverworldActions.DisableOverworldActions();
-            instance = __instance;
-            string flavor = instance.m_ThisMiniHex.GetMenuDisplayValues().m_Top;
-            Context.Send(EncounterContext(__instance.m_PoiName.text, __instance.m_LoreDescription.text, flavor));
-            QuickTimerCallback timerCallback = new(CreateAction, 2000f);
+            Plugin.Logger.LogWarning("encounter menu enabled");
+            // string flavor = instance.m_ThisMiniHex.GetMenuDisplayValues().m_Top;
+            // Context.Send(EncounterContext(__instance.m_PoiName.text, __instance.m_LoreDescription.text, flavor));
+            // QuickTimerCallback timerCallback = new(CreateAction, 2000f);
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.DisableMenu))]
@@ -68,12 +79,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GenerateMenu();
         }
 
+        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.MenuRefresh))] // after panel mode
+        [HarmonyPostfix]
+        static void Test2()
+        {
+            Plugin.Logger.LogMessage("uiEncounterMenu.MenuRefresh");
+            SubMenuGenerated(instance.m_ActiveSubPanel);
+        }
+
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.LeaveOrEndTurn))]
         [HarmonyPostfix]
         static void Leave()
         {
             Plugin.Logger.LogMessage("LeaveOrEndTurn");
-            ToggleOverworldActions.EnableOverworldActions();
+            // ToggleOverworldActions.EnableOverworldActions();
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EndTurn))]
@@ -90,7 +109,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (_enemyId.IsNullOrEmpty() || _enemyId == "None")
             {
-                Plugin.Logger.LogError("enemy: " + _enemyId);
+                enemies[count.ToString()] = new() {{"unknown", ""}};
                 return;
             }
             FTK_enemyCombat.ID id = FTK_enemyCombat.GetEnum(_enemyId);
@@ -118,6 +137,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateAction()
         {
+            generating = false;
             if (!instance.isActiveAndEnabled) return;
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             window.AddAction(new EncounterAction(instance, [.. activeButtons.Values]));
@@ -152,13 +172,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void SetButtonData(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> buttons)
         {
             activeButtons.Clear();
-            Plugin.Logger.LogMessage($"all btns: {string.Join(", ", [.. buttons.Select(x => x.Value.m_ButtonText.text)])}");
             foreach (KeyValuePair<SubPanelBaseBase.ButtonID, uiPoiButton> kvp in buttons)
             {
                 if (!kvp.Value.isActiveAndEnabled) continue;
                 if (activeButtons.ContainsKey(kvp.Key)) continue;
                 activeButtons.Add(kvp.Key, kvp.Value);
-                // Plugin.Logger.LogWarning("enter: " + kvp.Value.m_ButtonInfo.m_EnterFunc);
             }
             Plugin.Logger.LogMessage($"active buttons: {string.Join(", ", [.. activeButtons.Select(x => x.Value.m_ButtonText.text)])}");
             Dictionary<string, string> flavorData = [];
@@ -167,11 +185,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 GetButtonData(btn, flavorData, rollData);
             }
-            string context = "(this encounters actions (actions with no roll results will always succeed) displayed as: [action (description)] total successful rolls(chance for this result) = outcome result)\n";
+            Plugin.Logger.LogWarning(string.Join(", ", [.. flavorData.Select(x => x.Key)]));
+            Plugin.Logger.LogWarning(string.Join(", ", [.. rollData.Select(x => x.Key)]));
+            string context = "(this encounters actions (actions with no roll results will always succeed) displayed as: [action: description] total successful rolls(chance for this result) = outcome result)\n";
             foreach (KeyValuePair<string, object> data in rollData)
             {
                 // [ambush](ambush flavor) 
-                context += $"[{data.Key} ({flavorData[data.Key]})] \n";
+                context += $"[{data.Key}: {flavorData[data.Key]}] \n";
                 foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
                 {
                     // string value = JsonConvert.SerializeObject(outcome.Value);
@@ -188,7 +208,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void GetButtonData(uiPoiButton btn, Dictionary<string, string> flavorData, Dictionary<string, object> rollData)
         {
                 if (flavorData.ContainsKey(btn.m_ButtonText.text)) return;
-                flavorData.Add(btn.m_ButtonText.text, EncounterButton.GetString(btn.m_ButtonInfo.m_ButtonType, instance.m_ThisMiniHex));
+                flavorData.Add(btn.m_ButtonText.text, EncounterButton.GetString(btn.m_ButtonInfo.m_ButtonType));
                 FTK_slotOutput.ID id = FTK_slotOutput.ID.None;
                 if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Ambush)
                 {
@@ -200,12 +220,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 if (id == FTK_slotOutput.ID.None)
                 {
-                    //TODO revival & adventurer may break?
                     MiniEncounter hex = instance.m_ThisMiniHex as MiniEncounter;
-                    id = hex.GetDBEntry().m_SlotRoll;
+                    if (hex?.GetDBEntry() != null)
+                    {
+                        id = hex.GetDBEntry().m_SlotRoll;
+                    }
                 }
                 Dictionary<string, Dictionary<string, string>> outcome;
-                if (string.IsNullOrEmpty(btn.m_ButtonInfo.m_EnterFunc))
+                if (string.IsNullOrEmpty(btn.m_ButtonInfo.m_ExitFunc)) // TODO maybe only exit indicate rollable => to hide outcomes
                 {
                     Plugin.Logger.LogWarning("not mouseover btn");
                     outcome = [];
@@ -230,13 +252,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("uiEncounterMenu.SetMenuPanelMode");
         }
 
-        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.MenuRefresh))] // after panel mode
-        [HarmonyPostfix]
-        static void Test2()
-        {
-            Plugin.Logger.LogMessage("uiEncounterMenu.MenuRefresh");
-        }
-
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.OpenOverworldTreasureChest))]
         [HarmonyPostfix]
         static void Test7()
@@ -244,13 +259,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("uiEncounterMenu.OpenOverworldTreasureChest");
         }
         
-        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.LeaveOrEndTurn))]
-        [HarmonyPostfix]
-        static void Test6()
-        {
-            Plugin.Logger.LogMessage("uiEncounterMenu.LeaveOrEndTurn");
-        }
-
         // static readonly List<SubPanelBaseBase> menus = [];
 
         // public static SubPanelBaseBase GetActiveMenu()

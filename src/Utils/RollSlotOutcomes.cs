@@ -13,6 +13,7 @@ namespace Pyran.NeuroFTK.Utils
         /// <returns>{roll: {chance: result}}<br/>{ 1: { 95%: Success } }</returns>
         public static Dictionary<string, Dictionary<string, string>> GetOutcomes(FTK_slotOutput.ID _id)
         {
+            if (_id == FTK_slotOutput.ID.None) return [];
             Dictionary<string, Dictionary<string, string>> result = [];
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             FTK_slotOutput entry = FTK_slotOutputDB.GetDB().GetEntry(_id);

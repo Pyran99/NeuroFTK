@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -25,14 +27,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         // enumerator to show the rolled values
         [HarmonyPatch(typeof(SlotControl), "DisplaySlots")]
         [HarmonyPostfix]
-        static IEnumerator SlotResults(IEnumerator __result)
+        static IEnumerator SlotResults(IEnumerator __result, SlotControl __instance, CharacterOverworld _cow, string[] _slotResults, int _slotSuccess, string _goodSlot)
         {
+            Plugin.Logger.LogWarning(_cow?.m_PlayerName);
+            Plugin.Logger.LogWarning(string.Join(", ", [.. _slotResults.Select(x => x)])); // basequickness, basequickness, quickness, quickness, miss
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
             if (hasChoices)
             {
-                Plugin.Logger.LogMessage("displaySlots; already have choices");
+                // Plugin.Logger.LogMessage("displaySlots; already have choices");
+                hasChoices = false;
                 yield break;
+            }
+            if (_cow.m_FTKPlayerID.IsPlayer()) // FIXME also counts dungeon enemies
+            {
+                Context.Send($"[character roll result] {__instance.m_CurrentSuccess} / {_slotResults.Length}");
+            }
+            else
+            {
+                Plugin.Logger.LogMessage("is enemy " + _cow.m_FTKPlayerID.IsEnemy());
+                Context.Send($"[enemy roll result] {__instance.m_CurrentSuccess} / {_slotResults.Length}");
             }
             switch (ToggleOverworldActions.mode)
             {
@@ -44,7 +58,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     break;
                 case uiGameTrackerHUD.GameTrackerMode.Combat:
                     // no effect needed as rolls are shown with animation
-                    Plugin.Logger.LogWarning("combat slot display");
                     break;
             }
         }
@@ -62,13 +75,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             current = GameLogic.Instance.GetCurrentCOW();
-            current.StartCoroutine(Wait());
-
-            static IEnumerator Wait()
-            {
-                yield return new WaitForSeconds(1.5f);
-                GetValidMoveTiles(HexLand.SelectType.Land, current);
-            }
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(HexLand.SelectType.Land, current), 1500f);
         }
 
         // when movement begins
@@ -98,6 +105,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EndTurn()
         {
+            tiles.Clear();
             hasChoices = false;
             isTracking = false;
             isSearching = false;
@@ -137,11 +145,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
         }
 
+        [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]
+        [HarmonyPostfix]
+        static void ReturnedToOverworld()
+        {
+            ToggleOverworldActions.EnableOverworldActions();
+        }
+
         static void GetValidMoveTiles(HexLand.SelectType type, MonoBehaviour routineOwner)
         {
             if (!isTracking)
             {
-                Plugin.Logger.LogWarning("not tracking");
+                Plugin.Logger.LogError("not tracking");
+                return;
+            }
+            if (!routineOwner.isActiveAndEnabled)
+            {
+                Plugin.Logger.LogError("routine owner is disabled");
                 return;
             }
             routineOwner.StartCoroutine(GetValidTiles(type));
