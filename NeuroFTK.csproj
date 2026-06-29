@@ -47,6 +47,10 @@
       <HintPath>lib\Game\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="PlayMaker">
+      <HintPath>lib\Game\PlayMaker.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
