@@ -169,6 +169,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // 	SessionDialogue
             // }
         }
+
+        [HarmonyPatch(typeof(FTKUI), nameof(FTKUI.EnableEncounterMenu))]
+        [HarmonyPostfix]
+        static void EncounterMenu()
+        {
+            Plugin.Logger.LogWarning("TEST FTKUI.EnableEncounterMenu");
+        }
         
         
     }

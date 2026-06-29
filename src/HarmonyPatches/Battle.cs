@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -11,21 +10,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class Battle
     {
         static ActionWindow window;
-        static uiBattleStanceButtons StanceButtonsInstance;
+        static uiBattleStanceButtons StanceBtnInstance;
         static List<uiBattleStanceButtons.ProfValues> m_Proficiencies = [];
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Initialize))]
         [HarmonyPostfix]
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
-            StanceButtonsInstance = __instance;
-        }
-
-        [HarmonyPatch(typeof(FTKUI), nameof(FTKUI.EnableBattleStanceButtons))]
-        [HarmonyPostfix]
-        static void ButtonsEnabled()
-        {
-            window = CombatActions.RegisterActions(StanceButtonsInstance, m_Proficiencies);
+            StanceBtnInstance = __instance;
+            window = CombatActions.RegisterActions(StanceBtnInstance, m_Proficiencies);
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]
@@ -35,13 +28,35 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             m_Proficiencies = [.. ___m_Proficiencies];
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.StartNextCombatRound2))] // before stance btns enable
-        [HarmonyPostfix]
-        static void NextCombatRound()
+        [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Attack))]
+        [HarmonyPrefix]
+        static void BtnsAttack(uiBattleStanceButtons __instance)
         {
-            Plugin.Logger.LogMessage("StartNextCombatRound2");
+            Plugin.Logger.LogWarning("4 stanceBtnsAttack");
+            if (__instance.CombatCow.m_CurrentDummy is EnemyDummy)//TODO only called by players
+            {
+                Plugin.Logger.LogWarning("enemy attacks " + (__instance.CombatCow.m_CurrentDummy as EnemyDummy).m_EnemyCombat.GetEnemyDisplay());
+            }
+            else
+            {
+                Plugin.Logger.LogWarning("attacker player " + __instance.CombatCow.m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
+            }
+        }
+
+        [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.BattleButtonsOff))]
+        [HarmonyPrefix]
+        static void BtnsOff()
+        {
             Object.Destroy(window);
         }
+
+        // [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.StartNextCombatRound2))] // before stance btns enable
+        // [HarmonyPostfix]
+        // static void NextCombatRound()
+        // {
+        //     Plugin.Logger.LogMessage("StartNextCombatRound2");
+        //     Object.Destroy(window);
+        // }
 
 
 #region new
@@ -56,10 +71,36 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))] // context
         [HarmonyPostfix]
-        static void Test45()
+        static void Test45(FTKPlayerID _victim, FTKPlayerID _attacker) //NullReferenceException: Object reference not set to an instance of an object
         {
-            Plugin.Logger.LogMessage("45 CombatEnemyDie");
-            Context.Send("an enemy has died");
+            Plugin.Logger.LogWarning(_victim);
+            FTKPlayerID ph = _victim;
+            var t = ph.GetCow();
+            Plugin.Logger.LogWarning(t);
+            var u = t.m_CurrentDummy;
+            Plugin.Logger.LogWarning(u);
+            var w = (u as EnemyDummy).m_EnemyCombat;
+            Plugin.Logger.LogWarning(w);
+            var x = w.GetEnemyDisplay();
+            Plugin.Logger.LogWarning(x);
+            string victim = (ph.GetCow()?.m_CurrentDummy as EnemyDummy)?.m_EnemyCombat?.GetEnemyDisplay();
+            Context.Send($"[enemy] {victim} has died");
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))] // context
+        [HarmonyPostfix]
+        static void Test46(FTKPlayerID _victim, FTKPlayerID _attacker)
+        {
+            FTKPlayerID ph = _victim;
+            string victim = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
+            Context.Send($"{victim} has died");
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerVictory))]
+        [HarmonyPostfix]
+        static void CombatPlayerVictory()
+        {
+            Plugin.Logger.LogWarning("battle combat victory");
         }
 
 #endregion

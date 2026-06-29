@@ -13,7 +13,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void AfterStorySequence(uiStoryIntroCycle __instance, int _index, ref List<string> ___m_StoryEntries)
         {
-            Plugin.Logger.LogMessage($"story sequence {_index}");
             Context.Send($"story sequence {_index}: {___m_StoryEntries[_index]}");
             __instance.StartCoroutine(Delay(__instance));
 

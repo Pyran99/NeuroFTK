@@ -22,12 +22,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string buttonsContext = "";
         static int count = 0;
         static bool generating = false;
+        static ActionWindow window;
 
         #region patches
 
         [HarmonyPatch(typeof(SubPanelBaseBase), nameof(SubPanelBaseBase.GenerateMenu))]
         [HarmonyPrefix]
-        static void GenerateMenu()
+        static void ResetData()
         {
             activeButtons.Clear();
             players.Clear();
@@ -41,11 +42,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (generating)
             {
-                Plugin.Logger.LogWarning("multiple calls");
                 return;
             }
             generating = true;
-            Plugin.Logger.LogWarning("1 sub menu generated");
             instance = __instance.m_Owner;
             ToggleOverworldActions.DisableOverworldActions();
             __instance.StartCoroutine(Wait(__instance.m_Buttons));
@@ -55,31 +54,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             // wait for lower class to finish setup
             yield return new WaitForEndOfFrame();
-            Plugin.Logger.LogWarning("2 sub menu generated");
-            Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance?.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
+            Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
             QuickTimerCallback timer = new (CreateAction, 2000f);
             OnMenuOpened(instance, _buttons);
-        }
-
-        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EnableMenu))] // TODO not called from wishing well throw coin, generate is
-        [HarmonyPostfix]
-        static void EncounterMenuEnabled(uiEncounterMenu __instance)
-        {
-            Plugin.Logger.LogWarning("encounter menu enabled");
-            // string flavor = instance.m_ThisMiniHex.GetMenuDisplayValues().m_Top;
-            // Context.Send(EncounterContext(__instance.m_PoiName.text, __instance.m_LoreDescription.text, flavor));
-            // QuickTimerCallback timerCallback = new(CreateAction, 2000f);
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.DisableMenu))]
         [HarmonyPostfix]
         static void DisableMenu()
         {
-            Plugin.Logger.LogMessage("uiEncounterMenu.DisableMenu");
-            GenerateMenu();
+            Object.Destroy(window);
+            ResetData();
         }
 
-        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.MenuRefresh))] // after panel mode
+        [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.MenuRefresh))]
         [HarmonyPostfix]
         static void Test2()
         {
@@ -139,7 +127,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             generating = false;
             if (!instance.isActiveAndEnabled) return;
-            ActionWindow window = ActionWindow.Create(instance.gameObject);
+            window = ActionWindow.Create(instance.gameObject);
             window.AddAction(new EncounterAction(instance, [.. activeButtons.Values]));
             window.SetForce(0, "choose an action", "you encountered something in the overworld and a menu appeared");
             window.SetContext(buttonsContext);
@@ -185,8 +173,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 GetButtonData(btn, flavorData, rollData);
             }
-            Plugin.Logger.LogWarning(string.Join(", ", [.. flavorData.Select(x => x.Key)]));
-            Plugin.Logger.LogWarning(string.Join(", ", [.. rollData.Select(x => x.Key)]));
             string context = "(this encounters actions (actions with no roll results will always succeed) displayed as: [action: description] total successful rolls(chance for this result) = outcome result)\n";
             foreach (KeyValuePair<string, object> data in rollData)
             {
@@ -227,9 +213,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     }
                 }
                 Dictionary<string, Dictionary<string, string>> outcome;
-                if (string.IsNullOrEmpty(btn.m_ButtonInfo.m_ExitFunc)) // TODO maybe only exit indicate rollable => to hide outcomes
+                // ExitFunc means no rolls
+                if (string.IsNullOrEmpty(btn.m_ButtonInfo.m_ExitFunc))
                 {
-                    Plugin.Logger.LogWarning("not mouseover btn");
                     outcome = [];
                 }
                 else

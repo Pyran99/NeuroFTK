@@ -29,37 +29,54 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator SlotResults(IEnumerator __result, SlotControl __instance, CharacterOverworld _cow, string[] _slotResults, int _slotSuccess, string _goodSlot)
         {
-            Plugin.Logger.LogWarning(_cow?.m_PlayerName);
-            Plugin.Logger.LogWarning(string.Join(", ", [.. _slotResults.Select(x => x)])); // basequickness, basequickness, quickness, quickness, miss
+            Plugin.Logger.LogWarning(_cow?.m_CharacterStats.m_CharacterName);
             isSearching = false;
+            // if (hasChoices)
+            // {
+            //     hasChoices = false;
+            //     yield return __result.Current;
+            // }
             while (__result.MoveNext()) yield return __result.Current;
-            if (hasChoices)
+            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
-                // Plugin.Logger.LogMessage("displaySlots; already have choices");
-                hasChoices = false;
-                yield break;
+                current = GameLogic.Instance.GetCurrentCOW();
+                QuickTimerCallback timer = new(() => GetValidMoveTiles(HexLand.SelectType.Land, current), 1500f);
             }
-            if (_cow.m_FTKPlayerID.IsPlayer()) // FIXME also counts dungeon enemies
+        }
+
+        [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))]
+        [HarmonyPrefix]
+        static void SlotSequence(FTKPlayerID _player, string[] _slotResults)
+        {
+            FTKPlayerID temp = _player;
+            int success = 0;
+            foreach (string result in _slotResults)
             {
-                Context.Send($"[character roll result] {__instance.m_CurrentSuccess} / {_slotResults.Length}");
+                if (IsFailedRoll(result)) continue;
+                success++;
+            }
+            rollCount = success;
+            string ctx = "";
+            if (temp.IsPlayer()) //FIXME enemy turn doesnt send its id
+            {
+                ctx = $"[{temp.GetCow().m_CharacterStats.m_CharacterName} roll result] {success} / {_slotResults.Length}";
             }
             else
             {
-                Plugin.Logger.LogMessage("is enemy " + _cow.m_FTKPlayerID.IsEnemy());
-                Context.Send($"[enemy roll result] {__instance.m_CurrentSuccess} / {_slotResults.Length}");
+                ctx = $"[enemy roll result] {success} / {_slotResults.Length}";
             }
-            switch (ToggleOverworldActions.mode)
+            Plugin.Logger.LogMessage(ctx);
+            Context.Send(ctx);
+            Plugin.Logger.LogWarning(string.Join(", ", [.. _slotResults.Select(x => x)]));
+        }
+
+        static bool IsFailedRoll(string slot)
+        {
+            return slot switch
             {
-                case uiGameTrackerHUD.GameTrackerMode.Overworld:
-                    current = GameLogic.Instance.GetCurrentCOW();
-                    rollCount = current.m_CharacterStats.m_ActionPoints;
-                    Plugin.Logger.LogMessage($"display slots finished; rolled {rollCount}");
-                    GetValidMoveTiles(HexLand.SelectType.Land, current);
-                    break;
-                case uiGameTrackerHUD.GameTrackerMode.Combat:
-                    // no effect needed as rolls are shown with animation
-                    break;
-            }
+                "miss" or "vexxed" or "distract" or "badweather" or "scourgeCslot" => true,
+                _ => false,
+            };
         }
 
         // when movement choice starts
@@ -69,13 +86,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isTracking = true;
             Plugin.Logger.LogWarning("START tracking");
-            if (hasChoices)
-            {
-                Plugin.Logger.LogMessage("tracking; already have choices");
-                return;
-            }
+            if (hasChoices) return;
             current = GameLogic.Instance.GetCurrentCOW();
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(HexLand.SelectType.Land, current), 1500f);
+            // QuickTimerCallback timer = new(() => GetValidMoveTiles(HexLand.SelectType.Land, current), 1500f);
         }
 
         // when movement begins
@@ -95,7 +108,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             Context.Send($"game round: {GameFlow.Instance.m_RoundCount}, stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}, stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}, player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
             while (__result.MoveNext()) yield return __result.Current;
-            Plugin.Logger.LogMessage("begin turn transition finished");
             hasChoices = false;
             isTracking = false;
             isSearching = false;

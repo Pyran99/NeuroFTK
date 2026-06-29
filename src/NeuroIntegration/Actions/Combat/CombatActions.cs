@@ -93,7 +93,7 @@ namespace Pyran.NeuroFTK
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
             string context = $"[{key}]{type}, {description}\n";
-            if (hasRolls) context = $"[{key}]{type}, {description}, success chance for each roll slot {rollChance}\n";
+            if (hasRolls) context = $"[{key}]{type}, {description}, success chance for each roll {rollChance}\n";
             return context;
         }
 
@@ -104,7 +104,7 @@ namespace Pyran.NeuroFTK
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
             string dmg = data[key]["damage"];
-            string context = $"[{key}]damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll slot {rollChance}\n";
+            string context = $"[{key}]damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll {rollChance}\n";
             return context;
         }
 
@@ -307,17 +307,15 @@ namespace Pyran.NeuroFTK
             bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.isActiveAndEnabled;
             if (useDefault)
             {
-                // AddAttackContext(GetActionDetails(_instance.m_AttackButton, m_Proficiencies));
-                btns.Add("attack", _instance.m_AttackButton);
+                FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(GameLogic.Instance.GetCurrentCombatCOW().m_WeaponID);
+                btns.Add(entry1.GetAttackDisplay(), _instance.m_AttackButton);
             }
             if (canReload)
             {
-                // AddAttackContext(GetActionDetails(_instance.m_ReloadButton, m_Proficiencies));
-                btns.Add("reload gun", _instance.m_ReloadButton);
+                btns.Add(FTKHub.Localized<TextMenu>("STR_battleButtonsReloadWeapon"), _instance.m_ReloadButton);
             }
             foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
             {
-                // Plugin.Logger.LogMessage(prof.m_Prof.ToString());
                 switch (prof.m_Button.m_ButtonType)
                 {
                     case uiBattleButton.BattleButtonType.flee:
@@ -457,6 +455,7 @@ namespace Pyran.NeuroFTK
 
             private JsonSchema GetSchema()
             {
+                Plugin.Logger.LogWarning(string.Join(", ", [.. offense.Select(v => v.Key).ToArray()]));
                 JsonSchema schema = new()
                 {
                     Type = JsonSchemaType.Object,
