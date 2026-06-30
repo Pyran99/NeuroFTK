@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using NeuroSdk.Actions;
-using Pyran.NeuroFTK.Utils;
+using NeuroSdk.Messages.Outgoing;
 
 namespace Pyran.NeuroFTK
 {
@@ -21,11 +21,10 @@ namespace Pyran.NeuroFTK
 
         [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))]
         [HarmonyPostfix]
-        static void Test2()
+        static void DungeonExit()
         {
-            Plugin.Logger.LogMessage("dungeon exit"); // uiGameTrackerHUD.Instance.ToggleGameTrackerMode(uiGameTrackerHUD.GameTrackerMode.Overworld);
-            // called after random encounter battle
-            // called after leaving dungeon
+            Plugin.Logger.LogMessage("dungeon exit");
+            Context.Send("returning to overworld");
         }
 
         // to next room, from popup menu
@@ -56,9 +55,9 @@ namespace Pyran.NeuroFTK
         static void Test6(uiGameTrackerHUD.GameTrackerMode _mode)
         {
             mode = _mode;
-            string name = Enum.GetName(typeof(uiGameTrackerHUD.GameTrackerMode), _mode);
-            var test = Enum.Parse(typeof(uiGameTrackerHUD.GameTrackerMode), name);
-            Plugin.Logger.LogMessage($"game track mode changed to {name} - {_mode} - {test}"); // game track mode changed to Overworld - Overworld - Overworld
+            // string name = Enum.GetName(typeof(uiGameTrackerHUD.GameTrackerMode), _mode);
+            // var test = Enum.Parse(typeof(uiGameTrackerHUD.GameTrackerMode), name);
+            Plugin.Logger.LogMessage($"game track mode changed to {_mode}"); // game track mode changed to Overworld - Overworld - Overworld
             // if (_mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             // {
             //     QuickTimerCallback timer = new(EnableOverworldActions, 1000f); // maybe not. is set at end of battle during loot
@@ -66,8 +65,10 @@ namespace Pyran.NeuroFTK
             // else DisableOverworldActions();
         }
         
-        public static void EnableOverworldActions()
+        public static void EnableOverworldActions(bool _override = false)
         {
+            if (registeredActions.Count > 0 && !_override) return;
+            DisableOverworldActions();
             NeuroAction queryLocation = new QueryCurrentCOWLocation();
             registeredActions.Add(queryLocation);
             NeuroActionHandler.RegisterActions(registeredActions);
@@ -77,6 +78,32 @@ namespace Pyran.NeuroFTK
         {
             NeuroActionHandler.UnregisterActions(registeredActions);
             registeredActions.Clear();
+        }
+
+        public static void AppendOverworldAction(NeuroAction action, bool _override = false)
+        {
+            NeuroAction existing = null;
+            foreach (NeuroAction a in registeredActions.Cast<NeuroAction>())
+            {
+                if (a.Name == action.Name)
+                {
+                    existing = a;
+                    break;
+                }
+            }
+            if (existing == null)
+            {
+                registeredActions.Add(action);
+                NeuroActionHandler.RegisterActions(registeredActions);
+                return;
+            }
+            if (_override)
+            {
+                NeuroActionHandler.UnregisterActions(existing.Name);
+                registeredActions.Remove(existing);
+                registeredActions.Add(action);
+                NeuroActionHandler.RegisterActions(registeredActions);
+            }
         }
     }
 }

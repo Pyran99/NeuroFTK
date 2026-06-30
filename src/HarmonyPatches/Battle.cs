@@ -28,68 +28,55 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             m_Proficiencies = [.. ___m_Proficiencies];
         }
 
-        [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Attack))]
-        [HarmonyPrefix]
-        static void BtnsAttack(uiBattleStanceButtons __instance)
-        {
-            Plugin.Logger.LogWarning("4 stanceBtnsAttack");
-            if (__instance.CombatCow.m_CurrentDummy is EnemyDummy)//TODO only called by players
-            {
-                Plugin.Logger.LogWarning("enemy attacks " + (__instance.CombatCow.m_CurrentDummy as EnemyDummy).m_EnemyCombat.GetEnemyDisplay());
-            }
-            else
-            {
-                Plugin.Logger.LogWarning("attacker player " + __instance.CombatCow.m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
-            }
-        }
-
         [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.BattleButtonsOff))]
         [HarmonyPrefix]
         static void BtnsOff()
         {
             Object.Destroy(window);
+            m_Proficiencies = [];
         }
 
-        // [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.StartNextCombatRound2))] // before stance btns enable
-        // [HarmonyPostfix]
-        // static void NextCombatRound()
-        // {
-        //     Plugin.Logger.LogMessage("StartNextCombatRound2");
-        //     Object.Destroy(window);
-        // }
-
-
-#region new
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyFlee))] // context
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyFlee))]
         [HarmonyPostfix]
-        static void Test44()
+        static void EnemyFled(FTKPlayerID _enemyID)
         {
-            Plugin.Logger.LogMessage("44 CombatEnemyFlee");
-            Context.Send("the enemy has fled");
+            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_enemyID);
+            if (dummy == null)
+            {
+                return;
+            }
+            string enemy = (dummy as EnemyDummy).m_EnemyCombat.GetEnemyDisplay();
+            Context.Send($"[enemy] {enemy} has fled the battle");
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))] // context
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))]
         [HarmonyPostfix]
-        static void Test45(FTKPlayerID _victim, FTKPlayerID _attacker) //NullReferenceException: Object reference not set to an instance of an object
+        static void EnemyDied(FTKPlayerID _victim, FTKPlayerID _attacker)
         {
-            Plugin.Logger.LogWarning(_victim);
-            FTKPlayerID ph = _victim;
-            var t = ph.GetCow();
-            Plugin.Logger.LogWarning(t);
-            var u = t.m_CurrentDummy;
-            Plugin.Logger.LogWarning(u);
-            var w = (u as EnemyDummy).m_EnemyCombat;
-            Plugin.Logger.LogWarning(w);
-            var x = w.GetEnemyDisplay();
-            Plugin.Logger.LogWarning(x);
-            string victim = (ph.GetCow()?.m_CurrentDummy as EnemyDummy)?.m_EnemyCombat?.GetEnemyDisplay();
-            Context.Send($"[enemy] {victim} has died");
+            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_victim);
+            if (dummy == null)
+            {
+                return;
+            }
+            Context.Send($"[enemy] {GetEnemyName(dummy as EnemyDummy)} has died");
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))] // context
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyBlackHoled))]
         [HarmonyPostfix]
-        static void Test46(FTKPlayerID _victim, FTKPlayerID _attacker)
+        static void CombatEnemyBlackHoled(FTKPlayerID _enemyID)
+        {
+            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_enemyID);
+            if (dummy == null)
+            {
+                Plugin.Logger.LogError("null dummy");
+                return;
+            }
+            Context.Send($"[enemy] {GetEnemyName(dummy as EnemyDummy)} was consumed by a black hole");
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))]
+        [HarmonyPostfix]
+        static void PlayerDied(FTKPlayerID _victim, FTKPlayerID _attacker)
         {
             FTKPlayerID ph = _victim;
             string victim = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
@@ -100,10 +87,29 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void CombatPlayerVictory()
         {
-            Plugin.Logger.LogWarning("battle combat victory");
+            Context.Send("you have won the battle!");
         }
 
-#endregion
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerFlee))]
+        [HarmonyPostfix]
+        static void CombatPlayerFled(FTKPlayerID _fid)
+        {
+            FTKPlayerID ph = _fid;
+            string player = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
+            Context.Send($"[player] {player} has fled the battle");
+        }
+
+        static string GetEnemyName(EnemyDummy _dummy)
+        {
+            if (!uiEnemyHUD.Instance.m_EnemyHudDictionary.ContainsKey(_dummy))
+            {
+                Plugin.Logger.LogError($"invalid dummy ui {_dummy?.m_EnemyCombat?.GetEnemyDisplay()}");
+                return "";
+            }
+            uiEachEnemyHud hud = uiEnemyHUD.Instance.m_EnemyHudDictionary[_dummy];
+            string name = hud.m_EnemyNameDisplay.text;
+            return name;
+        }
 
         // [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.DisplayBattleActionInfo))] // spam while mouse down enemy
         // [HarmonyPostfix]

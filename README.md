@@ -4,6 +4,12 @@ The mod uses a [Modified SDK](https://github.com/Pyran99/neuro-sdk-net35) due to
 
 <img src="assets\FTK banner.jpg" width="500" style="vertical-align:middle;"> 
 
+## Game Libraries
+- Assembly-CSharp.dll
+- Assembly-CSharp-firstpass.dll
+- UnityEngine.UI.dll
+- PlayMaker.dll
+
 ## Config data
 Config files are automatically generated in the same folder as the dll
 Name | Default | Description
