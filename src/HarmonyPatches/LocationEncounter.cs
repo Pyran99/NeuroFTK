@@ -20,6 +20,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void LocationMenuClosed()
         {
+            Plugin.Logger.LogWarning("loc menu shutdown2");
             Object.Destroy(window);
         }
 
@@ -27,6 +28,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void StartShutdown()
         {
+            Plugin.Logger.LogWarning("loc menu start shutdown");
             Object.Destroy(window);
             menuDisplayValues = null;
             miniHexInfo = null;
@@ -36,6 +38,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void Show(MiniHexInfo _miniHexInfo)
         {
+            Plugin.Logger.LogWarning("loc_menu_show2");
             miniHexInfo = _miniHexInfo;
             menuDisplayValues = _miniHexInfo.GetMenuDisplayValues(); // translates
         }
@@ -44,6 +47,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator LocationMenuDisplayShow(IEnumerator __result)
         {
+            Plugin.Logger.LogWarning("loc_menu_slideIn");
             while (__result.MoveNext()) yield return __result.Current;
             //TODO 1 uiLocationMenuDisplay SwitchToSubMenu
             if (uiLocationMenuDisplay.Instance.m_SubMenu != null) yield return null;

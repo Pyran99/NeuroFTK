@@ -1,5 +1,4 @@
 using HarmonyLib;
-using NeuroSdk.Messages.Outgoing;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -10,7 +9,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EncounterFinished()
         {
-            Context.Send("encounter finished");
+            Plugin.Logger.LogMessage("GameState encounter finished");
         }
         
     }

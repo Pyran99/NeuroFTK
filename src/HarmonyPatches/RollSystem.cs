@@ -58,7 +58,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static CharacterDummy GetDummy(CharacterOverworld _cow, SlotControl _slots)
         {
-            Plugin.Logger.LogMessage($"slot object: {FTKUI.Instance.m_EnemySlots?.gameObject?.name}");
             if (FTKUI.Instance.m_EnemySlots == _slots)
             {
                 return (EnemyDummy)FsmVariables.GlobalVariables.GetFsmObject("compEnemyDummy").Value;

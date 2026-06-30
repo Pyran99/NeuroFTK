@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -108,7 +109,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             uiEachEnemyHud hud = uiEnemyHUD.Instance.m_EnemyHudDictionary[_dummy];
             string name = hud.m_EnemyNameDisplay.text;
-            return name;
+            return StringReplace.ReplaceNewLineSpace(name);
         }
 
         // [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.DisplayBattleActionInfo))] // spam while mouse down enemy
