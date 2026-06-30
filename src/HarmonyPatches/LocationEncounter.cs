@@ -1,5 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Google2u;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.NeuroIntegration.Actions;
@@ -16,41 +17,66 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static MiniHexInfo miniHexInfo;
         static MiniHexInfo.MenuPOIDisplayValues menuDisplayValues;
 
+
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
+        [HarmonyPrefix]
+        static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo)
+        {
+            miniHexInfo = _miniHexInfo;
+            menuDisplayValues = _miniHexInfo.GetMenuDisplayValues(); // translates
+        }
+
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
+        [HarmonyPostfix]
+        static void MenuDisplayPostShow()
+        {
+            Plugin.Logger.LogMessage("show location menu");
+            CreateAction();
+        }
+
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Unhide))]
+        [HarmonyPostfix]
+        static void MenuDisplayUnhide()
+        {
+            CreateAction();
+        }
+
         [HarmonyPatch(typeof(uiLocationMenuDisplay), "Shutdown2")]
         [HarmonyPrefix]
         static void LocationMenuClosed()
         {
-            Plugin.Logger.LogWarning("loc menu shutdown2");
-            Object.Destroy(window);
+            
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.StartShutdown))] // before tracking resumes
         [HarmonyPrefix]
-        static void StartShutdown()
+        static void StartShutdown()// remove all location actions
         {
-            Plugin.Logger.LogWarning("loc menu start shutdown");
+            Plugin.Logger.LogMessage("close location menu");
             Object.Destroy(window);
             menuDisplayValues = null;
             miniHexInfo = null;
         }
 
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.SlideOutMainMenu))]
         [HarmonyPrefix]
-        static void Show(MiniHexInfo _miniHexInfo)
+        static void MenuDisplaySlideOut() // remove main actions
         {
-            Plugin.Logger.LogWarning("loc_menu_show2");
-            miniHexInfo = _miniHexInfo;
-            menuDisplayValues = _miniHexInfo.GetMenuDisplayValues(); // translates
+            Plugin.Logger.LogWarning("loc_display_SlideOutMainMenu");
+            Object.Destroy(window);
         }
 
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), "SlideIn")]
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.SwitchToSubMenu))]
         [HarmonyPostfix]
-        static IEnumerator LocationMenuDisplayShow(IEnumerator __result)
+        static void SwitchToSubMenu() // create new menu actions (unless handled elsewhere? shop uiBuyMenu)
         {
-            Plugin.Logger.LogWarning("loc_menu_slideIn");
-            while (__result.MoveNext()) yield return __result.Current;
-            //TODO 1 uiLocationMenuDisplay SwitchToSubMenu
-            if (uiLocationMenuDisplay.Instance.m_SubMenu != null) yield return null;
+            Plugin.Logger.LogWarning("loc_display_SwitchSubMenu");
+            Plugin.Logger.LogWarning("TODO submenu actions");
+        }
+
+        static void CreateAction()
+        {
+            Object.Destroy(window);
             string info = $"{GetLocEncounterName()}: {GetLocEncounterFlavorText()}";
             window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, GetLocEncounterButtons(), info, GetLocEncounterLoreDescription());
         }
@@ -108,23 +134,24 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return buttons;
         }
 
-        
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.SwitchToSubMenu))]
+        [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
         [HarmonyPostfix]
-        static void Test1()
+        static void Location1(uiLocationMenu __instance)
         {
-            Plugin.Logger.LogMessage("1 uiLocationMenuDisplay SwitchToSubMenu");
+            List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
+            Plugin.Logger.LogWarning("loc_menu_generate");
+            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => FTKHub.Localized<TextMenu>(x.m_Text0))])}");
+            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Text1)])}");
+            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Function)])}");
+            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_CheckFunction)])}");
         }
 
-        // [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
-        // [HarmonyPostfix]
-        // static void GenerateLocationMenuEntry(uiLocationMenu __instance)
-        // {
-        //     List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
-        //     foreach (uiLocationMenu.Entry entry in entries)
-        //     {
-        //         Plugin.Logger.LogMessage($"text0 = {FTKHub.Localized<TextMenu>(entry.m_Text0)} || text1 = {entry.m_Text1}");
-        //     }
-        // }
+        [HarmonyPatch(typeof(uiLocationMenuEntry), nameof(uiLocationMenuEntry.SetEntry))] // shop items?
+        [HarmonyPostfix]
+        static void Location2(uiLocationMenuEntry __instance)
+        {
+            Plugin.Logger.LogWarning("loc_entry_set");
+            Plugin.Logger.LogWarning($"{__instance.m_Menu?.m_Location?.GetType()}"); //MiniEncounter | MiniHexTown
+        }
     }
 }

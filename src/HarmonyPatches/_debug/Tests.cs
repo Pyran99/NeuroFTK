@@ -179,77 +179,25 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("TEST FTKUI.EnableEncounterMenu");
         }
 
-        [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
-        [HarmonyPostfix]
-        static void Location1(uiLocationMenu __instance)
-        {
-            Plugin.Logger.LogWarning("loc_menu_generate");
-            Plugin.Logger.LogWarning($"{string.Join(", ", [.. __instance.m_MenuEntries.Select(x => FTKHub.Localized<TextMenu>(x.m_Text0))])}");
-            Plugin.Logger.LogWarning($"{string.Join(", ", [.. __instance.m_MenuEntries.Select(x => x.m_Text1)])}");
-        }
-
-        [HarmonyPatch(typeof(uiLocationMenuEntry), nameof(uiLocationMenuEntry.SetEntry))] // shop items?
-        [HarmonyPostfix]
-        static void Location2(uiLocationMenuEntry __instance)
-        {
-            Plugin.Logger.LogWarning("loc_entry_set");
-            Plugin.Logger.LogWarning($"{__instance.m_Menu?.m_Location?.GetType()}");
-        }
-
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
-        [HarmonyPostfix]
-        static void Location3()
-        {
-            Plugin.Logger.LogWarning("loc_display_show2");
-        }
-
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Refresh))]
         [HarmonyPostfix]
         static void Location4()
         {
-            Plugin.Logger.LogWarning("loc_display_refresh");
-        }
-
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), "ShowSubMenu")]
-        [HarmonyPostfix]
-        static void Location5()
-        {
-            Plugin.Logger.LogWarning("loc_display_ShowSubMenu");
-        }
-
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), "SwitchToSubMenu")]
-        [HarmonyPostfix]
-        static void Location6()
-        {
-            Plugin.Logger.LogWarning("loc_display_SwitchSubMenu");
+            Plugin.Logger.LogWarning("UNKNOWN_loc_display_refresh");
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.OpenSubMenu))]
         [HarmonyPostfix]
         static void Location7()
         {
-            Plugin.Logger.LogWarning("loc_display_OpenSubMenu");
+            Plugin.Logger.LogWarning("UNKNOWN_loc_display_OpenSubMenu");
         }
 
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.SlideOutMainMenu))]
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), "ShowSubMenu")] // maybe dropdown list?
         [HarmonyPostfix]
-        static void Location8()
+        static void Location5()
         {
-            Plugin.Logger.LogWarning("loc_display_SlideOutMainMenu");
-        }
-
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), "Shutdown2")]
-        [HarmonyPostfix]
-        static void Location9()
-        {
-            Plugin.Logger.LogWarning("loc_display_Shutdown2");
-        }
-        
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.ShutdownComplete))]
-        [HarmonyPostfix]
-        static void Location10()
-        {
-            Plugin.Logger.LogWarning("loc_display_ShutdownComplete");
+            Plugin.Logger.LogWarning("UNKNOWN_loc_display_ShowSubMenu");
         }
         
         
