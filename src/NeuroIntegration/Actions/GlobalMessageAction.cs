@@ -6,7 +6,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
 using WebSocketSharp;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class GlobalMessageAction(Dictionary<string, object> _actions) : NeuroAction<string>
     {

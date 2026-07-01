@@ -4,7 +4,7 @@ using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     [HarmonyPatch]
     public class ToggleOverworldActions

@@ -8,7 +8,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction() : NeuroAction<HexLand>
     {

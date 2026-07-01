@@ -7,7 +7,7 @@ using NeuroSdk.Websocket;
 using UnityEngine;
 using WebSocketSharp;
 
-namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class LocationEncounterAction(Dictionary<string, uiLocationMenuEntry> _buttons) : NeuroAction<string>
     {

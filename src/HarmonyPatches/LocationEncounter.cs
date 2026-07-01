@@ -3,7 +3,7 @@ using System.Linq;
 using Google2u;
 using HarmonyLib;
 using NeuroSdk.Actions;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,6 +31,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void MenuDisplayPostShow()
         {
             Plugin.Logger.LogMessage("show location menu");
+            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
+            {
+                Plugin.Logger.LogWarning("dungeon loc_menu skipped");
+                return;
+            }
             CreateAction();
         }
 
@@ -38,6 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void MenuDisplayUnhide()
         {
+            Plugin.Logger.LogMessage("unhide menu");
             CreateAction();
         }
 
@@ -48,7 +54,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             
         }
 
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.StartShutdown))] // before tracking resumes
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.StartShutdown))] // before tracking resumes, called after dungeon battle
         [HarmonyPrefix]
         static void StartShutdown()// remove all location actions
         {
@@ -140,18 +146,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
             Plugin.Logger.LogWarning("loc_menu_generate");
-            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => FTKHub.Localized<TextMenu>(x.m_Text0))])}");
-            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Text1)])}");
-            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Function)])}");
+            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => FTKHub.Localized<TextMenu>(x.m_Text0))])}"); // btn names
+            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Text1)])}"); // empty, probably mouseover descriptions
+            Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Function)])}"); // call func when clicked
             Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_CheckFunction)])}");
         }
 
-        [HarmonyPatch(typeof(uiLocationMenuEntry), nameof(uiLocationMenuEntry.SetEntry))] // shop items?
+        [HarmonyPatch(typeof(uiLocationMenuEntry), nameof(uiLocationMenuEntry.SetEntry))] // menu buttons
         [HarmonyPostfix]
         static void Location2(uiLocationMenuEntry __instance)
         {
-            Plugin.Logger.LogWarning("loc_entry_set");
-            Plugin.Logger.LogWarning($"{__instance.m_Menu?.m_Location?.GetType()}"); //MiniEncounter | MiniHexTown
+            // Plugin.Logger.LogWarning("loc_entry_set");
+            // Plugin.Logger.LogWarning($"{__instance.m_Menu?.m_Location?.GetType()}"); //MiniEncounter | MiniHexTown
         }
     }
 }

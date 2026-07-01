@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {

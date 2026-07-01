@@ -7,7 +7,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class EncounterAction(MonoBehaviour instance, List<uiPoiButton> btns) : NeuroAction<string>
     {

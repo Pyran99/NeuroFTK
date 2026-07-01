@@ -3,6 +3,7 @@ using System.Linq;
 using Google2u;
 using GridEditor;
 using HarmonyLib;
+using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -34,11 +35,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         //     Plugin.Logger.LogWarning("4 EncounterSessionMC.FinalEncounterFinished");
         // }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))]
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // entered dungeon
         [HarmonyPostfix]
         static void Test30()
         {
             Plugin.Logger.LogMessage("30 InitiateEncounterSessionRPC");
+            ToggleOverworldActions.DisableOverworldActions();
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateNextEncounter))]
@@ -69,14 +71,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("37 CommenceStair");
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), "CommenceVoteEncounter")]
+        [HarmonyPatch(typeof(EncounterSessionMC), "CommenceVoteEncounter")] // chest at end of dungeon
         [HarmonyPostfix]
         static void Test38()
         {
             Plugin.Logger.LogMessage("38 CommenceVoteEncounter");
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))] // context => enemy data
         [HarmonyPostfix]
         static void Test39()
         {
@@ -179,7 +181,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("TEST FTKUI.EnableEncounterMenu");
         }
 
-        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Refresh))]
+        [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Refresh))] // when shop item purchased
         [HarmonyPostfix]
         static void Location4()
         {

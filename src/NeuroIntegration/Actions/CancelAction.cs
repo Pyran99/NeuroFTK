@@ -3,7 +3,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     /// <summary>
     /// invokes the OnCancelled callback that can be used to Destroy the ActionWindow

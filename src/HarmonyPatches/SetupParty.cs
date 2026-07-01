@@ -6,7 +6,7 @@ using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
 using Pyran.NeuroFTK.Utils;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {

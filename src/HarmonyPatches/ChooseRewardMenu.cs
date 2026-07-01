@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using WebSocketSharp;
 

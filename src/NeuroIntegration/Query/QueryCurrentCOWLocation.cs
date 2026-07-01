@@ -3,7 +3,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class QueryCurrentCOWLocation : NeuroAction
     {

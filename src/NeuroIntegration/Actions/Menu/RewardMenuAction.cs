@@ -8,7 +8,7 @@ using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using WebSocketSharp;
 
-namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class RewardMenuAction(MonoBehaviour _owner, string _menuName, Dictionary<string, uiChooseRewardButton> _buttons) : NeuroAction<string>
     {

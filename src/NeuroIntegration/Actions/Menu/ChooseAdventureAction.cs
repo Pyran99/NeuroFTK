@@ -7,7 +7,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 
-namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class ChooseAdventureAction(GameConfig _instance) : NeuroAction<string>
     {

@@ -9,7 +9,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.Utils;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class CombatActions
     {
@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK
                     var data = GetActionDetails(offense[key], m_Proficiencies);
                     context += AddAttackContext(data);
                 }
-                window.AddAction(new CombatAttackAction(_instance));
+                window.AddAction(new CombatAttackAction(_instance, offense));
             }
             if (defense.Count > 0)
             {
@@ -43,14 +43,14 @@ namespace Pyran.NeuroFTK
                     var data = GetActionDetails(defense[key], m_Proficiencies);
                     context += AddAttackContext(data);
                 }
-                window.AddAction(new CombatFriendlyAction(_instance));
+                window.AddAction(new CombatFriendlyAction(_instance, defense));
             }
             bool canFlee = _instance.m_FleeButton != null && _instance.m_FleeButton.isActiveAndEnabled && _instance.m_FleeButton.m_CanUse;
             bool canRevive = _instance.m_ReviveButton != null && _instance.m_ReviveButton.isActiveAndEnabled && _instance.m_ReviveButton.m_CanUse;
             bool canTaunt = _instance.m_ShieldTauntButton != null && _instance.m_ShieldTauntButton.isActiveAndEnabled && _instance.m_ShieldTauntButton.m_CanUse;
             bool canChangeWeapon = _instance.m_EquipWeaponButton != null && _instance.m_EquipWeaponButton.isActiveAndEnabled && _instance.m_EquipWeaponButton.m_CanUse;
             bool canHealParty = _instance.m_PartyHealButton != null && _instance.m_PartyHealButton.isActiveAndEnabled && _instance.m_PartyHealButton.m_CanUse;
-            if (canFlee)
+            if (canFlee && !GlobalConfig.debug_mode)
             {
                 var data = GetActionDetails(_instance.m_FleeButton, m_Proficiencies);
                 context += AddContext(data);
@@ -373,279 +373,267 @@ namespace Pyran.NeuroFTK
 
 
 
+    }
+
 #region Actions
 
-        /// <summary>
-        /// actions to target friendly units
-        /// </summary>
-        private class CombatFriendlyAction(uiBattleStanceButtons instance) : NeuroAction<object[]>
+    /// <summary>
+    /// actions to target friendly units
+    /// </summary>
+    public class CombatFriendlyAction(uiBattleStanceButtons instance, Dictionary<string, uiBattleButton> _defense) : NeuroAction<object[]>
+    {
+        Dictionary<FTKPlayerID, string> names = [];
+
+        public override string Name => "ally_target";
+        protected override string Description => "heal or buff an ally or self";
+        protected override JsonSchema Schema => GetSchema();
+
+        private JsonSchema GetSchema()
         {
-            Dictionary<FTKPlayerID, string> names = [];
-
-            public override string Name => "ally_target";
-            protected override string Description => "heal or buff an ally";
-            protected override JsonSchema Schema => GetSchema();
-
-            private JsonSchema GetSchema()
+            JsonSchema schema = new()
             {
-                JsonSchema schema = new()
+                Type = JsonSchemaType.Object,
+                Required = ["target", "ability"],
+                Properties = new()
                 {
-                    Type = JsonSchemaType.Object,
-                    Required = ["target", "ability"],
-                    Properties = new()
-                    {
-                        ["target"] = QJS.Enum(GetListOfPlayers().Values),
-                        ["ability"] = QJS.Enum(defense.Keys)
-                    }
-                };
-                return schema;
-            }
-
-            protected override void Execute(object[] parsedData)
-            {
-                Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
-                defense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
-                FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
-                if (target == null)
-                {
-                    Plugin.Logger.LogError("target is null " + parsedData[0]);
-                    return;
+                    ["target"] = QJS.Enum(GetListOfPlayers().Values),
+                    ["ability"] = QJS.Enum(_defense.Keys)
                 }
-                btn.OnPointerEnter(null); // may be needed to allow friendly targeting?
-                SelectTarget(target);
-                SelectButton.StartCoroutine(instance, btn, 1.0f);
-            }
+            };
+            return schema;
+        }
 
-            protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
+        protected override void Execute(object[] parsedData)
+        {
+            Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
+            _defense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
+            FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
+            if (target == null)
             {
-                parsedData = new string[2];
-                Plugin.Logger.LogMessage(actionData.Data);
-                string target = actionData.Data.Value<string>("target");
-                if (!names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
-                string ability = actionData.Data.Value<string>("ability");
-                if (!defense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
-                parsedData[0] = target;
-                parsedData[1] = ability;
-                return ExecutionResult.Success();
+                Plugin.Logger.LogError("target is null " + parsedData[0]);
+                return;
             }
+            btn.OnPointerEnter(null); // may be needed to allow friendly targeting?
+            CombatActions.SelectTarget(target);
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
+        }
 
-            Dictionary<FTKPlayerID, string> GetListOfPlayers()
+        protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
+        {
+            parsedData = new string[2];
+            string target = actionData.Data.Value<string>("target");
+            if (!names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
+            string ability = actionData.Data.Value<string>("ability");
+            if (!_defense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+            parsedData[0] = target;
+            parsedData[1] = ability;
+            return ExecutionResult.Success();
+        }
+
+        Dictionary<FTKPlayerID, string> GetListOfPlayers()
+        {
+            names = [];
+            Dictionary<FTKPlayerID, CharacterDummy> players = new(EncounterSession.Instance.m_PlayerDummies);
+            // EncounterSessionMC.Instance.m_AllCombtatantsAlive // used by enemy targeting
+            foreach (var player in players)
             {
-                names = [];
-                Dictionary<FTKPlayerID, CharacterDummy> players = new(EncounterSession.Instance.m_PlayerDummies);
-                // EncounterSessionMC.Instance.m_AllCombtatantsAlive // used by enemy targeting
-                foreach (var player in players)
+                names.Add(player.Key, player.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
+            }
+            return names;
+        }
+    }
+
+    /// <summary>
+    /// actions to target enemies
+    /// </summary>
+    public class CombatAttackAction(uiBattleStanceButtons instance, Dictionary<string, uiBattleButton> _offense) : NeuroAction<object[]>
+    {
+        Dictionary<FTKPlayerID, string> names = [];
+        
+        public override string Name => "attack_enemy";
+        protected override string Description => "attack an enemy";
+        protected override JsonSchema Schema => GetSchema();
+
+        private JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["target", "ability"],
+                Properties = new()
                 {
-                    names.Add(player.Key, player.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
+                    ["target"] = QJS.Enum(GetListOfEnemies().Values),
+                    ["ability"] = QJS.Enum(_offense.Keys)
                 }
-                return names;
-            }
+            };
+            return schema;
         }
 
-        /// <summary>
-        /// actions to target enemies
-        /// </summary>
-        private class CombatAttackAction(uiBattleStanceButtons instance) : NeuroAction<object[]>
+        protected override void Execute(object[] parsedData)
         {
-            Dictionary<FTKPlayerID, string> names = [];
-            
-            public override string Name => "attack_enemy";
-            protected override string Description => "attack an enemy";
-            protected override JsonSchema Schema => GetSchema();
-
-            private JsonSchema GetSchema()
+            Plugin.Logger.LogMessage("execute attack: " + string.Join(", ", (string[])parsedData));
+            // Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
+            _offense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
+            FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
+            if (target == null)
             {
-                Plugin.Logger.LogWarning(string.Join(", ", [.. offense.Select(v => v.Key).ToArray()]));
-                JsonSchema schema = new()
-                {
-                    Type = JsonSchemaType.Object,
-                    Required = ["target", "ability"],
-                    Properties = new()
-                    {
-                        ["target"] = QJS.Enum(GetListOfEnemies().Values),
-                        ["ability"] = QJS.Enum(offense.Keys)
-                    }
-                };
-                return schema;
+                Plugin.Logger.LogError("target is null " + parsedData[0]);
+                return;
             }
+            CombatActions.SelectTarget(target);
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
+        }
 
-            protected override void Execute(object[] parsedData)
+        protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
+        {
+            parsedData = new string[2];
+            string target = actionData.Data.Value<string>("target");
+            if (!names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
+            string ability = actionData.Data.Value<string>("ability");
+            if (!_offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+            parsedData[0] = target;
+            parsedData[1] = ability;
+            return ExecutionResult.Success();
+        }
+
+        Dictionary<FTKPlayerID, string> GetListOfEnemies()
+        {
+            names = [];
+            Dictionary<FTKPlayerID, EnemyDummy> enemies = new(EncounterSession.Instance.m_EnemyDummies);
+            int count = 0;
+            foreach (var enemy in enemies)
             {
-                Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
-                offense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
-                FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
-                if (target == null)
+                if (!enemy.Value.m_IsAlive) continue;
+                string name = $"{enemy.Value.GetEnemyInfo().m_EnemyCombat.GetEnemyDisplay()}"; // Timberwolf 1
+                if (names.ContainsValue(name))
                 {
-                    Plugin.Logger.LogError("target is null " + parsedData[0]);
-                    return;
+                    name += $" {++count}";
                 }
-                SelectTarget(target);
-                SelectButton.StartCoroutine(instance, btn, 1.0f);
+                names.Add(enemy.Key, name);
             }
+            return names;
+        }
+    }
 
-            protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
-            {
-                parsedData = new string[2];
-                Plugin.Logger.LogMessage(actionData.Data);
-                string target = actionData.Data.Value<string>("target");
-                if (!names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
-                string ability = actionData.Data.Value<string>("ability");
-                if (!offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
-                parsedData[0] = target;
-                parsedData[1] = ability;
-                return ExecutionResult.Success();
-            }
+    /// <summary>
+    /// try to flee combat
+    /// </summary>
+    public class CombatFleeAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
+    {
+        public override string Name => "flee_combat";
+        protected override string Description => "try to run away from combat. only the character this is used with will exit combat.";
+        protected override JsonSchema Schema => null;
 
-            Dictionary<FTKPlayerID, string> GetListOfEnemies()
+        protected override void Execute()
+        {
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
+        }
+    }
+
+    /// <summary>
+    /// try to revive a character
+    /// </summary>
+    public class CombatReviveAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
+    {
+        public override string Name => "revive_ally";
+        protected override string Description => "revive a fallen party member";
+        protected override JsonSchema Schema => null;
+
+        protected override void Execute()
+        {
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
+        }
+    }
+
+    /// <summary>
+    /// force enemies to attack this unit
+    /// </summary>
+    public class CombatTauntAction(uiBattleStanceButtons instance, uiBattleButton btn) : NeuroAction
+    {
+        public override string Name => "taunt";
+        protected override string Description => "try to force enemies to attack this unit";
+        protected override JsonSchema Schema => null;
+
+        protected override void Execute()
+        {
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
+        }
+    }
+
+    /// <summary>
+    /// change weapon
+    /// TODO get & send context of available weapons
+    /// </summary>
+    public class CombatChangeWeaponAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction<string>
+    {
+        public override string Name => "change_weapon";
+        protected override string Description => "equip a different weapon. this will also end your turn";
+        protected override JsonSchema Schema => GetSchema();
+
+        private JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
             {
-                names = [];
-                Dictionary<FTKPlayerID, EnemyDummy> enemies = new(EncounterSession.Instance.m_EnemyDummies);
-                int count = 0;
-                foreach (var enemy in enemies)
+                Type = JsonSchemaType.Object,
+                Required = ["weapon"],
+                Properties = new()
                 {
-                    if (!enemy.Value.m_IsAlive) continue;
-                    string name = $"{enemy.Value.GetEnemyInfo().m_EnemyCombat.GetEnemyDisplay()}"; // Timberwolf 1
-                    if (names.ContainsValue(name))
-                    {
-                        name += $" {++count}";
-                    }
-                    names.Add(enemy.Key, name);
+                    ["weapon"] = new() { Type = JsonSchemaType.String, MinLength = 1, MaxLength = 16 }
                 }
-                return names;
-            }
+            };
+            return schema;
         }
 
-        /// <summary>
-        /// try to flee combat
-        /// </summary>
-        private class CombatFleeAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
+        protected override void Execute(string parsedData)
         {
-            public override string Name => "flee_combat";
-            protected override string Description => "try to run away from combat. only the character this is used with will exit combat.";
-            protected override JsonSchema Schema => null;
-
-            protected override void Execute()
-            {
-                if (GlobalConfig.debug_mode)
-                {
-                    Plugin.Logger.LogWarning("debug skip flee combat");
-                    return;
-                }
-                SelectButton.StartCoroutine(instance, btn, 1.0f);
-            }
-
-            protected override ExecutionResult Validate(ActionJData actionData)
-            {
-                return ExecutionResult.Success();
-            }
+            Plugin.Logger.LogWarning("execute change weapon action: " + parsedData);
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
         }
 
-        /// <summary>
-        /// try to revive a character
-        /// </summary>
-        private class CombatReviveAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
+        protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            public override string Name => "revive_ally";
-            protected override string Description => "revive a fallen party member";
-            protected override JsonSchema Schema => null;
-
-            protected override void Execute()
-            {
-                SelectButton.StartCoroutine(instance, btn, 1.0f);
-            }
-
-            protected override ExecutionResult Validate(ActionJData actionData)
-            {
-                return ExecutionResult.Success();
-            }
+            parsedData = actionData.Data.Value<string>("weapon") ?? "null";
+            return ExecutionResult.Success();
         }
+        
+    }
 
-        /// <summary>
-        /// force enemies to attack this unit
-        /// </summary>
-        private class CombatTauntAction(uiBattleStanceButtons instance, uiBattleButton btn) : NeuroAction
+    /// <summary>
+    /// heal all party members
+    /// </summary>
+    public class CombatPartyHealAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
+    {
+        public override string Name => "party_heal";
+        protected override string Description => "heal all party members";
+        protected override JsonSchema Schema => null;
+
+        protected override void Execute()
         {
-            public override string Name => "taunt";
-            protected override string Description => "try to force enemies to attack this unit";
-            protected override JsonSchema Schema => null;
-
-            protected override void Execute()
-            {
-                SelectButton.StartCoroutine(instance, btn, 1.0f);
-            }
-
-            protected override ExecutionResult Validate(ActionJData actionData)
-            {
-                return ExecutionResult.Success();
-            }
+            SelectButton.StartCoroutine(instance, btn, 1.0f);
         }
 
-        /// <summary>
-        /// switch to another weapon
-        /// TODO get weapons from inventory
-        /// </summary>
-        private class CombatChangeWeaponAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction<string>
+        protected override ExecutionResult Validate(ActionJData actionData)
         {
-            public override string Name => "change_weapon";
-            protected override string Description => "equip a different weapon. this will also end your turn";
-            protected override JsonSchema Schema => GetSchema();
-
-            private JsonSchema GetSchema()
-            {
-                JsonSchema schema = new()
-                {
-                    Type = JsonSchemaType.Object,
-                    Required = ["weapon"],
-                    Properties = new()
-                    {
-                        ["weapon"] = new() { Type = JsonSchemaType.String, MinLength = 1, MaxLength = 16 }
-                    }
-                };
-                return schema;
-            }
-
-            protected override void Execute(string parsedData)
-            {
-                Plugin.Logger.LogWarning("execute change weapon action " + parsedData);
-                if (GlobalConfig.debug_mode)
-                {
-                    Plugin.Logger.LogWarning("debug skip change weapon");
-                    return;
-                }
-                SelectButton.StartCoroutine(instance, btn, 1.0f);
-            }
-
-            protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
-            {
-                parsedData = actionData.Data.Value<string>("weapon") ?? "null";
-                return ExecutionResult.Success();
-            }
-            
+            return ExecutionResult.Success();
         }
-
-        /// <summary>
-        /// heal all party members
-        /// </summary>
-        private class CombatPartyHealAction(uiBattleStanceButtons instance, uiBattleButton btn): NeuroAction
-        {
-            public override string Name => "party_heal";
-            protected override string Description => "heal all party members";
-            protected override JsonSchema Schema => null;
-
-            protected override void Execute()
-            {
-                SelectButton.StartCoroutine(instance, btn, 1.0f);
-            }
-
-            protected override ExecutionResult Validate(ActionJData actionData)
-            {
-                return ExecutionResult.Success();
-            }
-        }
+    }
 
 #endregion
-
-    }
 
 
 }

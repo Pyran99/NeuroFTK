@@ -9,7 +9,7 @@ using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK.NeuroIntegration.Actions
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class ConfiguePartyAction : NeuroAction
     {

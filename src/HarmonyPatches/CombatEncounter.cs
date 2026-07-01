@@ -5,7 +5,7 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using WebSocketSharp;
@@ -40,10 +40,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void SubMenuGenerated(SubPanelBaseBase __instance)
         {
-            if (generating)
-            {
-                return;
-            }
+            Plugin.Logger.LogWarning("subpanel_Generate");
+            if (generating) return;
             generating = true;
             instance = __instance.m_Owner;
             ToggleOverworldActions.DisableOverworldActions();
@@ -166,7 +164,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (activeButtons.ContainsKey(kvp.Key)) continue;
                 activeButtons.Add(kvp.Key, kvp.Value);
             }
-            Plugin.Logger.LogMessage($"active buttons: {string.Join(", ", [.. activeButtons.Select(x => x.Value.m_ButtonText.text)])}");
+            // Plugin.Logger.LogMessage($"active buttons: {string.Join(", ", [.. activeButtons.Select(x => x.Value.m_ButtonText.text)])}");
             Dictionary<string, string> flavorData = [];
             Dictionary<string, object> rollData = [];
             foreach (uiPoiButton btn in activeButtons.Values)

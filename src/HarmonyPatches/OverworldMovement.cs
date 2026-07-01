@@ -5,7 +5,7 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
@@ -19,12 +19,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isTracking = false;
         public static List<HexLand> tiles = [];
 
-
-        // [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.Initialize))]
-        // [HarmonyPostfix]
-        // static void MoveSlotsInit(string[] _slotResults, int _slotSuccess, FTKPlayerID _fid)
-        // {
-        // }
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
         [HarmonyPostfix]
@@ -42,7 +36,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ToggleOverworldActions.EnableOverworldActions();
             isTracking = true;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(HexLand.SelectType.Land, RollSystem.currentCOW), 1500f);
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), 1500f);
         }
 
         // when movement begins
@@ -68,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             while (__result.MoveNext()) yield return __result.Current;
             if (_isLoadGame)
             {
-                QuickTimerCallback timer = new(() => GetValidMoveTiles(HexLand.SelectType.Land, GameLogic.Instance.GetCurrentCOW()), 1500f);
+                QuickTimerCallback timer = new(() => GetValidMoveTiles(GameLogic.Instance.GetCurrentCOW()), 1500f);
             }
         }
 
@@ -89,14 +83,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
-        // // when the characters actions points change. This occurs with each tile passed
-        // [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.UpdatePlayerAction))]
-        // [HarmonyPostfix]
-        // static void UpdatePlayerAction(CharacterOverworld __instance)
-        // {
-        //     // Plugin.Logger.LogMessage("update player action");
-        // }
-
         // spending focus for more actions
         [HarmonyPatch(typeof(Movement), "ConvertFocusToAction")]
         [HarmonyPostfix]
@@ -106,7 +92,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("movement focus added");
             Object.Destroy(window);
             tiles.Clear();
-            GetValidMoveTiles(HexLand.SelectType.Same, RollSystem.currentCOW);
+            GetValidMoveTiles(RollSystem.currentCOW);
         }
 
         // manual movement call
@@ -123,23 +109,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ToggleOverworldActions.EnableOverworldActions();
         }
 
-        public static void GetValidMoveTiles(HexLand.SelectType type, MonoBehaviour routineOwner)
+        public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
         {
-            if (!isTracking)
-            {
-                Plugin.Logger.LogError("not tracking");
-                return;
-            }
+            if (!isTracking) return;
             if (!routineOwner.isActiveAndEnabled)
             {
                 Plugin.Logger.LogError("routine owner is disabled");
                 return;
             }
-            if (tiles.Count > 0)
-            {
-                Plugin.Logger.LogWarning("has tiles");
-                return;
-            }
+            if (tiles.Count > 0) return;
             routineOwner.StartCoroutine(GetValidTiles(type));
         }
 
@@ -166,7 +144,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
         }
 
-        static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points)
+        static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
         {
             HexLand initialHex = owner.GetHexLand();
             List<HexLand> validNeighbors = [];
@@ -184,6 +162,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (neighbor == initialHex) continue;
                         if (hasChecked.Contains(neighbor)) continue;
                         hasChecked.Add(neighbor);
+                        //TODO match types
                         if (neighbor.CanTravel() && !neighbor.IsWater())
                         {
                             validNeighbors.Add(neighbor);
@@ -201,3 +180,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     }
 }
 
+
+// // when the characters actions points change. This occurs with each tile passed
+// [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.UpdatePlayerAction))]
+
+// [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.Initialize))]

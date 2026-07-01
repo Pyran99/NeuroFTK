@@ -5,7 +5,7 @@ using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.GameConfigs;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using StartGameFE;
 using UnityEngine;

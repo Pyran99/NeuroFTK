@@ -3,6 +3,7 @@ using HarmonyLib;
 using HutongGames.PlayMaker;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -52,7 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 currentCOW = GameLogic.Instance.GetCurrentCOW();
-                QuickTimerCallback timer = new(() => OverworldMovement.GetValidMoveTiles(HexLand.SelectType.Land, currentCOW), 1500f);
+                QuickTimerCallback timer = new(() => OverworldMovement.GetValidMoveTiles(currentCOW), 1500f);
             }
         }
 

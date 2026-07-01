@@ -1,6 +1,6 @@
 using HarmonyLib;
 using Pyran.NeuroFTK.GameConfigs;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {

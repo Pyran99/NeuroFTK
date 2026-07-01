@@ -7,7 +7,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class CharacterDecisionAction(string _key, List<VoteButton> _values) : NeuroAction<string>
     {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 using UnityEngine;
 using UnityEngine.UI;
 

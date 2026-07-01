@@ -3,7 +3,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using UnityEngine;
 
-namespace Pyran.NeuroFTK
+namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class ContinueMessageHudAction : NeuroAction
     {

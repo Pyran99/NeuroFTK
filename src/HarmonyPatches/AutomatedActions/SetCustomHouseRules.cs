@@ -8,7 +8,7 @@ using GridEditor;
 using System.Reflection;
 using System.IO;
 using Newtonsoft.Json;
-using Pyran.NeuroFTK.NeuroIntegration.Actions;
+using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
 /*Sets the custom difficulty sliders for any adventure
