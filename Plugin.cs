@@ -32,7 +32,7 @@ public class Plugin : BaseUnityPlugin
     {
         Instance = this;
         Logger = base.Logger;
-        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded! v.{MyPluginInfo.PLUGIN_VERSION}");
         InitializeHarmony();
         GenerateConfigFile();
         SetCustomHouseRules.LoadCustomRules();

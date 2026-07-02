@@ -27,7 +27,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!Plugin.doSpam || !GlobalConfig.debug_mode) return;
             if (MovementAction.hexPositions.ContainsKey(_hexland.GetPosition().ToString()))
             {
-                Plugin.Logger.LogMessage($"valid id {_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex}");
+                Plugin.Logger.LogMessage($"valid id {_hexland.GetPosition()} = {_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex}");
             }
         }
 
