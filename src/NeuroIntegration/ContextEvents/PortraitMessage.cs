@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -13,7 +12,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
     [HarmonyPatch]
     public class PortraitMessage
     {
-        static bool doOnce = false;
         static ActionWindow activeWindow;
 
         // npc talking
@@ -40,22 +38,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             ContinueAfterMessageSent(__instance);
         }
 
+        [HarmonyPatch(typeof(FTKClickAnywhere), nameof(FTKClickAnywhere.OnClose))]
+        [HarmonyPrefix]
+        static void MessageClosed()
+        {
+            UnityEngine.Object.Destroy(activeWindow);
+        }
+
         static void ContinueAfterMessageSent(uiPortraitMessageHud instance)
         {
             if (activeWindow != null) return;
-            doOnce = false;
-            activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject);
+            QuickTimerCallback timer = new(() => activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject), 2000f);
             // instance.StartCoroutine(Continue(instance));
-        }
-
-        static IEnumerator Continue(uiPortraitMessageHud instance)
-        {
-            if (doOnce) yield break;
-            doOnce = true;
-            yield return new WaitForSeconds(6f);
-            // this holds an event to current click anywhere that would call its close
-            // FTKClickAnywhere.Instance.OnClick();
-            doOnce = false;
         }
 
         // this may not always be called
@@ -64,7 +58,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static void AfterZoom(uiPortraitMessageHud __instance)
         {
             Plugin.Logger.LogMessage("portrait after zoom in");
-            ContinueAfterMessageSent(__instance);
+            QuickTimerCallback timer = new(() => ContinueAfterMessageSent(__instance), 2000f);
         }
 
         // this could be used to grab quest data => is set to m_Quest

@@ -85,13 +85,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("39 CommenceBattleRPC");
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerVictory))]
-        [HarmonyPostfix]
-        static void Test46()
-        {
-            Plugin.Logger.LogMessage("46 CombatPlayerVictory");
-        }
-
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.DisplayLootItem))]
         [HarmonyPostfix]
         static void Test47(string _item)
@@ -99,34 +92,34 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("47 DisplayLootItem: " + _item);
         }
 
-        [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverMultiQuestMsgPart))]
-        [HarmonyPostfix]
-        static void MsgPresenterDeliverQuestPart()
-        {
-            Plugin.Logger.LogMessage("MsgPresenterDeliverQuestPart");
-        }
+        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverMultiQuestMsgPart))]
+        // [HarmonyPostfix]
+        // static void MsgPresenterDeliverQuestPart() // may not be needed with uiPortraitMessageHud.InitializeMessage
+        // {
+        //     Plugin.Logger.LogMessage("MsgPresenterDeliverQuestPart");
+        // }
 
-        [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverStartQuestMsgPart))]
-        [HarmonyPostfix]
-        static void DeliverStartQuestMsgPart()
-        {
-            Plugin.Logger.LogMessage("DeliverStartQuestMsgPart"); // sent after npc message init
-        }
+        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverStartQuestMsgPart))]
+        // [HarmonyPostfix]
+        // static void DeliverStartQuestMsgPart()
+        // {
+        //     Plugin.Logger.LogMessage("DeliverStartQuestMsgPart"); // sent after npc message init
+        // }
 
-        [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverQuestMessagePart))]
-        [HarmonyPostfix]
-        static void DeliverQuestMessagePart()
-        {
-            Plugin.Logger.LogMessage("DeliverQuestMessagePart");
-        }
+        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverQuestMessagePart))]
+        // [HarmonyPostfix]
+        // static void DeliverQuestMessagePart()
+        // {
+        //     Plugin.Logger.LogMessage("DeliverQuestMessagePart");
+        // }
 
-        [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.PresentMessage))]
-        [HarmonyPatch([typeof(int),typeof(Action),typeof(Action<ContinueFSM, int>),typeof(QuestLogicBase),typeof(GameEventManager.QuestMessageType),typeof(bool)])]
-        [HarmonyPostfix]
-        static void PresentMessage()
-        {
-            Plugin.Logger.LogMessage("PresentMessage");
-        }
+        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.PresentMessage))]
+        // [HarmonyPatch([typeof(int),typeof(Action),typeof(Action<ContinueFSM, int>),typeof(QuestLogicBase),typeof(GameEventManager.QuestMessageType),typeof(bool)])]
+        // [HarmonyPostfix]
+        // static void PresentMessage()
+        // {
+        //     Plugin.Logger.LogMessage("PresentMessage");
+        // }
 
 
         // quest message

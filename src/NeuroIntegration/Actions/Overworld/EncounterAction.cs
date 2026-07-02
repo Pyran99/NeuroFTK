@@ -31,7 +31,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogMessage("execute " + parsedData);
             foreach (uiPoiButton btn in btns)
             {
                 if (btn.m_ButtonText.text == parsedData)
@@ -47,6 +46,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             parsedData = "";
             string result = actionData.Data.Value<string>("action");
+            if (btns.Count == 0) return ExecutionResult.Success();
             if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("action"));
             if (!btns.Any(b => b.m_ButtonText.text == result)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
             parsedData = result;

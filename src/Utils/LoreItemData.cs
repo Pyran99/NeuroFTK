@@ -230,7 +230,7 @@ namespace Pyran.NeuroFTK.Utils
                 text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
             }
             // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
-            string final = $"'weapon damage:{maxDmg} {dmgType}' 'attacks and proficiencies: {text1}' 'modifiers: {text2}'";
+            string final = $"'damage:{maxDmg} {dmgType}' 'attacks: {text1}' 'modifiers: {text2}'";
             return final;
         }
         

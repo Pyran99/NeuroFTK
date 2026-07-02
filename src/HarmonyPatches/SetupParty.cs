@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static bool shownOnce = false;
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
-        static readonly float waitTime = 1.0f;
+        static readonly float waitTime = 5.0f;
 
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.Show))]
@@ -85,7 +85,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             data = "[party setup is] ";
             foreach (string name in names)
             {
-                data += $"{name}: {classes[names.IndexOf(name)]}; ";
+                data += $"'{name}: {classes[names.IndexOf(name)]}' ";
             }
             Context.Send(data);
         }

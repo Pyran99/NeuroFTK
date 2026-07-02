@@ -5,6 +5,7 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.NeuroIntegration;
 using UnityEngine;
+using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -89,6 +90,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void CombatPlayerVictory()
         {
+            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                Plugin.Logger.LogMessage("combat victory overworld skip");
+                return;
+            }
             Context.Send("you have won the battle!");
         }
 

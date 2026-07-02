@@ -53,8 +53,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // wait for lower class to finish setup
             yield return new WaitForEndOfFrame();
             Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
-            QuickTimerCallback timer = new (CreateAction, 2000f);
             OnMenuOpened(instance, _buttons);
+            QuickTimerCallback timer = new (CreateAction);
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.DisableMenu))]
@@ -127,7 +127,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!instance.isActiveAndEnabled) return;
             window = ActionWindow.Create(instance.gameObject);
             window.AddAction(new EncounterAction(instance, [.. activeButtons.Values]));
-            window.SetForce(0, "choose an action", "you encountered something in the overworld and a menu appeared");
+            window.SetForce(3, "choose an action", "you encountered something in the overworld and a menu appeared");
             window.SetContext(buttonsContext);
             window.Register();
         }
