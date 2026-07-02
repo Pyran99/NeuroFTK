@@ -81,7 +81,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 window.AddAction(new CombatPartyHealAction(_instance, _instance.m_PartyHealButton));
             }
             window.SetContext(context);
-            window.SetForce(0, "choose a combat action", "it is your turn to act");
+            window.SetForce(1, "choose a combat action", "it is your turn to act");
             window.Register();
             return window;
         }

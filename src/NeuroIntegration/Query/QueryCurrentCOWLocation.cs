@@ -1,3 +1,4 @@
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
@@ -14,9 +15,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute()
         {
             CharacterOverworld current = GameLogic.Instance.GetCurrentCOW();
+            if (current == null)
+            {
+                Plugin.Logger.LogError("query location failed: no active character");
+                Context.Send("query location failed" + NeuroSdkStrings.ModFaultSuffix);
+                return;
+            }
             string name = current.m_CharacterStats.m_CharacterName;
             HexLand hex = current.GetHexLand();
-            Context.Send($"[{name}] is at {hex.GetPosition()} {hex}. This tile contains {hex.GetPOI()?.GetIDString()}");
+            Context.Send($"[{name}] is at {hex.GetPosition()} {hex}. This tile contains ({hex.GetPOI()?.GetIDString()})");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

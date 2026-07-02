@@ -42,6 +42,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             Plugin.Logger.LogMessage("execute " + parsedData);
+            if (!uiLocationMenuDisplay.Instance.IsShowing())
+            {
+                Plugin.Logger.LogWarning("location menu is not showing");
+                return;
+            }
             uiLocationMenuEntry btn = _buttons[parsedData];
             btn?.OnClick();
         }

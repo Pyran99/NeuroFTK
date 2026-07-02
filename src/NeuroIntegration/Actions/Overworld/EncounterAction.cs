@@ -12,7 +12,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class EncounterAction(MonoBehaviour instance, List<uiPoiButton> btns) : NeuroAction<string>
     {
         public override string Name => "encounter";
-        protected override string Description => "encounter_desc";
+        protected override string Description => "encounter_desc"; //TODO maybe remove & use LocationEncounterAction? compare data
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()

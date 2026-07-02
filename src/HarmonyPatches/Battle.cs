@@ -87,10 +87,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerVictory))]
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         static void CombatPlayerVictory()
         {
-            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
             {
                 Plugin.Logger.LogMessage("combat victory overworld skip");
                 return;
