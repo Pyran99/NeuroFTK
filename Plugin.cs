@@ -46,6 +46,11 @@ public class Plugin : BaseUnityPlugin
             if (!GlobalConfig.debug_mode) return;
             doSpam = !doSpam;
         }
+        if (Input.GetKeyDown(KeyCode.Minus))
+        {
+            GlobalConfig.debug_mode = !GlobalConfig.debug_mode;
+            Logger.LogWarning("CHANGED DEBUG MODE TO " + GlobalConfig.debug_mode);
+        }
     }
 
     void InitializeHarmony()
