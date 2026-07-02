@@ -9,6 +9,10 @@ using StartGameFE;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Newtonsoft.Json;
+using System.Collections;
+using NeuroSdk;
+using UnityEngine;
+using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -17,8 +21,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static ActionWindow activeWindow = null;
         static uiLoreStore uiLoreStore;
+        static List<uiLoreCard> uiLoreCards;
         // {"night market": {"description": "", "card": LoreCard}}
         public static readonly Dictionary<string, Dictionary<string, object>> availableLoreData = [];
+        public static bool isPurchasing = false;
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.Show))]
         [HarmonyPostfix]
@@ -27,8 +33,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string json = JsonConvert.SerializeObject(GetCategoryData(), Formatting.None);
             json = StringReplace.ReplaceNewLine(json);
             Context.Send($"[store categories] {json}");
-            PurchaseLoreItemAction.isPurchasing = false;
+            isPurchasing = false;
             uiLoreStore = __instance;
+            uiLoreCards = ___m_AllCards;
             CreateAction(__instance, ___m_AllCards);
         }
 
@@ -37,12 +44,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void OnClosed()
         {
             availableLoreData.Clear();
-            UnityEngine.Object.Destroy(activeWindow);
+            uiLoreCards.Clear();
+            Object.Destroy(activeWindow);
         }
 
         public static void OnActionCancelled(ActionWindow window)
         {
-            UnityEngine.Object.Destroy(window);
+            Object.Destroy(window);
             uiLoreStore.OnClose();
         }
 
@@ -63,17 +71,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return categoryData;
         }
 
-        public static void OnItemPurchased(PurchaseLoreItemAction action)
+        public static void OnItemPurchased()
         {
-            PurchaseLoreItemAction.isPurchasing = false;
-            // action.itemPurchased -= OnItemPurchased;
-            // UnityEngine.Object.Destroy(activeWindow);
+            isPurchasing = false;
+            Object.Destroy(activeWindow);
             if (MainMenu.GetPurchasableLoreCount() > 0)
             {
                 MainMenu.HasPurchasableLore();
-                CreateAction(action.uiLoreStore, action.uiLoreCards);
-                // activeWindow = PurchaseLoreItemAction.RegisterAction(action.uiLoreStore, action.uiLoreCards);
-                // UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
+                CreateAction(uiLoreStore, uiLoreCards);
                 return;
             }
             uiLoreStore.OnClose();
@@ -85,7 +90,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Dictionary<string, string> schemaData = GetAllItemsDetails(_uiLoreCards);
             QuickTimerCallback timer = new(() =>
             {
-                activeWindow = PurchaseLoreItemAction.RegisterAction(_instance, _uiLoreCards, schemaData);
+                activeWindow = PurchaseLoreItemAction.RegisterAction(_instance, schemaData);
                 UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
             }, 2000f);
         }
@@ -145,6 +150,47 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 "HelmetMask03" => "HelmetTriclops",
                 _ => name,
             };
+        }
+
+        public static IEnumerator DoPurchase(uiLoreCard card, string itemName, float delay = 1.0f)
+        {
+            card.Select();
+            bool failedPurchase = false;
+            if (card.m_LoreItem.IsPurchased())
+            {
+                Plugin.Logger.LogError($"card {card.m_LoreItem.m_ID} is already purchased");
+                failedPurchase = true;
+            }
+            if (!card.m_LoreItem.CanAfford())
+            {
+                Plugin.Logger.LogError($"cannot afford {card.m_LoreItem.m_ID}");
+                failedPurchase = true;
+            }
+            if (!card.m_LoreItem.IsRevealed())
+            {
+                Plugin.Logger.LogError($"card {card.m_LoreItem.m_ID} is not revealed");
+                failedPurchase = true;
+            }
+            if (failedPurchase)
+            {
+                Context.Send($"there was an issue purchasing the store item {itemName}, going back to the main menu{NeuroSdkStrings.ModFaultSuffix}");
+                uiLoreStore.OnClose();
+                isPurchasing = false;
+                yield break;
+            }
+            string successMsg = $"you purchased [{itemName}]";
+            foreach (KeyValuePair<string, Dictionary<string, object>> item in availableLoreData)
+            {
+                if (item.Key.ToLower() != itemName.ToLower()) continue;
+                successMsg = $"you purchased [{item.Key}: {item.Value["description"]}]";
+                break;
+            }
+            Context.Send(successMsg);
+            yield return new WaitForSeconds(delay);
+            if (!GlobalConfig.debug_mode) card.CommitToLorePurchase(); // skips confirm popup, debug_mode skips purchase fully
+            yield return new WaitForSeconds(delay);
+            OnItemPurchased();
+            isPurchasing = false;
         }
 
 
