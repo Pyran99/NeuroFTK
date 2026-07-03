@@ -4,6 +4,7 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using WebSocketSharp;
 
@@ -11,12 +12,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class LocationEncounterAction(Dictionary<string, uiLocationMenuEntry> _buttons) : NeuroAction<string>
     {
-        public static ActionWindow RegisterAction(GameObject owner, Dictionary<string, uiLocationMenuEntry> _buttons, string flavorText, string loreDescription)
+        public static ActionWindow RegisterAction(GameObject owner, Dictionary<string, uiLocationMenuEntry> _buttons, string _context = "")
         {
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new LocationEncounterAction(_buttons));
-            window.SetContext($"[location encountered] {flavorText} \ndescription: {loreDescription}");
-            window.SetForce(3, "choose an action", "you encountered something while moving");
+            window.SetForce(3, "choose an action for this location encounter", "you encountered something in the overworld and a menu appeared");
+            if (_context != "") window.SetContext(_context);
             window.Register();
             return window;
         }
@@ -47,8 +48,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Plugin.Logger.LogWarning("location menu is not showing");
                 return;
             }
-            uiLocationMenuEntry btn = _buttons[parsedData];
-            btn?.OnClick();
+            uiLocationMenuEntry entry = _buttons[parsedData];
+            SelectButton.StartUnityBtnCoroutine(uiLocationMenuDisplay.Instance, entry.m_Button);
+            // entry.m_Button.OnPointerEnter(null);
+            // entry.m_Button.OnSubmit(null);
+            // QuickTimerCallback timer = new(() => btn?.OnClick(), 0.25f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using Google2u;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using UnityEngine.UI;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -59,6 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void StartShutdown()// remove all location actions
         {
             Plugin.Logger.LogMessage("close location menu");
+            ResetContextData();
             Object.Destroy(window);
             menuDisplayValues = null;
             miniHexInfo = null;
@@ -83,46 +87,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateAction()
         {
             Object.Destroy(window);
-            string info = $"{GetLocEncounterName()}: {GetLocEncounterFlavorText()}";
-            window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, GetLocEncounterButtons(), info, GetLocEncounterLoreDescription());
-        }
-
-        public static string GetLocEncounterName()
-        {
-            if (menuDisplayValues != null)
+            string ctx = GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
+            Context.Send(ctx);
+            QuickTimerCallback timer = new(() =>
             {
-                return menuDisplayValues.m_Title;
-            }
-            GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
-            GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
-            GameObject header = menu2.transform.Find("LocationHeader").gameObject;
-            Text comp = header.GetComponentInChildren<Text>();
-            if (comp != null) return comp.text;
-            return "";
-        }
-
-        public static string GetLocEncounterFlavorText()
-        {
-            if (menuDisplayValues != null)
-            {
-                return StringReplace.RemoveStyling(menuDisplayValues.m_Top);
-            }
-            GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
-            GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
-            string text = menu2.transform.Find("FlavorPopup").GetComponent<Text>().text;
-            return StringReplace.RemoveStyling(text);
-        }
-
-        public static string GetLocEncounterLoreDescription()
-        {
-            if (menuDisplayValues != null)
-            {
-                return StringReplace.RemoveStyling(menuDisplayValues.m_Bottom);
-            }
-            GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
-            GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
-            string text = menu2.transform.Find("LoreDescription").GetComponent<Text>().text;
-            return StringReplace.RemoveStyling(text);
+                window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, GetLocEncounterButtons(), "btn context NYI");
+            });
         }
 
         public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()
@@ -137,8 +107,69 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Text comp = child.GetComponentInChildren<Text>();
                 buttons.Add(comp.text, child.GetComponent<uiLocationMenuEntry>());
             }
+            Plugin.Logger.LogMessage(string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
         }
+
+        public static List<string> players = [];
+        public static Dictionary<string, Dictionary<string, string>> enemies = [];
+        static int count = 0;
+
+        public static void ResetContextData()
+        {
+            players = [];
+            enemies = [];
+            count = 0;
+        }
+
+        public static string GetEncounterContext(string name, string description, string flavor)
+        {
+            string encounter = $"[Encounter] {name}: {description}; {flavor}";
+            string _players = "";
+            if (players.Count > 0)
+            {
+                _players = $"[characters involved] {string.Join(", ", [.. players.Select(x => x)])}";
+            }
+            string _enemies = "";
+            if (enemies.Count > 0)
+            {
+                _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+            }
+            return $"{encounter}\n{_players}\n{_enemies}";
+        }
+
+        [HarmonyPatch(typeof(uiEnemyEncounterPortrait), nameof(uiEnemyEncounterPortrait.Initialize))]
+        [HarmonyPatch([typeof(string)])]
+        [HarmonyPrefix]
+        static void PortraitInitEnemy(string _enemyId)
+        {
+            if (_enemyId.IsNullOrEmpty() || _enemyId == "None")
+            {
+                enemies[count.ToString()] = new() {{"unknown", ""}};
+                count++;
+                return;
+            }
+            FTK_enemyCombat.ID id = FTK_enemyCombat.GetEnum(_enemyId);
+            FTK_enemyCombat entry = FTK_enemyCombatDB.Get(id);
+            string lvl = "";
+            if (id != FTK_enemyCombat.ID.None && HauntManager.IsScourgeActive(HauntManager.Scourge.Deimos) && entry.CanBeRandomized())
+            {
+                id = FTK_enemyCombat.ID.None;
+            }
+            if (id != FTK_enemyCombat.ID.None) lvl = entry.GetEnemyLevelDisplay().ToString();
+            enemies[count.ToString()] = new() { {entry.GetEnemyDisplay(), lvl}, };
+            count++;
+        }
+
+        [HarmonyPatch(typeof(uiEnemyEncounterPortrait), nameof(uiEnemyEncounterPortrait.Initialize))]
+        [HarmonyPatch([typeof(FTKPlayerID)])]
+        [HarmonyPrefix]
+        static void PortraitInitPlayer(FTKPlayerID _pid)
+        {
+            CharacterOverworld player = FTKHub.Instance.GetCharacterOverworldByFID(_pid);
+            players.Add(player.m_CharacterStats.m_CharacterName);
+        }
+
 
         [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
         [HarmonyPostfix]
@@ -159,5 +190,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // Plugin.Logger.LogWarning("loc_entry_set");
             // Plugin.Logger.LogWarning($"{__instance.m_Menu?.m_Location?.GetType()}"); //MiniEncounter | MiniHexTown
         }
+
+        
+
+
+
     }
 }

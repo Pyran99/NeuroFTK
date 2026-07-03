@@ -25,6 +25,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void TurnSkipped(CharacterOverworld _cow)
         {
             Context.Send($"{_cow.m_CharacterStats.m_CharacterName} had their turn skipped");
+            Object.Destroy(window);
         }
 
         // when movement choice starts
@@ -73,6 +74,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             tiles.Clear();
             isTracking = false;
             isSearching = false;
+            Object.Destroy(window);
         }
 
         // when the character stops moving

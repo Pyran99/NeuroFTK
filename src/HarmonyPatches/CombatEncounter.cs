@@ -8,7 +8,6 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
-using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -16,11 +15,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class CombatEncounter
     {
         static uiEncounterMenu instance;
-        static readonly List<string> players = [];
-        static readonly Dictionary<string, Dictionary<string, string>> enemies = [];
         static readonly Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> activeButtons = [];
         static string buttonsContext = "";
-        static int count = 0;
         static bool generating = false;
         static ActionWindow window;
 
@@ -31,9 +27,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ResetData()
         {
             activeButtons.Clear();
-            players.Clear();
-            enemies.Clear();
-            count = 0;
+            buttonsContext = "";
         }
 
         [HarmonyPatch(typeof(SubPanelBaseBase), nameof(SubPanelBaseBase.GenerateMenu))]
@@ -52,9 +46,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             // wait for lower class to finish setup
             yield return new WaitForEndOfFrame();
-            Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
+            MiniHexInfo.MenuPOIDisplayValues values = instance.m_ThisMiniHex?.GetMenuDisplayValues();
+            string ctx = LocationEncounter.GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
+            Context.Send(ctx);
             OnMenuOpened(instance, _buttons);
             QuickTimerCallback timer = new (CreateAction);
+            // Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.DisableMenu))]
@@ -63,6 +60,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Object.Destroy(window);
             ResetData();
+            LocationEncounter.ResetContextData();
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.MenuRefresh))]
@@ -78,7 +76,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Leave()
         {
             Plugin.Logger.LogMessage("LeaveOrEndTurn");
-            // ToggleOverworldActions.EnableOverworldActions();
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EndTurn))]
@@ -88,65 +85,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("EndTurn");
         }
 
-        [HarmonyPatch(typeof(uiEnemyEncounterPortrait), nameof(uiEnemyEncounterPortrait.Initialize))]
-        [HarmonyPatch([typeof(string)])]
-        [HarmonyPostfix]
-        static void PortraitInitEnemy(string _enemyId)
-        {
-            if (_enemyId.IsNullOrEmpty() || _enemyId == "None")
-            {
-                enemies[count.ToString()] = new() {{"unknown", ""}};
-                return;
-            }
-            FTK_enemyCombat.ID id = FTK_enemyCombat.GetEnum(_enemyId);
-            FTK_enemyCombat entry = FTK_enemyCombatDB.Get(id);
-            string lvl = "";
-            if (id != FTK_enemyCombat.ID.None && HauntManager.IsScourgeActive(HauntManager.Scourge.Deimos) && entry.CanBeRandomized())
-            {
-                id = FTK_enemyCombat.ID.None;
-            }
-            if (id != FTK_enemyCombat.ID.None) lvl = entry.GetEnemyLevelDisplay().ToString();
-            enemies[count.ToString()] = new() { {entry.GetEnemyDisplay(), lvl}, };
-            count++;
-        }
-
-        [HarmonyPatch(typeof(uiEnemyEncounterPortrait), nameof(uiEnemyEncounterPortrait.Initialize))]
-        [HarmonyPatch([typeof(FTKPlayerID)])]
-        [HarmonyPostfix]
-        static void PortraitInitPlayer(FTKPlayerID _pid)
-        {
-            CharacterOverworld player = FTKHub.Instance.GetCharacterOverworldByFID(_pid);
-            players.Add(player.m_CharacterStats.m_CharacterName);
-        }
-
         #endregion
 
         static void CreateAction()
         {
             generating = false;
             if (!instance.isActiveAndEnabled) return;
-            window = ActionWindow.Create(instance.gameObject);
-            window.AddAction(new EncounterAction(instance, [.. activeButtons.Values]));
-            window.SetForce(3, "choose an action", "you encountered something in the overworld and a menu appeared");
-            window.SetContext(buttonsContext);
-            window.Register();
-        }
-
-        static string EncounterContext(string name, string description, string flavor)
-        {
-            // 0 {"name","level"}
-            string encounter = $"[Encounter] {name}: {description}; {flavor}\n";
-            string _players = "";
-            if (players.Count > 0)
-            {
-                _players = $"[characters involved] {string.Join(", ", [.. players.Select(x => x)])}\n";
-            }
-            string _enemies = "";
-            if (enemies.Count > 0)
-            {
-                _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}\n";
-            }
-            return $"{encounter}{_players}{_enemies}";
+            Object.Destroy(window);
+            window = EncounterAction.CreateWindow(instance, [.. activeButtons.Values], buttonsContext);
         }
 
         static void OnMenuOpened(uiEncounterMenu _instance, Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
@@ -164,7 +110,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (activeButtons.ContainsKey(kvp.Key)) continue;
                 activeButtons.Add(kvp.Key, kvp.Value);
             }
-            // Plugin.Logger.LogMessage($"active buttons: {string.Join(", ", [.. activeButtons.Select(x => x.Value.m_ButtonText.text)])}");
             Dictionary<string, string> flavorData = [];
             Dictionary<string, object> rollData = [];
             foreach (uiPoiButton btn in activeButtons.Values)
@@ -174,7 +119,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string context = "(this encounters actions (actions with no roll results will always succeed) displayed as: [action: description] total successful rolls(chance for this result) = outcome result)\n";
             foreach (KeyValuePair<string, object> data in rollData)
             {
-                // [ambush](ambush flavor) 
+                // [ambush: (ambush flavor)]
                 context += $"[{data.Key}: {flavorData[data.Key]}] \n";
                 foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
                 {

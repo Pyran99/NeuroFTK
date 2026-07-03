@@ -11,8 +11,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class EncounterAction(MonoBehaviour instance, List<uiPoiButton> btns) : NeuroAction<string>
     {
+        public static ActionWindow CreateWindow(MonoBehaviour _instance, List<uiPoiButton> _btns, string _context = "")
+        {
+            ActionWindow window = ActionWindow.Create(_instance.gameObject);
+            window.AddAction(new EncounterAction(_instance, _btns));
+            window.SetForce(3, "choose an action for this encounter", "you encountered something in the overworld and a menu appeared", true);
+            if (_context != "") window.SetContext(_context);
+            window.Register();
+            return window;
+        }
+
         public override string Name => "encounter";
-        protected override string Description => "encounter_desc"; //TODO maybe remove & use LocationEncounterAction? compare data
+        protected override string Description => "choose what to do at this encounter";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
