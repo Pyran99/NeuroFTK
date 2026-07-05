@@ -151,7 +151,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ActionStartGame()
         {
             uiFTKButton btn = characterCreateRoot.transform.Find("UIRoot/ButtonRoot/StartButton").GetComponent<uiFTKButton>();
-            SelectButton.StartCoroutine(characterCreateRoot, btn, 0.5f);
+            SelectButton.StartCoroutine(btn, 0.5f);
         }
 
         public static void NeuroRandomizeParty()

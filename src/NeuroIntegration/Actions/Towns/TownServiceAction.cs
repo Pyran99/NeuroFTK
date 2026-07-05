@@ -30,7 +30,7 @@ namespace Pyran.NeuroFTK
         protected override void Execute(string parsedData)
         {
             Plugin.Logger.LogWarning("execute service: " + parsedData);
-            SelectButton.StartCoroutine(_data[parsedData], _data[parsedData], 1.0f);
+            SelectButton.StartCoroutine(_data[parsedData], 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

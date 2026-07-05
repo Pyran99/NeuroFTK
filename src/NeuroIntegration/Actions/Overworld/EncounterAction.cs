@@ -45,7 +45,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 if (btn.m_ButtonText.text == parsedData)
                 {
-                    SelectButton.StartCoroutine(instance, btn, 1.0f);
+                    SelectButton.StartCoroutine(btn, 1.0f);
                     return;
                 }
             }

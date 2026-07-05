@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             uiChooseRewardButton btn = _buttons[parsedData];
-            SelectButton.StartCoroutine(_owner, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

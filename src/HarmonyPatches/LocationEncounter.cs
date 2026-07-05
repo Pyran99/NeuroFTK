@@ -98,7 +98,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     string desc = button.Value.m_Text0.text;
                     string ph = "";
-                    if (StringDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
+                    if (GameDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
                     {
                         ph = _value;
                     }

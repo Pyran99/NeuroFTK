@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Pyran.NeuroFTK.Utils
 {
-    public class StringDescriptions
+    public class GameDescriptions
     {
         public static Dictionary<string, string> EncounterDescriptions = new()
         {
@@ -17,7 +17,6 @@ namespace Pyran.NeuroFTK.Utils
             {MiniHexServiceType.Healer, "replenish all HP and remove debuffs"},
             {MiniHexServiceType.Meditation, "replenish all focus"},
             {MiniHexServiceType.Priest, "remove all curses"},
-            // {"Blessing", "remove all curses"}, // btn name but enum is Priest
             {MiniHexServiceType.BoatRepair, "fully repair all adjacent ships"},
             {MiniHexServiceType.BoatReclaim, "exchange an adjacent ship for a ship deed (ship must be fully repaired)"},
         };

@@ -38,8 +38,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Dictionary<string, uiChooseRewardButton> dict = buttons.ToDictionary(x => x.m_Text.text);
             if (buttons.Count == 1) // only cancel
             {
-                Plugin.Logger.LogWarning("only 1 reward button " + buttons.First().m_Text.text);
-                SelectButton.StartCoroutine(__instance, buttons.First(), 1.0f);
+                uiChooseRewardButton first = buttons.First();
+                Plugin.Logger.LogWarning("only 1 reward button " + first.m_Text.text);
+                SelectButton.StartCoroutine(first, 1.0f);
                 return;
             }
             if (dict.ContainsKey("Cancel")) dict.Remove("Cancel"); // assume always choose valid

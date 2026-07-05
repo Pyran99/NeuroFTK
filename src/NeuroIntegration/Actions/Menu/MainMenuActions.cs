@@ -87,7 +87,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         void SelectedButton(uiFTKButton button)
         {
-            SelectButton.StartCoroutine(mainScreen, button, 1.0f);
+            SelectButton.StartCoroutine(button, 1.0f);
         }
 
         public static ActionWindow RegisterAction(MainScreen instance, bool _resumeGame, bool _canSpendLore)

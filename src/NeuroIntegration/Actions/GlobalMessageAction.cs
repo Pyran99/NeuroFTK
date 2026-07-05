@@ -44,8 +44,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             if (parsedData == "continue") FTKClickAnywhere.Instance.OnClick();
-            else if (parsedData == "yes") SelectButton.StartCoroutine(owner, (uiFTKButton)_actions[parsedData]);
-            else if (parsedData == "no") SelectButton.StartCoroutine(owner, (uiFTKButton)_actions[parsedData]);
+            else if (parsedData == "yes") SelectButton.StartCoroutine((uiFTKButton)_actions[parsedData]);
+            else if (parsedData == "no") SelectButton.StartCoroutine((uiFTKButton)_actions[parsedData]);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

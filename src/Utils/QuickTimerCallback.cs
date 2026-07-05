@@ -5,10 +5,16 @@ namespace Pyran.NeuroFTK.Utils
 {
     /// <summary>
     /// call a method after a certain amount of time<br/>
-    /// <code>QuickTimerCallback timerCallback = new(Method, 2000f);</code>
+    /// <code>QuickTimerCallback timerCallback = new(Method, owner, 2000f);</code>
     /// </summary>
     public class QuickTimerCallback
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="method"></param>
+        /// <param name="owner">`null` will always invoke method</param>
+        /// <param name="ms"></param>
         public QuickTimerCallback(Action method, GameObject owner, float ms = 1000f)
         {
             Callback += method;

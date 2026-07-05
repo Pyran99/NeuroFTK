@@ -106,7 +106,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateGame()
         {
             uiFTKButton btn = instance.gameObject.transform.Find("Background/ButtonRoot/HostGame").GetComponent<uiFTKButton>();
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         // always choose apprentice for now

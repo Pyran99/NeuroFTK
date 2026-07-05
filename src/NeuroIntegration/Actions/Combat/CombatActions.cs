@@ -415,7 +415,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             btn.OnPointerEnter(null); // may be needed to allow friendly targeting?
             CombatActions.SelectTarget(target);
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
@@ -481,7 +481,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             CombatActions.SelectTarget(target);
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
@@ -526,7 +526,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
@@ -546,7 +546,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
@@ -566,7 +566,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
@@ -602,7 +602,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             Plugin.Logger.LogWarning("execute change weapon action: " + parsedData);
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -624,7 +624,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            SelectButton.StartCoroutine(instance, btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

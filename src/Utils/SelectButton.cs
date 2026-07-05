@@ -26,16 +26,16 @@ namespace Pyran.NeuroFTK.Utils
             button.OnControllerClick();
         }
 
-        public static void StartCoroutine(MonoBehaviour instance, uiFTKButton button, float wait = 1.0f)
+        public static void StartCoroutine(uiFTKButton button, float wait = 1.0f)
         {
-            instance.StartCoroutine(SelectButtonWithDelay(instance, button, wait));
+            button.StartCoroutine(SelectButtonWithDelay(button, wait));
         }
 
-        static IEnumerator SelectButtonWithDelay(MonoBehaviour instance, uiFTKButton button, float wait = 1.0f)
+        static IEnumerator SelectButtonWithDelay(uiFTKButton button, float wait = 1.0f)
         {
             if (button == null)
             {
-                Plugin.Logger.LogError($"button is null from {instance}");
+                Plugin.Logger.LogError($"button is null");
                 yield break;
             }
             if (!button.isActiveAndEnabled)
@@ -53,16 +53,16 @@ namespace Pyran.NeuroFTK.Utils
             button.OnControllerClick();
         }
 
-        public static void StartUnityBtnCoroutine(MonoBehaviour instance, Button button, float wait = 1.0f)
+        public static void StartUnityBtnCoroutine(Button button, float wait = 1.0f)
         {
-            instance.StartCoroutine(SelectUnityButtonWithDelay(instance, button, wait));
+            button.StartCoroutine(SelectUnityButtonWithDelay(button, wait));
         }
 
-        static IEnumerator SelectUnityButtonWithDelay(MonoBehaviour instance, Button button, float wait = 1.0f)
+        static IEnumerator SelectUnityButtonWithDelay(Button button, float wait = 1.0f)
         {
             if (button == null)
             {
-                Plugin.Logger.LogError($"button is null from {instance}");
+                Plugin.Logger.LogError($"button is null");
                 yield break;
             }
             if (!button.isActiveAndEnabled)
