@@ -1,0 +1,44 @@
+using System.Collections.Generic;
+using NeuroSdk;
+using NeuroSdk.Actions;
+using NeuroSdk.Json;
+using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
+
+namespace Pyran.NeuroFTK
+{
+    public class TownServiceAction(Dictionary<string, uiFTKButton> _data) : NeuroAction<string>
+    {
+        public override string Name => "town_service";
+        protected override string Description => "choose a town service to purchase";
+        protected override JsonSchema Schema => GetSchema();
+
+        private JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["service"],
+                Properties = new()
+                {
+                    ["service"] = QJS.Enum(_data.Keys)
+                }
+            };
+            return schema;
+        }
+
+        protected override void Execute(string parsedData)
+        {
+            Plugin.Logger.LogWarning("execute service: " + parsedData);
+            SelectButton.StartCoroutine(_data[parsedData], _data[parsedData], 1.0f);
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
+        {
+            parsedData = actionData.Data.Value<string>("service");
+            if (parsedData == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("service"));
+            if (!_data.ContainsKey(parsedData)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("service"));
+            return ExecutionResult.Success();
+        }
+    }
+}
