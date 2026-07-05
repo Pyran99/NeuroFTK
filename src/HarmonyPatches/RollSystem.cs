@@ -49,11 +49,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             OverworldMovement.isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
-            // combat rolls after choice
+            // combat rolls are after choice
             if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 currentCOW = GameLogic.Instance.GetCurrentCOW();
-                QuickTimerCallback timer = new(() => OverworldMovement.GetValidMoveTiles(currentCOW), 1500f);
+                QuickTimerCallback timer = new(() => OverworldMovement.GetValidMoveTiles(currentCOW), null, 1500f);
             }
         }
 

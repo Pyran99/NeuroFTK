@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -8,23 +9,29 @@ namespace Pyran.NeuroFTK.Utils
     /// </summary>
     public class QuickTimerCallback
     {
-        public QuickTimerCallback(Action method, float ms = 1000f)
+        public QuickTimerCallback(Action method, GameObject owner, float ms = 1000f)
         {
             Callback += method;
-            Start(method, ms);
+            Start(method, owner, ms);
         }
 
         public event Action Callback;
 
-        private void Start(Action method, float ms = 1000f)
+        private void Start(Action method, GameObject owner, float ms = 1000f)
         {
             System.Timers.Timer timer = new(ms)
             {
                 AutoReset = false
             };
-            timer.Elapsed += (sender, e) => Callback?.Invoke();
-            timer.Elapsed += (sender, e) => Dispose(method);
+            timer.Elapsed += (sender, e) => Finished(method, owner);
             timer.Start();
+        }
+
+        private void Finished(Action method, GameObject owner)
+        {
+            if (owner == null) Callback?.Invoke();
+            else if (owner.activeInHierarchy) Callback?.Invoke();
+            Dispose(method);
         }
 
         private void Dispose(Action method)

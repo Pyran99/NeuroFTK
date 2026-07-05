@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.NeuroIntegration;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void VoteContainerShow(VoteButtonContainer __instance)
         {
             string name = __instance.m_PlayerHud.m_Cow.m_CharacterStats.m_CharacterName;
+            Plugin.Logger.LogWarning("decision: " + name); // bug 14
             voteButtons[name] = [];
             Button[] btns = __instance.GetComponentsInChildren<Button>();
             foreach (Button btn in btns)
@@ -36,12 +38,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isShowing = true;
             instance = __instance;
             Object.Destroy(activeWindow);
-            System.Timers.Timer timer = new(1000)
-            {
-                AutoReset = false
-            };
-            timer.Elapsed += (sender, e) => CreateAction();
-            timer.Start();
+            QuickTimerCallback timer = new(CreateAction, __instance.m_Prompt.gameObject);
         }
 
         [HarmonyPatch(typeof(VoteButtonContainer), nameof(VoteButtonContainer.Hide))]

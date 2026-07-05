@@ -92,7 +92,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 activeWindow = PurchaseLoreItemAction.RegisterAction(_instance, schemaData);
                 UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
-            }, 2000f);
+            }, _instance.m_LoreRoot.gameObject, 2000f);
         }
 
         // get every item that can be purchased

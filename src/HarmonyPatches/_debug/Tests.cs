@@ -178,7 +178,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void Location4()
         {
-            Plugin.Logger.LogWarning("UNKNOWN_loc_display_refresh");
+            // Plugin.Logger.LogWarning("UNKNOWN_loc_display_refresh");
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.OpenSubMenu))]

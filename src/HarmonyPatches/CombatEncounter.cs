@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string ctx = LocationEncounter.GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
             Context.Send(ctx);
             OnMenuOpened(instance, _buttons);
-            QuickTimerCallback timer = new (CreateAction);
+            QuickTimerCallback timer = new (CreateAction, instance.m_MainPanel.gameObject);
             // Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
         }
 

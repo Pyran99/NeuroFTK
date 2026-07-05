@@ -17,7 +17,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(_owner.gameObject);
             window.AddAction(msg);
             window.SetForce(0, "continue to the next message", "a message has appeared on screen");
-            window.SetContext("[Message]" + _owner.m_Message.text);
+            window.SetContext("[Message]" + StringReplace.RemoveStyling(_owner.m_Message.text));
             window.Register();
             return window;
         }

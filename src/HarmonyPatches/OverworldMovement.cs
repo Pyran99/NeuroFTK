@@ -37,7 +37,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ToggleOverworldActions.EnableOverworldActions();
             isTracking = true;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW));
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), Movement.Instance.m_CursorHexRenderer.gameObject);
         }
 
         // when movement begins
@@ -63,7 +63,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             while (__result.MoveNext()) yield return __result.Current;
             if (_isLoadGame)
             {
-                QuickTimerCallback timer = new(() => GetValidMoveTiles(GameLogic.Instance.GetCurrentCOW()));
+                QuickTimerCallback timer = new(() => GetValidMoveTiles(GameLogic.Instance.GetCurrentCOW()), Movement.Instance.m_CursorHexRenderer.gameObject);
             }
         }
 

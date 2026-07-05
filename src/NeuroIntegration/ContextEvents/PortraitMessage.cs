@@ -48,7 +48,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static void ContinueAfterMessageSent(uiPortraitMessageHud instance)
         {
             if (activeWindow != null) return;
-            QuickTimerCallback timer = new(() => activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject), 2000f);
+            QuickTimerCallback timer = new(() => activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject), instance.m_MessagePanel.gameObject, 2000f);
             // instance.StartCoroutine(Continue(instance));
         }
 
@@ -58,7 +58,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static void AfterZoom(uiPortraitMessageHud __instance)
         {
             Plugin.Logger.LogMessage("portrait after zoom in");
-            QuickTimerCallback timer = new(() => ContinueAfterMessageSent(__instance), 2000f);
+            QuickTimerCallback timer = new(() => ContinueAfterMessageSent(__instance), __instance.m_MessagePanel.gameObject, 2000f);
         }
 
         // this could be used to grab quest data => is set to m_Quest

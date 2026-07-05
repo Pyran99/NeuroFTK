@@ -44,7 +44,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                     }
                     if (i < list.Count - 1) profs += ", ";
                 }
-                description = $"{dmg} {dmgType}, {hands + ", "}{breakable + ", "}[Abilities]{profs}";
+                description = $"{dmg} {dmgType}, {hands}, {breakable} [Abilities]{profs}";
             }
             else if (itemBase.m_ObjectType == FTK_itembase.ObjectType.armor || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.helmet || itemBase.m_ObjectType == FTK_itembase.ObjectType.boots || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.trinket || itemBase.m_ObjectType == FTK_itembase.ObjectType.necklace)
             {
@@ -57,14 +57,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             else
             {
                 CharacterOverworld cow = GameLogic.Instance.GetCurrentCombatCOW() ?? GameLogic.Instance.GetCurrentCOW();
-                // if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
-                // {
-                //     cow = GameLogic.Instance.GetCurrentCOW();
-                // }
-                // else if(ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Combat || ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon || ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.MultiEncounter)
-                // {
-                //     cow = GameLogic.Instance.GetCurrentCombatCOW();
-                // }
                 if (cow == null)
                 {
                     Plugin.Logger.LogError("null cow");

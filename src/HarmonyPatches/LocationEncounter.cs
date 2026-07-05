@@ -26,7 +26,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo)
         {
             miniHexInfo = _miniHexInfo;
-            menuDisplayValues = _miniHexInfo.GetMenuDisplayValues(); // translates
+            menuDisplayValues = _miniHexInfo.GetMenuDisplayValues();
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
@@ -91,8 +91,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send(ctx);
             QuickTimerCallback timer = new(() =>
             {
-                window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, GetLocEncounterButtons(), "btn context NYI");
-            });
+                Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
+                // {string.Join(", ", [.. _buttons.Select(x => x.Key)])}
+                string ctx = $"[buttons]";
+                foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
+                {
+                    string desc = button.Value.m_Text0.text;
+                    string ph = "";
+                    if (StringDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
+                    {
+                        ph = _value;
+                    }
+                    ctx += $"{desc}: {ph}.\n";
+                }
+                window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, ctx);
+            }, uiLocationMenuDisplay.Instance.m_DisplayRoot.gameObject);
         }
 
         public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()
@@ -103,9 +116,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Dictionary<string, uiLocationMenuEntry> buttons = [];
             foreach (Transform child in panel.transform)
             {
-                if (child.GetComponent<uiLocationMenuEntry>() == null) continue;
+                uiLocationMenuEntry entry = child.GetComponent<uiLocationMenuEntry>();
+                if (entry == null) continue;
+                if (!entry.m_Button.interactable) continue;
                 Text comp = child.GetComponentInChildren<Text>();
-                buttons.Add(comp.text, child.GetComponent<uiLocationMenuEntry>());
+                buttons.Add(comp.text, entry);
             }
             Plugin.Logger.LogMessage(string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
@@ -124,7 +139,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static string GetEncounterContext(string name, string description, string flavor)
         {
-            string encounter = $"[Encounter] {name}: {description}; {flavor}";
+            string encounter = $"[Encounter] {name}: {flavor}; {description}";
             string _players = "";
             if (players.Count > 0)
             {

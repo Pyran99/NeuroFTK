@@ -49,7 +49,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 __instance.Close();
                 return;
             }
-            QuickTimerCallback timer = new(() => CreateAction(__instance, dict, title));
+            QuickTimerCallback timer = new(() => CreateAction(__instance, dict, title), __instance.m_DisplayRoot.gameObject);
         }
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), nameof(uiChooseRewardMenu.Close))]
