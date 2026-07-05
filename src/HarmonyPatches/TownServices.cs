@@ -43,6 +43,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (uiTownServiceMenu.ServiceButton btn in uiTownServiceMenu.Instance.m_ServiceButtons)
             {
                 if (!btn.m_RectTransform.gameObject.activeInHierarchy) continue;
+                int cost = int.Parse(btn.m_CostText.text);
+                if (GameLogic.Instance.GetCurrentCOW().m_CharacterStats.CanAfford(cost)) continue;
                 string _name = btn.m_RectTransform.Find("Text").GetComponent<Text>().text;
                 string _desc = StringDescriptions.TownServices[btn.m_ServiceType];
                 string _cost = btn.m_CostText.text;

@@ -105,7 +105,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     ctx += $"{desc}: {ph}.\n";
                 }
                 window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, ctx);
-            }, uiLocationMenuDisplay.Instance.m_DisplayRoot.gameObject);
+            }, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
         }
 
         public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()
