@@ -32,7 +32,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (__instance == uiTownServiceMenu.Instance)
             {
                 neuroData.Clear();
-                Plugin.Logger.LogWarning("service type instance");
                 Object.Destroy(window);
             }
         }
