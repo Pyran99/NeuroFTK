@@ -17,16 +17,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             PurchaseLoreItemAction action = new(instance, _schemaData);
             window.AddAction(action);
-            CancelAction cancelAction = new(window, "return to main menu");
-            cancelAction.OnCancelled += LoreStoreUnlocks.OnActionCancelled;
-            window.AddAction(cancelAction);
-            window.SetForce(5, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks");
+            CancelAction cancel = new(window, "return to main menu");
+            cancel.OnCancelled += LoreStoreUnlocks.OnActionCancelled;
+            window.AddAction(cancel);
             string context = "";
             foreach (string key in _schemaData.Keys)
             {
                 context += $"[{key}] {StringReplace.ReplaceNewLine(_schemaData[key])}.\n";
             }
             window.SetContext($"Items and their descriptions you can afford: {context}");
+            window.SetForce(5, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks");
             window.Register();
             return window;
         }

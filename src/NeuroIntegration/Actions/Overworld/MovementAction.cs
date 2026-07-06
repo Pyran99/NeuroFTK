@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new MovementAction());
             window.AddAction(new EndTurnAction());
-            // window.SetForce(5, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
+            window.SetForce(5, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
             window.SetContext(GetContext(_tiles));
             window.Register();
             return window;

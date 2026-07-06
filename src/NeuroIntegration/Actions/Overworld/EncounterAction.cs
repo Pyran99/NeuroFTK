@@ -9,12 +9,12 @@ using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class EncounterAction(MonoBehaviour instance, List<uiPoiButton> btns) : NeuroAction<string>
+    public class EncounterAction(List<uiPoiButton> btns) : NeuroAction<string>
     {
         public static ActionWindow CreateWindow(MonoBehaviour _instance, List<uiPoiButton> _btns, string _context = "")
         {
             ActionWindow window = ActionWindow.Create(_instance.gameObject);
-            window.AddAction(new EncounterAction(_instance, _btns));
+            window.AddAction(new EncounterAction(_btns));
             window.SetForce(3, "choose an action for this encounter", "you encountered something in the overworld and a menu appeared", true);
             if (_context != "") window.SetContext(_context);
             window.Register();

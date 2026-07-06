@@ -10,14 +10,14 @@ using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class RewardMenuAction(MonoBehaviour _owner, string _menuName, Dictionary<string, uiChooseRewardButton> _buttons) : NeuroAction<string>
+    public class RewardMenuAction(string _menuName, Dictionary<string, uiChooseRewardButton> _buttons) : NeuroAction<string>
     {
 
         public static ActionWindow RegisterActions(MonoBehaviour owner, Dictionary<string, uiChooseRewardButton> _buttons, string menuName)
         {
             menuName = Regex.Replace(menuName, " ", "_").ToLower();
             ActionWindow window = ActionWindow.Create(owner.gameObject);
-            window.AddAction(new RewardMenuAction(owner, menuName, _buttons));
+            window.AddAction(new RewardMenuAction(menuName, _buttons));
             window.SetForce(0, "choose a reward or revive a character", "");
             window.Register();
             return window;
