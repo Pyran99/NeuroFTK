@@ -44,7 +44,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                     }
                     if (i < list.Count - 1) profs += ", ";
                 }
-                description = $"{dmg} {dmgType}, {hands}, {breakable} [Abilities]{profs}";
+                description = $"{dmg} {dmgType}, {hands}, {breakable} [Abilities] {profs}";
             }
             else if (itemBase.m_ObjectType == FTK_itembase.ObjectType.armor || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.helmet || itemBase.m_ObjectType == FTK_itembase.ObjectType.boots || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.trinket || itemBase.m_ObjectType == FTK_itembase.ObjectType.necklace)
             {

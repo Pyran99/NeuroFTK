@@ -49,10 +49,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             uiLocationMenuEntry entry = _buttons[parsedData];
-            SelectButton.StartUnityBtnCoroutine(entry.m_Button);
-            // entry.m_Button.OnPointerEnter(null);
-            // entry.m_Button.OnSubmit(null);
-            // QuickTimerCallback timer = new(() => btn?.OnClick(), 0.25f);
+            SelectButton.StartCoroutine(entry.GetComponent<ServiceButton>());
+            // SelectButton.StartUnityBtnCoroutine(entry.m_Button);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

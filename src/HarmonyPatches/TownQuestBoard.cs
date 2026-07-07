@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using FTKItemName;
 using Google2u;
 using GridEditor;
 using HarmonyLib;
@@ -16,21 +17,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class TownQuestBoard
     {
         static ActionWindow window;
-        static List<QuestListItem> items = [];
-        static Dictionary<string, QuestListItem> itemsById = [];
+        static readonly List<QuestListItem> items = [];
+        static readonly Dictionary<string, QuestListItem> itemsById = [];
 
 
         [HarmonyPatch(typeof(uiGetQuestMenu), nameof(uiGetQuestMenu.EnableMenu))]
         [HarmonyPostfix]
         static void BoardOpened(MiniHexInfo _hex)
         {
-            if (uiGetQuestMenu.Instance.m_NoQuestDisplay.text != string.Empty)
+            uiGetQuestMenu.Instance.StartCoroutine(Wait());
+            static IEnumerator Wait()
             {
-                Context.Send("no quests available at this location", true);
-                SelectButton.StartCoroutine(uiGetQuestMenu.Instance.m_BackButton.GetComponent<uiFTKButton>());
-                return;
+                yield return new WaitForEndOfFrame();
+                if (uiGetQuestMenu.Instance.m_NoQuestDisplay.text != string.Empty)
+                {
+                    Context.Send("no quests available at this location", true);
+                    SelectButton.StartCoroutine(uiGetQuestMenu.Instance.m_BackButton.GetComponent<uiFTKButton>(), 2.5f);
+                    yield break;
+                }
+                uiGetQuestMenu.Instance.StartCoroutine(GetQuestItems());
             }
-            uiGetQuestMenu.Instance.StartCoroutine(GetQuestItems());
         }
 
         [HarmonyPatch(typeof(GeneralMenuBase), nameof(GeneralMenuBase.DisableMenu))]
@@ -69,25 +75,50 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append($"{StringReplace.RemoveStyling(items[i].m_Quest.GetLocalizedOneLineDesc())}. Reward {items[i].m_Quest.GetRewardString()}");
                 if (items[i].m_Quest.m_RewardType == QuestLogicBase.Reward.Item)
                 {
-                    string itemCtx = "";
-                    FTK_itembase.ID id = items[i].m_Quest.m_RewardItem;
-                    FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
-                    if (itemBase is FTK_items)
-                    {
-                        Plugin.Logger.LogWarning("item reward");
-                    }
-                    else if (itemBase is FTK_weaponStats2)
-                    {
-                        Plugin.Logger.LogWarning("weapon reward");
-                        itemCtx += $" ({(itemBase as FTK_weaponStats2).GetAttackDisplay()})";
-                    }
-                    itemCtx += "[rarity] " + FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display.ToUpper());
+                    sb.Append(GetItemDetails(i));
                 }
                 sb.AppendLine();
             }
             ctx = sb.ToString();
             Context.Send(ctx);
             QuickTimerCallback timer = new(CreateAction, uiGetQuestMenu.Instance.m_ListRoot.gameObject);
+        }
+
+        static string GetItemDetails(int count)
+        {
+            string result = "";
+            FTK_itembase.ID id = items[count].m_Quest.m_RewardItem;
+            FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
+            result += $" [rarity] {FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display)},";
+            if (itemBase is FTK_items)
+            {
+                Plugin.Logger.LogWarning("item reward");
+                FTKItem _item = FTKItem.Get(id);
+                result += $" {_item.GetDescription(GameLogic.Instance.GetCurrentCOW())}";
+            }
+            else if (itemBase is FTK_weaponStats2 stats)
+            {
+                Plugin.Logger.LogWarning("weapon reward");
+                // from LootDropped
+                string dmg = stats._maxdmg.ToString();
+                string dmgType = stats._dmgtype == FTK_weaponStats2.DamageType.physical ? FTKHub.Localized<TextMisc>("STR_charModPhysicalDamage") : FTKHub.Localized<TextMisc>("STR_charModMagicDamage");
+                string hands = stats.m_ObjectSlot == FTK_itembase.ObjectSlot.twoHands ? "Two-Handed" : "One-Handed";
+                string breakable = stats.m_CanBreak == true ? "Breaks on critical fail" : "";
+                string profs = "";
+                List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(stats)];
+                if (!stats.m_NoRegularAttack) list.Insert(0, FTK_proficiencyTable.ID.None);
+                for (int j = 0; j < list.Count; j++)
+                {
+                    if (list[j] == FTK_proficiencyTable.ID.None) profs += stats.GetAttackDisplay();
+                    else
+                    {
+                        profs += FTK_proficiencyTableDB.GetDB().GetEntry(list[j]).GetLocalizedDisplayTitle();
+                    }
+                    if (j < list.Count - 1) profs += ", ";
+                }
+                result += $" {dmg} {dmgType}, {hands}, {breakable} [Abilities] {profs} ";
+            }
+            return result;
         }
 
         static void CreateAction()
@@ -97,7 +128,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void NeuroDecision(QuestListItem _item)
         {
-            Context.Send("you accepted the quest: " + StringReplace.RemoveStyling(_item.m_QuestDetail?.m_Text.text));
+            Context.Send("Quest accepted: " + StringReplace.RemoveStyling(_item.m_QuestDetail?.m_Text.text));
             Button btn = _item.m_Button;
             uiFTKButton btnComp = btn.GetComponent<uiFTKButton>();
             if (btnComp != null) SelectButton.StartCoroutine(btnComp);
