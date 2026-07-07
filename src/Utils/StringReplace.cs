@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -35,8 +37,9 @@ namespace Pyran.NeuroFTK.Utils
             return builder.ToString();
         }
 
-        public static string RemoveStyling(string input)
+        public static string RemoveStyling(string? input)
         {
+            if (input == null) return "";
             Regex pattern = new(@"<[^>]*>");
             if (pattern.IsMatch(input))
             {

@@ -8,7 +8,9 @@ namespace Pyran.NeuroFTK.Utils
         {
             {"Services", "purchase health, focus points, remove debuffs, or remove curses"},
             {"Market", "purchase items"},
-            {"Quest Board", "grab a quest to complete for rewards"},
+            {"Quest Board", "grab a side quest to complete for rewards"},
+            {"Leave", "close this menu"},
+            {"End Turn", "end this characters turn"},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()

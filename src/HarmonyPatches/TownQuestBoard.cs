@@ -1,7 +1,14 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using Google2u;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -9,27 +16,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class TownQuestBoard
     {
         static ActionWindow window;
-        static Dictionary<string, uiFTKButton> neuroData = [];
         static List<QuestListItem> items = [];
+        static Dictionary<string, QuestListItem> itemsById = [];
 
 
         [HarmonyPatch(typeof(uiGetQuestMenu), nameof(uiGetQuestMenu.EnableMenu))]
         [HarmonyPostfix]
         static void BoardOpened(MiniHexInfo _hex)
         {
-            Plugin.Logger.LogWarning("quest board open");
-            // MiniHexTown hexTown = (MiniHexTown)_hex;
-            // if (hexTown.m_QuestList.Count == 0)
-            // {
-            //     Plugin.Logger.LogWarning("1 no quests");
-            //     return;
-            // }
             if (uiGetQuestMenu.Instance.m_NoQuestDisplay.text != string.Empty)
             {
-                Plugin.Logger.LogWarning("2 no quests");
+                Context.Send("no quests available at this location", true);
+                SelectButton.StartCoroutine(uiGetQuestMenu.Instance.m_BackButton.GetComponent<uiFTKButton>());
                 return;
             }
-
+            uiGetQuestMenu.Instance.StartCoroutine(GetQuestItems());
         }
 
         [HarmonyPatch(typeof(GeneralMenuBase), nameof(GeneralMenuBase.DisableMenu))]
@@ -38,24 +39,90 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (__instance == uiGetQuestMenu.Instance)
             {
-                // neuroData.Clear();
-                Plugin.Logger.LogWarning("quest type instance close");
-                // Object.Destroy(window);
+                items.Clear();
+                itemsById.Clear();
+                Object.Destroy(window);
             }
         }
 
-
-        static void GetQuestItems()
+        static IEnumerator GetQuestItems()
         {
-            // uiGetQuestMenu.Instance.m_ListRoot.transform;
-            for (int i = 0; i < uiGetQuestMenu.Instance.m_ListRoot.transform.childCount; i++)
+            yield return new WaitForEndOfFrame();
+            items.Clear();
+            itemsById.Clear();
+            Transform root = uiGetQuestMenu.Instance.m_ListRoot.transform;
+            for (int i = 0; i < root.childCount; i++)
             {
-                GameObject child = uiGetQuestMenu.Instance.m_ListRoot.transform.GetChild(i).gameObject;
-                if (child.GetComponent<QuestListItem>())
+                GameObject child = root.GetChild(i).gameObject;
+                QuestListItem item = child.GetComponent<QuestListItem>();
+                if (item)
                 {
-                    items.Add(child.GetComponent<QuestListItem>());
+                    items.Add(item);
                 }
             }
+            string ctx = "";
+            StringBuilder sb = new();
+            for (int i = 0; i < items.Count; i++)
+            {
+                itemsById.Add($"quest {i+1}", items[i]);
+                sb.Append($"[Quest {i + 1}] ");
+                sb.Append($"{StringReplace.RemoveStyling(items[i].m_Quest.GetLocalizedOneLineDesc())}. Reward {items[i].m_Quest.GetRewardString()}");
+                if (items[i].m_Quest.m_RewardType == QuestLogicBase.Reward.Item)
+                {
+                    string itemCtx = "";
+                    FTK_itembase.ID id = items[i].m_Quest.m_RewardItem;
+                    FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
+                    if (itemBase is FTK_items)
+                    {
+                        Plugin.Logger.LogWarning("item reward");
+                    }
+                    else if (itemBase is FTK_weaponStats2)
+                    {
+                        Plugin.Logger.LogWarning("weapon reward");
+                        itemCtx += $" ({(itemBase as FTK_weaponStats2).GetAttackDisplay()})";
+                    }
+                    itemCtx += "[rarity] " + FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display.ToUpper());
+                }
+                sb.AppendLine();
+            }
+            ctx = sb.ToString();
+            Context.Send(ctx);
+            QuickTimerCallback timer = new(CreateAction, uiGetQuestMenu.Instance.m_ListRoot.gameObject);
+        }
+
+        static void CreateAction()
+        {
+            window = TownQuestBoardAction.CreateWindow(itemsById);
+        }
+
+        public static void NeuroDecision(QuestListItem _item)
+        {
+            Context.Send("you accepted the quest: " + StringReplace.RemoveStyling(_item.m_QuestDetail?.m_Text.text));
+            Button btn = _item.m_Button;
+            uiFTKButton btnComp = btn.GetComponent<uiFTKButton>();
+            if (btnComp != null) SelectButton.StartCoroutine(btnComp);
+            else SelectButton.StartUnityBtnCoroutine(_item.m_Button);
+            _item.StartCoroutine(AcceptQuest(_item.m_QuestDetail));
+        }
+
+        static IEnumerator AcceptQuest(uiQuestDetail _detail)
+        {
+            Plugin.Logger.LogWarning("wait for details");
+            GameObject obj = uiGetQuestMenu.Instance.m_ListRoot.gameObject;
+            while (!_detail.gameObject.activeInHierarchy)
+            {
+                if (!obj.activeInHierarchy)
+                {
+                    Plugin.Logger.LogError("quest menu was closed");
+                    Context.Send("there was an issue accepting the quest", true);
+                    yield break;
+                }
+                yield return null;
+            }
+            yield return new WaitForSeconds(2f);
+            Plugin.Logger.LogWarning("details shown");
+            SelectButton.StartUnityBtnCoroutine(_detail.m_AcceptButton);
+
         }
         
     }
