@@ -4,6 +4,7 @@ using Google2u;
 using GridEditor;
 using HarmonyLib;
 using Pyran.NeuroFTK.NeuroIntegration;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -13,6 +14,41 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Tests
     {
+
+        [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))]
+        [HarmonyPostfix]
+        static void Popup1()
+        {
+            Plugin.Logger.LogWarning("popupMenu.Show");
+        }
+
+        [HarmonyPatch(typeof(uiPopupMenu), "OnClick")]
+        [HarmonyPostfix]
+        static void Popup2(uiPopupMenu.Action _a)
+        {
+            Plugin.Logger.LogWarning("popupMenu.OnClick " + _a);
+        }
+
+        [HarmonyPatch(typeof(uiItemMenu), "ShowBuyMenu")]
+        [HarmonyPostfix]
+        static void Popup3()
+        {
+            Plugin.Logger.LogWarning("uiItemMenu.ShowBuyMenu");
+        }
+
+        [HarmonyPatch(typeof(uiItemMenu), "ShowPlayerInventory")]
+        [HarmonyPostfix]
+        static void Popup5()
+        {
+            Plugin.Logger.LogWarning("uiItemMenu.ShowPlayerInventory");
+        }
+
+        [HarmonyPatch(typeof(uiItemMenu), "CheckScroll")] // end of Show
+        [HarmonyPostfix]
+        static void Popup4()
+        {
+            Plugin.Logger.LogWarning("uiItemMenu.CheckScroll");
+        }
 
         // [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.OnEncounterSessionEnd))]
         // [HarmonyPostfix]

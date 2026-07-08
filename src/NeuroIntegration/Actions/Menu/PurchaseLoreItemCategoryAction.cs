@@ -8,6 +8,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Newtonsoft.Json;
+using Pyran.NeuroFTK.Utils;
 using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -213,30 +214,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             FTK_itembase itemBase = FTK_itembase.GetItemBase(itemId);
             string trName = itemBase.GetLocalizedName();
             string trDescription;
-            if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon)
-            {
-                trDescription = GetWeaponDetails((FTK_weaponStats2)itemBase);
-            }
-            else if (itemBase.m_ObjectType == FTK_itembase.ObjectType.armor || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.helmet || itemBase.m_ObjectType == FTK_itembase.ObjectType.boots || itemBase.m_ObjectType == FTK_itembase.ObjectType.shield || itemBase.m_ObjectType == FTK_itembase.ObjectType.trinket || itemBase.m_ObjectType == FTK_itembase.ObjectType.necklace)
-            {
-                if (FTK_characterModifierDB.GetDB().IsContainID(itemBase.m_ID))
-                {
-                    trDescription = CharacterSkills.GetModDisplay(FTK_characterModifierDB.Get(itemBase.m_ID), false);
-                }
-                else
-                {
-                    Plugin.Logger.LogWarning("equipment database error");
-                    trDescription = "";
-                }
-            }
-            else if (FTK_itembase.IsPipeItem(itemId))
-            {
-                trDescription = FTK_pipeDB.GetDB().GetPipeEntryFromItem(itemId).GetItemCardDescription();
-            }
-            else
-            {
-                trDescription = FTKItem.Get(itemId)?.GetDescription(null);
-            }
+            trDescription = ItemData.GetItemDescription(itemId);
             trDescription.Replace(@"\\n", ", ");
             data.Add(trName, trDescription);
             return data;
@@ -245,88 +223,91 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         // returns that values of a weapon
         string GetWeaponDetails(FTK_weaponStats2 weaponStats)
         {
-            string maxDmg = weaponStats._maxdmg.ToString();
-            string dmgType;
-            switch (weaponStats._dmgtype)
-            {
-                case FTK_weaponStats2.DamageType.physical:
-                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModPhysicalDamage")].GetStringDataByIndex(0);
-                    break;
-                case FTK_weaponStats2.DamageType.magic:
-                    dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModMagicDamage")].GetStringDataByIndex(0);
-                    break;
-                default:
-                    dmgType = "";
-                    Plugin.Logger.LogWarning($"unknown damage type: {weaponStats._dmgtype}");
-                    break;
-            }
-            string text1 = "";
-            string text2 = "";
-            string targetType = "target type: ";
-            string attackProficiency = "";
-            List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(weaponStats)];
-            if (!weaponStats.m_NoRegularAttack)
-            {
-                list.Insert(0, FTK_proficiencyTable.ID.None);
-            }
-            for (int i = 0; i < list.Count; i++)
-            {
-                FTK_proficiencyTable ftk_proficiencyTable = null;
-                if (list[i] == FTK_proficiencyTable.ID.None)
-                {
-                    text1 += weaponStats.GetAttackDisplay();
-                }
-                else
-                {
-                    text1 += FTK_proficiencyTableDB.GetDB().GetEntry(list[i]).GetLocalizedDisplayTitle();
-                    ftk_proficiencyTable = FTK_proficiencyTableDB.Get(list[i]);
-                }
-                if (i < list.Count - 1)
-                {
-                    text1 += ", ";
-                }
-                if (ftk_proficiencyTable != null && !ftk_proficiencyTable.m_TargetFriendly)
-                {
-                    CharacterDummy.TargetType target = ftk_proficiencyTable.m_Target;
-                    if (target != CharacterDummy.TargetType.Aoe)
-                    {
-                        if (target != CharacterDummy.TargetType.Splash)
-                        {
-                            if (target == CharacterDummy.TargetType.None)
-                            {
-                                targetType += " single target,";
-                                // this.m_SingleTargetIcon.SetActive(true);
-                            }
-                        }
-                        else
-                        {
-                            targetType += " splash,";
-                            // this.m_SplashIcon.SetActive(true);
-                        }
-                    }
-                    else
-                    {
-                        targetType += " aoe,";
-                        // this.m_AoeIcon.SetActive(true);
-                    }
-                    if (ftk_proficiencyTable.m_DmgMultiplier > 1f)
-                    {
-                        attackProficiency = " heavy attack,";
-                    }
-                    if (ftk_proficiencyTable.m_IgnoresArmor)
-                    {
-                        attackProficiency += " pierce armor,";
-                    }
-                }
-            }
-            if (FTK_characterModifierDB.GetDB().IsContainID(weaponStats.m_ID))
-            {
-                text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
-                text2.Replace(@"\n", ", ");
-            }
-            // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
-            string final = $"weapon damage:{maxDmg} {dmgType}; attacks and proficiencies: {text1}; modifiers: {text2}";
-            return final;
+            //TESTING
+            return ItemData.GetItemDescription(FTK_itembase.GetEnum(weaponStats.m_ID));
+            //
+            // string maxDmg = weaponStats._maxdmg.ToString();
+            // string dmgType;
+            // switch (weaponStats._dmgtype)
+            // {
+            //     case FTK_weaponStats2.DamageType.physical:
+            //         dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModPhysicalDamage")].GetStringDataByIndex(0);
+            //         break;
+            //     case FTK_weaponStats2.DamageType.magic:
+            //         dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModMagicDamage")].GetStringDataByIndex(0);
+            //         break;
+            //     default:
+            //         dmgType = "";
+            //         Plugin.Logger.LogWarning($"unknown damage type: {weaponStats._dmgtype}");
+            //         break;
+            // }
+            // string text1 = "";
+            // string text2 = "";
+            // string targetType = "target type: ";
+            // string attackProficiency = "";
+            // List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(weaponStats)];
+            // if (!weaponStats.m_NoRegularAttack)
+            // {
+            //     list.Insert(0, FTK_proficiencyTable.ID.None);
+            // }
+            // for (int i = 0; i < list.Count; i++)
+            // {
+            //     FTK_proficiencyTable ftk_proficiencyTable = null;
+            //     if (list[i] == FTK_proficiencyTable.ID.None)
+            //     {
+            //         text1 += weaponStats.GetAttackDisplay();
+            //     }
+            //     else
+            //     {
+            //         text1 += FTK_proficiencyTableDB.GetDB().GetEntry(list[i]).GetLocalizedDisplayTitle();
+            //         ftk_proficiencyTable = FTK_proficiencyTableDB.Get(list[i]);
+            //     }
+            //     if (i < list.Count - 1)
+            //     {
+            //         text1 += ", ";
+            //     }
+            //     if (ftk_proficiencyTable != null && !ftk_proficiencyTable.m_TargetFriendly)
+            //     {
+            //         CharacterDummy.TargetType target = ftk_proficiencyTable.m_Target;
+            //         if (target != CharacterDummy.TargetType.Aoe)
+            //         {
+            //             if (target != CharacterDummy.TargetType.Splash)
+            //             {
+            //                 if (target == CharacterDummy.TargetType.None)
+            //                 {
+            //                     targetType += " single target,";
+            //                     // this.m_SingleTargetIcon.SetActive(true);
+            //                 }
+            //             }
+            //             else
+            //             {
+            //                 targetType += " splash,";
+            //                 // this.m_SplashIcon.SetActive(true);
+            //             }
+            //         }
+            //         else
+            //         {
+            //             targetType += " aoe,";
+            //             // this.m_AoeIcon.SetActive(true);
+            //         }
+            //         if (ftk_proficiencyTable.m_DmgMultiplier > 1f)
+            //         {
+            //             attackProficiency = " heavy attack,";
+            //         }
+            //         if (ftk_proficiencyTable.m_IgnoresArmor)
+            //         {
+            //             attackProficiency += " pierce armor,";
+            //         }
+            //     }
+            // }
+            // if (FTK_characterModifierDB.GetDB().IsContainID(weaponStats.m_ID))
+            // {
+            //     text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
+            //     text2.Replace(@"\n", ", ");
+            // }
+            // // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
+            // string final = $"weapon damage:{maxDmg} {dmgType}; attacks and proficiencies: {text1}; modifiers: {text2}";
+            // return final;
         }
 
         
