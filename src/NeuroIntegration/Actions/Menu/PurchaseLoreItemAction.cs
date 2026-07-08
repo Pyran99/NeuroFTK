@@ -7,6 +7,7 @@ using NeuroSdk.Websocket;
 using StartGameFE;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
+using System.Text;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -20,12 +21,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CancelAction cancel = new(window, "return to main menu");
             cancel.OnCancelled += LoreStoreUnlocks.OnActionCancelled;
             window.AddAction(cancel);
-            string context = "";
+            StringBuilder sb = new();
             foreach (string key in _schemaData.Keys)
             {
-                context += $"[{key}] {StringReplace.ReplaceNewLine(_schemaData[key])}.\n";
+                sb.AppendLine($"[{key}] {StringReplace.ReplaceNewLine(_schemaData[key])}");
             }
-            window.SetContext($"Items and their descriptions you can afford: {context}");
+            window.SetContext($"(Items and their descriptions you can afford) {sb}");
             window.SetForce(5, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks");
             window.Register();
             return window;

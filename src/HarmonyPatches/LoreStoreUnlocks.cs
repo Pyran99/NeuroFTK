@@ -112,10 +112,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 else
                 {
-                    // this.m_ItemDetail.Show(_itemID, uiItemDetail.Mode.ItemDisplay, _cow, false, _forceFrontSide, _loreCard);
                     FTK_itembase itemBase = FTK_itembase.GetItemBase((FTK_itembase.ID)item.m_UnlockID);
-                    // string trName = itemBase.GetLocalizedName();
-                    entry = LoreItemData.HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
+                    entry = ItemData.HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
                 }
                 string key = entry.Keys?.First().ToLower();
                 // some item sets use the same name
@@ -178,11 +176,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 isPurchasing = false;
                 yield break;
             }
-            string successMsg = $"you purchased [{itemName}]";
+            string successMsg = $"you purchased {itemName}";
             foreach (KeyValuePair<string, Dictionary<string, object>> item in availableLoreData)
             {
                 if (item.Key.ToLower() != itemName.ToLower()) continue;
-                successMsg = $"you purchased [{item.Key}: {item.Value["description"]}]";
+                successMsg = $"you purchased {item.Key} {item.Value["description"]}";
                 break;
             }
             Context.Send(successMsg);

@@ -68,15 +68,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             Dictionary<string, string> allLoreData = GetAllItemsDetails(uiLoreCards);
             allLoreData.OrderByDescending(kvp => kvp.Key);
-            string json = JsonConvert.SerializeObject(allLoreData, Formatting.Indented);
-            Plugin.Logger.LogMessage("card title: item description\n" + json);
+            // string json = JsonConvert.SerializeObject(allLoreData, Formatting.Indented);
+            // Plugin.Logger.LogMessage("card title: item description\n" + json);
             return allLoreData;
         }
 
         Dictionary<string, string> GetAllItemsDetails(List<uiLoreCard> cards)
         {
             Dictionary<string, string> allLoreData = [];
-            Dictionary<string, string> entry = [];
+            Dictionary<string, string> entry;
             FTK_loreItem item;
             foreach (uiLoreCard card in uiLoreCards)
             {
@@ -92,11 +92,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 }
                 else
                 {
-                    // this.m_ItemDetail.Show(_itemID, uiItemDetail.Mode.ItemDisplay, _cow, false, _forceFrontSide, _loreCard);
                     FTK_itembase itemBase = FTK_itembase.GetItemBase((FTK_itembase.ID)item.m_UnlockID);
-                    // string trName = itemBase.GetLocalizedName();
-                    // allLoreData.Add(trName, "");
-                    entry = HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
+                    entry = ItemData.HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
                 }
                 if (allLoreData.ContainsKey(entry?.Keys?.First())) continue;
                 allLoreData.Add(entry?.Keys?.First(), entry?.Values?.First());
@@ -208,107 +205,96 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return data;
         }
 
-        Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
-        {
-            Dictionary<string, string> data = [];
-            FTK_itembase itemBase = FTK_itembase.GetItemBase(itemId);
-            string trName = itemBase.GetLocalizedName();
-            string trDescription;
-            trDescription = ItemData.GetItemDescription(itemId);
-            trDescription.Replace(@"\\n", ", ");
-            data.Add(trName, trDescription);
-            return data;
-        }
 
-        // returns that values of a weapon
-        string GetWeaponDetails(FTK_weaponStats2 weaponStats)
-        {
-            //TESTING
-            return ItemData.GetItemDescription(FTK_itembase.GetEnum(weaponStats.m_ID));
-            //
-            // string maxDmg = weaponStats._maxdmg.ToString();
-            // string dmgType;
-            // switch (weaponStats._dmgtype)
-            // {
-            //     case FTK_weaponStats2.DamageType.physical:
-            //         dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModPhysicalDamage")].GetStringDataByIndex(0);
-            //         break;
-            //     case FTK_weaponStats2.DamageType.magic:
-            //         dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModMagicDamage")].GetStringDataByIndex(0);
-            //         break;
-            //     default:
-            //         dmgType = "";
-            //         Plugin.Logger.LogWarning($"unknown damage type: {weaponStats._dmgtype}");
-            //         break;
-            // }
-            // string text1 = "";
-            // string text2 = "";
-            // string targetType = "target type: ";
-            // string attackProficiency = "";
-            // List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(weaponStats)];
-            // if (!weaponStats.m_NoRegularAttack)
-            // {
-            //     list.Insert(0, FTK_proficiencyTable.ID.None);
-            // }
-            // for (int i = 0; i < list.Count; i++)
-            // {
-            //     FTK_proficiencyTable ftk_proficiencyTable = null;
-            //     if (list[i] == FTK_proficiencyTable.ID.None)
-            //     {
-            //         text1 += weaponStats.GetAttackDisplay();
-            //     }
-            //     else
-            //     {
-            //         text1 += FTK_proficiencyTableDB.GetDB().GetEntry(list[i]).GetLocalizedDisplayTitle();
-            //         ftk_proficiencyTable = FTK_proficiencyTableDB.Get(list[i]);
-            //     }
-            //     if (i < list.Count - 1)
-            //     {
-            //         text1 += ", ";
-            //     }
-            //     if (ftk_proficiencyTable != null && !ftk_proficiencyTable.m_TargetFriendly)
-            //     {
-            //         CharacterDummy.TargetType target = ftk_proficiencyTable.m_Target;
-            //         if (target != CharacterDummy.TargetType.Aoe)
-            //         {
-            //             if (target != CharacterDummy.TargetType.Splash)
-            //             {
-            //                 if (target == CharacterDummy.TargetType.None)
-            //                 {
-            //                     targetType += " single target,";
-            //                     // this.m_SingleTargetIcon.SetActive(true);
-            //                 }
-            //             }
-            //             else
-            //             {
-            //                 targetType += " splash,";
-            //                 // this.m_SplashIcon.SetActive(true);
-            //             }
-            //         }
-            //         else
-            //         {
-            //             targetType += " aoe,";
-            //             // this.m_AoeIcon.SetActive(true);
-            //         }
-            //         if (ftk_proficiencyTable.m_DmgMultiplier > 1f)
-            //         {
-            //             attackProficiency = " heavy attack,";
-            //         }
-            //         if (ftk_proficiencyTable.m_IgnoresArmor)
-            //         {
-            //             attackProficiency += " pierce armor,";
-            //         }
-            //     }
-            // }
-            // if (FTK_characterModifierDB.GetDB().IsContainID(weaponStats.m_ID))
-            // {
-            //     text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
-            //     text2.Replace(@"\n", ", ");
-            // }
-            // // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
-            // string final = $"weapon damage:{maxDmg} {dmgType}; attacks and proficiencies: {text1}; modifiers: {text2}";
-            // return final;
-        }
+        // // returns that values of a weapon
+        // string GetWeaponDetails(FTK_weaponStats2 weaponStats)
+        // {
+        //     //TESTING
+        //     return ItemData.GetItemDescription(FTK_itembase.GetEnum(weaponStats.m_ID));
+        //     //
+        //     // string maxDmg = weaponStats._maxdmg.ToString();
+        //     // string dmgType;
+        //     // switch (weaponStats._dmgtype)
+        //     // {
+        //     //     case FTK_weaponStats2.DamageType.physical:
+        //     //         dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModPhysicalDamage")].GetStringDataByIndex(0);
+        //     //         break;
+        //     //     case FTK_weaponStats2.DamageType.magic:
+        //     //         dmgType = TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_charModMagicDamage")].GetStringDataByIndex(0);
+        //     //         break;
+        //     //     default:
+        //     //         dmgType = "";
+        //     //         Plugin.Logger.LogWarning($"unknown damage type: {weaponStats._dmgtype}");
+        //     //         break;
+        //     // }
+        //     // string text1 = "";
+        //     // string text2 = "";
+        //     // string targetType = "target type: ";
+        //     // string attackProficiency = "";
+        //     // List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(weaponStats)];
+        //     // if (!weaponStats.m_NoRegularAttack)
+        //     // {
+        //     //     list.Insert(0, FTK_proficiencyTable.ID.None);
+        //     // }
+        //     // for (int i = 0; i < list.Count; i++)
+        //     // {
+        //     //     FTK_proficiencyTable ftk_proficiencyTable = null;
+        //     //     if (list[i] == FTK_proficiencyTable.ID.None)
+        //     //     {
+        //     //         text1 += weaponStats.GetAttackDisplay();
+        //     //     }
+        //     //     else
+        //     //     {
+        //     //         text1 += FTK_proficiencyTableDB.GetDB().GetEntry(list[i]).GetLocalizedDisplayTitle();
+        //     //         ftk_proficiencyTable = FTK_proficiencyTableDB.Get(list[i]);
+        //     //     }
+        //     //     if (i < list.Count - 1)
+        //     //     {
+        //     //         text1 += ", ";
+        //     //     }
+        //     //     if (ftk_proficiencyTable != null && !ftk_proficiencyTable.m_TargetFriendly)
+        //     //     {
+        //     //         CharacterDummy.TargetType target = ftk_proficiencyTable.m_Target;
+        //     //         if (target != CharacterDummy.TargetType.Aoe)
+        //     //         {
+        //     //             if (target != CharacterDummy.TargetType.Splash)
+        //     //             {
+        //     //                 if (target == CharacterDummy.TargetType.None)
+        //     //                 {
+        //     //                     targetType += " single target,";
+        //     //                     // this.m_SingleTargetIcon.SetActive(true);
+        //     //                 }
+        //     //             }
+        //     //             else
+        //     //             {
+        //     //                 targetType += " splash,";
+        //     //                 // this.m_SplashIcon.SetActive(true);
+        //     //             }
+        //     //         }
+        //     //         else
+        //     //         {
+        //     //             targetType += " aoe,";
+        //     //             // this.m_AoeIcon.SetActive(true);
+        //     //         }
+        //     //         if (ftk_proficiencyTable.m_DmgMultiplier > 1f)
+        //     //         {
+        //     //             attackProficiency = " heavy attack,";
+        //     //         }
+        //     //         if (ftk_proficiencyTable.m_IgnoresArmor)
+        //     //         {
+        //     //             attackProficiency += " pierce armor,";
+        //     //         }
+        //     //     }
+        //     // }
+        //     // if (FTK_characterModifierDB.GetDB().IsContainID(weaponStats.m_ID))
+        //     // {
+        //     //     text2 = CharacterSkills.GetModDisplay(FTK_characterModifierDB.GetDB().GetEntryByStringID(weaponStats.m_ID), false);
+        //     //     text2.Replace(@"\n", ", ");
+        //     // }
+        //     // // weapon damage: 20 physical damage; attacks and proficiencies: stab, shadow blades; modifiers: 5% crit chance, 8 speed
+        //     // string final = $"weapon damage:{maxDmg} {dmgType}; attacks and proficiencies: {text1}; modifiers: {text2}";
+        //     // return final;
+        // }
 
         
     }

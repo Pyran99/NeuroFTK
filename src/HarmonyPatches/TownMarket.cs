@@ -56,7 +56,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (isCreating) yield break;
             isCreating = true;
-            if (_itemContainer == GameLogic.Instance.GetCurrentCOW().m_PlayerInventory.m_ContainerBackpack)
+            CharacterOverworld _cow = GameLogic.Instance.GetCurrentCOW();
+            if (_itemContainer == _cow.m_PlayerInventory.m_ContainerBackpack)
             {
                 Plugin.Logger.LogWarning("sell list. unsure when called");
                 yield break;
@@ -76,21 +77,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     continue;
                 }
                 // this.m_NameText.text = this.m_ItemInfo.GetLocalizedName() + "(" + this.GetItemCount().ToString() + ")";
-                if (!GameLogic.Instance.GetCurrentCOW().m_CharacterStats.CanAfford(int.Parse(_item.m_CostText.text))) continue;
+                if (!_cow.m_CharacterStats.CanAfford(int.Parse(_item.m_CostText.text))) continue;
                 buyList.Add(_item.m_NameText.text, _item);
             }
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
-            Context.Send($"{cow.m_CharacterStats.m_CharacterName} has {cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
+            Context.Send($"{_cow.m_CharacterStats.m_CharacterName} has {_cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
             StringBuilder sb = new();
-            sb.Append("[market items (name: description (cost))] ");
+            sb.Append("[market items ([name] description (cost))] ");
+            Plugin.Logger.LogWarning("4.1");
             foreach (uiItemIcon _item in buyList.Values)
             {
                 // string name = _item.m_NameText.text;
                 // string cost = _item.m_CostText.text;
                 // sb.AppendLine($"{name}: {cost}.");
-                FTK_itembase itemBase = _item.m_ItemInfo;
-                sb.AppendLine(ItemData.GetItemDescription(_item.m_ItemName, cow) + $" (cost {_item.m_CostText.text} gold)");
+                sb.AppendLine($"[{ItemData.GetItemName(_item.m_ItemName)}] {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)} (cost {_item.m_CostText?.text} gold)");
             }
+            Plugin.Logger.LogWarning("5");
             Object.Destroy(activeWindow);
             QuickTimerCallback timer = new(() => CreateAction(sb.ToString()), list.gameObject);
             isCreating = false;

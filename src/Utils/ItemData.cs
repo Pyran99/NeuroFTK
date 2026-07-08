@@ -6,32 +6,26 @@ using GridEditor;
 namespace Pyran.NeuroFTK.Utils
 {
     /// <summary>
-    /// NYI this could be used when needing to get item data in different scripts
+    /// get names & descriptions of FTK_itemBase items
     /// </summary>
     public class ItemData
     {
-        public static Dictionary<string, string> GetAllItemData(List<FTK_itembase.ID> _ids)
-        {
-            Dictionary<string, string> data = [];
-            foreach (FTK_itembase.ID _id in _ids)
-            {
-                data.Merge(GetItemData(_id));
-            }
-            return data;
-        }
 
-        public static Dictionary<string, string> GetItemData(FTK_itembase.ID _id)
+        /// <returns>{name: description}</returns>
+        public static Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
         {
             Dictionary<string, string> data = [];
-            string id = GetItemName(_id);
-            string description = GetItemDescription(_id);
-            data[id] = description;
+            string trName = GetItemName(itemId);
+            string trDescription = GetItemDescription(itemId);
+            trDescription.Replace(@"\\n", ", ");
+            data.Add(trName, trDescription);
             return data;
         }
 
         public static string GetItemName(FTK_itembase.ID _id)
         {
-            return "";
+            FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
+            return itemBase.GetLocalizedName();
         }
 
         public static string GetItemDescription(FTK_itembase.ID _id, bool removeStyling = true, CharacterOverworld _cow = null)
@@ -41,10 +35,8 @@ namespace Pyran.NeuroFTK.Utils
             if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon) result = GetWeaponData(_id);
             else if (IsEquipmentType(itemBase.m_ObjectType)) result = GetEquipmentData(_id);
             else if (FTK_itembase.IsPipeItem(_id)) result = GetPipeData(_id);
-            else
-            {
-                result = FTKItem.Get(_id)?.GetDescription(_cow);
-            }
+            else result = GetOtherData(_id, _cow);
+
             if (removeStyling) result = StringReplace.RemoveStyling(result);
             return result;
         }
@@ -83,7 +75,7 @@ namespace Pyran.NeuroFTK.Utils
                 }
                 if (i < list.Count - 1) profs += ", ";
             }
-            string result = $"{dmg} {dmgType}, {hands}, {breakable} [Abilities] {profs}.";
+            string result = $"{dmg} {dmgType}, {hands}, {breakable} (Abilities) {profs}";
             return result;
         }
 
@@ -100,10 +92,14 @@ namespace Pyran.NeuroFTK.Utils
             return result;
         }
 
-        public static string GetOtherData(FTK_itembase.ID _id)
+        public static string GetOtherData(FTK_itembase.ID _id, CharacterOverworld _cow)
         {
-            string result = "";
-            return result;
+            if (_cow == null)
+            {
+                Plugin.Logger.LogError("null cow");
+                return "";
+            }
+            return FTKItem.Get(_id)?.GetDescription(_cow);
         }
     }
 }

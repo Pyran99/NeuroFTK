@@ -23,9 +23,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             bool hasAmount = false;
             if (___m_LootItem.Contains("_gold_") || ___m_LootItem.Contains("_lore_")) hasAmount = true;
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
-            description = ItemData.GetItemDescription(id, GameLogic.Instance.GetCurrentCOW());
+            description = ItemData.GetItemDescription(id, true, GameLogic.Instance.GetCurrentCOW());
 
-            Context.Send($"[Loot] {name}{amount} [Rarity] {StringReplace.RemoveStyling(rarity)} [Description] {StringReplace.RemoveStyling(description)}");
+            Context.Send($"[Loot] {name}{amount} (Rarity) {StringReplace.RemoveStyling(rarity)} (Description) {description}");
             // [the loot item to decide on]Gold Coins [Rarity]Common [Description]Currency of Fahrul. Each coin worth its weight in gold.
         }
     }
