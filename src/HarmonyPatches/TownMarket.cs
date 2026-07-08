@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using FTKItemName;
-using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
@@ -17,17 +15,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static ActionWindow activeWindow;
         static readonly Dictionary<string, uiItemIcon> buyList = [];
-        // static readonly Dictionary<string, FTK_itembase.ID> sellList = [];
         static bool isCreating = false;
 
         [HarmonyPatch(typeof(uiBuyMenuHud), nameof(uiBuyMenuHud.EnableMenu))]
         [HarmonyPostfix]
         static void BuyMenuEnabled()
         {
-            Plugin.Logger.LogMessage("market open");
             buyList.Clear();
             Object.Destroy(activeWindow);
-            // sellList.Clear();
         }
 
         [HarmonyPatch(typeof(GeneralMenuBase), nameof(GeneralMenuBase.DisableMenu))]
@@ -37,7 +32,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (__instance == uiBuyMenuHud.Instance)
             {
                 buyList.Clear();
-                // sellList.Clear();
                 isCreating = false;
                 Object.Destroy(activeWindow);
             }
@@ -47,7 +41,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void Refresh2()
         {
-            Plugin.Logger.LogMessage("market stock refresh");
             Object.Destroy(activeWindow);
             uiBuyMenuHud.Instance.StartCoroutine(AddData(null));
         }
@@ -120,7 +113,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogError("market close btn is null");
                 return;
             }
-            SelectButton.StartCoroutine(closeBtn, 1.0f);
+            SelectButton.StartCoroutine(closeBtn);
         }
 
         static IEnumerator BuyCoroutine(uiFTKButton btn, bool equip)
@@ -128,8 +121,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             btn.OnPointerEnter(null);
             yield return new WaitForSeconds(0.25f);
             btn.Select();
-            yield return new WaitForSeconds(0.25f);
-            // brings up menu => uiPopupMenu
+            yield return new WaitForSeconds(0.5f);
+            // skips uiPopupMenu
             if (equip)
             {
                 uiBuyMenuHud.Instance.BuyAndEquipCurrentItem();

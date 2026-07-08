@@ -13,6 +13,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MainMenuAction(MainScreen mainMenu, bool _resumeGame, bool _canSpendLore) : NeuroAction<string>
     {
+        public static ActionWindow RegisterAction(MainScreen instance, bool _resumeGame, bool _canSpendLore)
+        {
+            ActionWindow window = ActionWindow.Create(instance.gameObject);
+            window.AddAction(new MainMenuAction(instance, _resumeGame, _canSpendLore));
+            window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "you are at the games main menu", true);
+            window.Register();
+            return window;
+        }
+
         readonly MainScreen mainScreen = mainMenu;
         readonly bool resumeGame = _resumeGame;
         readonly bool spendLore = _canSpendLore;
@@ -88,15 +97,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         void SelectedButton(uiFTKButton button)
         {
             SelectButton.StartCoroutine(button, 1.0f);
-        }
-
-        public static ActionWindow RegisterAction(MainScreen instance, bool _resumeGame, bool _canSpendLore)
-        {
-            ActionWindow window = ActionWindow.Create(instance.gameObject);
-            window.AddAction(new MainMenuAction(instance, _resumeGame, _canSpendLore));
-            window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "you are at the games main menu", true);
-            window.Register();
-            return window;
         }
     }
 }

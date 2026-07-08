@@ -35,7 +35,7 @@ namespace Pyran.NeuroFTK
             _items.TryGetValue((string)parsedData[0], out uiItemIcon result);
             if (result == null)
             {
-                Plugin.Logger.LogError("issue with market purchase");
+                Plugin.Logger.LogError("issue with market purchase: " + parsedData[0]);
                 Context.Send("issue with market purchase" + NeuroSdkStrings.ModFaultSuffix);
                 TownMarket.CloseMenu();
                 return;
@@ -47,10 +47,8 @@ namespace Pyran.NeuroFTK
         {
             parsedData = new object[2];
             Plugin.Logger.LogWarning("data: " + actionData.Data.ToString());
-//   data: {
-//   "item": "Panax",
-//   "equip": false
-// }
+            //   "item": "Panax",
+            //   "equip": false
             if (actionData.Data == null) return ExecutionResult.Failure("invalid data");
             string item = actionData.Data.Value<string>("item") ?? "null";
             bool equip = actionData.Data.Value<bool>("equip");

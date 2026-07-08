@@ -10,7 +10,6 @@ namespace Pyran.NeuroFTK.Utils
     /// </summary>
     public class ItemData
     {
-
         /// <returns>{name: description}</returns>
         public static Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
         {

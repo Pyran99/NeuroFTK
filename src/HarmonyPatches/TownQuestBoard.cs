@@ -71,7 +71,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             for (int i = 0; i < items.Count; i++)
             {
                 itemsById.Add($"quest {i+1}", items[i]);
-                sb.Append($"[Quest {i + 1}] ");
+                sb.Append($"[quest {i + 1}] ");
                 sb.Append($"{StringReplace.RemoveStyling(items[i].m_Quest.GetLocalizedOneLineDesc())}. Reward {items[i].m_Quest.GetRewardString()}");
                 if (items[i].m_Quest.m_RewardType == QuestLogicBase.Reward.Item)
                 {
@@ -89,7 +89,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string result = "";
             FTK_itembase.ID id = items[count].m_Quest.m_RewardItem;
             FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
-            result += $" [rarity] {FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display)},";
+            result += $" (rarity) {FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display)},";
             if (itemBase is FTK_items)
             {
                 Plugin.Logger.LogWarning("item reward");
@@ -99,24 +99,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             else if (itemBase is FTK_weaponStats2 stats)
             {
                 Plugin.Logger.LogWarning("weapon reward");
-                // from LootDropped
-                string dmg = stats._maxdmg.ToString();
-                string dmgType = stats._dmgtype == FTK_weaponStats2.DamageType.physical ? FTKHub.Localized<TextMisc>("STR_charModPhysicalDamage") : FTKHub.Localized<TextMisc>("STR_charModMagicDamage");
-                string hands = stats.m_ObjectSlot == FTK_itembase.ObjectSlot.twoHands ? "Two-Handed" : "One-Handed";
-                string breakable = stats.m_CanBreak == true ? "Breaks on critical fail" : "";
-                string profs = "";
-                List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(stats)];
-                if (!stats.m_NoRegularAttack) list.Insert(0, FTK_proficiencyTable.ID.None);
-                for (int j = 0; j < list.Count; j++)
-                {
-                    if (list[j] == FTK_proficiencyTable.ID.None) profs += stats.GetAttackDisplay();
-                    else
-                    {
-                        profs += FTK_proficiencyTableDB.GetDB().GetEntry(list[j]).GetLocalizedDisplayTitle();
-                    }
-                    if (j < list.Count - 1) profs += ", ";
-                }
-                result += $" {dmg} {dmgType}, {hands}, {breakable} [Abilities] {profs} ";
+                result += ItemData.GetItemDescription(id, true, GameLogic.Instance.GetCurrentCOW());
             }
             return result;
         }

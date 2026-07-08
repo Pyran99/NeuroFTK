@@ -22,7 +22,6 @@ namespace Pyran.NeuroFTK.Utils
 
         private void OnDisable()
         {
-            Debug.Log("disabled object destroy window");
             Destroy(window);
             if (destroySelf)
             {
