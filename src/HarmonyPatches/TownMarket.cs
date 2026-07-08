@@ -76,22 +76,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     Plugin.Logger.LogError("duplicate keys in buy list");
                     continue;
                 }
-                // this.m_NameText.text = this.m_ItemInfo.GetLocalizedName() + "(" + this.GetItemCount().ToString() + ")";
                 if (!_cow.m_CharacterStats.CanAfford(int.Parse(_item.m_CostText.text))) continue;
+                // this.m_NameText.text = this.m_ItemInfo.GetLocalizedName() + "(" + this.GetItemCount().ToString() + ")";
                 buyList.Add(_item.m_NameText.text, _item);
             }
             Context.Send($"{_cow.m_CharacterStats.m_CharacterName} has {_cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
             StringBuilder sb = new();
-            sb.Append("[market items ([name] description (cost))] ");
-            Plugin.Logger.LogWarning("4.1");
+            sb.Append("[market items ([name](cost) description)] \n");
             foreach (uiItemIcon _item in buyList.Values)
             {
-                // string name = _item.m_NameText.text;
-                // string cost = _item.m_CostText.text;
-                // sb.AppendLine($"{name}: {cost}.");
-                sb.AppendLine($"[{ItemData.GetItemName(_item.m_ItemName)}] {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)} (cost {_item.m_CostText?.text} gold)");
+                sb.AppendLine($"[{ItemData.GetItemName(_item.m_ItemName)}](cost {_item.m_CostText?.text} gold) {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)}");
             }
-            Plugin.Logger.LogWarning("5");
             Object.Destroy(activeWindow);
             QuickTimerCallback timer = new(() => CreateAction(sb.ToString()), list.gameObject);
             isCreating = false;
@@ -112,8 +107,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void NeuroDecision(uiItemIcon _item, bool equip)
         {
-            // SelectButton.StartCoroutine(_item);
-            _item.StartCoroutine(BuyCoroutine(_item, equip));
+            bool _equip = equip;
+            if (!ItemData.IsEquipmentType(_item.m_ItemInfo.m_ObjectType)) _equip = false;
+            _item.StartCoroutine(BuyCoroutine(_item, _equip));
         }
 
         public static void CloseMenu(ActionWindow window = null)

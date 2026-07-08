@@ -45,13 +45,17 @@ namespace Pyran.NeuroFTK
 
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
         {
-            parsedData = [];
+            parsedData = new object[2];
             Plugin.Logger.LogWarning("data: " + actionData.Data.ToString());
-            Plugin.Logger.LogWarning("data: " + actionData.Data.Values<string>());
+//   data: {
+//   "item": "Panax",
+//   "equip": false
+// }
             if (actionData.Data == null) return ExecutionResult.Failure("invalid data");
             string item = actionData.Data.Value<string>("item") ?? "null";
             bool equip = actionData.Data.Value<bool>("equip");
             if (!_items.ContainsKey(item)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));
+            if (equip.GetType() != typeof(bool)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("equip"));
             parsedData[0] = item;
             parsedData[1] = equip;
             return ExecutionResult.Success();
