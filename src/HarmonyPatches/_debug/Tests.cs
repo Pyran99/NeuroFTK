@@ -15,6 +15,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class Tests
     {
 
+        [HarmonyPatch(typeof(HexLand), nameof(HexLand.Ping))]
+        [HarmonyPostfix]
+        static void Ping(HexLand __instance)
+        {
+            Plugin.Logger.LogMessage($"{__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex} ping");
+            Plugin.Logger.LogMessage($"{__instance.GetPosition()} ping");
+        }
+
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))]
         [HarmonyPostfix]
         static void Popup1()
@@ -172,12 +180,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             HexLandID id = destination.GetHexLandID();
             if (id == null) return;
             Plugin.Logger.LogMessage(destination + $" = {id.m_BigIndex} - {id.m_SmallIndex}");
-            CharacterOverworld character = GameLogic.Instance.GetCurrentCOW();
-            FTKPlayerID id2 = character.m_FTKPlayerID;
-            GameFlow.Instance.ToggleHexPingRPC(id2, id);
-            string name = character.m_CharacterStats.m_CharacterName;
-            FTK_playerGameStart.ID _class = character.m_CharacterStats.m_CharacterClass;
-            Plugin.Logger.LogMessage($"try ping {name} - {id.m_BigIndex} - {id.m_SmallIndex}");
+            // CharacterOverworld character = GameLogic.Instance.GetCurrentCOW();
+            // FTKPlayerID id2 = character.m_FTKPlayerID;
+            // GameFlow.Instance.ToggleHexPingRPC(id2, id);
+            // string name = character.m_CharacterStats.m_CharacterName;
+            // FTK_playerGameStart.ID _class = character.m_CharacterStats.m_CharacterClass;
+            // Plugin.Logger.LogMessage($"try ping {name} - {id.m_BigIndex} - {id.m_SmallIndex}");
 // [Message:Neuro For the King] quest message type
 // [Message:Neuro For the King] MultiQuestLogic
 // [Message:Neuro For the King] 1

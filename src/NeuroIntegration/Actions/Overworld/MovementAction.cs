@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
@@ -84,44 +85,61 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             // try [pos (point of interest)] => does quest show as poi, otherwise +(is quest loc/quest name)
             // => maybe remove name for general tiles (MMland), keep poi (ForestVillage02)
-            string context = "[all tiles in range, displayed as [(position x,z): (name or realm)(quest name)])]: ";
+            string context = "[all tiles in range] (displayed as [(position x,z) (name/realm)(quest name)other info]) ";
             string name;
             string questName = "";
             string hasDeadPlayers = "";
-            Vector2 pos;
+            string poi = "";
             Vector3 itemPos;
-            FTK_realm.ID realm;
+            Vector2 pos;
+            // FTK_realm.ID realm;
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
-            float distance = 0f; // testing things
+            // float distance = 0f; // testing things
             foreach (HexLand hex in tiles)
             {
-                realm = hex.GetRealm();
-                Plugin.Logger.LogWarning("realm: " + realm);
-                distance = HexLand.Distance(cow.m_HexLand, hex);
-                Plugin.Logger.LogWarning("dist: " + distance);
+                poi = "";
+                hasDeadPlayers = "";
+                questName = "";
+                // realm = hex.GetRealm();
+                // GuardianForest | GoldenPlains
+                // Plugin.Logger.LogWarning("realm: " + realm);
+                // distance = (float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2);
+                // Plugin.Logger.LogWarning("dist: " + distance);
                 name = hex.GetLocationDisplayValue(cow);
                 // name = item.ToString().Replace(" (HexLand)", "");
                 itemPos = hex.GetPosition();
                 pos = new Vector2(itemPos.x, itemPos.z);
                 if (TileHasQuestObjective(hex))
                 {
-                    questName = "has quest";
+                    Plugin.Logger.LogWarning(hex.GetPOI());
+                    Plugin.Logger.LogWarning(hex.GetPOI()?.GetEncounterQuest());
+                    Plugin.Logger.LogWarning(hex.GetPOI()?.GetEncounterQuest()?.GetLocalizedOneLineDesc());
+                    QuestLogicBase quest = hex.GetPOI().GetEncounterQuest();
+                    // quest.GetLocalizedOneLineDesc();
+                    // quest.GetCurrentDestinationLocation();
+                    questName = quest.GetQuestDef()?.m_DisplayName;
+                    // questName = "has quest";
                 }
                 if (hex.GetDeadPlayerCount() > 0)
                 {
                     hasDeadPlayers = "has dead character to revive";
                 }
+                if (hex.GetPOI() != null)
+                {
+                    poi = hex.GetPOI().GetPOIDisplayValue();
+                }
                 // [(165.9, 37.5): (The guardian forest)()]
-                context += $"[{pos}: ({name})({questName}){hasDeadPlayers}]";
+                context += $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]\n";
                 hexPositions.Add(pos.ToString(), hex);
             }
             return context;
         }
 
-        //TODO
         static bool TileHasQuestObjective(HexLand hex)
         {
-            return false;
+            bool result = hex.GetPOI()?.HasEncounterQuest() ?? false;
+            Plugin.Logger.LogWarning(result);
+            return result;
         }
     }
 
