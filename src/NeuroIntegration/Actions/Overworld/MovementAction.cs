@@ -79,12 +79,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
 
         /// <summary>
-        /// display as ({name}(quest name): {position})
+        /// display as [(position x,z) (name/realm)(quest name)other info]
         /// </summary>
         static string GetContext(List<HexLand> tiles)
         {
-            // try [pos (point of interest)] => does quest show as poi, otherwise +(is quest loc/quest name)
-            // => maybe remove name for general tiles (MMland), keep poi (ForestVillage02)
+            // [(155.8, 20.0): (The Guardian Forest)(). Woodsmoke]
             string context = "[all tiles in range] (displayed as [(position x,z) (name/realm)(quest name)other info]) ";
             string name;
             string questName = "";
@@ -128,7 +127,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 {
                     poi = hex.GetPOI().GetPOIDisplayValue();
                 }
-                // [(165.9, 37.5): (The guardian forest)()]
                 context += $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]\n";
                 hexPositions.Add(pos.ToString(), hex);
             }

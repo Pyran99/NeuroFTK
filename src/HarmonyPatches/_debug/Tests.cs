@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Google2u;
 using GridEditor;
 using HarmonyLib;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using UnityEngine;
 
@@ -14,13 +17,40 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Tests
     {
-
         [HarmonyPatch(typeof(HexLand), nameof(HexLand.Ping))]
         [HarmonyPostfix]
         static void Ping(HexLand __instance)
         {
-            Plugin.Logger.LogMessage($"{__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex} ping");
-            Plugin.Logger.LogMessage($"{__instance.GetPosition()} ping");
+            if (GlobalConfig.debug_mode == false) return;
+            Plugin.Logger.LogMessage("ping data");
+            StringBuilder sb = new();
+            sb.AppendLine($"id: {__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex}");
+            sb.AppendLine($"pos: {__instance.GetPosition()}");
+            sb.AppendLine($"realm: {__instance.GetRealm()}");
+            sb.AppendLine($"realm display: {__instance.GetRealmDisplayValue()}");
+            sb.AppendLine($"boat: {__instance.IsBoat()}");
+            sb.AppendLine($"loc display: {__instance.GetLocationDisplayValue(GameLogic.Instance.GetCurrentCOW())}");
+            sb.AppendLine($"distance: {HexLand.Distance(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance)}");
+            List<HexLand> list = [];
+            _ = HexLand.FindPath(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
+            sb.AppendLine($"path: {list.Count} | path end: {list.Last()?.GetPosition()}");
+            MiniHexInfo poi = __instance.GetPOI();
+            sb.AppendLine($"poi: {poi?.GetIDString()}");
+            sb.AppendLine($"poi title: {poi?.GetPOIProfile().m_Title}");
+            sb.AppendLine($"poi skill: {poi?.GetPOIProfile().m_SkillRequired}");
+            sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()}");
+            QuestLogicBase quest = poi?.GetEncounterQuest();
+            if (quest != null)
+            {
+                sb.AppendLine($"quest desc1: {quest.GetOneLineDesc()}");
+                sb.AppendLine($"quest desc2: {quest.GetLocalizedOneLineDesc()}");
+                QuestDefBase def = quest.GetQuestDef();
+                if (def != null)
+                {
+                    sb.AppendLine($"def display: {def.m_DisplayName}");
+                }
+            }
+            Plugin.Logger.LogMessage(sb.ToString());
         }
 
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))]
@@ -172,8 +202,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PortraitClosed(QuestLogicBase _quest)
         {
-            Plugin.Logger.LogMessage("quest message type");
-            Plugin.Logger.LogMessage(_quest);
             if (_quest == null) return;
             HexLand destination = _quest.GetHexLandDestination(); // null on quest complete
             if (destination == null) return;
@@ -186,12 +214,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // string name = character.m_CharacterStats.m_CharacterName;
             // FTK_playerGameStart.ID _class = character.m_CharacterStats.m_CharacterClass;
             // Plugin.Logger.LogMessage($"try ping {name} - {id.m_BigIndex} - {id.m_SmallIndex}");
-// [Message:Neuro For the King] quest message type
-// [Message:Neuro For the King] MultiQuestLogic
-// [Message:Neuro For the King] 1
-// [Message:Neuro For the King] PresentMessage
-// [Message:Neuro For the King] show quest message
-// [Message:Neuro For the King] -1 - -1
         }
 
         // engage message
