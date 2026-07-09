@@ -33,7 +33,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             sb.AppendLine($"path end: {last?.GetPosition()}");
             // sb.AppendLine($"path: {list.Count} | path end: {list.Last()?.GetPosition()}");
             MiniHexInfo poi = __instance.GetPOI();
-            sb.AppendLine($"poi title: {poi?.GetPOIProfile().m_Title}"); // Cult Device
             sb.AppendLine($"poi skill: {poi?.GetPOIProfile().m_SkillRequired}"); // fortitude
             sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()}"); // Cult Device
             if (TileHasQuestObjective(__instance, out QuestLogicBase quest))

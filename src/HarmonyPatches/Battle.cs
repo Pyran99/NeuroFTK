@@ -5,6 +5,10 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.NeuroIntegration;
 using UnityEngine;
+using GridEditor;
+using Google2u;
+using System.Linq;
+using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -20,7 +24,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
             StanceBtnInstance = __instance;
-            window = CombatActions.RegisterActions(StanceBtnInstance, m_Proficiencies);
+            CreateActionWindow(StanceBtnInstance, m_Proficiencies);
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]
@@ -118,6 +122,356 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return StringReplace.ReplaceNewLineSpace(name);
         }
 
+#region action window
+
+        static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
+        {
+            offense.Clear();
+            defense.Clear();
+            string ctx = GetContext(_instance, _proficiencies, out INeuroAction[] _actions);
+            window = CombatActions.CreateAction(_instance, ctx, _actions);
+        }
+
+        static string GetContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, out INeuroAction[] actions)
+        {
+            string ctx = "";
+            actions = [];
+            GetOffenseAttackDetails(_instance, _proficiencies);
+            GetDefenseAttackDetails(_instance, _proficiencies);
+            if (offense.Count > 0)
+            {
+                foreach (string key in offense.Keys)
+                {
+                    var data = GetActionDetails(offense[key], m_Proficiencies);
+                    ctx += AddAttackContext(data);
+                }
+                actions.AddItem(new CombatAttackAction(offense));
+            }
+            if (defense.Count > 0)
+            {
+                foreach (string key in defense.Keys)
+                {
+                    var data = GetActionDetails(defense[key], m_Proficiencies);
+                    ctx += AddAttackContext(data);
+                }
+                actions.AddItem(new CombatFriendlyAction(defense));
+            }
+            bool canFlee = _instance.m_FleeButton != null && _instance.m_FleeButton.isActiveAndEnabled && _instance.m_FleeButton.m_CanUse;
+            bool canRevive = _instance.m_ReviveButton != null && _instance.m_ReviveButton.isActiveAndEnabled && _instance.m_ReviveButton.m_CanUse;
+            bool canTaunt = _instance.m_ShieldTauntButton != null && _instance.m_ShieldTauntButton.isActiveAndEnabled && _instance.m_ShieldTauntButton.m_CanUse;
+            bool canChangeWeapon = _instance.m_EquipWeaponButton != null && _instance.m_EquipWeaponButton.isActiveAndEnabled && _instance.m_EquipWeaponButton.m_CanUse;
+            bool canHealParty = _instance.m_PartyHealButton != null && _instance.m_PartyHealButton.isActiveAndEnabled && _instance.m_PartyHealButton.m_CanUse;
+            if (canFlee && !GlobalConfig.debug_mode)
+            {
+                var data = GetActionDetails(_instance.m_FleeButton, m_Proficiencies);
+                ctx += AddContext(data);
+                actions.AddItem(new CombatFleeAction(_instance.m_FleeButton));
+            } 
+            if (canRevive)
+            {
+                var data = GetActionDetails(_instance.m_ReviveButton, m_Proficiencies);
+                ctx += AddContext(data, false);
+                actions.AddItem(new CombatReviveAction(_instance.m_ReviveButton));
+            }
+            if (canTaunt)
+            {
+                var data = GetActionDetails(_instance.m_ShieldTauntButton, m_Proficiencies);
+                ctx += AddContext(data);
+                actions.AddItem(new CombatTauntAction(_instance.m_ShieldTauntButton));
+            }
+            if (canChangeWeapon && !GlobalConfig.debug_mode)
+            {
+                var data = GetActionDetails(_instance.m_EquipWeaponButton, m_Proficiencies);
+                ctx += AddContext(data, false);
+                actions.AddItem(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));
+            }
+            if (canHealParty)
+            {
+                var data = GetActionDetails(_instance.m_PartyHealButton, m_Proficiencies);
+                ctx += AddContext(data, false);
+                actions.AddItem(new CombatPartyHealAction(_instance.m_PartyHealButton));
+            }
+            return ctx;
+        }
+
+        static Dictionary<string, uiBattleButton> offense = [];
+        static Dictionary<string, uiBattleButton> defense = [];
+
+        public static void GetOffenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        {
+            Dictionary<string, uiBattleButton> btns = [];
+            bool useDefault = _instance.m_AttackButton != null && _instance.m_AttackButton.m_CanUse && _instance.m_AttackButton.isActiveAndEnabled; // this may act as normal attack with/out weapon
+            bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.isActiveAndEnabled;
+            if (useDefault)
+            {
+                FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(GameLogic.Instance.GetCurrentCombatCOW().m_WeaponID);
+                btns.Add(entry1.GetAttackDisplay(), _instance.m_AttackButton);
+            }
+            if (canReload)
+            {
+                btns.Add(FTKHub.Localized<TextMenu>("STR_battleButtonsReloadWeapon"), _instance.m_ReloadButton);
+            }
+            foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
+            {
+                switch (prof.m_Button.m_ButtonType)
+                {
+                    case uiBattleButton.BattleButtonType.flee:
+                    case uiBattleButton.BattleButtonType.shieldtaunt:
+                    case uiBattleButton.BattleButtonType.equipweapon:
+                    case uiBattleButton.BattleButtonType.revive:
+                    case uiBattleButton.BattleButtonType.partyheal:
+                        continue;
+                }
+                if (prof.m_Prof == FTK_proficiencyTable.ID.None) continue;
+                FTK_proficiencyTable entry = FTK_proficiencyTableDB.GetDB().GetEntry(prof.m_Prof);
+                if (entry.m_TargetFriendly) continue;
+                string name = entry.GetLocalizedDisplayTitle();
+                if (prof.m_Button == null || !prof.m_Button.m_CanUse || !prof.m_Button.isActiveAndEnabled) continue;
+                if (btns.ContainsKey(name))
+                {
+                    Plugin.Logger.LogWarning($"existing key {name}");
+                    continue;
+                }
+                btns.Add(name, prof.m_Button);
+            }
+            offense = new Dictionary<string, uiBattleButton>(btns);
+        }
+
+        public static void GetDefenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        {
+            // GetTargetInfo(FTK_proficiencyTable.ID pid, out CharacterDummy.TargetType _targetType, out bool _targetFriendly)
+            Dictionary<string, uiBattleButton> btns = [];
+            foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
+            {
+                if (prof.m_Prof == FTK_proficiencyTable.ID.None) continue;
+                FTK_proficiencyTable table = FTK_proficiencyTableDB.Get(prof.m_Prof);
+                if (!table.m_TargetFriendly) continue;
+                if (prof.m_Button == null || !prof.m_Button.m_CanUse || !prof.m_Button.isActiveAndEnabled) continue;
+                string name = table.GetLocalizedDisplayTitle();
+                if (btns.ContainsKey(name))
+                {
+                    Plugin.Logger.LogWarning($"existing key {name}");
+                    continue;
+                }
+                btns.Add(name, prof.m_Button);
+            }
+            defense = new Dictionary<string, uiBattleButton>(btns);
+        }
+
+        /// <summary>
+        /// dictionary style: "name": {"type": "target self", "description": "perfect(56%) = leave combat", "per_roll_chance": "50", "damage": "10"}
+        /// </summary>
+        public static Dictionary<string, Dictionary<string, string>> GetActionDetails(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        {
+            // from => public void DisplayBattleActionInfo(uiBattleButton _button, bool _on)
+            Dictionary<string, Dictionary<string, string>> data = [];
+            CharacterOverworld current = GameLogic.Instance.GetCurrentCombatCOW();
+            global::CharacterStats stats = current.m_CharacterStats;
+			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
+			FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
+            FTK_weaponStats2.SkillType skillType;
+            int maxRollSlots = GameFlow.Instance.m_DefaultSlots;
+            string text = "";
+            string[] array = [null, FTKHub.Localized<TextMenu>("STR_battleButtonsStandardAttack")];
+
+            switch (btn.m_ButtonType)
+            {
+                case uiBattleButton.BattleButtonType.flee:
+                    skillType = FTK_weaponStats2.SkillType.quickness;
+                    if (stats.m_CharacterSkills.m_Flee)
+                    {
+                        maxRollSlots = 1;
+                        text = FTKHub.Localized<TextMenu>("STR_battleButtonsEliteFlee");
+                    }
+                    else
+                    {
+                        text = FTKHub.Localized<TextMenu>("STR_battleButtonsFlee");
+                    }
+                    array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
+                    if (EncounterSession.Instance.CanPlayerFlee(current))
+                    {
+                        float num4 = stats.CalculateFullSkillChance(skillType, maxRollSlots, 0f);
+                        string text2 = FTKHub.Localized<TextMenu>("STR_battleButtonsLeaveCombat");
+                        array[1] = FTKUI.GetPerfectDescriptionFormatted(num4, text2);
+                    }
+                    else
+                    {
+                        array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsNoFlee");
+                    }
+                    break;
+                case uiBattleButton.BattleButtonType.shieldtaunt:
+                    text = FTKHub.Localized<TextMisc>("STR_profTaunt");
+                    skillType = FTK_weaponStats2.SkillType.vitality;
+                    maxRollSlots = GameFlow.Instance.m_DefaultSlots;
+                    float fullSkillChance = current.m_CharacterStats.CalculateFullSkillChance(skillType, maxRollSlots, 0f);
+                    array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
+                    array[1] = FTKUI.GetPerfectDescriptionFormatted(fullSkillChance, FTKHub.Localized<TextMenu>("STR_battleButtonsDrawAttention"));
+                    break;
+                case uiBattleButton.BattleButtonType.attack:
+                    maxRollSlots = entry._slots;
+                    text = entry.GetAttackDisplay();
+                    array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsSingleTarget");
+                    break;
+                case uiBattleButton.BattleButtonType.proficiency:
+                    foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
+                    {
+                        if (profValues.m_Button == btn)
+                        {
+                            id = profValues.m_Prof;
+                            break;
+                        }
+                    }
+                    if (id == FTK_proficiencyTable.ID.None) Plugin.Logger.LogError("proficiency error");
+					FTK_proficiencyTable entry3 = FTK_proficiencyTableDB.GetDB().GetEntry(id);
+					if (entry3.m_SlotOverride > 0)
+					{
+						maxRollSlots = entry3.m_SlotOverride;
+					}
+					else
+					{
+						maxRollSlots = entry._slots;
+					}
+					text = entry3.GetLocalizedDisplayTitle();
+					array = entry3.GetBattleButtonInfo(current);
+                    break;
+                case uiBattleButton.BattleButtonType.equipweapon:
+                    text = FTKHub.Localized<TextMenu>("STR_battleButtonsEquipWeapon");
+                    array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
+                    array[1] = FTKHub.Localized<TextMenu>("STR_equipWeaponDescription");
+                    break;
+                case uiBattleButton.BattleButtonType.partyheal:
+                    text = FTKHub.Localized<TextMenu>("STR_battleButtonsPartyHeal");
+                    array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetParty");
+                    if (current.HasInventoryItem(FTK_itembase.ID.herbGodsbeard1))
+                    {
+                        array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsPartyHealGodsbeard");
+                    }
+                    else
+                    {
+                        array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsPartyHealNoGodsbeard");
+                    }
+                    break;
+                case uiBattleButton.BattleButtonType.reload:
+                    text = FTKHub.Localized<TextMenu>("STR_battleButtonsReloadWeapon");
+                    array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
+                    if (current.GetCurrentDummy().m_CurrentAmmo == 0)
+                    {
+                        array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsYouMustReloadWeapon");
+                    }
+                    else
+                    {
+                        array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsNoReload");
+                    }
+                    break;
+                case uiBattleButton.BattleButtonType.revive:
+                    text = FTKHub.Localized<TextMenu>("STR_RevivePlayer");
+                    array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetFriendly");
+                    array[1] = FTKHub.Localized<TextMenu>("STR_battleButtonsReviveInfo");
+                    break;
+                default:
+                    Plugin.Logger.LogError("invalid button type or standard attack");
+                    break;
+            }
+            // maxRolls = maxRollSlots;
+            data.Add(text, []);
+            data[text]["type"] = array[0];
+            data[text]["description"] = array[1];
+            data[text]["per_roll_chance"] = "100%";
+            float accuracy = GetAccuracy(btn, m_Proficiencies);
+            if (accuracy > -1f) data[text]["per_roll_chance"] = FTKUtil.RoundToInt(accuracy * 100f).ToString() + "%";
+            data[text]["damage"] = GetAttackDamage(btn, m_Proficiencies).ToString();
+            return data;
+        }
+
+        public static float GetAccuracy(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        {
+            CharacterOverworld current = GameLogic.Instance.GetCurrentCombatCOW();
+            global::CharacterStats stats = current.m_CharacterStats;
+			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
+			FTK_weaponStats2.SkillType skillType;
+            FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
+            float acc = -1;
+
+            switch (btn.m_ButtonType)
+            {
+                case uiBattleButton.BattleButtonType.flee:
+                    skillType = FTK_weaponStats2.SkillType.quickness;
+                    acc = stats.GetSkillValue(skillType, true, 0f);
+                    break;
+                case uiBattleButton.BattleButtonType.shieldtaunt:
+                    skillType = FTK_weaponStats2.SkillType.vitality;
+                    FTK_proficiencyTable entry2 = FTK_proficiencyTableDB.GetDB().GetEntry(FTK_proficiencyTable.ID.taunt);
+                    acc = stats.GetSkillValue(skillType, true, entry2.m_PerSlotSkillRoll);
+                    break;
+                case uiBattleButton.BattleButtonType.attack:
+                    acc = stats.GetSkillValue(entry._skilltest, true, 0f);
+                    break;
+                case uiBattleButton.BattleButtonType.proficiency:
+                    foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
+                    {
+                        if (profValues.m_Button == btn)
+                        {
+                            id = profValues.m_Prof;
+                            break;
+                        }
+                    }
+                    if (id != FTK_proficiencyTable.ID.None)
+                    {
+                        acc = stats.GetSkillValue(entry._skilltest, true, FTK_proficiencyTableDB.GetDB().GetEntry(id).m_PerSlotSkillRoll);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return acc;
+        }
+
+        public static int GetAttackDamage(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        {
+            int dmg = GameLogic.Instance.GetCurrentCombatCOW().m_CharacterStats.GetWeaponMaxDamage();
+            FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
+
+            if (btn.m_ButtonType == uiBattleButton.BattleButtonType.proficiency)
+            {
+				foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
+				{
+					if (profValues.m_Button == btn)
+					{
+						id = profValues.m_Prof;
+						break;
+					}
+				}
+                if (id != FTK_proficiencyTable.ID.None)
+                {
+                    FTK_proficiencyTable entry = FTK_proficiencyTableDB.GetDB().GetEntry(id);
+                    dmg = FTKUtil.RoundToInt(dmg * entry.m_DmgMultiplier);
+                }
+            }
+            return dmg;
+        }
+
+        private static string AddContext(Dictionary<string, Dictionary<string, string>> data, bool hasRolls = true)
+        {
+            string key = data.Keys.First();
+            string type = data[key]["type"];
+            string description = data[key]["description"];
+            string rollChance = data[key]["per_roll_chance"];
+            string context = $"[{key}]{type}, {description}\n";
+            if (hasRolls) context = $"[{key}]{type}, {description}, success chance for each roll {rollChance}\n";
+            return context;
+        }
+
+        private static string AddAttackContext(Dictionary<string, Dictionary<string, string>> data)
+        {
+            string key = data.Keys.First();
+            string type = data[key]["type"];
+            string description = data[key]["description"];
+            string rollChance = data[key]["per_roll_chance"];
+            string dmg = data[key]["damage"];
+            string context = $"[{key}]damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll {rollChance}\n";
+            return context;
+        }
+
         // [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.DisplayBattleActionInfo))] // spam while mouse down enemy
         // [HarmonyPostfix]
         // static void Test11(uiBattleStanceButtons __instance, bool _on)
@@ -133,13 +487,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         //     Plugin.Logger.LogMessage($"DisplayBattleActionInfo: value: {dmg}; dmg title:{type}; desc:{desc} || {desc2}");
         // }
 
-        // [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.BattleButtonsOff))] // called after attacks & game start
-        // [HarmonyPostfix]
-        // static void Test14()
-        // {
-        //     Plugin.Logger.LogMessage("14 BattleButtonsOff");
-        //     UnityEngine.Object.Destroy(window);
-        // }
-    }
+#endregion
 
+    }
 }

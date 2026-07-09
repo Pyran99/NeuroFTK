@@ -140,7 +140,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
             static IEnumerator Wait()
             {
-                yield return new WaitForSeconds(0.25f);
+                yield return new WaitForSeconds(1f);
                 window = MovementAction.RegisterAction(RollSystem.currentCOW.gameObject, tiles);
                 isSearching = false;
             }

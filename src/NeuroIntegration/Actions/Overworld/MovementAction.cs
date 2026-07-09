@@ -7,6 +7,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -14,15 +15,18 @@ using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class MovementAction() : NeuroAction<HexLand>
+    public class MovementAction : NeuroAction<HexLand>
     {
         public static ActionWindow RegisterAction(GameObject owner, List<HexLand> _tiles)
         {
             hexPositions.Clear();
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new MovementAction());
-            window.AddAction(new EndTurnAction());
-            window.SetForce(2, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
+            if (!GlobalConfig.debug_mode)
+            {
+                window.AddAction(new EndTurnAction());
+            }
+            window.SetForce(0, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
             window.SetContext(GetContext(_tiles));
             window.Register();
             return window;
