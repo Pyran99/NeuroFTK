@@ -39,6 +39,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
         }
 
+        [HarmonyPatch(typeof(uiGetQuestMenu), nameof(uiGetQuestMenu.OnClose))]
+        [HarmonyPrefix]
+        static void QuestMenuClosed()
+        {
+            items.Clear();
+            itemsById.Clear();
+            Object.Destroy(window);
+        }
+
         [HarmonyPatch(typeof(GeneralMenuBase), nameof(GeneralMenuBase.DisableMenu))]
         [HarmonyPrefix]
         static void ServiceClosed2(GeneralMenuBase __instance)

@@ -8,7 +8,9 @@ using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -84,10 +86,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         static string GetContext(List<HexLand> tiles)
         {
             // [(155.8, 20.0): (The Guardian Forest)(). Woodsmoke]
-            string context = "[all tiles in range] (displayed as [(position x,z) (name/realm)(quest name)other info]) ";
+            string context = "[all tiles in range] (displayed as [(position x,z) (name/realm)(quest)other info]) ";
             string name;
             string questName = "";
             string hasDeadPlayers = "";
+            string characters = ""; //TODO
             string poi = "";
             Vector3 itemPos;
             Vector2 pos;
@@ -108,16 +111,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 // name = item.ToString().Replace(" (HexLand)", "");
                 itemPos = hex.GetPosition();
                 pos = new Vector2(itemPos.x, itemPos.z);
-                if (TileHasQuestObjective(hex))
+                if (TileHasQuestObjective(hex, out QuestLogicBase _quest))
                 {
-                    Plugin.Logger.LogWarning(hex.GetPOI());
-                    Plugin.Logger.LogWarning(hex.GetPOI()?.GetEncounterQuest());
-                    Plugin.Logger.LogWarning(hex.GetPOI()?.GetEncounterQuest()?.GetLocalizedOneLineDesc());
-                    QuestLogicBase quest = hex.GetPOI().GetEncounterQuest();
-                    // quest.GetLocalizedOneLineDesc();
-                    // quest.GetCurrentDestinationLocation();
-                    questName = quest.GetQuestDef()?.m_DisplayName;
-                    // questName = "has quest";
+                    MiniHexInfo hexPOI = hex.GetPOI();
+                    Plugin.Logger.LogWarning(hexPOI);
+                    if (_quest != null)
+                    {
+                        questName = _quest.GetQuestDef()?.m_DisplayName;
+                        if (questName.IsNullOrEmpty()) questName = "is quest location";
+                        Plugin.Logger.LogWarning(StringReplace.RemoveStyling(_quest.GetLocalizedOneLineDesc()));
+                        // Kill the <color=#FBB060>Chaos Leader</color> in <color=#FBB060>The Guardian Forest</color>
+                        // quest.GetCurrentDestinationLocation();
+                    }
                 }
                 if (hex.GetDeadPlayerCount() > 0)
                 {
@@ -133,10 +138,19 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return context;
         }
 
-        static bool TileHasQuestObjective(HexLand hex)
+        static bool TileHasQuestObjective(HexLand hex, out QuestLogicBase quest)
         {
-            bool result = hex.GetPOI()?.HasEncounterQuest() ?? false;
-            Plugin.Logger.LogWarning(result);
+            MiniHexInfo poi = hex.GetPOI();
+            quest = poi?.GetEncounterQuest();
+            bool result = quest != null;
+            if (!result)
+            {
+                if (poi?.GetFirstQuest() != null)
+                {
+                    quest = poi.GetFirstQuest();
+                    result = true;
+                }
+            }
             return result;
         }
     }

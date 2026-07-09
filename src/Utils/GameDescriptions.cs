@@ -11,6 +11,7 @@ namespace Pyran.NeuroFTK.Utils
             {"Quest Board", "grab a side quest to complete for rewards"},
             {"Leave", "close this menu"},
             {"End Turn", "end this characters turn"},
+            {"View Wares", "purchase items"},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()

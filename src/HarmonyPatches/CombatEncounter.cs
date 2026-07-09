@@ -131,7 +131,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             MiniHexInfo.PoiProfile profile = instance.m_ThisMiniHex.GetPOIProfile();
             if (profile != null && profile.m_SkillRequired != FTK_weaponStats2.SkillType.none)
             {
-                context += $"these roll chances are based on your {profile.m_SkillRequired} skill\n";
+                context += $"these roll chances are based on your {profile.m_SkillRequired} stat\n";
             }
             buttonsContext = context;
         }

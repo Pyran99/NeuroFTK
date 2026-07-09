@@ -1,12 +1,15 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Google2u;
 using GridEditor;
 using HarmonyLib;
+using HutongGames.PlayMaker.Actions;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -17,40 +20,52 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Tests
     {
+        static bool isPing = false;
+
         [HarmonyPatch(typeof(HexLand), nameof(HexLand.Ping))]
         [HarmonyPostfix]
         static void Ping(HexLand __instance)
         {
             if (GlobalConfig.debug_mode == false) return;
+            // called twice from TogglePing
+            if (isPing) return;
+            isPing = true;
             Plugin.Logger.LogMessage("ping data");
             StringBuilder sb = new();
-            sb.AppendLine($"id: {__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex}");
+            sb.AppendLine($"\nid: {__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex}");
             sb.AppendLine($"pos: {__instance.GetPosition()}");
-            sb.AppendLine($"realm: {__instance.GetRealm()}");
-            sb.AppendLine($"realm display: {__instance.GetRealmDisplayValue()}");
+            sb.AppendLine($"realm: {__instance.GetRealm()}"); // GuardianForest
             sb.AppendLine($"boat: {__instance.IsBoat()}");
-            sb.AppendLine($"loc display: {__instance.GetLocationDisplayValue(GameLogic.Instance.GetCurrentCOW())}");
-            sb.AppendLine($"distance: {HexLand.Distance(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance)}");
-            List<HexLand> list = [];
-            _ = HexLand.FindPath(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
-            sb.AppendLine($"path: {list.Count} | path end: {list.Last()?.GetPosition()}");
+            sb.AppendLine($"loc display: {__instance.GetLocationDisplayValue(GameLogic.Instance.GetCurrentCOW())}"); // The Guardian Forest, is realm display if not dungeon
+            sb.AppendLine($"distance: {Math.Round(HexLand.Distance(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance), 2)}");
+            // List<HexLand> list = [];
+            // _ = HexLand.FindPath(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
+            HexLand last = Movement.Instance.m_HexListPartial.Last();
+            sb.AppendLine($"path end: {last?.GetPosition()}");
+            // sb.AppendLine($"path: {list.Count} | path end: {list.Last()?.GetPosition()}");
             MiniHexInfo poi = __instance.GetPOI();
-            sb.AppendLine($"poi: {poi?.GetIDString()}");
-            sb.AppendLine($"poi title: {poi?.GetPOIProfile().m_Title}");
-            sb.AppendLine($"poi skill: {poi?.GetPOIProfile().m_SkillRequired}");
-            sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()}");
+            sb.AppendLine($"poi title: {poi?.GetPOIProfile().m_Title}"); // Cult Device
+            sb.AppendLine($"poi skill: {poi?.GetPOIProfile().m_SkillRequired}"); // fortitude
+            sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()}"); // Cult Device
             QuestLogicBase quest = poi?.GetEncounterQuest();
             if (quest != null)
             {
-                sb.AppendLine($"quest desc1: {quest.GetOneLineDesc()}");
-                sb.AppendLine($"quest desc2: {quest.GetLocalizedOneLineDesc()}");
+                sb.AppendLine($"quest desc: {quest.GetLocalizedOneLineDesc()}"); // // Kill the <color=#FBB060>Chaos Leader</color> in <color=#FBB060>The Guardian Forest</color>
                 QuestDefBase def = quest.GetQuestDef();
                 if (def != null)
                 {
-                    sb.AppendLine($"def display: {def.m_DisplayName}");
+                    sb.AppendLine($"def display: {def.m_DisplayName}"); // ""
                 }
             }
             Plugin.Logger.LogMessage(sb.ToString());
+            // QuickTimerCallback timer = new(() => isPing = false, __instance.gameObject, 100f);
+            __instance.StartCoroutine(Wait());
+
+            static IEnumerator Wait()
+            {
+                yield return new WaitForSeconds(0.1f);
+                isPing = false;
+            }
         }
 
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))]

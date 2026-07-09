@@ -9,6 +9,7 @@ using System.Reflection;
 using System.IO;
 using Newtonsoft.Json;
 using Pyran.NeuroFTK.NeuroIntegration;
+using System.Linq;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
 /*Sets the custom difficulty sliders for any adventure
@@ -34,7 +35,18 @@ public class SetCustomHouseRules
         static IEnumerator SetWithDelays(HouseRule instance, Dictionary<FTK_gameParams.ID, HouseRuleSlider> m_Sliders)
         {
             customRules ??= new Dictionary<string, CustomRuleValues>(CustomHouseRules.houseRules);
+            if (configInstance == null)
+            {
+                Plugin.Logger.LogError("null GameConfig");
+                yield break;
+            }
             Plugin.Logger.LogWarning("1"); // TODO finding null ref
+            GameDefinitionPreview prev = configInstance.GetCurrentGameDefPreview();
+            if (prev == null)
+            {
+                configInstance.m_GameDefButtons.First()?.OnControllerClick();
+                prev = configInstance.m_GameDefButtons.First().GetPreview();
+            }
             CustomRuleValues selectedRules = customRules[configInstance.GetCurrentGameDefPreview().m_SaveFileName];
             Plugin.Logger.LogWarning("2");
             LogValues(selectedRules);

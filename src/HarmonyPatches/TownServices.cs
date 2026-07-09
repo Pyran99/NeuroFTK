@@ -48,14 +48,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (btn.m_ServiceType == MiniHexServiceType.BoatRepair)
                 {
                     List<MiniHexBoat> boats = cow.m_HexLand.GetPOI()?.GetNearbyRepairBoats();
-                    ctx += "[no boats to repair]";
-                    if (boats.Count == 0) continue;
+                    if (boats.Count == 0)
+                    {
+                        ctx += "[no boats to repair] ";
+                        continue;
+                    }
                 }
                 else if (btn.m_ServiceType == MiniHexServiceType.BoatReclaim)
                 {
                     List<MiniHexBoat> boats = cow.m_HexLand.GetPOI()?.GetNearbyBoats();
-                    ctx += "[no boats to reclaim]";
-                    if (boats.Count == 0) continue;
+                    if (boats.Count == 0)
+                    {
+                        ctx += "[no boats to reclaim] ";
+                        continue;
+                    }
                 }
                 string _name = btn.m_RectTransform.Find("Text").GetComponent<Text>().text;
                 string _desc = GameDescriptions.TownServices[btn.m_ServiceType];

@@ -22,6 +22,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void OnGameConfigShown(GameConfig __instance)
         {
             instance = __instance;
+            SetCustomHouseRules.configInstance = __instance;
             CreateActionWindow(__instance);
         }
 
