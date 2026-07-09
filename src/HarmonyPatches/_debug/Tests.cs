@@ -1,16 +1,10 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Google2u;
-using GridEditor;
 using HarmonyLib;
-using HutongGames.PlayMaker.Actions;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
-using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -20,16 +14,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Tests
     {
-        static bool isPing = false;
-
-        [HarmonyPatch(typeof(HexLand), nameof(HexLand.Ping))]
+        [HarmonyPatch(typeof(HexLand), nameof(HexLand.TogglePing))]
         [HarmonyPostfix]
         static void Ping(HexLand __instance)
         {
             if (GlobalConfig.debug_mode == false) return;
-            // called twice from TogglePing
-            if (isPing) return;
-            isPing = true;
             Plugin.Logger.LogMessage("ping data");
             StringBuilder sb = new();
             sb.AppendLine($"\nid: {__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex}");
@@ -47,10 +36,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             sb.AppendLine($"poi title: {poi?.GetPOIProfile().m_Title}"); // Cult Device
             sb.AppendLine($"poi skill: {poi?.GetPOIProfile().m_SkillRequired}"); // fortitude
             sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()}"); // Cult Device
-            QuestLogicBase quest = poi?.GetEncounterQuest();
-            if (quest != null)
+            if (TileHasQuestObjective(__instance, out QuestLogicBase quest))
             {
-                sb.AppendLine($"quest desc: {quest.GetLocalizedOneLineDesc()}"); // // Kill the <color=#FBB060>Chaos Leader</color> in <color=#FBB060>The Guardian Forest</color>
+                sb.AppendLine($"quest desc: {StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc())}"); // Kill the <color=#FBB060>Chaos Leader</color> in <color=#FBB060>The Guardian Forest</color>
                 QuestDefBase def = quest.GetQuestDef();
                 if (def != null)
                 {
@@ -58,15 +46,25 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
             }
             Plugin.Logger.LogMessage(sb.ToString());
-            // QuickTimerCallback timer = new(() => isPing = false, __instance.gameObject, 100f);
-            __instance.StartCoroutine(Wait());
-
-            static IEnumerator Wait()
-            {
-                yield return new WaitForSeconds(0.1f);
-                isPing = false;
-            }
         }
+
+
+        static bool TileHasQuestObjective(HexLand hex, out QuestLogicBase quest)
+        {
+            MiniHexInfo poi = hex.GetPOI();
+            quest = poi?.GetEncounterQuest();
+            bool result = quest != null;
+            if (!result)
+            {
+                if (poi?.GetFirstQuest() != null)
+                {
+                    quest = poi.GetFirstQuest();
+                    result = true;
+                }
+            }
+            return result;
+        }
+
 
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))]
         [HarmonyPostfix]
