@@ -40,29 +40,23 @@ public class SetCustomHouseRules
                 Plugin.Logger.LogError("null GameConfig");
                 yield break;
             }
-            Plugin.Logger.LogWarning("1"); // TODO finding null ref
             GameDefinitionPreview prev = configInstance.GetCurrentGameDefPreview();
             if (prev == null)
             {
                 configInstance.m_GameDefButtons.First()?.OnControllerClick();
                 prev = configInstance.m_GameDefButtons.First().GetPreview();
             }
-            CustomRuleValues selectedRules = customRules[configInstance.GetCurrentGameDefPreview().m_SaveFileName];
-            Plugin.Logger.LogWarning("2");
+            CustomRuleValues selectedRules = customRules[prev.m_SaveFileName];
             LogValues(selectedRules);
-            Plugin.Logger.LogWarning("3");
 
             yield return new WaitForSeconds(0.3f);
             instance.UpdateChaos(GetScaledValue(selectedRules.chaosFrequency, FTK_gameParams.ID.chaos));
-            Plugin.Logger.LogWarning("4");
 
             yield return new WaitForSeconds(0.3f);
             instance.UpdateLife(GetScaledValue(selectedRules.lifePool, FTK_gameParams.ID.lifepool));
-            Plugin.Logger.LogWarning("5");
 
             yield return new WaitForSeconds(0.3f);
             instance.UpdateInflation(GetScaledValue(selectedRules.economyInflation, FTK_gameParams.ID.inflation));
-            Plugin.Logger.LogWarning("6");
 
             foreach (KeyValuePair<FTK_gameParams.ID, HouseRuleSlider> _slider in m_Sliders)
             {
