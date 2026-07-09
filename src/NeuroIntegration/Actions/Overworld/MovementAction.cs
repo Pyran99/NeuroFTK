@@ -171,7 +171,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             else
             {
                 Context.Send("cannot end turn right now");
-                MovementAction.RegisterAction(GameLogic.Instance.GetCurrentCOW().gameObject, OverworldMovement.tiles);
+                if (OverworldMovement.tiles.Count > 0)
+                {
+                    MovementAction.RegisterAction(GameLogic.Instance.GetCurrentCOW().gameObject, OverworldMovement.tiles);
+                }
             }
             
         }

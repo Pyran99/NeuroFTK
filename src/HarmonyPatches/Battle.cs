@@ -18,6 +18,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static ActionWindow window;
         static uiBattleStanceButtons StanceBtnInstance;
         static List<uiBattleStanceButtons.ProfValues> m_Proficiencies = [];
+        static Dictionary<string, uiBattleButton> offense = [];
+        static Dictionary<string, uiBattleButton> defense = [];
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Initialize))]
         [HarmonyPostfix]
@@ -156,46 +158,44 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 actions.AddItem(new CombatFriendlyAction(defense));
             }
-            bool canFlee = _instance.m_FleeButton != null && _instance.m_FleeButton.isActiveAndEnabled && _instance.m_FleeButton.m_CanUse;
-            bool canRevive = _instance.m_ReviveButton != null && _instance.m_ReviveButton.isActiveAndEnabled && _instance.m_ReviveButton.m_CanUse;
-            bool canTaunt = _instance.m_ShieldTauntButton != null && _instance.m_ShieldTauntButton.isActiveAndEnabled && _instance.m_ShieldTauntButton.m_CanUse;
-            bool canChangeWeapon = _instance.m_EquipWeaponButton != null && _instance.m_EquipWeaponButton.isActiveAndEnabled && _instance.m_EquipWeaponButton.m_CanUse;
-            bool canHealParty = _instance.m_PartyHealButton != null && _instance.m_PartyHealButton.isActiveAndEnabled && _instance.m_PartyHealButton.m_CanUse;
-            if (canFlee && !GlobalConfig.debug_mode)
+            if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.debug_mode)
             {
-                var data = GetActionDetails(_instance.m_FleeButton, m_Proficiencies);
-                ctx += AddContext(data);
+                ctx += HandleBtnContext(_instance.m_FleeButton, m_Proficiencies);
                 actions.AddItem(new CombatFleeAction(_instance.m_FleeButton));
             } 
-            if (canRevive)
+            if (CanUseBtn(_instance.m_ReviveButton))
             {
-                var data = GetActionDetails(_instance.m_ReviveButton, m_Proficiencies);
-                ctx += AddContext(data, false);
+                ctx += HandleBtnContext(_instance.m_ReviveButton, m_Proficiencies, false);
                 actions.AddItem(new CombatReviveAction(_instance.m_ReviveButton));
             }
-            if (canTaunt)
+            if (CanUseBtn(_instance.m_ShieldTauntButton))
             {
-                var data = GetActionDetails(_instance.m_ShieldTauntButton, m_Proficiencies);
-                ctx += AddContext(data);
+                ctx += HandleBtnContext(_instance.m_ShieldTauntButton, m_Proficiencies);
                 actions.AddItem(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
-            if (canChangeWeapon && !GlobalConfig.debug_mode)
+            if (CanUseBtn(_instance.m_EquipWeaponButton) && !GlobalConfig.debug_mode)
             {
-                var data = GetActionDetails(_instance.m_EquipWeaponButton, m_Proficiencies);
-                ctx += AddContext(data, false);
+                ctx += HandleBtnContext(_instance.m_EquipWeaponButton, m_Proficiencies, false);
                 actions.AddItem(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));
             }
-            if (canHealParty)
+            if (CanUseBtn(_instance.m_PartyHealButton))
             {
-                var data = GetActionDetails(_instance.m_PartyHealButton, m_Proficiencies);
-                ctx += AddContext(data, false);
+                ctx += HandleBtnContext(_instance.m_PartyHealButton, m_Proficiencies, false);
                 actions.AddItem(new CombatPartyHealAction(_instance.m_PartyHealButton));
             }
             return ctx;
         }
 
-        static Dictionary<string, uiBattleButton> offense = [];
-        static Dictionary<string, uiBattleButton> defense = [];
+        static bool CanUseBtn(uiBattleButton btn)
+        {
+            return btn != null && btn.isActiveAndEnabled && btn.m_CanUse;
+        }
+
+        static string HandleBtnContext(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies, bool hasRolls = true)
+        {
+            var data = GetActionDetails(btn, m_Proficiencies);
+            return AddContext(data, hasRolls);
+        }
 
         public static void GetOffenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
         {

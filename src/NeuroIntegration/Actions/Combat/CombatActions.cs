@@ -10,6 +10,40 @@ using Pyran.NeuroFTK.Utils;
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
 
+    public class CombatActions
+    {
+        static uiBattleStanceButtons instance;
+
+        public static ActionWindow CreateAction(uiBattleStanceButtons _instance, string ctx, INeuroAction[] actions)
+        {
+            instance = _instance;
+            if (actions.Length == 0)
+            {
+                Plugin.Logger.LogError("no combat actions to register");
+                return null;
+            }
+            ActionWindow window = ActionWindow.Create(_instance.gameObject);
+            window.SetContext(ctx);
+            foreach (INeuroAction action in actions)
+            {
+                window.AddAction(action);
+            }
+            window.Register();
+            return window;
+        }
+
+        public static void SelectTarget(FTKPlayerID target, FTK_itembase.ID _item = FTK_itembase.ID.None)
+        {
+            if (instance == null)
+            {
+                Plugin.Logger.LogError("battle buttons instance null");
+                return;
+            }
+            instance.SelectEnemyDummy(target, _item);
+        }
+    }
+
+
 #region Actions
 
     /// <summary>
@@ -20,7 +54,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         Dictionary<FTKPlayerID, string> names = [];
 
         public override string Name => "ally_target";
-        protected override string Description => "heal or buff an ally or self";
+        protected override string Description => "heal/buff an ally or self";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -139,7 +173,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             foreach (var enemy in enemies)
             {
                 if (!enemy.Value.m_IsAlive) continue;
-                string name = $"{enemy.Value.GetEnemyInfo().m_EnemyCombat.GetEnemyDisplay()}"; // Timberwolf 1
+                string name = $"{enemy.Value.GetEnemyInfo().m_EnemyCombat.GetEnemyDisplay()}";
+                // Timberwolf 1
                 if (names.ContainsValue(name))
                 {
                     name += $" {++count}";
@@ -156,7 +191,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CombatFleeAction(uiBattleButton btn): NeuroAction
     {
         public override string Name => "flee_combat";
-        protected override string Description => "try to run away from combat. only the character this is used with will exit combat.";
+        protected override string Description => "try to run away from combat. only the character this is used with will exit combat. this should be used for emergencies.";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()
@@ -217,26 +252,27 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CombatChangeWeaponAction(uiBattleButton btn): NeuroAction<string>
     {
         public override string Name => "change_weapon";
-        protected override string Description => "equip a different weapon. this will also end your turn";
+        protected override string Description => "equip a different weapon. this will also end your turn without attacking.";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
         {
-            JsonSchema schema = new()
-            {
-                Type = JsonSchemaType.Object,
-                Required = ["weapon"],
-                Properties = new()
-                {
-                    ["weapon"] = new() { Type = JsonSchemaType.String, MinLength = 1, MaxLength = 16 }
-                }
-            };
-            return schema;
+            return null;
+            // JsonSchema schema = new()
+            // {
+            //     Type = JsonSchemaType.Object,
+            //     Required = ["weapon"],
+            //     Properties = new()
+            //     {
+            //         ["weapon"] = new() { Type = JsonSchemaType.String, MinLength = 1, MaxLength = 16 }
+            //     }
+            // };
+            // return schema;
         }
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogWarning("execute change weapon action: " + parsedData);
+            // Plugin.Logger.LogWarning("execute change weapon action: " + parsedData);
             SelectButton.StartCoroutine(btn, 1.0f);
         }
 
@@ -271,36 +307,4 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 #endregion
 
 
-    public class CombatActions
-    {
-        static uiBattleStanceButtons instance;
-
-        public static ActionWindow CreateAction(uiBattleStanceButtons _instance, string ctx, INeuroAction[] actions)
-        {
-            instance = _instance;
-            if (actions.Length == 0)
-            {
-                Plugin.Logger.LogError("no combat actions to register");
-                return null;
-            }
-            ActionWindow window = ActionWindow.Create(_instance.gameObject);
-            window.SetContext(ctx);
-            foreach (INeuroAction action in actions)
-            {
-                window.AddAction(action);
-            }
-            window.Register();
-            return window;
-        }
-
-        public static void SelectTarget(FTKPlayerID target, FTK_itembase.ID _item = FTK_itembase.ID.None)
-        {
-            if (instance == null)
-            {
-                Plugin.Logger.LogError("battle buttons instance null");
-                return;
-            }
-            instance.SelectEnemyDummy(target, _item);
-        }
-    }
 }
