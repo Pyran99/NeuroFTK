@@ -34,17 +34,23 @@ public class SetCustomHouseRules
         static IEnumerator SetWithDelays(HouseRule instance, Dictionary<FTK_gameParams.ID, HouseRuleSlider> m_Sliders)
         {
             customRules ??= new Dictionary<string, CustomRuleValues>(CustomHouseRules.houseRules);
+            Plugin.Logger.LogWarning("1"); // TODO finding null ref
             CustomRuleValues selectedRules = customRules[configInstance.GetCurrentGameDefPreview().m_SaveFileName];
+            Plugin.Logger.LogWarning("2");
             LogValues(selectedRules);
+            Plugin.Logger.LogWarning("3");
 
             yield return new WaitForSeconds(0.3f);
             instance.UpdateChaos(GetScaledValue(selectedRules.chaosFrequency, FTK_gameParams.ID.chaos));
+            Plugin.Logger.LogWarning("4");
 
             yield return new WaitForSeconds(0.3f);
             instance.UpdateLife(GetScaledValue(selectedRules.lifePool, FTK_gameParams.ID.lifepool));
+            Plugin.Logger.LogWarning("5");
 
             yield return new WaitForSeconds(0.3f);
             instance.UpdateInflation(GetScaledValue(selectedRules.economyInflation, FTK_gameParams.ID.inflation));
+            Plugin.Logger.LogWarning("6");
 
             foreach (KeyValuePair<FTK_gameParams.ID, HouseRuleSlider> _slider in m_Sliders)
             {

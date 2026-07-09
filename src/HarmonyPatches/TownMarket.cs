@@ -88,8 +88,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateAction(string ctx)
         {
             activeWindow = ActionWindow.Create(uiBuyMenuHud.Instance.GetListRootTransform().gameObject);
-            activeWindow.SetContext(ctx);
-            activeWindow.AddAction(new MarketPurchaseAction(new(buyList)));
+            if (buyList.Count > 0)
+            {
+                activeWindow.SetContext(ctx);
+                activeWindow.AddAction(new MarketPurchaseAction(new(buyList)));
+            }
+            else
+            {
+                activeWindow.SetContext("you cannot afford anything at this market (vedal should give you a raise)");
+            }
             // TODO sell action
             CancelAction cancel = new(activeWindow, "close the market");
             cancel.OnCancelled += CloseMenu;

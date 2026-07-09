@@ -19,6 +19,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 Plugin.Logger.LogError("query location failed: no active character");
                 Context.Send("query location failed" + NeuroSdkStrings.ModFaultSuffix);
+                ToggleOverworldActions.DisableOverworldActions();
                 return;
             }
             string name = current.m_CharacterStats.m_CharacterName;

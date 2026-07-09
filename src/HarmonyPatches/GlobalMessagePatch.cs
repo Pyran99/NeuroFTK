@@ -21,14 +21,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void GetButtons(uiGlobalMessageHUD _instance)
         {
             Dictionary<string, object> buttons = [];
-            if (_instance.m_ClickAnywhere.isActiveAndEnabled)
-            {
-                buttons.Add("continue", _instance.m_ClickAnywhere);
-            } 
-            else
+            if (_instance.m_ChoiceButtonPanel.gameObject.activeSelf)
             {
                 buttons.Add("yes", _instance.m_YesButton.GetComponent<uiFTKButton>());
                 buttons.Add("no", _instance.m_NoButton.GetComponent<uiFTKButton>());
+            }
+            else
+            {
+                buttons.Add("continue", _instance.m_ClickAnywhere);
             }
             GlobalMessageAction.RegisterAction(_instance, new(buttons));
         }

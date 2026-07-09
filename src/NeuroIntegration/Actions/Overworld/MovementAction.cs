@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
@@ -18,7 +19,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new MovementAction());
             window.AddAction(new EndTurnAction());
-            window.SetForce(5, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
+            window.SetForce(2, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
             window.SetContext(GetContext(_tiles));
             window.Register();
             return window;
@@ -68,8 +69,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out HexLand parsedData)
         {
             parsedData = null;
-            //"(x, y, z)"
-            Plugin.Logger.LogMessage(actionData.Data);
+            //"tile": "(168.8, 0.0, 37.5)"
             string data = actionData.Data.Value<string>("tile");
             if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("tile"));
             if (!hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("tile"));
@@ -82,20 +82,38 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         /// </summary>
         static string GetContext(List<HexLand> tiles)
         {
-            string context = "[these are the tiles in range (displayed as [(position(as x,y,z)): (name)(quest name)])]: ";
+            // try [pos (point of interest)] => does quest show as poi, otherwise +(is quest loc/quest name)
+            // => maybe remove name for general tiles (MMland), keep poi (ForestVillage02)
+            string context = "[all tiles in range, displayed as [(position x,z): (name or realm)(quest name)])]: ";
             string name;
             string questName = "";
-            Vector3 pos;
-            foreach (HexLand item in tiles)
+            string hasDeadPlayers = "";
+            Vector2 pos;
+            Vector3 itemPos;
+            FTK_realm.ID realm;
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            float distance = 0f; // testing things
+            foreach (HexLand hex in tiles)
             {
-                name = item.ToString().Replace(" (HexLand)", "");
-                pos = item.GetPosition();
-                if (TileHasQuestObjective(item))
+                realm = hex.GetRealm();
+                Plugin.Logger.LogWarning("realm: " + realm);
+                distance = HexLand.Distance(cow.m_HexLand, hex);
+                Plugin.Logger.LogWarning("dist: " + distance);
+                name = hex.GetLocationDisplayValue(cow);
+                // name = item.ToString().Replace(" (HexLand)", "");
+                itemPos = hex.GetPosition();
+                pos = new Vector2(itemPos.x, itemPos.z);
+                if (TileHasQuestObjective(hex))
                 {
                     questName = "has quest";
                 }
-                context += $"[({pos}): ({name})({questName})]";
-                hexPositions.Add(pos.ToString(), item);
+                if (hex.GetDeadPlayerCount() > 0)
+                {
+                    hasDeadPlayers = "has dead character to revive";
+                }
+                // [(165.9, 37.5): (The guardian forest)()]
+                context += $"[{pos}: ({name})({questName}){hasDeadPlayers}]";
+                hexPositions.Add(pos.ToString(), hex);
             }
             return context;
         }
@@ -103,7 +121,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         //TODO
         static bool TileHasQuestObjective(HexLand hex)
         {
-
             return false;
         }
     }
