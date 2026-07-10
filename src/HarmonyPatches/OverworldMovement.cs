@@ -164,8 +164,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (neighbor == initialHex) continue;
                         if (hasChecked.Contains(neighbor)) continue;
                         hasChecked.Add(neighbor);
-                        //TODO match types
-                        if (neighbor.CanTravel() && !neighbor.IsWater())
+                        if (neighbor.CanTravel() && CanTravel(neighbor, owner))
+                        // if (neighbor.CanTravel() && !neighbor.IsWater())
                         {
                             validNeighbors.Add(neighbor);
                             nextLoop.Add(neighbor);
@@ -178,6 +178,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (validNeighbors.Count == 0) Plugin.Logger.LogError("no valid neighbors found");
             return validNeighbors;
+        }
+
+        static bool CanTravel(HexLand hex, CharacterOverworld cow)
+        {
+            bool isLand = hex.m_Type == HexLand.Type.Land;
+            bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
+            bool onBoat = cow.IsInBoat();
+            //1. if hex is land & cow on land => land=>land
+            if (isLand && cowOnLand) return true;
+            //2. if hex is land & cow on boat => boat=>land
+            if (isLand && onBoat) return true;
+            //3. if hex is water & cow on land => land=>water
+            if (!isLand && cowOnLand) return false;
+            //4. if hex is water & cow on boat => boat=>water
+            if (!isLand && onBoat) return true;
+            //5. if hex has boat & cow on land => land=>boat
+            if (hex.IsBoat() && cowOnLand) return true;
+            // what would 2 boats do
+            // what about air
+            return false;
         }
     }
 }
