@@ -14,13 +14,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     {
         static uiBattleStanceButtons instance;
 
-        public static ActionWindow CreateAction(uiBattleStanceButtons _instance, string ctx, INeuroAction[] actions)
+        public static ActionWindow CreateAction(uiBattleStanceButtons _instance, string ctx, List<INeuroAction> actions)
         {
             instance = _instance;
-            if (actions.Length == 0)
+            if (actions.Count == 0)
             {
                 Plugin.Logger.LogError("no combat actions to register");
-                return null;
+                actions.Add(new CombatFleeAction(_instance.m_FleeButton));
             }
             ActionWindow window = ActionWindow.Create(_instance.gameObject);
             window.SetContext(ctx);
@@ -28,6 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 window.AddAction(action);
             }
+            window.SetForce(0, "choose an action", "you are in combat");
             window.Register();
             return window;
         }
@@ -52,6 +53,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CombatFriendlyAction(Dictionary<string, uiBattleButton> _defense) : NeuroAction<object[]>
     {
         Dictionary<FTKPlayerID, string> names = [];
+        readonly Dictionary<string, uiBattleButton> defense = new(_defense);
 
         public override string Name => "ally_target";
         protected override string Description => "heal/buff an ally or self";
@@ -66,7 +68,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Properties = new()
                 {
                     ["target"] = QJS.Enum(GetListOfPlayers().Values),
-                    ["ability"] = QJS.Enum(_defense.Keys)
+                    ["ability"] = QJS.Enum(defense.Keys)
                 }
             };
             return schema;
@@ -75,7 +77,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(object[] parsedData)
         {
             Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
-            _defense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
+            defense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
             FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
             if (target == null)
             {
@@ -93,7 +95,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string target = actionData.Data.Value<string>("target");
             if (!names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
             string ability = actionData.Data.Value<string>("ability");
-            if (!_defense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+            if (!defense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
             parsedData[0] = target;
             parsedData[1] = ability;
             return ExecutionResult.Success();
@@ -118,6 +120,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CombatAttackAction(Dictionary<string, uiBattleButton> _offense) : NeuroAction<object[]>
     {
         Dictionary<FTKPlayerID, string> names = [];
+        readonly Dictionary<string, uiBattleButton> offense = new(_offense);
         
         public override string Name => "attack_enemy";
         protected override string Description => "attack an enemy";
@@ -132,7 +135,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Properties = new()
                 {
                     ["target"] = QJS.Enum(GetListOfEnemies().Values),
-                    ["ability"] = QJS.Enum(_offense.Keys)
+                    ["ability"] = QJS.Enum(offense.Keys)
                 }
             };
             return schema;
@@ -142,7 +145,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             Plugin.Logger.LogMessage("execute attack: " + string.Join(", ", (string[])parsedData));
             // Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
-            _offense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
+            offense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
             FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
             if (target == null)
             {
@@ -159,7 +162,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string target = actionData.Data.Value<string>("target");
             if (!names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
             string ability = actionData.Data.Value<string>("ability");
-            if (!_offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+            if (!offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
             parsedData[0] = target;
             parsedData[1] = ability;
             return ExecutionResult.Success();

@@ -126,62 +126,64 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
 #region action window
 
+        static List<INeuroAction> actions = [];
+
         static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
-            offense.Clear();
-            defense.Clear();
-            string ctx = GetContext(_instance, _proficiencies, out INeuroAction[] _actions);
-            window = CombatActions.CreateAction(_instance, ctx, _actions);
-        }
-
-        static string GetContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, out INeuroAction[] actions)
-        {
-            string ctx = "";
-            actions = [];
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
+            string ctx = GetContext(_instance, _proficiencies);
+            window = CombatActions.CreateAction(_instance, ctx, actions);
+            offense.Clear();
+            defense.Clear();
+        }
+
+        static string GetContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
+        {
+            actions.Clear();
+            string ctx = "";
             if (offense.Count > 0)
             {
                 foreach (string key in offense.Keys)
                 {
-                    var data = GetActionDetails(offense[key], m_Proficiencies);
+                    var data = GetActionDetails(offense[key], _proficiencies);
                     ctx += AddAttackContext(data);
                 }
-                actions.AddItem(new CombatAttackAction(offense));
+                actions.Add(new CombatAttackAction(offense));
             }
             if (defense.Count > 0)
             {
                 foreach (string key in defense.Keys)
                 {
-                    var data = GetActionDetails(defense[key], m_Proficiencies);
+                    var data = GetActionDetails(defense[key], _proficiencies);
                     ctx += AddAttackContext(data);
                 }
-                actions.AddItem(new CombatFriendlyAction(defense));
+                actions.Add(new CombatFriendlyAction(defense));
             }
             if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.debug_mode)
             {
-                ctx += HandleBtnContext(_instance.m_FleeButton, m_Proficiencies);
-                actions.AddItem(new CombatFleeAction(_instance.m_FleeButton));
+                ctx += HandleBtnContext(_instance.m_FleeButton, _proficiencies);
+                actions.Add(new CombatFleeAction(_instance.m_FleeButton));
             } 
             if (CanUseBtn(_instance.m_ReviveButton))
             {
-                ctx += HandleBtnContext(_instance.m_ReviveButton, m_Proficiencies, false);
-                actions.AddItem(new CombatReviveAction(_instance.m_ReviveButton));
+                ctx += HandleBtnContext(_instance.m_ReviveButton, _proficiencies, false);
+                actions.Add(new CombatReviveAction(_instance.m_ReviveButton));
             }
             if (CanUseBtn(_instance.m_ShieldTauntButton))
             {
-                ctx += HandleBtnContext(_instance.m_ShieldTauntButton, m_Proficiencies);
-                actions.AddItem(new CombatTauntAction(_instance.m_ShieldTauntButton));
+                ctx += HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies);
+                actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
             if (CanUseBtn(_instance.m_EquipWeaponButton) && !GlobalConfig.debug_mode)
             {
-                ctx += HandleBtnContext(_instance.m_EquipWeaponButton, m_Proficiencies, false);
-                actions.AddItem(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));
+                ctx += HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false);
+                actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));
             }
             if (CanUseBtn(_instance.m_PartyHealButton))
             {
-                ctx += HandleBtnContext(_instance.m_PartyHealButton, m_Proficiencies, false);
-                actions.AddItem(new CombatPartyHealAction(_instance.m_PartyHealButton));
+                ctx += HandleBtnContext(_instance.m_PartyHealButton, _proficiencies, false);
+                actions.Add(new CombatPartyHealAction(_instance.m_PartyHealButton));
             }
             return ctx;
         }
@@ -197,8 +199,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return AddContext(data, hasRolls);
         }
 
-        public static void GetOffenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        public static void GetOffenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
+            offense.Clear();
             Dictionary<string, uiBattleButton> btns = [];
             bool useDefault = _instance.m_AttackButton != null && _instance.m_AttackButton.m_CanUse && _instance.m_AttackButton.isActiveAndEnabled; // this may act as normal attack with/out weapon
             bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.isActiveAndEnabled;
@@ -211,7 +214,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 btns.Add(FTKHub.Localized<TextMenu>("STR_battleButtonsReloadWeapon"), _instance.m_ReloadButton);
             }
-            foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
+            foreach (uiBattleStanceButtons.ProfValues prof in _Proficiencies)
             {
                 switch (prof.m_Button.m_ButtonType)
                 {
@@ -237,11 +240,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             offense = new Dictionary<string, uiBattleButton>(btns);
         }
 
-        public static void GetDefenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        public static void GetDefenseAttackDetails(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
             // GetTargetInfo(FTK_proficiencyTable.ID pid, out CharacterDummy.TargetType _targetType, out bool _targetFriendly)
+            defense.Clear();
             Dictionary<string, uiBattleButton> btns = [];
-            foreach (uiBattleStanceButtons.ProfValues prof in m_Proficiencies)
+            foreach (uiBattleStanceButtons.ProfValues prof in _Proficiencies)
             {
                 if (prof.m_Prof == FTK_proficiencyTable.ID.None) continue;
                 FTK_proficiencyTable table = FTK_proficiencyTableDB.Get(prof.m_Prof);
@@ -261,7 +265,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// <summary>
         /// dictionary style: "name": {"type": "target self", "description": "perfect(56%) = leave combat", "per_roll_chance": "50", "damage": "10"}
         /// </summary>
-        public static Dictionary<string, Dictionary<string, string>> GetActionDetails(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        public static Dictionary<string, Dictionary<string, string>> GetActionDetails(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
             // from => public void DisplayBattleActionInfo(uiBattleButton _button, bool _on)
             Dictionary<string, Dictionary<string, string>> data = [];
@@ -313,7 +317,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsSingleTarget");
                     break;
                 case uiBattleButton.BattleButtonType.proficiency:
-                    foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
+                    foreach (uiBattleStanceButtons.ProfValues profValues in _Proficiencies)
                     {
                         if (profValues.m_Button == btn)
                         {
@@ -377,13 +381,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             data[text]["type"] = array[0];
             data[text]["description"] = array[1];
             data[text]["per_roll_chance"] = "100%";
-            float accuracy = GetAccuracy(btn, m_Proficiencies);
+            float accuracy = GetAccuracy(btn, _Proficiencies);
             if (accuracy > -1f) data[text]["per_roll_chance"] = FTKUtil.RoundToInt(accuracy * 100f).ToString() + "%";
-            data[text]["damage"] = GetAttackDamage(btn, m_Proficiencies).ToString();
+            data[text]["damage"] = GetAttackDamage(btn, _Proficiencies).ToString();
             return data;
         }
 
-        public static float GetAccuracy(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        public static float GetAccuracy(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
             CharacterOverworld current = GameLogic.Instance.GetCurrentCombatCOW();
             global::CharacterStats stats = current.m_CharacterStats;
@@ -407,7 +411,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     acc = stats.GetSkillValue(entry._skilltest, true, 0f);
                     break;
                 case uiBattleButton.BattleButtonType.proficiency:
-                    foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
+                    foreach (uiBattleStanceButtons.ProfValues profValues in _Proficiencies)
                     {
                         if (profValues.m_Button == btn)
                         {
@@ -426,14 +430,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return acc;
         }
 
-        public static int GetAttackDamage(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies)
+        public static int GetAttackDamage(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
             int dmg = GameLogic.Instance.GetCurrentCombatCOW().m_CharacterStats.GetWeaponMaxDamage();
             FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
 
             if (btn.m_ButtonType == uiBattleButton.BattleButtonType.proficiency)
             {
-				foreach (uiBattleStanceButtons.ProfValues profValues in m_Proficiencies)
+				foreach (uiBattleStanceButtons.ProfValues profValues in _Proficiencies)
 				{
 					if (profValues.m_Button == btn)
 					{

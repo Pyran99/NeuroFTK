@@ -97,12 +97,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
                 {
                     string desc = button.Value.m_Text0.text;
-                    string ph = "";
+                    string btnInfo = "";
                     if (GameDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
                     {
-                        ph = _value;
+                        btnInfo = _value;
                     }
-                    ctx += $"{desc}: {ph}.\n";
+                    ctx += $"{desc}: {btnInfo}\n";
                 }
                 window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, ctx);
             }, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
@@ -139,7 +139,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static string GetEncounterContext(string name, string description, string flavor)
         {
-            string encounter = $"[Encounter] {name}: {flavor}; {description}";
+            string encounter = $"[Encounter] {name}: {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}";
             string _players = "";
             if (players.Count > 0)
             {

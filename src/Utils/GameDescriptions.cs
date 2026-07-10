@@ -6,12 +6,14 @@ namespace Pyran.NeuroFTK.Utils
     {
         public static Dictionary<string, string> EncounterDescriptions = new()
         {
-            {"Services", "purchase health, focus points, remove debuffs, or remove curses"},
-            {"Market", "purchase items"},
-            {"Quest Board", "grab a side quest to complete for rewards"},
-            {"Leave", "close this menu"},
-            {"End Turn", "end this characters turn"},
-            {"View Wares", "purchase items"},
+            {"Services", "purchase health, focus points, remove debuffs, or remove curses."},
+            {"Market", "purchase items."},
+            {"Quest Board", "grab a side quest to complete for rewards."},
+            {"Leave", "close this menu."},
+            {"End Turn", "end this characters turn."},
+            {"View Wares", "purchase items."},
+            {"Journal", "view this adventurers journal."},
+            {"Devote", "become a champion for this sanctums god."},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()

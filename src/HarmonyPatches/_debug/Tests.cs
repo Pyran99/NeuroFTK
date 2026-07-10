@@ -30,6 +30,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // List<HexLand> list = [];
             // _ = HexLand.FindPath(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
             HexLand last = Movement.Instance.m_HexListPartial.Last();
+            //TODO for neuro auto-walk => select desired tile, then choose last from movement list
             sb.AppendLine($"path end: {last?.GetPosition()}");
             // sb.AppendLine($"path: {list.Count} | path end: {list.Last()?.GetPosition()}");
             MiniHexInfo poi = __instance.GetPOI();
