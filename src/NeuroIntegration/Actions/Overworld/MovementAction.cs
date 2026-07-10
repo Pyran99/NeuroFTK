@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
@@ -17,6 +18,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction : NeuroAction<HexLand>
     {
+        // // copy from CombatActions
+        // public static ActionWindow CreateAction(uiBattleStanceButtons _instance, string ctx, List<INeuroAction> actions)
+        // {
+            
+        // }
+
+
         public static ActionWindow RegisterAction(GameObject owner, List<HexLand> _tiles)
         {
             hexPositions.Clear();
@@ -25,6 +33,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (!GlobalConfig.debug_mode)
             {
                 window.AddAction(new EndTurnAction());
+            }
+            if (GameLogic.Instance.GetQuestTable().Count > 0)
+            {
+                window.AddAction(new GoToHexAction());
             }
             window.SetForce(0, "choose a position that represents the tile you want to move to", "awaiting movement action", true);
             window.SetContext(GetContext(_tiles));
@@ -61,8 +73,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             Plugin.Logger.LogMessage($"executing movement action to {parsedData}");
-            OverworldMovement.tiles.Clear();
+            // OverworldMovement.tiles.Clear();
             Movement.Instance.m_CursorHex = parsedData; // needs to be set
+            Movement.Instance.UpdateCursorHex();
             if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
@@ -123,7 +136,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     {
                         questName = _quest.GetQuestDef()?.m_DisplayName;
                         if (questName.IsNullOrEmpty()) questName = "is quest location";
-                        Plugin.Logger.LogWarning(StringReplace.RemoveStyling(_quest.GetLocalizedOneLineDesc()));
+                        Plugin.Logger.LogWarning("tile quest obj: " + StringReplace.RemoveStyling(_quest.GetLocalizedOneLineDesc()));
                         // Kill the <color=#FBB060>Chaos Leader</color> in <color=#FBB060>The Guardian Forest</color>
                         // quest.GetCurrentDestinationLocation();
                     }
@@ -183,5 +196,90 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             return ExecutionResult.Success();
         }
+    }
+
+    public class GoToHexAction : NeuroAction<string>
+    {
+        readonly Dictionary<string, QuestLogicBase> questDict = [];
+
+        public override string Name => "go_to_quest";
+        protected override string Description => "choose a quest location to go to";
+        protected override JsonSchema Schema => GetSchema();
+
+        private JsonSchema GetSchema()
+        {
+            GetQuests(); // remove when done
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["destination"],
+                Properties = new()
+                {
+                    ["destination"] = QJS.Enum(questDict.Select(kvp => kvp.Key)),
+                }
+            };
+            return schema;
+        }
+
+        protected override void Execute(string parsedData)
+        {
+            Plugin.Logger.LogWarning($"Execute GoTo {parsedData}");
+            if (!questDict.TryGetValue(parsedData, out QuestLogicBase quest))
+            {
+                Plugin.Logger.LogError("quest not found");
+                return;
+            }
+            HexLand dest = quest.GetHexLandDestination();
+            // OverworldMovement.tiles.Clear();
+            // Movement.Instance.m_CursorHex = dest; // needs to be set
+            // Movement.Instance.UpdateCursorHex();
+            OverworldMovement.ReverseCheckHoverPath(Movement.Instance, dest);
+            if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
+                Context.Send($"an issue occurred with the {Name} action", true);
+                return;
+            }
+            //for neuro auto-walk => select desired tile, then choose last from movement list
+            HexLand last = Movement.Instance.m_HexListPartial.Last();
+            dest = last;
+            if (!OverworldMovement.CanTravel(dest, GameLogic.Instance.GetCurrentCOW()))
+            {
+                Plugin.Logger.LogWarning("cant auto travel to last hex");
+                return;
+            }
+            OverworldMovement.ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
+        {
+            Plugin.Logger.LogWarning("validate GoTo");
+            parsedData = "";
+            string data = actionData.Data.Value<string>("destination");
+            if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
+            if (!questDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
+            parsedData = data;
+            return ExecutionResult.Success();
+        }
+
+        //TODO remove when done
+        void GetQuests()
+        {
+            questDict.Clear();
+            List<uiQuestItem> storyQuests = [];
+            List<uiQuestItem> sideQuests = [];
+            uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren(false, storyQuests);
+            uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren(false, sideQuests);
+            foreach (uiQuestItem q in storyQuests)
+            {
+                OverworldMovement.AddValidQuests(q);
+            }
+            foreach (uiQuestItem q in sideQuests)
+            {
+                OverworldMovement.AddValidQuests(q);
+            }
+            return;
+        }
+
     }
 }

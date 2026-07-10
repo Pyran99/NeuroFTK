@@ -27,12 +27,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             sb.AppendLine($"boat: {__instance.IsBoat()}");
             sb.AppendLine($"loc display: {__instance.GetLocationDisplayValue(GameLogic.Instance.GetCurrentCOW())}"); // The Guardian Forest, is realm display if not dungeon
             sb.AppendLine($"distance: {Math.Round(HexLand.Distance(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance), 2)}");
-            // List<HexLand> list = [];
             // _ = HexLand.FindPath(GameLogic.Instance.GetCurrentCOW().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
             HexLand last = Movement.Instance.m_HexListPartial.Last();
-            //TODO for neuro auto-walk => select desired tile, then choose last from movement list
-            sb.AppendLine($"path end: {last?.GetPosition()}");
-            // sb.AppendLine($"path: {list.Count} | path end: {list.Last()?.GetPosition()}");
+            sb.AppendLine($"path end: {last?.GetPosition()}"); // is giving correct last valid move hex for hex's to far
             MiniHexInfo poi = __instance.GetPOI();
             sb.AppendLine($"poi skill: {poi?.GetPOIProfile().m_SkillRequired}"); // fortitude
             sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()}"); // Cult Device

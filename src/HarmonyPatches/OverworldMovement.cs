@@ -104,6 +104,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
         }
 
+        // manual movement call
+        [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]
+        [HarmonyReversePatch]
+        public static void ReverseCheckHoverPath(object instance, HexLand _hexland)
+        {
+        }
+
         [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]
         [HarmonyPostfix]
         static void ReturnedToOverworld()
@@ -180,7 +187,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return validNeighbors;
         }
 
-        static bool CanTravel(HexLand hex, CharacterOverworld cow)
+        public static bool CanTravel(HexLand hex, CharacterOverworld cow)
         {
             bool isLand = hex.m_Type == HexLand.Type.Land;
             bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
@@ -199,6 +206,65 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // what about air
             return false;
         }
+
+
+        #region work
+
+        static readonly Dictionary<string, QuestLogicBase> questDict = [];
+
+        static void GetQuestData()
+        {
+            //TODO MovementAction GetQuests
+            List<uiQuestItem> storyQuests = [];
+            List<uiQuestItem> sideQuests = [];
+            uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren(false, storyQuests);
+            uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren(false, sideQuests);
+            foreach (uiQuestItem q in storyQuests)
+            {
+                AddValidQuests(q);
+            }
+            foreach (uiQuestItem q in sideQuests)
+            {
+                AddValidQuests(q);
+            }
+        }
+
+        public static void AddValidQuests(uiQuestItem questItem)
+        {
+            if (StringReplace.RemoveStyling(questItem.m_Display.text) == "??????") return;
+            QuestLogicBase quest;
+            quest = questItem.m_Quest;
+            if (quest == null) return;
+            if (quest.IsConsiderComplete()) return;
+            string description;
+            description = StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc());
+            Plugin.Logger.LogWarning("quest desc: " + description);
+            HexLand dest;
+            dest = quest.GetHexLandDestination();
+            if (dest != null)
+            {
+                Vector3 pos1 = dest.GetPosition();
+                Vector2 pos2 = new(pos1.x, pos1.z);
+                if (questDict.ContainsKey(pos2.ToString())) return;
+                Plugin.Logger.LogWarning("quest pos: " + pos2.ToString());
+                questDict.Add(pos2.ToString(), quest);
+            }
+            // quest.GetCurrentDestinationLocation();
+            
+        }
+
+        static void CreateActionWindow()
+        {
+            List<INeuroAction> actions = [];
+            window = ActionWindow.Create(null);
+            actions.Add(new MovementAction());
+            actions.Add(new GoToHexAction());
+            actions.Add(new EndTurnAction());
+        }
+
+
+        #endregion
+
     }
 }
 
