@@ -45,6 +45,7 @@ public class Plugin : BaseUnityPlugin
         {
             if (!GlobalConfig.debug_mode) return;
             doSpam = !doSpam;
+            Logger.LogWarning("CHANGED DEBUG SPAM TO " + doSpam);
         }
         if (Input.GetKeyDown(KeyCode.Minus))
         {

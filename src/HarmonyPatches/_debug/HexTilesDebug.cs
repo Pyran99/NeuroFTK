@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -25,7 +26,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (currentHover == _hexland) return;
             currentHover = _hexland;
             if (!Plugin.doSpam || !GlobalConfig.debug_mode) return;
-            if (MovementAction.hexPositions.ContainsKey(_hexland.GetPosition().ToString()))
+            Vector3 pos1 = _hexland.GetPosition();
+            Vector2 pos2 = new(pos1.x, pos1.z);
+            if (OverworldMovement.questDict.ContainsKey(pos2.ToString()))
             {
                 Plugin.Logger.LogMessage($"valid id {_hexland.GetPosition()} = {_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex}");
             }

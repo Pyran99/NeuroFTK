@@ -1,13 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -57,7 +61,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame)
         {
             GameDefinition gameDef = GameLogic.Instance.GetGameDef();
-            Context.Send($"game round: {GameFlow.Instance.m_RoundCount}, stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}, stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}, player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
+            Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
             isTracking = false;
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
@@ -148,7 +152,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             static IEnumerator Wait()
             {
                 yield return new WaitForSeconds(1f);
-                window = MovementAction.RegisterAction(RollSystem.currentCOW.gameObject, tiles);
+                CreateActionWindow();
                 isSearching = false;
             }
         }
@@ -172,7 +176,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (hasChecked.Contains(neighbor)) continue;
                         hasChecked.Add(neighbor);
                         if (neighbor.CanTravel() && CanTravel(neighbor, owner))
-                        // if (neighbor.CanTravel() && !neighbor.IsWater())
                         {
                             validNeighbors.Add(neighbor);
                             nextLoop.Add(neighbor);
@@ -207,14 +210,85 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return false;
         }
 
+        static Dictionary<string, HexLand> hexPositions = [];
 
-        #region work
+        /// <summary>
+        /// display as [(position x,z) (name/realm)(quest name)other info]
+        /// </summary>
+        static string GetTileContext(List<HexLand> _tiles)
+        {
+            hexPositions.Clear();
+            // [(155.8, 20.0): (The Guardian Forest)(). Woodsmoke]
+            StringBuilder sb = new();
+            sb.Append("[all tiles in range] (displayed as [(position x,z) (name/realm)(quest)other info]) ");
+            string name;
+            string questName;
+            string hasDeadPlayers;
+            string characters = "";
+            string poi;
+            Vector3 itemPos;
+            Vector2 pos;
+            // FTK_realm.ID realm;
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            foreach (HexLand hex in _tiles)
+            {
+                poi = "";
+                hasDeadPlayers = "";
+                questName = "";
+                _ = characters;
+                // realm = hex.GetRealm();
+                // GuardianForest | GoldenPlains
+                // Plugin.Logger.LogWarning("realm: " + realm);
+                // distance = (float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2);
+                name = hex.GetLocationDisplayValue(cow);
+                itemPos = hex.GetPosition();
+                pos = new Vector2(itemPos.x, itemPos.z);
+                QuestLogicBase _quest = TileHasQuestObjective(hex);
+                if (_quest != null && !_quest.IsConsiderComplete())
+                {
+                    questName = "is quest location";
+                    Plugin.Logger.LogWarning("tile quest obj: " + StringReplace.RemoveStyling(_quest.GetLocalizedOneLineDesc()));
+                    // quest.GetCurrentDestinationLocation();
+                }
+                if (hex.GetDeadPlayerCount() > 0)
+                {
+                    hasDeadPlayers = "has dead character to revive";
+                }
+                if (hex.GetPOI() != null)
+                {
+                    poi = hex.GetPOI().GetPOIDisplayValue();
+                }
+                sb.AppendLine($"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]");
+                hexPositions.Add(pos.ToString(), hex);
+            }
+            return sb.ToString();
+        }
 
-        static readonly Dictionary<string, QuestLogicBase> questDict = [];
+        static QuestLogicBase TileHasQuestObjective(HexLand hex)
+        {
+            MiniHexInfo poi = hex.GetPOI();
+            if (poi?.HasEncounterQuest() ?? false)
+            {
+                Plugin.Logger.LogWarning("HasEncounterQuest");
+                return poi.GetEncounterQuest();
+            }
+            if (questPositions.Contains(hex?.GetPosition() ?? Vector3.positiveInfinity))
+            {
+                return GameLogic.Instance.GetQuestByID(questPositions.IndexOf(hex.GetPosition()));
+            }
+            return null;
+        }
+
+
+        #region quests
+
+        public static readonly Dictionary<string, QuestLogicBase> questDict = [];
+        static readonly List<Vector3> questPositions = [];
 
         static void GetQuestData()
         {
-            //TODO MovementAction GetQuests
+            questDict.Clear();
+            questPositions.Clear();
             List<uiQuestItem> storyQuests = [];
             List<uiQuestItem> sideQuests = [];
             uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren(false, storyQuests);
@@ -229,7 +303,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
         }
 
-        public static void AddValidQuests(uiQuestItem questItem)
+        static void AddValidQuests(uiQuestItem questItem)
         {
             if (StringReplace.RemoveStyling(questItem.m_Display.text) == "??????") return;
             QuestLogicBase quest;
@@ -237,6 +311,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (quest == null) return;
             if (quest.IsConsiderComplete()) return;
             string description;
+// [Warning:Neuro For the King] quest desc: Kill the Chaos Leader in The Guardian Forest
+// [Warning:Neuro For the King] quest pos: (85.1, 117.5)
+// [Warning:Neuro For the King] quest desc: Kill the Scary Ghost in The Guardian Forest
+// [Warning:Neuro For the King] quest pos: (54.8, 110.0)
             description = StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc());
             Plugin.Logger.LogWarning("quest desc: " + description);
             HexLand dest;
@@ -248,22 +326,29 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (questDict.ContainsKey(pos2.ToString())) return;
                 Plugin.Logger.LogWarning("quest pos: " + pos2.ToString());
                 questDict.Add(pos2.ToString(), quest);
+                questPositions.Add(pos1);
             }
             // quest.GetCurrentDestinationLocation();
             
         }
 
-        static void CreateActionWindow()
+        #endregion
+
+        public static void CreateActionWindow()
         {
+            GetQuestData();
             List<INeuroAction> actions = [];
-            window = ActionWindow.Create(null);
-            actions.Add(new MovementAction());
-            actions.Add(new GoToHexAction());
-            actions.Add(new EndTurnAction());
+            string ctx = GetTileContext(tiles);
+            actions.Add(new MovementAction(hexPositions));
+            if (!GlobalConfig.debug_mode) actions.Add(new EndTurnAction());
+            if (questDict.Count > 0)
+            {
+                actions.Add(new GoToHexAction(new Dictionary<string, QuestLogicBase>(questDict)));
+            }
+            window = MovementAction.CreateAction(GameLogic.Instance.GetCurrentCOW(), ctx, actions);
         }
 
 
-        #endregion
 
     }
 }
