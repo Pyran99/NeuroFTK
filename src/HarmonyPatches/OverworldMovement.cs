@@ -11,7 +11,6 @@ using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
-using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -22,6 +21,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isSearching = false;
         public static bool isTracking = false;
         public static List<HexLand> tiles = [];
+
+        static readonly Dictionary<string, QuestLogicBase> questDict = [];
+        static readonly List<Vector3> questPositions = [];
+        static StringBuilder sbQuest = new();
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -246,8 +249,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 QuestLogicBase _quest = TileHasQuestObjective(hex);
                 if (_quest != null && !_quest.IsConsiderComplete())
                 {
-                    questName = "is quest location";
-                    Plugin.Logger.LogWarning("tile quest obj: " + StringReplace.RemoveStyling(_quest.GetLocalizedOneLineDesc()));
+                    if (_quest.HasQuestDefID())
+                    {
+                        // _quest.m_StoryQuestID 
+                        questName = "story quest";
+                    }
+                    else questName = "quest location";
                     // quest.GetCurrentDestinationLocation();
                 }
                 if (hex.GetDeadPlayerCount() > 0)
@@ -269,7 +276,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             MiniHexInfo poi = hex.GetPOI();
             if (poi?.HasEncounterQuest() ?? false)
             {
-                Plugin.Logger.LogWarning("HasEncounterQuest");
                 return poi.GetEncounterQuest();
             }
             if (questPositions.Contains(hex?.GetPosition() ?? Vector3.positiveInfinity))
@@ -282,41 +288,34 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #region quests
 
-        public static readonly Dictionary<string, QuestLogicBase> questDict = [];
-        static readonly List<Vector3> questPositions = [];
-
         static void GetQuestData()
         {
             questDict.Clear();
             questPositions.Clear();
-            List<uiQuestItem> storyQuests = [];
-            List<uiQuestItem> sideQuests = [];
-            uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren(false, storyQuests);
-            uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren(false, sideQuests);
-            foreach (uiQuestItem q in storyQuests)
+            sbQuest = new();
+            foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>())
             {
                 AddValidQuests(q);
             }
-            foreach (uiQuestItem q in sideQuests)
+            foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>())
             {
                 AddValidQuests(q);
             }
+            if (sbQuest.Length > 0) Context.Send(sbQuest.ToString());
         }
 
         static void AddValidQuests(uiQuestItem questItem)
         {
             if (StringReplace.RemoveStyling(questItem.m_Display.text) == "??????") return;
-            QuestLogicBase quest;
-            quest = questItem.m_Quest;
+            QuestLogicBase quest = questItem.m_Quest;
             if (quest == null) return;
             if (quest.IsConsiderComplete()) return;
-            string description;
-// [Warning:Neuro For the King] quest desc: Kill the Chaos Leader in The Guardian Forest
-// [Warning:Neuro For the King] quest pos: (85.1, 117.5)
-// [Warning:Neuro For the King] quest desc: Kill the Scary Ghost in The Guardian Forest
-// [Warning:Neuro For the King] quest pos: (54.8, 110.0)
-            description = StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc());
-            Plugin.Logger.LogWarning("quest desc: " + description);
+            string type = "side";
+            if (quest.HasQuestDefID()) // considered Bounty Story Quest
+            {
+                type = "story";
+            }
+            string description = StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc());
             HexLand dest;
             dest = quest.GetHexLandDestination();
             if (dest != null)
@@ -324,12 +323,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Vector3 pos1 = dest.GetPosition();
                 Vector2 pos2 = new(pos1.x, pos1.z);
                 if (questDict.ContainsKey(pos2.ToString())) return;
-                Plugin.Logger.LogWarning("quest pos: " + pos2.ToString());
                 questDict.Add(pos2.ToString(), quest);
                 questPositions.Add(pos1);
+                sbQuest.AppendLine($"[{type} quest at {pos2}]: {description}");
+                // [Warning:Neuro For the King] quest desc: Kill the Chaos Leader in The Guardian Forest
+                // [Warning:Neuro For the King] quest pos: (85.1, 117.5)
             }
-            // quest.GetCurrentDestinationLocation();
-            
         }
 
         #endregion
@@ -340,6 +339,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             List<INeuroAction> actions = [];
             string ctx = GetTileContext(tiles);
             actions.Add(new MovementAction(hexPositions));
+            if (GameLogic.Instance.GetCurrentCOW()?.GetHexLand()?.HasPOI() ?? false)
+            {
+                actions.Add(new InteractWithCurrentHex());
+            }
             if (!GlobalConfig.debug_mode) actions.Add(new EndTurnAction());
             if (questDict.Count > 0)
             {
@@ -347,8 +350,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             window = MovementAction.CreateAction(GameLogic.Instance.GetCurrentCOW(), ctx, actions);
         }
-
-
 
     }
 }

@@ -46,24 +46,27 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (parsedData == null)
             {
                 Plugin.Logger.LogError($"did not find {parsedData} in tiles");
+                Context.Send($"an issue occurred with the {Name} action", true);
+                OverworldMovement.CreateActionWindow();
                 return;
             }
-            Plugin.Logger.LogMessage($"executing movement action to {parsedData}");
             OverworldMovement.ReverseCheckHoverPath(Movement.Instance, parsedData);
             if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
                 Context.Send($"an issue occurred with the {Name} action", true);
+                OverworldMovement.CreateActionWindow();
                 return;
             }
             OverworldMovement.ReverseCheckClickPath(Movement.Instance, parsedData, false, false, false);
+            Context.Send($"moving to {parsedData}");
         }
 
 
         protected override ExecutionResult Validate(ActionJData actionData, out HexLand parsedData)
         {
             parsedData = null;
-            //"tile": "(168.8, 0.0, 37.5)"
+            //"tile": "(168.8, 37.5)"
             string data = actionData.Data.Value<string>("tile");
             if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("tile"));
             if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("tile"));
@@ -84,8 +87,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             else
             {
                 Context.Send("cannot end turn right now");
+                OverworldMovement.CreateActionWindow();
             }
-            
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
@@ -116,10 +119,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogWarning($"Execute GoTo {parsedData}");
             if (!_questDict.TryGetValue(parsedData, out QuestLogicBase quest))
             {
                 Plugin.Logger.LogError("quest not found");
+                Context.Send($"an issue occurred with the {Name} action, try another one", true);
+                OverworldMovement.CreateActionWindow();
                 return;
             }
             // hover destination to generate path list
@@ -128,7 +132,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
-                Context.Send($"an issue occurred with the {Name} action", true);
+                Context.Send($"an issue occurred with the {Name} action, try another one", true);
                 return;
             }
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
@@ -148,9 +152,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (failed)
             {
                 Plugin.Logger.LogError("failed to auto travel to last hex");
+                Context.Send($"an issue occurred with the {Name} action, try another one", true);
                 return;
             }
             OverworldMovement.ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
+            Context.Send($"moving to {parsedData}", true);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -176,7 +182,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             HexLand hex = cow.GetHexLand();
             if (!hex.HasPOI())
             {
-                Context.Send("this character is not on a tile with something to interact with" + NeuroSdkStrings.ModFaultSuffix);
+                Context.Send("this character is not on a tile with something to interact with");
+                OverworldMovement.CreateActionWindow();
                 return;
             }
             OverworldMovement.ReverseCheckHoverPath(Movement.Instance, hex);
