@@ -157,7 +157,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.TakeSecondaryDamage))] // does not call Gain, calls EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
         [HarmonyPostfix]
-        static void EnemyDmgTaken2(EnemyDummy __instance, int _gain)
+        static void EnemyDmgTaken2(EnemyDummy __instance, int _dmg, FTKPlayerID _attackerID)
         {
         }
 
