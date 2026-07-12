@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GridEditor;
@@ -22,9 +21,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isTracking = false;
         public static List<HexLand> tiles = [];
 
-        static readonly Dictionary<string, QuestLogicBase> questDict = [];
+        public static readonly Dictionary<string, QuestLogicBase> questDict = [];
         static readonly List<Vector3> questPositions = [];
         static StringBuilder sbQuest = new();
+        static readonly Dictionary<string, HexLand> hexPositions = [];
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -63,6 +63,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame)
         {
+            BeginTurns.SendOverworldTurnBeginStats(GameLogic.Instance.GetCurrentCOW());
             GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
             isTracking = false;
@@ -213,7 +214,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return false;
         }
 
-        static Dictionary<string, HexLand> hexPositions = [];
 
         /// <summary>
         /// display as [(position x,z) (name/realm)(quest name)other info]
@@ -271,20 +271,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return sb.ToString();
         }
 
-        static QuestLogicBase TileHasQuestObjective(HexLand hex)
-        {
-            MiniHexInfo poi = hex.GetPOI();
-            if (poi?.HasEncounterQuest() ?? false)
-            {
-                return poi.GetEncounterQuest();
-            }
-            if (questPositions.Contains(hex?.GetPosition() ?? Vector3.positiveInfinity))
-            {
-                return GameLogic.Instance.GetQuestByID(questPositions.IndexOf(hex.GetPosition()));
-            }
-            return null;
-        }
-
 
         #region quests
 
@@ -329,6 +315,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // [Warning:Neuro For the King] quest desc: Kill the Chaos Leader in The Guardian Forest
                 // [Warning:Neuro For the King] quest pos: (85.1, 117.5)
             }
+        }
+
+        static QuestLogicBase TileHasQuestObjective(HexLand hex)
+        {
+            MiniHexInfo poi = hex.GetPOI();
+            if (poi?.HasEncounterQuest() ?? false)
+            {
+                return poi.GetEncounterQuest();
+            }
+            if (questPositions.Contains(hex?.GetPosition() ?? Vector3.positiveInfinity))
+            {
+                return GameLogic.Instance.GetQuestByID(questPositions.IndexOf(hex.GetPosition()));
+            }
+            return null;
         }
 
         #endregion

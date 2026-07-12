@@ -72,11 +72,11 @@ namespace Pyran.NeuroFTK.ModDebug
         [HarmonyPrefix]
         static void OnHealthAboutToChange(ref int _hpGain)
         {
-            Plugin.Logger.LogMessage("gain health");
             if (ToggleGodModeEffects.Instance.godModeType == ToggleGodModeEffects.GodModeType.NO_DMG)
             {
                 if (_hpGain < 0)
                 {
+                    Plugin.Logger.LogMessage("god mode no dmg");
                     _hpGain = 0;
                 }
             }
