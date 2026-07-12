@@ -112,6 +112,55 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"[player] {player} has fled the battle");
         }
 
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.GainSpecificHealth))]
+        [HarmonyPostfix]
+        static void HealthChanged(CharacterStats __instance, int _hpGain)
+        {
+            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} health gain {_hpGain}");
+            CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _hpGain, __instance.m_HealthCurrent, __instance.MaxHealth);
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))] // secondarydmg calls rpc directly | players only
+        [HarmonyPrefix]
+        static void HealthChanged2(CharacterStats __instance, int _newHp)
+        {
+            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} health set rpc {_newHp}");
+            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
+            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TakeSecondaryDamageCombat))]
+        [HarmonyPrefix]
+        static void HealthChanged3(CharacterStats __instance, int _dmg)
+        {
+            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} second dmg {_dmg}");
+            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
+            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TakeSecondaryDamageNonCombatRPC))]
+        [HarmonyPrefix]
+        static void HealthChanged4(CharacterStats __instance, int _dmg)
+        {
+            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} second dmg rpc {_dmg}");
+            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
+            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
+        }
+
+        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.GainSpecificHealth))]
+        [HarmonyPostfix]
+        static void EnemyDmgTaken(EnemyDummy __instance, int _gain)
+        {
+		// this.m_CurrentHealth = Mathf.Clamp(this.m_CurrentHealth + _gain, 0, this.m_EnemyCombat.GetHealthTotal());
+		// EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
+        }
+
+        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.TakeSecondaryDamage))] // does not call Gain, calls EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
+        [HarmonyPostfix]
+        static void EnemyDmgTaken2(EnemyDummy __instance, int _gain)
+        {
+        }
+
         static string GetEnemyName(EnemyDummy _dummy)
         {
             if (!uiEnemyHUD.Instance.m_EnemyHudDictionary.ContainsKey(_dummy))

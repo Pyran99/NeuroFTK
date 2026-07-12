@@ -126,6 +126,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ToggleOverworldActions.EnableOverworldActions();
         }
 
+        [HarmonyPatch(typeof(CharacterSkills), nameof(CharacterSkills.Refocus))]
+        [HarmonyPrefix]
+        static void Refocus()
+        {
+            Plugin.Logger.LogWarning("NYI end turn refocus skill proc");//TODO
+        }
+
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
         {
             if (!isTracking) return;
