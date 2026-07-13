@@ -63,14 +63,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame)
         {
-            BeginTurns.SendOverworldTurnBeginStats(GameLogic.Instance.GetCurrentCOW());
+            BeginTurns.CtxOverworldTurnBeginStats(GameLogic.Instance.GetCurrentCOW());
             GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
-            isTracking = false;
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
             if (_isLoadGame)
             {
+                isTracking = true;
                 QuickTimerCallback timer = new(() => GetValidMoveTiles(GameLogic.Instance.GetCurrentCOW()), Movement.Instance.m_CursorHexRenderer.gameObject);
             }
         }
@@ -126,12 +126,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ToggleOverworldActions.EnableOverworldActions();
         }
 
+        #region end turn procs
+
         [HarmonyPatch(typeof(CharacterSkills), nameof(CharacterSkills.Refocus))]
         [HarmonyPrefix]
         static void Refocus()
         {
-            Plugin.Logger.LogWarning("NYI end turn refocus skill proc");//TODO
+            Plugin.Logger.LogWarning("NYI end turn refocus skill proc");
         }
+
+        #endregion
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
         {

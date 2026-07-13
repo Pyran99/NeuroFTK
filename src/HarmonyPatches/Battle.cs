@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -9,6 +10,7 @@ using GridEditor;
 using Google2u;
 using System.Linq;
 using Pyran.NeuroFTK.GameConfigs;
+using System.Text;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -26,6 +28,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
             StanceBtnInstance = __instance;
+            BeginTurns.CtxCombatTurnBeginEnemy();
+            BeginTurns.CtxCombatTurnBeginPlayer();
             CreateActionWindow(StanceBtnInstance, m_Proficiencies);
         }
 
@@ -57,6 +61,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"[enemy] {enemy} has fled the battle");
         }
 
+        static StringBuilder enemyDied = new();
+        static bool isWaitingEnemy = false;
+
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))]
         [HarmonyPostfix]
         static void EnemyDied(FTKPlayerID _victim, FTKPlayerID _attacker)
@@ -66,7 +73,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 return;
             }
-            Context.Send($"[enemy] {GetEnemyName(dummy as EnemyDummy)} has died");
+            // Context.Send($"[enemy] {GetEnemyName(dummy as EnemyDummy)} has died");
+            enemyDied.AppendLine($"[enemy] {GetEnemyName(dummy as EnemyDummy)} has died");
+            EncounterSession.Instance.StartCoroutine(EnemyDiedWait());
+        }
+
+        static IEnumerator EnemyDiedWait()
+        {
+            if (isWaitingEnemy) yield break;
+            isWaitingEnemy = true;
+            yield return new WaitForEndOfFrame();
+            Context.Send(enemyDied.ToString());
+            enemyDied = new();
+            isWaitingEnemy = false;
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyBlackHoled))]
@@ -129,9 +148,32 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
         }
 
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))] // secondarydmg calls rpc directly | players only
+        [HarmonyPostfix]
+        static void HealthChanged3(CharacterStats __instance, int _newHp)
+        {
+            dmgTakenString.AppendLine($"{__instance.m_CharacterName} health {__instance.GetHealthDisplayString()})");
+            EncounterSession.Instance.StartCoroutine(PlayerHealthChangeWait());
+            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
+            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
+        }
+
+        static StringBuilder dmgTakenString = new();
+        static bool isWaiting = false;
+
+        static IEnumerator PlayerHealthChangeWait()
+        {
+            if (isWaiting) yield break;
+            isWaiting = true;
+            yield return new WaitForEndOfFrame();
+            Context.Send(dmgTakenString.ToString());
+            dmgTakenString = new();
+            isWaiting = false;
+        }
+
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TakeSecondaryDamageCombat))]
         [HarmonyPrefix]
-        static void HealthChanged3(CharacterStats __instance, int _dmg)
+        static void HealthChanged4(CharacterStats __instance, int _dmg)
         {
             Plugin.Logger.LogWarning($"{__instance.m_CharacterName} second dmg {_dmg}");
             // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
@@ -140,7 +182,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TakeSecondaryDamageNonCombatRPC))]
         [HarmonyPrefix]
-        static void HealthChanged4(CharacterStats __instance, int _dmg)
+        static void HealthChanged5(CharacterStats __instance, int _dmg)
         {
             Plugin.Logger.LogWarning($"{__instance.m_CharacterName} second dmg rpc {_dmg}");
             // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
