@@ -64,8 +64,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame)
         {
             BeginTurns.CtxOverworldTurnBeginStats(GameLogic.Instance.GetCurrentCOW());
-            GameDefinition gameDef = GameLogic.Instance.GetGameDef();
-            Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
+            // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
+            // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
             if (_isLoadGame)
@@ -210,15 +210,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             bool isLand = hex.m_Type == HexLand.Type.Land;
             bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
             bool onBoat = cow.IsInBoat();
-            //1. if hex is land & cow on land => land=>land
+            //if hex is land & cow on land => land=>land
             if (isLand && cowOnLand) return true;
-            //2. if hex is land & cow on boat => boat=>land
+            //if hex is land & cow on boat => boat=>land
             if (isLand && onBoat) return true;
-            //3. if hex is water & cow on land => land=>water
+            //if hex is water & cow on land => land=>water
             if (!isLand && cowOnLand) return false;
-            //4. if hex is water & cow on boat => boat=>water
+            //if hex is water & cow on boat => boat=>water
             if (!isLand && onBoat) return true;
-            //5. if hex has boat & cow on land => land=>boat
+            //if hex has boat & cow on land => land=>boat
             if (hex.IsBoat() && cowOnLand) return true;
             // what would 2 boats do
             // what about air

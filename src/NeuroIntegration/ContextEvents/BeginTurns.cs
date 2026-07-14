@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using Google2u;
 using GridEditor;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
@@ -13,28 +14,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             CharacterStats stats = _cow.m_CharacterStats;
             StringBuilder sb = new();
-            sb.AppendLine($"[Begin turn overworld]");
-            sb.AppendLine($"name: {stats.m_CharacterName} ({stats.m_CharacterClass})");
+            sb.AppendLine($"[{stats.m_CharacterName}({stats.m_CharacterClass}) turn]");
             sb.AppendLine($"lvl: {stats.m_PlayerLevel}");
             sb.AppendLine($"xp: {stats.GetXpDisplayString()}");// ({(float)Math.Round(stats.GetXpPercent()*100, 1)}%)");
             sb.AppendLine($"health: {stats.GetHealthDisplayString()}");// ({(float)Math.Round(stats.GetHealthPercent()*100, 1)}%)");
             sb.AppendLine($"gold: {stats.m_Gold}");
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(stats.GetPipe());
-            sb.AppendLine($"pipe: {pipe.m_DisplayName}({(int)stats.GetPipe()}) (upgraded at the market)");
+            sb.AppendLine($"pipe: {FTKHub.Localized<TextItems>(pipe.m_DisplayName)}({(int)stats.GetPipe()}) (upgraded at the market)");
             Context.Send(sb.ToString());
         }
 
         public static void CtxCombatTurnBeginPlayer()
         {
             StringBuilder sb = new();
+            sb.Append("[team state]");
             foreach (KeyValuePair<FTKPlayerID, CharacterDummy> cow in EncounterSession.Instance.m_PlayerDummies)
             {
                 if (!cow.Value.m_IsAlive) continue;
                 CharacterStats stats = cow.Value.m_CharacterOverworld.m_CharacterStats;
-                string name = $"{stats.m_CharacterName}";
+                string name = $"{stats.m_CharacterName} (lvl {stats.m_PlayerLevel})";
                 string health = $"{stats.GetHealthDisplayString()}";
                 string coherent = cow.Value.IsCoherent() ? "" : "stunned";
-                sb.AppendLine($"{name} (health: {health}) {coherent}");
+                sb.AppendLine($"{name} (health {health}) {coherent}.");
             }
             Context.Send(sb.ToString());
         }
@@ -42,6 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CtxCombatTurnBeginEnemy()
         {
             StringBuilder sb = new();
+            sb.Append("[enemy state]");
             // Dictionary<EnemyDummy, uiEachEnemyHud> enemies = new(uiEnemyHUD.Instance.m_EnemyHudDictionary);
             foreach (KeyValuePair<FTKPlayerID, EnemyDummy> enemy in EncounterSession.Instance.m_EnemyDummies)
             {
@@ -52,7 +54,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string lvl = $"{_enemy.GetEnemyLevelDisplay()}";
                 string health = $"{_dummy.GetEnemyInfo().GetCurrentHealth()}";
                 string coherent = _dummy.IsCoherent() ? "" : "stunned";
-                sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}");
+                sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}.");
             }
             Context.Send(sb.ToString());
         }

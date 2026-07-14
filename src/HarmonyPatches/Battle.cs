@@ -133,29 +133,106 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.GainSpecificHealth))]
         [HarmonyPostfix]
-        static void HealthChanged(CharacterStats __instance, int _hpGain)
+        static void HealthGain(CharacterStats __instance, int _hpGain)
         {
             Plugin.Logger.LogWarning($"{__instance.m_CharacterName} health gain {_hpGain}");
             CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _hpGain, __instance.m_HealthCurrent, __instance.MaxHealth);
         }
 
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))] // secondarydmg calls rpc directly | players only
+        static readonly Dictionary<string, int> healths = [];
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))]
         [HarmonyPrefix]
-        static void HealthChanged2(CharacterStats __instance, int _newHp)
+        static void PreHealthChanged(CharacterStats __instance, int _newHp)
         {
-            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} health set rpc {_newHp}");
+            healths[__instance.m_CharacterName] = __instance.m_HealthCurrent;
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))] // player dmg taken // secondarydmg calls rpc directly | players only
+        [HarmonyPostfix]
+        static void PostHealthChanged(CharacterStats __instance)
+        {
+            // if attacked by enemy
+            int old = healths[__instance.m_CharacterName];
+            int dif = old - __instance.m_HealthCurrent;
+            dmgTakenString.AppendLine($"{__instance.m_CharacterName} (health {__instance.GetHealthDisplayString()}) took {dif} damage");
+            // DummyDamageInfo atk = __instance.m_CharacterOverworld.m_CurrentDummy.m_AttackInfo; // do attack? would not be relevant here
+            DummyDamageInfo dmg = __instance.m_CharacterOverworld.m_CurrentDummy.m_DamageInfo; // receive hit?
+            if (dmg != null)
+            {
+                CharacterDummy attacker = null;
+                CharacterDummy victim = null;
+                foreach (KeyValuePair<FTKPlayerID, CharacterDummy> dummy in EncounterSession.Instance.m_Dummies)
+                {
+                    if (dmg.m_AttackerID == dummy.Key)
+                    {
+                        if ((bool)dummy.Value.m_CharacterOverworld)
+                        {
+                            Plugin.Logger.LogWarning("attacker is " + dummy.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
+                            attacker = dummy.Value;
+                        }
+                        else
+                        {
+                            EnemyDummy dummy1 = (EnemyDummy)dummy.Value;
+                            Plugin.Logger.LogWarning("attacker is " + dummy1.m_EnemyCombat.GetEnemyDisplay());
+                            attacker = dummy1;
+                        }
+                    }
+                    else if (dmg.m_VictimID == dummy.Key)
+                    {
+                        if ((bool)dummy.Value.m_CharacterOverworld)
+                        {
+                            Plugin.Logger.LogWarning("victim is " + dummy.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
+                            victim = dummy.Value;
+                        }
+                        else
+                        {
+                            EnemyDummy dummy1 = (EnemyDummy)dummy.Value;
+                            Plugin.Logger.LogWarning("victim is " + dummy1.m_EnemyCombat.GetEnemyDisplay());
+                            victim = dummy1;
+                        }
+                    }
+                }
+                Plugin.Logger.LogWarning("dmg attacker: " + attacker);
+                Plugin.Logger.LogWarning("victim: " + victim);
+                Plugin.Logger.LogWarning("dmg: " + dmg.m_Damage);
+                Plugin.Logger.LogWarning("new health: " + dmg.m_NewHealth);
+                // if (CharacterDummy.CharacterOverworld) => 2100
+                // this.m_CharacterOverworld.m_CharacterStats.SetSpecificHealthRPC(this.m_DamageInfo.m_NewHealth);
+                // EncounterSessionMC.Instance.RPC("CombatPlayerDie", new object[]
+                // {
+                // 	this.m_CharacterOverworld.m_FTKPlayerID,
+                // 	this.m_DamageInfo.m_AttackerID
+                // });
+
+                // else
+                // {
+                    // EnemyDummy enemyDummy = (EnemyDummy)this;
+                    // EncounterSession.Instance.UpdateEnemyHealth(enemyDummy.FID, this.m_DamageInfo.m_NewHealth);
+                    
+                // }
+
+				// if (this.m_DamageInfo.m_Damage >= 100)
+				// {
+				// 	global::StatsAchievements.StatsAchievements.TryPlayerAchievementSetAchieved(FTK_achievement.ID.ACH_DAMAGE_ATTACK_T1, true);
+				// }
+            }
+            EncounterSession.Instance.StartCoroutine(PlayerHealthChangeWait());
+            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, 0, __instance.m_HealthCurrent, __instance.MaxHealth);
             // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
             // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
         }
 
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))] // secondarydmg calls rpc directly | players only
+        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToHit))]
         [HarmonyPostfix]
-        static void HealthChanged3(CharacterStats __instance, int _newHp)
+        static void RespondToHit(CharacterDummy __instance)
         {
-            dmgTakenString.AppendLine($"{__instance.m_CharacterName} health {__instance.GetHealthDisplayString()})");
-            EncounterSession.Instance.StartCoroutine(PlayerHealthChangeWait());
-            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
-            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
+            if (__instance is EnemyDummy)
+            {
+                Plugin.Logger.LogWarning("enemy dummy RespondToHit");
+            }
+            Plugin.Logger.LogWarning($"{__instance.m_CharacterOverworld?.m_CharacterStats.m_CharacterName} RespondToHit from {__instance.m_DamageInfo.m_AttackerID}");
+            _ = __instance.m_DamageInfo.m_AttackerID;
         }
 
         static StringBuilder dmgTakenString = new();
@@ -218,6 +295,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 #region action window
 
         static List<INeuroAction> actions = [];
+        public static INeuroAction temp;
 
         static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
@@ -227,12 +305,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             window = CombatActions.CreateAction(_instance, ctx, actions);
             offense.Clear();
             defense.Clear();
+            temp = new SillyAction();
+            NeuroActionHandler.RegisterActions(temp);
         }
 
         static string GetContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             actions.Clear();
-            string ctx = "";
+            string ctx = "[your attacks]";
             if (offense.Count > 0)
             {
                 foreach (string key in offense.Keys)
@@ -552,7 +632,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
             string context = $"[{key}]{type}, {description}\n";
-            if (hasRolls) context = $"[{key}]{type}, {description}, success chance for each roll {rollChance}\n";
+            if (hasRolls) context = $"({key}) {type}, {description}, success chance for each roll {rollChance}\n";
             return context;
         }
 
@@ -563,7 +643,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
             string dmg = data[key]["damage"];
-            string context = $"[{key}]damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll {rollChance}\n";
+            string context = $"({key}) damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll {rollChance}\n";
             return context;
         }
 

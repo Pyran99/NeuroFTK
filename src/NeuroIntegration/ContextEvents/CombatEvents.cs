@@ -33,5 +33,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             dmgTakenString = new();
             waiting = false;
         }
+
+        public static void UnitDied()
+        {
+            
+        }
     }
 }

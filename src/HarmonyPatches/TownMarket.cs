@@ -79,7 +79,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             sb.Append("[market items ([name](cost) description)] \n");
             foreach (uiItemIcon _item in buyList.Values)
             {
-                sb.AppendLine($"[{ItemData.GetItemName(_item.m_ItemName)}](cost {_item.m_CostText?.text} gold) {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)}");
+                sb.AppendLine($"[{ItemData.GetItemName(_item.m_ItemName)}]({_item.m_CostText?.text} gold) {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)}");
             }
             Object.Destroy(activeWindow);
             QuickTimerCallback timer = new(() => CreateAction(sb.ToString()), list.gameObject);
