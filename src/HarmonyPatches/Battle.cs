@@ -48,68 +48,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             m_Proficiencies = [];
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyFlee))]
-        [HarmonyPostfix]
-        static void EnemyFled(FTKPlayerID _enemyID)
-        {
-            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_enemyID);
-            if (dummy == null)
-            {
-                return;
-            }
-            string enemy = (dummy as EnemyDummy).m_EnemyCombat.GetEnemyDisplay();
-            Context.Send($"[enemy] {enemy} has fled the battle");
-        }
-
-        static StringBuilder enemyDied = new();
-        static bool isWaitingEnemy = false;
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))]
-        [HarmonyPostfix]
-        static void EnemyDied(FTKPlayerID _victim, FTKPlayerID _attacker)
-        {
-            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_victim);
-            if (dummy == null)
-            {
-                return;
-            }
-            // Context.Send($"[enemy] {GetEnemyName(dummy as EnemyDummy)} has died");
-            enemyDied.AppendLine($"[enemy] {GetEnemyName(dummy as EnemyDummy)} has died");
-            EncounterSession.Instance.StartCoroutine(EnemyDiedWait());
-        }
-
-        static IEnumerator EnemyDiedWait()
-        {
-            if (isWaitingEnemy) yield break;
-            isWaitingEnemy = true;
-            yield return new WaitForEndOfFrame();
-            Context.Send(enemyDied.ToString());
-            enemyDied = new();
-            isWaitingEnemy = false;
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyBlackHoled))]
-        [HarmonyPostfix]
-        static void CombatEnemyBlackHoled(FTKPlayerID _enemyID)
-        {
-            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_enemyID);
-            if (dummy == null)
-            {
-                Plugin.Logger.LogError("null dummy");
-                return;
-            }
-            Context.Send($"[enemy] {GetEnemyName(dummy as EnemyDummy)} was consumed by a black hole");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))]
-        [HarmonyPostfix]
-        static void PlayerDied(FTKPlayerID _victim, FTKPlayerID _attacker)
-        {
-            FTKPlayerID ph = _victim;
-            string victim = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
-            Context.Send($"{victim} has died");
-        }
-
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerVictory))]
         [HarmonyPrefix]
         static void CombatPlayerVictory()
@@ -122,28 +60,29 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send("you have won the battle!");
         }
 
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))]
+        [HarmonyPostfix]
+        static void PlayerDied(FTKPlayerID _victim, FTKPlayerID _attacker)
+        {
+            FTKPlayerID ph = _victim;
+            string victim = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
+            Context.Send($"{victim} has died");
+        }
+
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerFlee))]
         [HarmonyPostfix]
         static void CombatPlayerFled(FTKPlayerID _fid)
         {
             FTKPlayerID ph = _fid;
             string player = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
-            Context.Send($"[player] {player} has fled the battle");
-        }
-
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.GainSpecificHealth))]
-        [HarmonyPostfix]
-        static void HealthGain(CharacterStats __instance, int _hpGain)
-        {
-            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} health gain {_hpGain}");
-            CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _hpGain, __instance.m_HealthCurrent, __instance.MaxHealth);
+            Context.Send($"{player} has fled the battle");
         }
 
         static readonly Dictionary<string, int> healths = [];
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))]
         [HarmonyPrefix]
-        static void PreHealthChanged(CharacterStats __instance, int _newHp)
+        static void PreHealthChanged(CharacterStats __instance)
         {
             healths[__instance.m_CharacterName] = __instance.m_HealthCurrent;
         }
@@ -154,25 +93,56 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             int old = healths[__instance.m_CharacterName];
             int dif = old - __instance.m_HealthCurrent;
-            dmgTakenString.AppendLine($"{__instance.m_CharacterName} took {dif} damage (health {__instance.GetHealthDisplayString()})");
+            CombatEvents.PlayerHealthChange(__instance.m_CharacterOverworld, dif);
 
             // DummyDamageInfo dmg = __instance.m_CharacterOverworld.m_CurrentDummy.m_DamageInfo;
             // int dif = dmg.m_Damage;
-            EncounterSession.Instance.StartCoroutine(PlayerHealthChangeWait());
-            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
         }
 
-        static StringBuilder dmgTakenString = new();
-        static bool isWaiting = false;
-
-        static IEnumerator PlayerHealthChangeWait()
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyFlee))]
+        [HarmonyPostfix]
+        static void EnemyFled(FTKPlayerID _enemyID)
         {
-            if (isWaiting) yield break;
-            isWaiting = true;
+            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_enemyID);
+            if (dummy == null) return;
+            string enemy = CombatUtils.GetEnemyName(dummy as EnemyDummy);
+            Context.Send($"[enemy] {enemy} has fled the battle");
+        }
+
+        static StringBuilder enemyDiedSB = new();
+        static bool isEnemyDeathWait = false;
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))]
+        [HarmonyPostfix]
+        static void EnemyDied(FTKPlayerID _victim, FTKPlayerID _attacker)
+        {
+            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_victim);
+            if (dummy == null) return;
+            enemyDiedSB.AppendLine($"[enemy] {CombatUtils.GetEnemyName(dummy as EnemyDummy)} has died");
+            if (isEnemyDeathWait) return;
+            EncounterSession.Instance.StartCoroutine(EnemyDiedWait());
+        }
+
+        static IEnumerator EnemyDiedWait()
+        {
+            isEnemyDeathWait = true;
             yield return new WaitForEndOfFrame();
-            Context.Send(dmgTakenString.ToString());
-            dmgTakenString = new();
-            isWaiting = false;
+            Context.Send(enemyDiedSB.ToString());
+            enemyDiedSB = new();
+            isEnemyDeathWait = false;
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyBlackHoled))]
+        [HarmonyPostfix]
+        static void CombatEnemyBlackHoled(FTKPlayerID _enemyID)
+        {
+            CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_enemyID);
+            if (dummy == null)
+            {
+                Plugin.Logger.LogError("CombatEnemyBlackHoled null dummy");
+                return;
+            }
+            Context.Send($"[enemy] {CombatUtils.GetEnemyName(dummy as EnemyDummy)} was consumed by a black hole");
         }
 
         static readonly Dictionary<FTKPlayerID, int> enemyHealths = [];
@@ -193,84 +163,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void UpdateEnemyHealthPost(FTKPlayerID _enemyID, int _newHealth)
         {
-            string name = GetEnemyName(EncounterSession.Instance.m_EnemyDummies[_enemyID]);
-            Context.Send($"[enemy] {name} health is {_newHealth}");
+            int oldHealth = enemyHealths[_enemyID];
+            int dif = oldHealth - _newHealth;
+            string name = CombatUtils.GetEnemyName(EncounterSession.Instance.m_EnemyDummies[_enemyID]);
+            if (dif > 0)
+            {
+                enemySb.AppendLine($"[enemy] {name} took {dif} damage (health {_newHealth})");
+            }
+            else
+            {
+                enemySb.AppendLine($"[enemy] {name} healed {dif} (health {_newHealth})");
+            }
+            if (isWaitingEnemyHealth) return;
             EncounterSession.Instance.StartCoroutine(Wait());
         }
 
         static IEnumerator Wait()
         {
-            if (isWaitingEnemyHealth) yield break;
             isWaitingEnemyHealth = true;
             yield return new WaitForEndOfFrame();
             Context.Send(enemySb.ToString());
             enemySb = new();
             isWaitingEnemyHealth = false;
-        }
-
-        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.GainSpecificHealth))]
-        [HarmonyPrefix]
-        static void EnemyHealthGainPre(EnemyDummy __instance, int _gain)
-        {
-            enemyHealths[__instance.FID] = __instance.m_CurrentHealth;
-            enemySb.Append($"[enemy] {GetEnemyName(__instance)} gained {_gain} health");
-            Plugin.Logger.LogWarning("pre_EnemyDummy.GainSpecificHealth " + _gain);
-            // this.m_CurrentHealth = Mathf.Clamp(this.m_CurrentHealth + _gain, 0, this.m_EnemyCombat.GetHealthTotal());
-            // EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
-        }
-
-        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.GainSpecificHealth))]
-        [HarmonyPostfix]
-        static void EnemyHealthGainPost(EnemyDummy __instance, int _gain)
-        {
-            Plugin.Logger.LogWarning("post_EnemyDummy.GainSpecificHealth " + _gain);
-            int _old = enemyHealths[__instance.FID];
-            int _dif = _old - __instance.m_CurrentHealth;
-            string _name = GetEnemyName(__instance);
-            Context.Send($"[enemy] {_name} healed {_dif} (health {__instance.m_CurrentHealth})");
-        }
-
-        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.TakeSecondaryDamage))] // does not call Gain, calls EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
-        [HarmonyPrefix]
-        static void EnemySecondDmgPre(EnemyDummy __instance, int _dmg)
-        {
-            enemyHealths[__instance.FID] = __instance.m_CurrentHealth;
-            enemySb.Append($"[enemy] {GetEnemyName(__instance)} took {_dmg} damage");
-        }
-
-        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.TakeSecondaryDamage))]
-        [HarmonyPostfix]
-        static void EnemySecondDmgPost(EnemyDummy __instance, int _dmg)
-        {
-            int _old = enemyHealths[__instance.FID];
-            int _dif = _old - __instance.m_CurrentHealth;
-            string _name = GetEnemyName(__instance);
-            Context.Send($"[enemy] {_name} took {_dif} damage (health {__instance.m_CurrentHealth})");
-        }
-
-        static CharacterDummy GetDummy(FTKPlayerID _id)
-        {
-            // EnemyDummy attacker = EncounterSession.Instance.m_EnemyDummies.TryGetValue(dmg.m_AttackerID, out attacker) ? attacker : null;
-            foreach (KeyValuePair<FTKPlayerID, CharacterDummy> dummy in EncounterSession.Instance.m_Dummies)
-            {
-                if (dummy.Key == _id)
-                {
-                    return dummy.Value;
-                }
-            }
-            return null;
-        }
-
-        static string GetEnemyName(EnemyDummy _dummy)
-        {
-            if (!uiEnemyHUD.Instance.m_EnemyHudDictionary.ContainsKey(_dummy))
-            {
-                Plugin.Logger.LogError($"invalid dummy ui {_dummy?.m_EnemyCombat?.GetEnemyDisplay()}");
-                return "";
-            }
-            uiEachEnemyHud hud = uiEnemyHUD.Instance.m_EnemyHudDictionary[_dummy];
-            string name = hud.m_EnemyNameDisplay.text;
-            return StringReplace.ReplaceNewLineSpace(name);
         }
 
 #region action window

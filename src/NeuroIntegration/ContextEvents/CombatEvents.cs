@@ -10,16 +10,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static StringBuilder dmgTakenString = new();
         static bool waiting = false;
 
-        public static void OnDamageTaken(CharacterOverworld character, int damage, int currentHealth, int maxHealth)
+        public static void PlayerHealthChange(CharacterOverworld character, int change)
         {
             Plugin.Logger.LogWarning("dummy: " + character.GetCurrentDummy());
-            if (damage > 0)
+            if (change > 0)
             {
-                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} took {damage} damage (health: {currentHealth}/{maxHealth})");
+                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} took {change} damage (health {character.m_CharacterStats.GetHealthDisplayString()})");
             }
-            else if (damage < 0)
+            else if (change < 0)
             {
-                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} healed {damage} (health: {currentHealth}/{maxHealth})");
+                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} healed {change} (health {character.m_CharacterStats.GetHealthDisplayString()})");
             }
             if (waiting) return;
             GameLogic.Instance.StartCoroutine(Wait());
