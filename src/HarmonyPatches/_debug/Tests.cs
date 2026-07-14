@@ -270,6 +270,37 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Plugin.Logger.LogWarning("UNKNOWN_loc_display_ShowSubMenu");
         }
+
+
+        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToDodge))]
+        [HarmonyPostfix]
+        static void Dodge(CharacterDummy __instance)
+        {
+            Plugin.Logger.LogWarning("CharacterDummy.RespondToDodge");
+            if (__instance.m_CharacterOverworld)
+            {
+                Plugin.Logger.LogWarning("player dodge");
+            }
+            else
+            {
+                Plugin.Logger.LogWarning("enemy dodge");
+            }
+        }
+
+        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToHit))]
+        [HarmonyPostfix]
+        static void Hit(CharacterDummy __instance)
+        {
+            Plugin.Logger.LogWarning("CharacterDummy.RespondToHit");
+            if (__instance.m_CharacterOverworld)
+            {
+                Plugin.Logger.LogWarning("player hit");
+            }
+            else
+            {
+                Plugin.Logger.LogWarning("enemy hit");
+            }
+        }
         
         
     }

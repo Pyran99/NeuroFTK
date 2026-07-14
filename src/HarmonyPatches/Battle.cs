@@ -17,11 +17,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Battle
     {
+
         static ActionWindow window;
         static uiBattleStanceButtons StanceBtnInstance;
         static List<uiBattleStanceButtons.ProfValues> m_Proficiencies = [];
         static Dictionary<string, uiBattleButton> offense = [];
         static Dictionary<string, uiBattleButton> defense = [];
+        static readonly Dictionary<string, int> playerHealths = [];
+        static StringBuilder dmgTakenString = new();
+        static bool isHealthChangeWait = false;
+
+        #region Player
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Initialize))]
         [HarmonyPostfix]
@@ -78,25 +84,81 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"{player} has fled the battle");
         }
 
-        static readonly Dictionary<string, int> healths = [];
-
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))]
         [HarmonyPrefix]
         static void PreHealthChanged(CharacterStats __instance)
         {
-            healths[__instance.m_CharacterName] = __instance.m_HealthCurrent;
+            playerHealths[__instance.m_CharacterName] = __instance.m_HealthCurrent;
         }
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))] // player dmg taken // secondarydmg calls rpc directly | players only
         [HarmonyPostfix]
         static void PostHealthChanged(CharacterStats __instance)
         {
-            int old = healths[__instance.m_CharacterName];
+            int old = playerHealths[__instance.m_CharacterName];
             int dif = old - __instance.m_HealthCurrent;
-            CombatEvents.PlayerHealthChange(__instance.m_CharacterOverworld, dif);
+            PlayerHealthChange(__instance.m_CharacterOverworld, dif);
 
             // DummyDamageInfo dmg = __instance.m_CharacterOverworld.m_CurrentDummy.m_DamageInfo;
             // int dif = dmg.m_Damage;
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))]
+        [HarmonyPostfix]
+        static void PlayerLeveled(CharacterStats __instance)
+        {
+            string name = __instance.m_CharacterName;
+            int level = __instance.m_PlayerLevel;
+            playerHealths[name] = __instance.m_HealthCurrent;
+            string ctx = $"{name} leveled up to {level}! health {__instance.GetHealthDisplayString()}";
+            Context.Send(ctx);
+        }
+
+        static void PlayerHealthChange(CharacterOverworld character, int change)
+        {
+            if (change >= 0)
+            {
+                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} took {change} damage (health {character.m_CharacterStats.GetHealthDisplayString()})");
+            }
+            else if (change < 0)
+            {
+                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} healed {-change} (health {character.m_CharacterStats.GetHealthDisplayString()})");
+            }
+            if (isHealthChangeWait) return;
+            GameLogic.Instance.StartCoroutine(PlayerHealthWait());
+        }
+
+        static IEnumerator PlayerHealthWait()
+        {
+            isHealthChangeWait = true;
+            yield return new WaitForEndOfFrame();
+            Context.Send(dmgTakenString.ToString());
+            dmgTakenString = new();
+            isHealthChangeWait = false;
+        }
+
+
+        #endregion
+
+
+
+        #region Enemy
+
+        static readonly Dictionary<FTKPlayerID, int> enemyHealths = [];
+        static bool isWaitingEnemyHealth = false;
+        static StringBuilder enemySb = new();
+
+        static StringBuilder enemyDiedSB = new();
+        static bool isEnemyDeathWait = false;
+
+        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.InitEnemyDummiesForCombat))]
+        [HarmonyPostfix]
+        static void InitEnemyDummies()
+        {
+            foreach (KeyValuePair<FTKPlayerID, EnemyDummy> dummy in EncounterSession.Instance.m_EnemyDummies)
+            {
+                enemyHealths[dummy.Key] = dummy.Value.m_CurrentHealth;
+            }
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyFlee))]
@@ -109,9 +171,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"[enemy] {enemy} has fled the battle");
         }
 
-        static StringBuilder enemyDiedSB = new();
-        static bool isEnemyDeathWait = false;
-
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))]
         [HarmonyPostfix]
         static void EnemyDied(FTKPlayerID _victim, FTKPlayerID _attacker)
@@ -121,15 +180,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             enemyDiedSB.AppendLine($"[enemy] {CombatUtils.GetEnemyName(dummy as EnemyDummy)} has died");
             if (isEnemyDeathWait) return;
             EncounterSession.Instance.StartCoroutine(EnemyDiedWait());
-        }
-
-        static IEnumerator EnemyDiedWait()
-        {
-            isEnemyDeathWait = true;
-            yield return new WaitForEndOfFrame();
-            Context.Send(enemyDiedSB.ToString());
-            enemyDiedSB = new();
-            isEnemyDeathWait = false;
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyBlackHoled))]
@@ -143,20 +193,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             Context.Send($"[enemy] {CombatUtils.GetEnemyName(dummy as EnemyDummy)} was consumed by a black hole");
-        }
-
-        static readonly Dictionary<FTKPlayerID, int> enemyHealths = [];
-        static bool isWaitingEnemyHealth = false;
-        static StringBuilder enemySb = new();
-
-        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.InitEnemyDummiesForCombat))]
-        [HarmonyPostfix]
-        static void InitEnemyDummies()
-        {
-            foreach (KeyValuePair<FTKPlayerID, EnemyDummy> dummy in EncounterSession.Instance.m_EnemyDummies)
-            {
-                enemyHealths[dummy.Key] = dummy.Value.m_CurrentHealth;
-            }
         }
 
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.UpdateEnemyHealthRPC))]
@@ -175,10 +211,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 enemySb.AppendLine($"[enemy] {name} healed {dif} (health {_newHealth})");
             }
             if (isWaitingEnemyHealth) return;
-            EncounterSession.Instance.StartCoroutine(Wait());
+            EncounterSession.Instance.StartCoroutine(EnemyHealthWait());
         }
 
-        static IEnumerator Wait()
+        static IEnumerator EnemyDiedWait()
+        {
+            isEnemyDeathWait = true;
+            yield return new WaitForEndOfFrame();
+            Context.Send(enemyDiedSB.ToString());
+            enemyDiedSB = new();
+            isEnemyDeathWait = false;
+        }
+
+        static IEnumerator EnemyHealthWait()
         {
             isWaitingEnemyHealth = true;
             yield return new WaitForEndOfFrame();
@@ -187,9 +232,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isWaitingEnemyHealth = false;
         }
 
-#region action window
 
-        static List<INeuroAction> actions = [];
+        #endregion
+
+
+
+        #region action window
+
+        static readonly List<INeuroAction> actions = [];
         public static INeuroAction temp;
 
         static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
@@ -207,13 +257,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string GetContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             actions.Clear();
-            string ctx = "[your attacks]";
+            StringBuilder sb = new();
+            sb.Append("[your attacks]");
             if (offense.Count > 0)
             {
                 foreach (string key in offense.Keys)
                 {
                     var data = GetActionDetails(offense[key], _proficiencies);
-                    ctx += AddAttackContext(data);
+                    sb.Append(AddAttackContext(data));
                 }
                 actions.Add(new CombatAttackAction(offense));
             }
@@ -222,36 +273,36 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (string key in defense.Keys)
                 {
                     var data = GetActionDetails(defense[key], _proficiencies);
-                    ctx += AddAttackContext(data);
+                    sb.Append(AddAttackContext(data));
                 }
                 actions.Add(new CombatFriendlyAction(defense));
             }
             if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.debug_mode)
             {
-                ctx += HandleBtnContext(_instance.m_FleeButton, _proficiencies);
+                sb.Append(HandleBtnContext(_instance.m_FleeButton, _proficiencies));
                 actions.Add(new CombatFleeAction(_instance.m_FleeButton));
             } 
             if (CanUseBtn(_instance.m_ReviveButton))
             {
-                ctx += HandleBtnContext(_instance.m_ReviveButton, _proficiencies, false);
+                sb.Append(HandleBtnContext(_instance.m_ReviveButton, _proficiencies, false));
                 actions.Add(new CombatReviveAction(_instance.m_ReviveButton));
             }
             if (CanUseBtn(_instance.m_ShieldTauntButton))
             {
-                ctx += HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies);
+                sb.Append(HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
                 actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
             if (CanUseBtn(_instance.m_EquipWeaponButton) && !GlobalConfig.debug_mode)
             {
-                ctx += HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false);
+                sb.Append(HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
                 actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));
             }
             if (CanUseBtn(_instance.m_PartyHealButton))
             {
-                ctx += HandleBtnContext(_instance.m_PartyHealButton, _proficiencies, false);
+                sb.Append(HandleBtnContext(_instance.m_PartyHealButton, _proficiencies, false));
                 actions.Add(new CombatPartyHealAction(_instance.m_PartyHealButton));
             }
-            return ctx;
+            return sb.ToString();
         }
 
         static bool CanUseBtn(uiBattleButton btn)
@@ -542,22 +593,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return context;
         }
 
-        // [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.DisplayBattleActionInfo))] // spam while mouse down enemy
-        // [HarmonyPostfix]
-        // static void Test11(uiBattleStanceButtons __instance, bool _on)
-        // {
-        //     if (!_on) return;
-        //     FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(__instance.CombatCow.m_WeaponID);
-        //     FTK_weaponStats2.DamageType dmgType = entry._dmgtype;
-        //     uiBattleButtonInfoPanel info = __instance.m_InfoPanel;
-        //     string type = dmgType == FTK_weaponStats2.DamageType.physical ? FTKHub.Localized<TextMenu>("STR_battleButtonsPhysDmg") : FTKHub.Localized<TextMenu>("STR_battleButtonsMagDmg");
-        //     string dmg = info.m_DamageValue.text;
-        //     string desc = info.m_Description[0]?.text ?? "null";
-        //     string desc2 = info.m_Description[1]?.text ?? "null";
-        //     Plugin.Logger.LogMessage($"DisplayBattleActionInfo: value: {dmg}; dmg title:{type}; desc:{desc} || {desc2}");
-        // }
-
-#endregion
+        #endregion
 
     }
 }

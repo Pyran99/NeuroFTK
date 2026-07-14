@@ -346,6 +346,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateActionWindow()
         {
+            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             GetQuestData();
             List<INeuroAction> actions = [];
             string ctx = GetTileContext(tiles);
