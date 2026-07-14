@@ -32,10 +32,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (!cow.Value.m_IsAlive) continue;
                 CharacterStats stats = cow.Value.m_CharacterOverworld.m_CharacterStats;
-                string name = $"{stats.m_CharacterName} (lvl {stats.m_PlayerLevel})";
+                string name = $"{stats.m_CharacterName}";
+                string lvl = $"{stats.m_PlayerLevel}";
                 string health = $"{stats.GetHealthDisplayString()}";
                 string coherent = cow.Value.IsCoherent() ? "" : "stunned";
-                sb.AppendLine($"{name} (health {health}) {coherent}.");
+                sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}.");
             }
             Context.Send(sb.ToString());
         }

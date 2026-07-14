@@ -152,87 +152,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PostHealthChanged(CharacterStats __instance)
         {
-            // if attacked by enemy
             int old = healths[__instance.m_CharacterName];
             int dif = old - __instance.m_HealthCurrent;
-            dmgTakenString.AppendLine($"{__instance.m_CharacterName} (health {__instance.GetHealthDisplayString()}) took {dif} damage");
-            // DummyDamageInfo atk = __instance.m_CharacterOverworld.m_CurrentDummy.m_AttackInfo; // do attack? would not be relevant here
-            DummyDamageInfo dmg = __instance.m_CharacterOverworld.m_CurrentDummy.m_DamageInfo; // receive hit?
-            if (dmg != null)
-            {
-                CharacterDummy attacker = null;
-                CharacterDummy victim = null;
-                foreach (KeyValuePair<FTKPlayerID, CharacterDummy> dummy in EncounterSession.Instance.m_Dummies)
-                {
-                    if (dmg.m_AttackerID == dummy.Key)
-                    {
-                        if ((bool)dummy.Value.m_CharacterOverworld)
-                        {
-                            Plugin.Logger.LogWarning("attacker is " + dummy.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
-                            attacker = dummy.Value;
-                        }
-                        else
-                        {
-                            EnemyDummy dummy1 = (EnemyDummy)dummy.Value;
-                            Plugin.Logger.LogWarning("attacker is " + dummy1.m_EnemyCombat.GetEnemyDisplay());
-                            attacker = dummy1;
-                        }
-                    }
-                    else if (dmg.m_VictimID == dummy.Key)
-                    {
-                        if ((bool)dummy.Value.m_CharacterOverworld)
-                        {
-                            Plugin.Logger.LogWarning("victim is " + dummy.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
-                            victim = dummy.Value;
-                        }
-                        else
-                        {
-                            EnemyDummy dummy1 = (EnemyDummy)dummy.Value;
-                            Plugin.Logger.LogWarning("victim is " + dummy1.m_EnemyCombat.GetEnemyDisplay());
-                            victim = dummy1;
-                        }
-                    }
-                }
-                Plugin.Logger.LogWarning("dmg attacker: " + attacker);
-                Plugin.Logger.LogWarning("victim: " + victim);
-                Plugin.Logger.LogWarning("dmg: " + dmg.m_Damage);
-                Plugin.Logger.LogWarning("new health: " + dmg.m_NewHealth);
-                // if (CharacterDummy.CharacterOverworld) => 2100
-                // this.m_CharacterOverworld.m_CharacterStats.SetSpecificHealthRPC(this.m_DamageInfo.m_NewHealth);
-                // EncounterSessionMC.Instance.RPC("CombatPlayerDie", new object[]
-                // {
-                // 	this.m_CharacterOverworld.m_FTKPlayerID,
-                // 	this.m_DamageInfo.m_AttackerID
-                // });
+            dmgTakenString.AppendLine($"{__instance.m_CharacterName} took {dif} damage (health {__instance.GetHealthDisplayString()})");
 
-                // else
-                // {
-                    // EnemyDummy enemyDummy = (EnemyDummy)this;
-                    // EncounterSession.Instance.UpdateEnemyHealth(enemyDummy.FID, this.m_DamageInfo.m_NewHealth);
-                    
-                // }
-
-				// if (this.m_DamageInfo.m_Damage >= 100)
-				// {
-				// 	global::StatsAchievements.StatsAchievements.TryPlayerAchievementSetAchieved(FTK_achievement.ID.ACH_DAMAGE_ATTACK_T1, true);
-				// }
-            }
+            // DummyDamageInfo dmg = __instance.m_CharacterOverworld.m_CurrentDummy.m_DamageInfo;
+            // int dif = dmg.m_Damage;
             EncounterSession.Instance.StartCoroutine(PlayerHealthChangeWait());
-            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, 0, __instance.m_HealthCurrent, __instance.MaxHealth);
-            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
             // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
-        }
-
-        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToHit))]
-        [HarmonyPostfix]
-        static void RespondToHit(CharacterDummy __instance)
-        {
-            if (__instance is EnemyDummy)
-            {
-                Plugin.Logger.LogWarning("enemy dummy RespondToHit");
-            }
-            Plugin.Logger.LogWarning($"{__instance.m_CharacterOverworld?.m_CharacterStats.m_CharacterName} RespondToHit from {__instance.m_DamageInfo.m_AttackerID}");
-            _ = __instance.m_DamageInfo.m_AttackerID;
         }
 
         static StringBuilder dmgTakenString = new();
@@ -248,36 +175,90 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isWaiting = false;
         }
 
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TakeSecondaryDamageCombat))]
-        [HarmonyPrefix]
-        static void HealthChanged4(CharacterStats __instance, int _dmg)
+        static readonly Dictionary<FTKPlayerID, int> enemyHealths = [];
+        static bool isWaitingEnemyHealth = false;
+        static StringBuilder enemySb = new();
+
+        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.InitEnemyDummiesForCombat))]
+        [HarmonyPostfix]
+        static void InitEnemyDummies()
         {
-            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} second dmg {_dmg}");
-            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
-            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
+            foreach (KeyValuePair<FTKPlayerID, EnemyDummy> dummy in EncounterSession.Instance.m_EnemyDummies)
+            {
+                enemyHealths[dummy.Key] = dummy.Value.m_CurrentHealth;
+            }
         }
 
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TakeSecondaryDamageNonCombatRPC))]
-        [HarmonyPrefix]
-        static void HealthChanged5(CharacterStats __instance, int _dmg)
+        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.UpdateEnemyHealthRPC))]
+        [HarmonyPostfix]
+        static void UpdateEnemyHealthPost(FTKPlayerID _enemyID, int _newHealth)
         {
-            Plugin.Logger.LogWarning($"{__instance.m_CharacterName} second dmg rpc {_dmg}");
-            // int _dmg = Mathf.Clamp(newHp, 0, __instance.MaxHealth) - __instance.m_HealthCurrent;
-            // CombatEvents.OnDamageTaken(__instance.m_CharacterOverworld, _dmg, __instance.m_HealthCurrent, __instance.MaxHealth);
+            string name = GetEnemyName(EncounterSession.Instance.m_EnemyDummies[_enemyID]);
+            Context.Send($"[enemy] {name} health is {_newHealth}");
+            EncounterSession.Instance.StartCoroutine(Wait());
+        }
+
+        static IEnumerator Wait()
+        {
+            if (isWaitingEnemyHealth) yield break;
+            isWaitingEnemyHealth = true;
+            yield return new WaitForEndOfFrame();
+            Context.Send(enemySb.ToString());
+            enemySb = new();
+            isWaitingEnemyHealth = false;
+        }
+
+        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.GainSpecificHealth))]
+        [HarmonyPrefix]
+        static void EnemyHealthGainPre(EnemyDummy __instance, int _gain)
+        {
+            enemyHealths[__instance.FID] = __instance.m_CurrentHealth;
+            enemySb.Append($"[enemy] {GetEnemyName(__instance)} gained {_gain} health");
+            Plugin.Logger.LogWarning("pre_EnemyDummy.GainSpecificHealth " + _gain);
+            // this.m_CurrentHealth = Mathf.Clamp(this.m_CurrentHealth + _gain, 0, this.m_EnemyCombat.GetHealthTotal());
+            // EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
         }
 
         [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.GainSpecificHealth))]
         [HarmonyPostfix]
-        static void EnemyDmgTaken(EnemyDummy __instance, int _gain)
+        static void EnemyHealthGainPost(EnemyDummy __instance, int _gain)
         {
-		// this.m_CurrentHealth = Mathf.Clamp(this.m_CurrentHealth + _gain, 0, this.m_EnemyCombat.GetHealthTotal());
-		// EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
+            Plugin.Logger.LogWarning("post_EnemyDummy.GainSpecificHealth " + _gain);
+            int _old = enemyHealths[__instance.FID];
+            int _dif = _old - __instance.m_CurrentHealth;
+            string _name = GetEnemyName(__instance);
+            Context.Send($"[enemy] {_name} healed {_dif} (health {__instance.m_CurrentHealth})");
         }
 
         [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.TakeSecondaryDamage))] // does not call Gain, calls EncounterSession.Instance.UpdateEnemyHealthRPC(this.FID, this.m_CurrentHealth);
-        [HarmonyPostfix]
-        static void EnemyDmgTaken2(EnemyDummy __instance, int _dmg, FTKPlayerID _attackerID)
+        [HarmonyPrefix]
+        static void EnemySecondDmgPre(EnemyDummy __instance, int _dmg)
         {
+            enemyHealths[__instance.FID] = __instance.m_CurrentHealth;
+            enemySb.Append($"[enemy] {GetEnemyName(__instance)} took {_dmg} damage");
+        }
+
+        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.TakeSecondaryDamage))]
+        [HarmonyPostfix]
+        static void EnemySecondDmgPost(EnemyDummy __instance, int _dmg)
+        {
+            int _old = enemyHealths[__instance.FID];
+            int _dif = _old - __instance.m_CurrentHealth;
+            string _name = GetEnemyName(__instance);
+            Context.Send($"[enemy] {_name} took {_dif} damage (health {__instance.m_CurrentHealth})");
+        }
+
+        static CharacterDummy GetDummy(FTKPlayerID _id)
+        {
+            // EnemyDummy attacker = EncounterSession.Instance.m_EnemyDummies.TryGetValue(dmg.m_AttackerID, out attacker) ? attacker : null;
+            foreach (KeyValuePair<FTKPlayerID, CharacterDummy> dummy in EncounterSession.Instance.m_Dummies)
+            {
+                if (dummy.Key == _id)
+                {
+                    return dummy.Value;
+                }
+            }
+            return null;
         }
 
         static string GetEnemyName(EnemyDummy _dummy)
