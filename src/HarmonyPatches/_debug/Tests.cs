@@ -98,26 +98,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("uiItemMenu.CheckScroll");
         }
 
-        // [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.OnEncounterSessionEnd))]
-        // [HarmonyPostfix]
-        // static void Test()
-        // {
-        //     Plugin.Logger.LogWarning("1 EncounterSession.OnEncounterSessionEnd");
-        // }
-
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.DungeonMiniEncounterCompleteMC))]
         [HarmonyPostfix]
         static void Test2()
         {
             Plugin.Logger.LogWarning("2 EncounterSessionMC.DungeonMiniEncounterCompleteMC");
         }
-
-        // [HarmonyPatch(typeof(EncounterSessionMC), "FinalEncounterFinished")]
-        // [HarmonyPostfix]
-        // static void Test4()
-        // {
-        //     Plugin.Logger.LogWarning("4 EncounterSessionMC.FinalEncounterFinished");
-        // }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // entered dungeon
         [HarmonyPostfix]
@@ -175,36 +161,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Plugin.Logger.LogMessage("47 DisplayLootItem: " + _item);
         }
-
-        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverMultiQuestMsgPart))]
-        // [HarmonyPostfix]
-        // static void MsgPresenterDeliverQuestPart() // may not be needed with uiPortraitMessageHud.InitializeMessage
-        // {
-        //     Plugin.Logger.LogMessage("MsgPresenterDeliverQuestPart");
-        // }
-
-        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverStartQuestMsgPart))]
-        // [HarmonyPostfix]
-        // static void DeliverStartQuestMsgPart()
-        // {
-        //     Plugin.Logger.LogMessage("DeliverStartQuestMsgPart"); // sent after npc message init
-        // }
-
-        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.DeliverQuestMessagePart))]
-        // [HarmonyPostfix]
-        // static void DeliverQuestMessagePart()
-        // {
-        //     Plugin.Logger.LogMessage("DeliverQuestMessagePart");
-        // }
-
-        // [HarmonyPatch(typeof(MessagePresenter), nameof(MessagePresenter.PresentMessage))]
-        // [HarmonyPatch([typeof(int),typeof(Action),typeof(Action<ContinueFSM, int>),typeof(QuestLogicBase),typeof(GameEventManager.QuestMessageType),typeof(bool)])]
-        // [HarmonyPostfix]
-        // static void PresentMessage()
-        // {
-        //     Plugin.Logger.LogMessage("PresentMessage");
-        // }
-
 
         // quest message
         [HarmonyPatch(typeof(MessagePresenter), "WaitPortraitToClose")]
