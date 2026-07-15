@@ -7,6 +7,7 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using GridEditor;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
 
@@ -47,6 +48,7 @@ public class MainMenu
         int lorePoints = LorePersistence.Instance.GetLore();
         int purchasableItemsCount = GetPurchasableLoreCount();
         Context.Send($"You have {lorePoints} lore points and there are {purchasableItemsCount} items you can afford. These can be used in the lore store to unlock new events, characters, equipment, and cosmetics, if you have enough points, or saved for another time.");
+        // LoggerTest.Instance?.LogMsg($"You have {lorePoints} lore points and there are {purchasableItemsCount} items you can afford. These can be used in the lore store to unlock new events, characters, equipment, and cosmetics, if you have enough points, or saved for another time.");
         return purchasableItemsCount > 0;
     }
 

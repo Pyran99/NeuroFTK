@@ -52,6 +52,10 @@ public class Plugin : BaseUnityPlugin
             GlobalConfig.debug_mode = !GlobalConfig.debug_mode;
             Logger.LogWarning("CHANGED DEBUG MODE TO " + GlobalConfig.debug_mode);
         }
+        if (Input.GetKeyDown(KeyCode.BackQuote))
+        {
+            // LoggerTest.Instance?.ToggleConsole();
+        }
     }
 
     void InitializeHarmony()

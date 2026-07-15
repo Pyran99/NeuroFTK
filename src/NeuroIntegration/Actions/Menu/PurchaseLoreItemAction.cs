@@ -8,6 +8,7 @@ using StartGameFE;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
 using System.Text;
+using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -27,6 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 sb.AppendLine($"[{key}] {StringReplace.ReplaceNewLine(_schemaData[key])}");
             }
             window.SetContext($"(Items and their descriptions you can afford) {sb}");
+            // LoggerTest.Instance?.LogMsg($"(Items and their descriptions you can afford) {sb}");
             window.SetForce(5, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks");
             window.Register();
             return window;
