@@ -52,6 +52,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void BtnsOff()
         {
             Object.Destroy(window);
+            UnregisterDisposableActions();
             m_Proficiencies = [];
         }
 
@@ -59,7 +60,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void CombatPlayerVictory()
         {
-            NeuroActionHandler.UnregisterActions(["send_msg"]);
+            UnregisterDisposableActions();
             if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
             {
                 Plugin.Logger.LogMessage("combat victory overworld skip");
@@ -265,7 +266,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         #region action window
 
         static readonly List<INeuroAction> actions = [];
-        public static INeuroAction temp;
+        static readonly List<INeuroAction> disposableActions = [];
 
         static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
@@ -273,31 +274,45 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             RegisterDisposableActions(cow);
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
-            string ctx = GetContext(_instance, _proficiencies);
+            actions.Clear();
+            string ctx = GetAttackContext(_instance, _proficiencies);
             ctx += GetBeltDetails(cow);
-            window = CombatActions.CreateAction(_instance, ctx, actions);
+            window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
             offense.Clear();
             defense.Clear();
         }
 
         static void RegisterDisposableActions(CharacterOverworld cow)
         {
-            temp = new SillyAction();
             Dictionary<string, FTK_itembase.ID> items = [];
             foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())
             {
                 if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
                 items.Add(ItemData.GetItemName(item), item);
             }
-            INeuroAction temp2 = new UseBeltItemAction(items, cow);
-            NeuroActionHandler.RegisterActions([temp, temp2]);
+            disposableActions.Clear();
+            disposableActions.Add(new SillyAction());
+            if (items.Count > 0)
+            {
+                disposableActions.Add(new UseBeltItemAction(items, cow));
+            }
+            NeuroActionHandler.RegisterActions(disposableActions);
         }
 
-        static string GetBeltDetails(CharacterOverworld cow)
+        static void UnregisterDisposableActions()
+        {
+            if (disposableActions.Count == 0) return;
+            NeuroActionHandler.UnregisterActions(disposableActions);
+            disposableActions.Clear();
+        }
+
+        public static string GetBeltDetails(CharacterOverworld cow)
         {
             StringBuilder sb = new();
-            sb.Append("[quick use items] ");
             List<FTK_itembase.ID> items = cow.m_CharacterStats.GetBeltItems();
+            if (items.Count == 0) return "";
+            sb.AppendLine();
+            sb.Append("[usable belt items] ");
             foreach (FTK_itembase.ID item in items)
             {
                 if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
@@ -306,9 +321,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return sb.ToString();
         }
 
-        static string GetContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
+        static string GetAttackContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
-            actions.Clear();
             StringBuilder sb = new();
             sb.Append("[your attacks] ");
             if (offense.Count > 0)

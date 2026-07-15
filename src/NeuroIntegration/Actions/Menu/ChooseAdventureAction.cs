@@ -18,6 +18,20 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override string Description => "select the adventure to play";
         protected override JsonSchema Schema => GetSchema();
 
+        JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["adventure"],
+                Properties = new()
+                {
+                    ["adventure"] = QJS.Enum(GetAdventureNames()),
+                }
+            };
+            return schema;
+        }
+
         protected override void Execute(string parsedData)
         {
             ConfigureAdventure.NeuroSelectAdventure(instance, parsedData);
@@ -60,20 +74,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             validAdventures = [.. names];
             return names;
-        }
-
-        JsonSchema GetSchema()
-        {
-            JsonSchema schema = new()
-            {
-                Type = JsonSchemaType.Object,
-                Required = ["adventure"],
-                Properties = new()
-                {
-                    ["adventure"] = QJS.Enum(GetAdventureNames()),
-                }
-            };
-            return schema;
         }
     }
 }

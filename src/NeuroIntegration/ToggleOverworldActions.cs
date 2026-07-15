@@ -1,8 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
+using FTKItemName;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -24,7 +26,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         static void DungeonExit()
         {
             Plugin.Logger.LogMessage("dungeon exit");
-            Context.Send("returning to overworld");
+            Context.Send("returning to overworld", true);
         }
 
         // to next room, from popup menu
@@ -58,34 +60,41 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             // string name = Enum.GetName(typeof(uiGameTrackerHUD.GameTrackerMode), _mode);
             // var test = Enum.Parse(typeof(uiGameTrackerHUD.GameTrackerMode), name);
             Plugin.Logger.LogMessage($"game track mode changed to {_mode}"); // game track mode changed to Overworld - Overworld - Overworld
-            // if (_mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
-            // {
-            //     QuickTimerCallback timer = new(EnableOverworldActions, 1000f); // maybe not. is set at end of battle during loot
-            // }
-            // else DisableOverworldActions();
         }
         
-        public static void EnableOverworldActions(bool _override = false)
+        public static void EnableDisposableActions(bool _override = false)
         {
             if (registeredActions.Count > 0 && !_override) return;
-            DisableOverworldActions();
-            NeuroAction queryLocation = new QueryCurrentCOWLocation();
+            DisposeActions();
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            INeuroAction queryLocation = new QueryCurrentCOWLocation();
             registeredActions.Add(queryLocation);
-            NeuroAction queryBeltItems = new QueryBeltItems(GameLogic.Instance.GetCurrentCOW());
+            INeuroAction queryBeltItems = new QueryBeltItems(cow);
             registeredActions.Add(queryBeltItems);
+            Dictionary<string, FTK_itembase.ID> items = [];
+            foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())
+            {
+                if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
+                items.Add(ItemData.GetItemName(item), item);
+            }
+            if (items.Count > 0)
+            {
+                INeuroAction useBeltItem = new UseBeltItemAction(items, cow);
+                registeredActions.Add(useBeltItem);
+            }
             NeuroActionHandler.RegisterActions(registeredActions);
         }
 
-        public static void DisableOverworldActions()
+        public static void DisposeActions()
         {
             NeuroActionHandler.UnregisterActions(registeredActions);
             registeredActions.Clear();
         }
 
-        public static void AppendOverworldAction(NeuroAction action, bool _override = false)
+        public static void AppendOverworldAction(INeuroAction action, bool _override = false)
         {
-            NeuroAction existing = null;
-            foreach (NeuroAction a in registeredActions.Cast<NeuroAction>())
+            INeuroAction existing = null;
+            foreach (INeuroAction a in registeredActions)
             {
                 if (a.Name == action.Name)
                 {
@@ -110,34 +119,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     }
 }
 
-// dungeon entered order
-// dungeon encounter: sin
-// [Info   : Unity Log] Combat: InitiateEncounterSessionRPC
-// [Info   : Unity Log] Combat: InitiateCurrentEncounter
-// [Info   : Unity Log] Combat: StartEncounterSession Dungeon baseCV Enemy
-// [Info   : Unity Log] Encounter: Random Seed - 945920638
-// [Message:Neuro For the King] game track mode changed to Dungeon - Dungeon - Dungeon
-// [Message:Neuro For the King] game track mode changed to Dungeon - Dungeon - Dungeon
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 0
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 0
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 0
-// [Info   : Unity Log] Sending ws message {"command":"actions/unregister","game":"For the King","data":{"action_names":["query_current_location","query_current_location","query_current_location"]}}
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 1
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 1
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 1
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 2
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 2
-// [Info   : Unity Log] Combat: PlayIntroAnim_CR 2
-// [Info   : Unity Log] CameraCut- UpdateEnd [ScrollEnd]
-// [Info   : Unity Log] Combat: CommenceBattle
-// [Info   : Unity Log] Combat: CommenceBattleRPC
-// [Message:Neuro For the King] game track mode changed to Combat - Combat - Combat
-
-
 // battle round finished
 // [Info   : Unity Log] Combat: InitiateEncounterSessionRPC
 // [Info   : Unity Log] Combat: InitiateCurrentEncounter
-
 
 // next area
 // [Info   : Unity Log] Game Round: 1, Stage Percent: 7%, Stage Progression: Tier1, Player Progression: Tier1
@@ -148,13 +132,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 // [Info   : Unity Log] Combat: StartEncounterSession Dungeon  DungeonMiniEncounter
 // [Info   : Unity Log] Encounter: Random Seed - 43250088
 // [Message:Neuro For the King] game track mode changed to Dungeon - Dungeon - Dungeon
-// [Info   : Unity Log] Sending ws message {"command":"actions/unregister","game":"For the King","data":{"action_names":[]}}
 // [Info   : Unity Log] CameraCut- UpdateEnd [ScrollStart]
 // [Message:Neuro For the King] game track mode changed to Dungeon - Dungeon - Dungeon
-// [Info   : Unity Log] Sending ws message {"command":"actions/unregister","game":"For the King","data":{"action_names":[]}}
 // [Info   : Unity Log] CameraCut- UpdateEnd [ScrollEndTrap]
-
-
-// dungeon finished
-// game track mode changed to Overworld - Overworld - Overworld
-// dungeon exit

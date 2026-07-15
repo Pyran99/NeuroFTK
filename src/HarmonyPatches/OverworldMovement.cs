@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
@@ -32,7 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void TurnSkipped(CharacterOverworld _cow)
         {
             Context.Send($"{_cow.m_CharacterStats.m_CharacterName} had their turn skipped");
-            Object.Destroy(window);
+            DisposeActions();
         }
 
         // when movement choice starts
@@ -41,7 +40,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void StartTracking()
         {
             Plugin.Logger.LogWarning("START tracking");
-            ToggleOverworldActions.EnableOverworldActions();
+            ToggleOverworldActions.EnableDisposableActions();
             isTracking = true;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
             QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), Movement.Instance.m_CursorHexRenderer.gameObject);
@@ -56,7 +55,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isTracking = false;
             isSearching = false;
             tiles.Clear();
-            Object.Destroy(window);
+            DisposeActions();
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")]
@@ -82,7 +81,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             tiles.Clear();
             isTracking = false;
             isSearching = false;
-            Object.Destroy(window);
+            DisposeActions();
         }
 
         // when the character stops moving
@@ -90,7 +89,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PlayerStopped(CharacterOverworld __instance)
         {
-            Object.Destroy(window);
+            
         }
 
         // spending focus for more actions
@@ -123,7 +122,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ReturnedToOverworld()
         {
-            ToggleOverworldActions.EnableOverworldActions();
+            ToggleOverworldActions.EnableDisposableActions();
         }
 
         #region end turn procs
@@ -136,6 +135,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
         #endregion
+
+        static void DisposeActions()
+        {
+            Object.Destroy(window);
+            ToggleOverworldActions.DisposeActions();
+        }
+
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
         {

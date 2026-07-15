@@ -36,16 +36,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override ExecutionResult Validate(ActionJData actionData, out FTK_itembase.ID parsedData)
         {
-            Plugin.Logger.LogWarning(actionData.Data);
-            string result = actionData.Data.Value<string>("item");
+            string result = actionData.Data?.Value<string>("item");
             parsedData = items.TryGetValue(result, out parsedData) ? parsedData : FTK_itembase.ID.None;
             if (parsedData == FTK_itembase.ID.None)
             {
-                
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));
             }
-            Plugin.Logger.LogWarning(parsedData);
-            Plugin.devConsole?.PrintToConsole(parsedData.ToString());
             if (!FTKItem.Get(parsedData).CanUse(cow))
             {
                 return ExecutionResult.Failure($"cannot use item {parsedData}: {FTKItem.Get(parsedData).GetCannotUseReason(cow)}");

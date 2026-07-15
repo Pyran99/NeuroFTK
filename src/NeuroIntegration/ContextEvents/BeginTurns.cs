@@ -17,8 +17,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StringBuilder sb = new();
             sb.AppendLine($"[{stats.m_CharacterName}({stats.m_CharacterClass}) turn]");
             sb.AppendLine($"lvl: {stats.m_PlayerLevel}");
-            sb.AppendLine($"xp: {stats.GetXpDisplayString()}");// ({(float)Math.Round(stats.GetXpPercent()*100, 1)}%)");
-            sb.AppendLine($"health: {stats.GetHealthDisplayString()}");// ({(float)Math.Round(stats.GetHealthPercent()*100, 1)}%)");
+            sb.AppendLine($"xp: {stats.GetXpDisplayString()}");
+            sb.AppendLine($"health: {stats.GetHealthDisplayString()}");
             sb.AppendLine($"gold: {stats.m_Gold}");
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(stats.GetPipe());
             sb.AppendLine($"pipe: {FTKHub.Localized<TextItems>(pipe.m_DisplayName)}({(int)stats.GetPipe()}) (upgraded at the market)");

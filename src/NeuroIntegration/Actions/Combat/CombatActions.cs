@@ -14,7 +14,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     {
         static uiBattleStanceButtons instance;
 
-        public static ActionWindow CreateAction(uiBattleStanceButtons _instance, string ctx, List<INeuroAction> actions)
+        public static ActionWindow RegisterCombatActions(uiBattleStanceButtons _instance, string ctx, List<INeuroAction> actions)
         {
             instance = _instance;
             if (actions.Count == 0)

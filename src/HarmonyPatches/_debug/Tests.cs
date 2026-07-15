@@ -110,7 +110,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Test30()
         {
             Plugin.Logger.LogMessage("30 InitiateEncounterSessionRPC");
-            ToggleOverworldActions.DisableOverworldActions();
+            ToggleOverworldActions.DisposeActions();
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateNextEncounter))]
