@@ -23,8 +23,7 @@ namespace Pyran.NeuroFTK.Utils
 
         public static string GetItemName(FTK_itembase.ID _id)
         {
-            FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
-            return itemBase.GetLocalizedName();
+            return FTKHub.Instance.GetItemDisplayName(_id);
         }
 
         public static string GetItemDescription(FTK_itembase.ID _id, bool removeStyling = true, CharacterOverworld _cow = null)
@@ -32,21 +31,12 @@ namespace Pyran.NeuroFTK.Utils
             FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
             string result;
             if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon) result = GetWeaponData(_id);
-            else if (IsEquipmentType(itemBase.m_ObjectType)) result = GetEquipmentData(_id);
+            else if (itemBase.m_Equippable) result = GetEquipmentData(_id);
             else if (FTK_itembase.IsPipeItem(_id)) result = GetPipeData(_id);
             else result = GetOtherData(_id, _cow);
 
             if (removeStyling) result = StringReplace.RemoveStyling(result);
             return result;
-        }
-
-        public static bool IsEquipmentType(FTK_itembase.ObjectType type)
-        {
-            return type switch
-            {
-                FTK_itembase.ObjectType.armor or FTK_itembase.ObjectType.shield or FTK_itembase.ObjectType.helmet or FTK_itembase.ObjectType.boots or FTK_itembase.ObjectType.trinket or FTK_itembase.ObjectType.necklace => true,
-                _ => false,
-            };
         }
 
         /// <summary>

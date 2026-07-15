@@ -13,7 +13,7 @@ namespace Pyran.NeuroFTK
         {
             ActionWindow window = ActionWindow.Create(uiGetQuestMenu.Instance.m_ListRoot.gameObject);
             window.AddAction(new TownQuestBoardAction(_items));
-            window.SetForce(0, "choose a side quest for additional rewards", "you are at a towns quest board");
+            window.SetForce(0, "choose a side quest for additional rewards", "you are at a towns quest board", true);
             window.Register();
             return window;
         }

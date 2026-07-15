@@ -76,7 +76,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             cancel.OnCancelled += CloseServiceWindow;
             window.AddAction(cancel);
             window.SetContext(ctx);
-            window.SetForce(2, "choose a service to purchase", "you are at a town and a service menu has opened");
+            window.SetForce(2, "choose a service to purchase", "you are at a town and a service menu has opened", true);
             window.Register();
         }
 

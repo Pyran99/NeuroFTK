@@ -11,6 +11,7 @@ using Google2u;
 using System.Linq;
 using Pyran.NeuroFTK.GameConfigs;
 using System.Text;
+using FTKItemName;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -109,7 +110,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
         [HarmonyPostfix]
-        static void PlayerLeveled(CharacterStats __instance) //TODO see if worked
+        static void PlayerLeveled(CharacterStats __instance)
         {
 // this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
 // this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
@@ -268,21 +269,48 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCombatCOW();
+            RegisterDisposableActions(cow);
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
             string ctx = GetContext(_instance, _proficiencies);
+            ctx += GetBeltDetails(cow);
             window = CombatActions.CreateAction(_instance, ctx, actions);
             offense.Clear();
             defense.Clear();
+        }
+
+        static void RegisterDisposableActions(CharacterOverworld cow)
+        {
             temp = new SillyAction();
-            NeuroActionHandler.RegisterActions(temp);
+            Dictionary<string, FTK_itembase.ID> items = [];
+            foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())
+            {
+                if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
+                items.Add(ItemData.GetItemName(item), item);
+            }
+            INeuroAction temp2 = new UseBeltItemAction(items, cow);
+            NeuroActionHandler.RegisterActions([temp, temp2]);
+        }
+
+        static string GetBeltDetails(CharacterOverworld cow)
+        {
+            StringBuilder sb = new();
+            sb.Append("[quick use items] ");
+            List<FTK_itembase.ID> items = cow.m_CharacterStats.GetBeltItems();
+            foreach (FTK_itembase.ID item in items)
+            {
+                if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
+                sb.AppendLine($"({ItemData.GetItemName(item)}){ItemData.GetItemDescription(item, true, cow)}");
+            }
+            return sb.ToString();
         }
 
         static string GetContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             actions.Clear();
             StringBuilder sb = new();
-            sb.Append("[your attacks]");
+            sb.Append("[your attacks] ");
             if (offense.Count > 0)
             {
                 foreach (string key in offense.Keys)

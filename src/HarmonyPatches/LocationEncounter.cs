@@ -139,7 +139,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static string GetEncounterContext(string name, string description, string flavor)
         {
-            string encounter = $"[Encounter] {name}: {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}";
+            string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}";
             string _players = "";
             if (players.Count > 0)
             {

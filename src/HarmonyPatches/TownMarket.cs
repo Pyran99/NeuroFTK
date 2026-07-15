@@ -102,14 +102,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CancelAction cancel = new(activeWindow, "close the market");
             cancel.OnCancelled += CloseMenu;
             activeWindow.AddAction(cancel);
-            activeWindow.SetForce(0, "buy/sell items at the market or close the menu if there is nothing you want", "you are at the market");
+            activeWindow.SetForce(0, "buy/sell items at the market or close the menu if there is nothing you want", "you are at the market", true);
             activeWindow.Register();
         }
 
         public static void NeuroDecision(uiItemIcon _item, bool equip)
         {
             bool _equip = equip;
-            if (!ItemData.IsEquipmentType(_item.m_ItemInfo.m_ObjectType)) _equip = false;
+            if (!_item.m_ItemInfo.m_Equippable) _equip = false;
             _item.StartCoroutine(BuyCoroutine(_item, _equip));
         }
 

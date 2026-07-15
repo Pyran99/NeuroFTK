@@ -4,6 +4,7 @@ using Google2u;
 using GridEditor;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -51,7 +52,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (!enemy.Value.m_IsAlive) continue;
                 EnemyDummy _dummy = enemy.Value;
                 FTK_enemyCombat _enemy = _dummy.GetEnemyInfo().m_EnemyCombat;
-                string name = $"{_enemy.GetEnemyDisplay()}";
+                string name = $"{CombatUtils.GetEnemyName(_dummy)}";
                 string lvl = $"{_enemy.GetEnemyLevelDisplay()}";
                 string health = $"{_dummy.GetEnemyInfo().GetCurrentHealth()}";
                 string coherent = _dummy.IsCoherent() ? "" : "stunned";

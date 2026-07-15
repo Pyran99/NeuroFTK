@@ -17,7 +17,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (actions.Count == 0) Plugin.Logger.LogError("no movement actions to register");
             window.SetContext(ctx);
             foreach (INeuroAction action in actions) window.AddAction(action);
-            window.SetForce(0, "choose an action for this movement turn", "you have rolled for movement");
+            window.SetForce(0, "choose an action for this movement turn", "you have rolled for movement", true);
             window.Register();
             return window;
         }

@@ -28,7 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 window.AddAction(action);
             }
-            window.SetForce(0, "choose an action", "you are in combat");
+            window.SetForce(5, "choose an action", "you are in combat", true);
             window.Register();
             return window;
         }

@@ -26,6 +26,7 @@ public class Plugin : BaseUnityPlugin
     /// toggle message spam from update related calls
     /// </summary>
     public static bool doSpam = false;
+    public static DeveloperConsole devConsole = null;
 
 
     private void Awake()
@@ -38,6 +39,11 @@ public class Plugin : BaseUnityPlugin
         SetCustomHouseRules.LoadCustomRules();
         SetSettingsOptions.InitializeCustomSettings();
         NeuroSdkSetup.Initialize("For the King");
+        //TODO testing console
+        Logger.LogWarning("1");
+        devConsole = Instantiate(new DeveloperConsole(), Instance.transform);
+        Logger.LogWarning("dev console = " + devConsole);
+        devConsole?.gameObject?.SetActive(false);
     }
 
     private void Update() {
@@ -55,6 +61,7 @@ public class Plugin : BaseUnityPlugin
         if (Input.GetKeyDown(KeyCode.BackQuote))
         {
             // LoggerTest.Instance?.ToggleConsole();
+            devConsole.gameObject.SetActive(!devConsole.gameObject.activeSelf);
         }
     }
 

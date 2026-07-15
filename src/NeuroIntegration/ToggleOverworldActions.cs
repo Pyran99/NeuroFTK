@@ -71,6 +71,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             DisableOverworldActions();
             NeuroAction queryLocation = new QueryCurrentCOWLocation();
             registeredActions.Add(queryLocation);
+            NeuroAction queryBeltItems = new QueryBeltItems(GameLogic.Instance.GetCurrentCOW());
+            registeredActions.Add(queryBeltItems);
             NeuroActionHandler.RegisterActions(registeredActions);
         }
 
