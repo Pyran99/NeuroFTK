@@ -271,35 +271,58 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("UNKNOWN_loc_display_ShowSubMenu");
         }
 
+        // // both responds are called?
+        // [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToDodge))]
+        // [HarmonyPostfix]
+        // static void Dodge(CharacterDummy __instance)
+        // {
+        //     Plugin.Logger.LogWarning("CharacterDummy.RespondToDodge");
+        //     if (__instance.m_CharacterOverworld)
+        //     {
+        //         Plugin.Logger.LogWarning("player dodge " + AvoidResponse(__instance.m_DamageInfo.m_AttackResponse));
+        //     }
+        //     else
+        //     {
+        //         Plugin.Logger.LogWarning("enemy dodge " + AvoidResponse(__instance.m_DamageInfo.m_AttackResponse));
+        //     }
+        // }
 
-        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToDodge))]
-        [HarmonyPostfix]
-        static void Dodge(CharacterDummy __instance)
-        {
-            Plugin.Logger.LogWarning("CharacterDummy.RespondToDodge");
-            if (__instance.m_CharacterOverworld)
-            {
-                Plugin.Logger.LogWarning("player dodge");
-            }
-            else
-            {
-                Plugin.Logger.LogWarning("enemy dodge");
-            }
-        }
+        // [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToHit))]
+        // [HarmonyPostfix]
+        // static void Hit(CharacterDummy __instance)
+        // {
+        //     Plugin.Logger.LogWarning("CharacterDummy.RespondToHit");
+        //     if (__instance.m_CharacterOverworld)
+        //     {
+        //         Plugin.Logger.LogWarning("player hit " + AvoidResponse(__instance.m_DamageInfo.m_AttackResponse));
+        //     }
+        //     else
+        //     {
+        //         Plugin.Logger.LogWarning("enemy hit " + AvoidResponse(__instance.m_DamageInfo.m_AttackResponse));
+        //     }
+        // }
 
-        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RespondToHit))]
-        [HarmonyPostfix]
-        static void Hit(CharacterDummy __instance)
+
+        static string AvoidResponse(CharacterDummy.AttackResponse response)
         {
-            Plugin.Logger.LogWarning("CharacterDummy.RespondToHit");
-            if (__instance.m_CharacterOverworld)
+            return response switch
             {
-                Plugin.Logger.LogWarning("player hit");
-            }
-            else
-            {
-                Plugin.Logger.LogWarning("enemy hit");
-            }
+                CharacterDummy.AttackResponse.BlackHole => "BlackHole",
+                CharacterDummy.AttackResponse.Block => "Block",
+                CharacterDummy.AttackResponse.Dodge => "Dodge",
+                CharacterDummy.AttackResponse.HarmlessAttack => "HarmlessAttack",
+                CharacterDummy.AttackResponse.MagicBlock => "MagicBlock",
+                CharacterDummy.AttackResponse.Petrify => "Petrify",
+                CharacterDummy.AttackResponse.PetrifyBreak => "PetrifyBreak",
+                CharacterDummy.AttackResponse.PetrifyBreakSanctum => "PetrifyBreakSanctum",
+                CharacterDummy.AttackResponse.Protect => "Protect",
+                CharacterDummy.AttackResponse.Reflect => "Reflect",
+                CharacterDummy.AttackResponse.ResistDeath => "ResistDeath",
+                CharacterDummy.AttackResponse.ResistDeathSanctum => "ResistDeathSanctum",
+                CharacterDummy.AttackResponse.Shield => "Shield",
+                CharacterDummy.AttackResponse.SteadFast => "Steadfast",
+                _ => "",
+            };
         }
         
         

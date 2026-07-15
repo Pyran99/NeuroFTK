@@ -58,6 +58,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void CombatPlayerVictory()
         {
+            NeuroActionHandler.UnregisterActions(["send_msg"]);
             if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
             {
                 Plugin.Logger.LogMessage("combat victory overworld skip");
@@ -103,15 +104,38 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // int dif = dmg.m_Damage;
         }
 
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))]
+        static Dictionary<string, string> levelUps = [];
+        static bool isLevelUpWait = false;
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
         [HarmonyPostfix]
-        static void PlayerLeveled(CharacterStats __instance)
+        static void PlayerLeveled(CharacterStats __instance) //TODO see if worked
         {
+// this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
+// this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
+// this.TallyCharacterHealth(this.m_PlayerLevel, true, false);
             string name = __instance.m_CharacterName;
             int level = __instance.m_PlayerLevel;
             playerHealths[name] = __instance.m_HealthCurrent;
             string ctx = $"{name} leveled up to {level}! health {__instance.GetHealthDisplayString()}";
-            Context.Send(ctx);
+            levelUps[name] = ctx;
+            // Context.Send(ctx);
+            if (isLevelUpWait) return;
+            GameLogic.Instance.StartCoroutine(LevelUpWait());
+        }
+        
+        static IEnumerator LevelUpWait()
+        {
+            isLevelUpWait = true;
+            yield return new WaitForEndOfFrame();
+            StringBuilder sb = new();
+            foreach (KeyValuePair<string, string> kvp in levelUps)
+            {
+                sb.AppendLine(kvp.Value);
+            }
+            Context.Send(sb.ToString());
+            levelUps = [];
+            isLevelUpWait = false;
         }
 
         static void PlayerHealthChange(CharacterOverworld character, int change)
