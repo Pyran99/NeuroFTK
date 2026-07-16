@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using Google2u;
 using GridEditor;
+using NeuroSdk.Internal;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
@@ -13,6 +14,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CtxOverworldTurnBeginStats(CharacterOverworld _cow)
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            SerializeTest test = SerializeTest.Calculate(_cow);
+            Plugin.Logger.LogWarning($"Serialize test char name = {test.Name}");
             CharacterStats stats = _cow.m_CharacterStats;
             StringBuilder sb = new();
             sb.AppendLine($"[{stats.m_CharacterName}({stats.m_CharacterClass}) turn]");
@@ -22,7 +25,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             sb.AppendLine($"gold: {stats.m_Gold}");
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(stats.GetPipe());
             sb.AppendLine($"pipe: {FTKHub.Localized<TextItems>(pipe.m_DisplayName)}({(int)stats.GetPipe()}) (upgraded at the market)");
-            Context.Send(sb.ToString());
+            // Context.Send(sb.ToString());
+            string json = $"[your character turn] {Jason.Serialize(test)}\n";
+            Plugin.Logger.LogWarning(json);
+            Context.Send(json);
         }
 
         public static void CtxCombatTurnBeginPlayer()
