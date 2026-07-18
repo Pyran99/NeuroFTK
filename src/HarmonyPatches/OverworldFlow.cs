@@ -25,7 +25,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static StringBuilder sbQuest = new();
         public static readonly Dictionary<string, HexLand> hexPositions = [];
 
-        public static bool isFirstAction = true;
+        public static bool isFirstAction = false;
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -36,20 +36,24 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             DisposeActions();
         }
 
-        [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")]
+        [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")] // not called when loading game
         [HarmonyPostfix]
-        static IEnumerator BeginTurn(CharacterOverworld __instance, IEnumerator __result, bool _isLoadGame)
+        static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
-            isFirstAction = true;
+            Plugin.Logger.LogWarning("begin turn: load = " + _isLoadGame);
+            isFirstAction = _isLoadGame;
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
             List<FTK_itembase.ID> beltItems = ItemData.GetUsableBeltItems(__instance);
             Dictionary<string, FTK_itembase.ID> items = [];
+            StringBuilder beltCtx = new();
+            beltCtx.Append("[usable belt items] ");
             foreach (FTK_itembase.ID item in beltItems)
             {
                 items.Add(ItemData.GetItemName(item), item);
+                beltCtx.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, __instance)}");
             }
-            QuickTimerCallback timer = new(() => OWBeginTurnAction.CreateWindow(items), __instance.gameObject, 2.0f);
+            QuickTimerCallback timer = new(() => OWBeginTurnAction.CreateWindow(items, beltCtx.ToString()), __instance.gameObject, 2.0f);
 
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
@@ -60,9 +64,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
-            Plugin.Logger.LogWarning("START tracking");
-            if (isFirstAction) return;
+            Plugin.Logger.LogWarning("START tracking " + isFirstAction);
             isTracking = true;
+            if (isFirstAction) return;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
             QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), Movement.Instance.m_CursorHexRenderer.gameObject);
         }
@@ -353,7 +357,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             GetQuestData();
             string tileCtx = GetTileContext(tiles);
-            window = MovementAction.CreateAction2(_cow, tileCtx, hexPositions, questDict);
+            window = MovementAction.CreateAction(_cow, tileCtx, hexPositions, questDict);
             isSearching = false;
         }
 

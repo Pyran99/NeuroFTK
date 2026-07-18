@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using GridEditor;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
@@ -9,7 +10,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class OWBeginTurnAction
     {
-        public static ActionWindow CreateWindow(Dictionary<string, FTK_itembase.ID> items)
+        public static ActionWindow CreateWindow(Dictionary<string, FTK_itembase.ID> items, string beltCtx)
         {
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             ActionWindow window = ActionWindow.Create(cow.gameObject);
@@ -18,12 +19,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (items.Count > 0)
             {
                 registerActions.Add(new UseBeltItemAction(items, cow));
+                window.SetContext(beltCtx);
             }
             if (cow.GetHexLand()?.HasPOI() ?? false)
             {
                 registerActions.Add(new InteractWithCurrentHex());
             }
             string query = $"your turn for {cow.m_CharacterStats.m_CharacterName} has started. use items or begin your movement choices";
+            foreach (INeuroAction action in registerActions) window.AddAction(action);
             window.SetForce(0, query, BeginTurns.CtxOverworldTurnBeginStats(cow));
             window.Register();
             return window;

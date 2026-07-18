@@ -12,7 +12,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateAction2(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict)
+        public static ActionWindow CreateAction(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));

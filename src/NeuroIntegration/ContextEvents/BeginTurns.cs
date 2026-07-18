@@ -15,8 +15,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
             SerializeTest test = SerializeTest.Calculate(_cow);
-            string json = $"[your character] {Jason.Serialize(test)}";
-            Plugin.Logger.LogWarning(json);
+            string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
             return json;
             // CharacterStats stats = _cow.m_CharacterStats;
             // StringBuilder sb = new();
