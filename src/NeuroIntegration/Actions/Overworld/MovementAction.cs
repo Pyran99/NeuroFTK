@@ -7,6 +7,7 @@ using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -20,6 +21,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (questDict != null & questDict.Count > 0)
             {
                 window.AddAction(new GoToQuestAction(new(questDict)));
+            }
+            if (_cow.GetHexLand()?.HasPOI() ?? false)
+            {
+                window.AddAction(new InteractWithCurrentHex());
             }
             window.SetContext(ctx);
             window.SetForce(0, "choose an action for this movement turn", "", true);
@@ -55,16 +60,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            OverworldFlow.ReverseCheckHoverPath(Movement.Instance, parsedData);
-            if (!OverworldFlow.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
-            {
-                Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
-                Context.Send($"an issue occurred with the {Name} action", true);
-                OverworldFlow.CreateActionWindow(cow);
-                return;
-            }
-            OverworldFlow.ReverseCheckClickPath(Movement.Instance, parsedData, false, false, false);
-            Context.Send($"moving to {parsedData}");
+            Context.Send($"moving to {OverworldFlow.GetContextForHex(cow, parsedData)}");
+            cow.StartCoroutine(OverworldFlow.MoveToHex(cow, parsedData));
         }
 
 
@@ -132,37 +129,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            // hover destination to generate path list
             HexLand dest = quest.GetHexLandDestination();
-            OverworldFlow.ReverseCheckHoverPath(Movement.Instance, dest);
-            if (!OverworldFlow.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
-            {
-                Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
-                Context.Send($"an issue occurred with the {Name} action, try another one", true);
-                OverworldFlow.CreateActionWindow(cow);
-                return;
-            }
-            // the generated move path
-            dest = Movement.Instance.m_HexListPartial.Last();
-            bool failed = true;
-            for (int i = Movement.Instance.m_HexListPartial.Count-1; i >= 0; i--)
-            {
-                if (OverworldFlow.CanTravel(dest, cow))
-                {
-                    dest = Movement.Instance.m_HexListPartial[i];
-                    failed = false;
-                    break;
-                }
-                Plugin.Logger.LogWarning("cant auto travel to last hex");
-            }
-            if (failed)
-            {
-                Plugin.Logger.LogError("failed to auto travel to last hex");
-                Context.Send($"an issue occurred with the {Name} action, try another one", true);
-                return;
-            }
-            OverworldFlow.ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
-            Context.Send($"moving to {parsedData}", true);
+            OverworldFlow.MoveToHex(cow, dest, true);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

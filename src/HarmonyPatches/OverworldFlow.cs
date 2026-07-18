@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GridEditor;
@@ -40,8 +41,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
-            Plugin.Logger.LogWarning("begin turn: load = " + _isLoadGame);
-            isFirstAction = _isLoadGame;
+            isFirstAction = true;
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
             List<FTK_itembase.ID> beltItems = ItemData.GetUsableBeltItems(__instance);
@@ -64,7 +64,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
-            Plugin.Logger.LogWarning("START tracking " + isFirstAction);
+            Plugin.Logger.LogWarning("START tracking first:" + isFirstAction);
             isTracking = true;
             if (isFirstAction) return;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
@@ -151,6 +151,54 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
+        public static IEnumerator MoveToHex(CharacterOverworld cow, HexLand hex, bool outOfRange = false)
+        {
+            HexLand dest = hex;
+            // hover destination to generate path list
+            ReverseCheckHoverPath(Movement.Instance, dest);
+            if (!isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
+                Context.Send($"an issue occurred with the move action", true);
+                CreateActionWindow(cow);
+                yield break;
+            }
+            bool isSameTarget = true;
+            if (outOfRange)
+            {
+                // the generated move path from hover
+                dest = Movement.Instance.m_HexListPartial.Last();
+                bool failed = true;
+                for (int i = Movement.Instance.m_HexListPartial.Count-1; i >= 0; i--)
+                {
+                    if (CanTravel(dest, cow))
+                    {
+                        dest = Movement.Instance.m_HexListPartial[i];
+                        failed = false;
+                        break;
+                    }
+                    Plugin.Logger.LogWarning("cant auto travel to last hex " + i);
+                    isSameTarget = false;
+                    if (i == 0)
+                    {
+                        Plugin.Logger.LogError("could not find any valid tiles");
+                        Context.Send("could not find any valid tiles", true);
+                        yield break;
+                    }
+                }
+                if (failed)
+                {
+                    Plugin.Logger.LogError("failed to auto travel to last hex");
+                    Context.Send($"an issue occurred with the go_to_quest action, try another one", true);
+                    yield break;
+                }
+            }
+            yield return new WaitForSeconds(0.5f);
+            string ctx = $"moving to {GetContextForHex(cow, dest)}";
+            if (!isSameTarget) ctx += " (could not reach your chosen destination)";
+            Context.Send(ctx, true);
+            ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
+        }
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
         {
@@ -240,54 +288,55 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static string GetTileContext(List<HexLand> _tiles)
         {
             hexPositions.Clear();
-            // [(155.8, 20.0): (The Guardian Forest)(). Woodsmoke]
             StringBuilder sb = new();
             sb.Append("[all tiles in range] (displayed as [(position x,z) (name/realm)(quest)other info]) ");
-            string name;
-            string questName;
-            string hasDeadPlayers;
-            string characters = "";
-            string poi;
-            Vector3 itemPos;
-            Vector2 pos;
-            // FTK_realm.ID realm;
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             foreach (HexLand hex in _tiles)
             {
-                poi = "";
-                hasDeadPlayers = "";
-                questName = "";
-                _ = characters;
-                // realm = hex.GetRealm();
-                // GuardianForest | GoldenPlains
-                // Plugin.Logger.LogWarning("realm: " + realm);
-                // distance = (float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2);
-                name = hex.GetLocationDisplayValue(cow);
-                itemPos = hex.GetPosition();
-                pos = new Vector2(itemPos.x, itemPos.z);
-                QuestLogicBase _quest = TileHasQuestObjective(hex);
-                if (_quest != null && !_quest.IsConsiderComplete())
-                {
-                    if (_quest.HasQuestDefID())
-                    {
-                        // _quest.m_StoryQuestID 
-                        questName = "story quest";
-                    }
-                    else questName = "quest location";
-                    // quest.GetCurrentDestinationLocation();
-                }
-                if (hex.GetDeadPlayerCount() > 0)
-                {
-                    hasDeadPlayers = "has dead character to revive";
-                }
-                if (hex.GetPOI() != null)
-                {
-                    poi = hex.GetPOI().GetPOIDisplayValue();
-                }
-                sb.AppendLine($"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]");
-                hexPositions.Add(pos.ToString(), hex);
+                sb.AppendLine(GetContextForHex(cow, hex, true));
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="addToList">adds to member hexPositions</param>
+        /// <returns>[(155.8, 20.0): (The Guardian Forest)(). Woodsmoke]</returns>
+        public static string GetContextForHex(CharacterOverworld cow, HexLand hex, bool addToList = false)
+        {
+            // FTK_realm.ID realm;
+            // realm = hex.GetRealm();
+            // GuardianForest | GoldenPlains
+            // Plugin.Logger.LogWarning("realm: " + realm);
+            // distance = (float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2);
+            string poi = "";
+            string hasDeadPlayers = "";
+            string questName = "";
+            string name = hex.GetLocationDisplayValue(cow);
+            Vector3 itemPos = hex.GetPosition();
+            Vector2 pos = new(itemPos.x, itemPos.z);
+            QuestLogicBase _quest = TileHasQuestObjective(hex);
+            if (_quest != null && !_quest.IsConsiderComplete())
+            {
+                if (_quest.HasQuestDefID())
+                {
+                    // _quest.m_StoryQuestID 
+                    questName = "story quest";
+                }
+                else questName = "quest location";
+                // quest.GetCurrentDestinationLocation();
+            }
+            if (hex.GetDeadPlayerCount() > 0)
+            {
+                hasDeadPlayers = "has dead character to revive";
+            }
+            if (hex.GetPOI() != null)
+            {
+                poi = hex.GetPOI().GetPOIDisplayValue();
+            }
+            if (addToList) hexPositions.Add(pos.ToString(), hex);
+            return $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]";
         }
 
 
@@ -336,7 +385,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
         }
 
-        static QuestLogicBase TileHasQuestObjective(HexLand hex)
+        public static QuestLogicBase TileHasQuestObjective(HexLand hex)
         {
             MiniHexInfo poi = hex.GetPOI();
             if (poi?.HasEncounterQuest() ?? false)
@@ -356,6 +405,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             GetQuestData();
+            Context.Send($"it is your turn, you are controlling {_cow.m_CharacterStats.m_CharacterName}", true);
             string tileCtx = GetTileContext(tiles);
             window = MovementAction.CreateAction(_cow, tileCtx, hexPositions, questDict);
             isSearching = false;

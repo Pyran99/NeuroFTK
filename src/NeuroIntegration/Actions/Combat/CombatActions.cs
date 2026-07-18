@@ -28,7 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 window.AddAction(action);
             }
-            window.SetForce(5, "choose an action", "you are in combat", true);
+            window.SetForce(3, $"it is your turn with {_instance.CombatCow.m_CharacterStats.m_CharacterName}, choose an attack action", "", true);
             window.Register();
             return window;
         }
@@ -123,7 +123,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         readonly Dictionary<string, uiBattleButton> offense = new(_offense);
         
         public override string Name => "attack_enemy";
-        protected override string Description => "attack an enemy";
+        protected override string Description => "choose an enemy to attack with an ability";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()

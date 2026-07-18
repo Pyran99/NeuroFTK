@@ -1,6 +1,7 @@
 using System;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -19,6 +20,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
+            Context.Send($"cancelling action described ({_description})", true);
             OnCancelled?.Invoke(_window);
         }
 

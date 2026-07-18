@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using GridEditor;
-using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -12,7 +10,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public readonly string Health;
         public readonly int Gold;
         public readonly int PipeItemLevel;
-        public readonly Dictionary<Vector2, string> HexTiles;
 
         public static SerializeTest Calculate(CharacterOverworld cow) => new(cow);
 
@@ -26,15 +23,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Gold = cow.m_CharacterStats.m_Gold;
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(cow.m_CharacterStats.GetPipe());
             PipeItemLevel = (int)pipe.m_PipeItem;
-            HexTiles = [];
-            Vector3 itemPos;
-            Vector2 pos;
-            foreach (HexLand hex in OverworldFlow.tiles)
-            {
-                itemPos = hex.GetPosition();
-                pos = new(itemPos.x, itemPos.z);
-                HexTiles.Add(pos, hex.GetLocationDisplayValue(cow));
-            }
         }
 
         private void EmptyFunc()
