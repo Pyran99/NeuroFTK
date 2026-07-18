@@ -28,7 +28,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!Plugin.doSpam || !GlobalConfig.debug_mode) return;
             Vector3 pos1 = _hexland.GetPosition();
             Vector2 pos2 = new(pos1.x, pos1.z);
-            if (OverworldMovement.questDict.ContainsKey(pos2.ToString()))
+            if (OverworldFlow.questDict.ContainsKey(pos2.ToString()))
             {
                 Plugin.Logger.LogMessage($"valid id {_hexland.GetPosition()} = {_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex}");
             }

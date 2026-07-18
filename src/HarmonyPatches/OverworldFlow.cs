@@ -2,10 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -13,7 +13,7 @@ using UnityEngine;
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
     [HarmonyPatch]
-    public class OverworldMovement
+    public class OverworldFlow
     {
         static ActionWindow window;
         public static bool isSearching = false;
@@ -23,7 +23,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static readonly Dictionary<string, QuestLogicBase> questDict = [];
         static readonly List<Vector3> questPositions = [];
         static StringBuilder sbQuest = new();
-        static readonly Dictionary<string, HexLand> hexPositions = [];
+        public static readonly Dictionary<string, HexLand> hexPositions = [];
+
+        public static bool isFirstAction = true;
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -34,13 +36,32 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             DisposeActions();
         }
 
+        [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")]
+        [HarmonyPostfix]
+        static IEnumerator BeginTurn(CharacterOverworld __instance, IEnumerator __result, bool _isLoadGame)
+        {
+            isFirstAction = true;
+            isSearching = false;
+            while (__result.MoveNext()) yield return __result.Current;
+            List<FTK_itembase.ID> beltItems = ItemData.GetUsableBeltItems(__instance);
+            Dictionary<string, FTK_itembase.ID> items = [];
+            foreach (FTK_itembase.ID item in beltItems)
+            {
+                items.Add(ItemData.GetItemName(item), item);
+            }
+            QuickTimerCallback timer = new(() => OWBeginTurnAction.CreateWindow(items), __instance.gameObject, 2.0f);
+
+            // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
+            // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
+        }
+
         // when movement choice starts
         [HarmonyPatch(typeof(Movement), nameof(Movement.StartTracking))]
         [HarmonyPostfix]
-        static void StartTracking()
+        public static void StartTracking()
         {
             Plugin.Logger.LogWarning("START tracking");
-            ToggleOverworldActions.EnableDisposableActions();
+            if (isFirstAction) return;
             isTracking = true;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
             QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), Movement.Instance.m_CursorHexRenderer.gameObject);
@@ -54,24 +75,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("STOP tracking");
             isTracking = false;
             isSearching = false;
+            isFirstAction = false;
             tiles.Clear();
             DisposeActions();
-        }
-
-        [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")]
-        [HarmonyPostfix]
-        static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame)
-        {
-            BeginTurns.CtxOverworldTurnBeginStats(GameLogic.Instance.GetCurrentCOW());
-            // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
-            // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
-            isSearching = false;
-            while (__result.MoveNext()) yield return __result.Current;
-            if (_isLoadGame)
-            {
-                isTracking = true;
-                QuickTimerCallback timer = new(() => GetValidMoveTiles(GameLogic.Instance.GetCurrentCOW()), Movement.Instance.m_CursorHexRenderer.gameObject);
-            }
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.EndTurn))]
@@ -122,7 +128,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ReturnedToOverworld()
         {
-            ToggleOverworldActions.EnableDisposableActions();
+            // ToggleOverworldActions.EnableDisposableActions();
         }
 
         #region end turn procs
@@ -139,7 +145,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void DisposeActions()
         {
             Object.Destroy(window);
-            ToggleOverworldActions.DisposeActions();
         }
 
 
@@ -168,14 +173,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Task task = Task.Factory.StartNew(() => tiles = [.. LoopNeighbors(currentCOW, points)]);
             yield return task.IsCompleted;
             Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
-            currentCOW.StartCoroutine(Wait());
-
-            static IEnumerator Wait()
-            {
-                yield return new WaitForSeconds(1f);
-                CreateActionWindow();
-                isSearching = false;
-            }
+            QuickTimerCallback timer = new(() => CreateActionWindow(currentCOW), currentCOW.gameObject);
         }
 
         static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -235,7 +233,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// <summary>
         /// display as [(position x,z) (name/realm)(quest name)other info]
         /// </summary>
-        static string GetTileContext(List<HexLand> _tiles)
+        public static string GetTileContext(List<HexLand> _tiles)
         {
             hexPositions.Clear();
             // [(155.8, 20.0): (The Guardian Forest)(). Woodsmoke]
@@ -291,7 +289,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #region quests
 
-        static void GetQuestData()
+        public static void GetQuestData()
         {
             questDict.Clear();
             questPositions.Clear();
@@ -350,23 +348,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #endregion
 
-        public static void CreateActionWindow()
+        public static void CreateActionWindow(CharacterOverworld _cow)
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             GetQuestData();
-            List<INeuroAction> actions = [];
-            string ctx = GetTileContext(tiles);
-            actions.Add(new MovementAction(hexPositions));
-            if (GameLogic.Instance.GetCurrentCOW()?.GetHexLand()?.HasPOI() ?? false)
-            {
-                actions.Add(new InteractWithCurrentHex());
-            }
-            if (!GlobalConfig.debug_mode) actions.Add(new EndTurnAction());
-            if (questDict.Count > 0)
-            {
-                actions.Add(new GoToHexAction(new Dictionary<string, QuestLogicBase>(questDict)));
-            }
-            window = MovementAction.CreateAction(GameLogic.Instance.GetCurrentCOW(), ctx, actions);
+            string tileCtx = GetTileContext(tiles);
+            window = MovementAction.CreateAction2(_cow, tileCtx, hexPositions, questDict);
+            isSearching = false;
         }
 
     }

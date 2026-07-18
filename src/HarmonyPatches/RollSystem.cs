@@ -47,13 +47,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator SlotResults(IEnumerator __result)
         {
-            OverworldMovement.isSearching = false;
+            OverworldFlow.isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
             // combat rolls are after choice
             if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 currentCOW = GameLogic.Instance.GetCurrentCOW();
-                QuickTimerCallback timer = new(() => OverworldMovement.GetValidMoveTiles(currentCOW), null, 1500f);
+                QuickTimerCallback timer = new(() => OverworldFlow.GetValidMoveTiles(currentCOW), null, 1500f);
             }
         }
 

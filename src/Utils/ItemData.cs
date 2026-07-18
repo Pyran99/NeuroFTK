@@ -39,6 +39,17 @@ namespace Pyran.NeuroFTK.Utils
             return result;
         }
 
+        public static List<FTK_itembase.ID> GetUsableBeltItems(CharacterOverworld _cow)
+        {
+            List<FTK_itembase.ID> list = [];
+            foreach (FTK_itembase.ID item in _cow.m_CharacterStats.GetBeltItems())
+            {
+                if ((bool)!FTKItem.Get(item)?.CanUse(_cow)) continue;
+                list.Add(item);
+            }
+            return list;
+        }
+
         /// <summary>
         /// return has styling
         /// </summary>

@@ -11,24 +11,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 {
     public class BeginTurns
     {
-        public static void CtxOverworldTurnBeginStats(CharacterOverworld _cow)
+        public static string CtxOverworldTurnBeginStats(CharacterOverworld _cow)
         {
-            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
             SerializeTest test = SerializeTest.Calculate(_cow);
-            Plugin.Logger.LogWarning($"Serialize test char name = {test.Name}");
-            CharacterStats stats = _cow.m_CharacterStats;
-            StringBuilder sb = new();
-            sb.AppendLine($"[{stats.m_CharacterName}({stats.m_CharacterClass}) turn]");
-            sb.AppendLine($"lvl: {stats.m_PlayerLevel}");
-            sb.AppendLine($"xp: {stats.GetXpDisplayString()}");
-            sb.AppendLine($"health: {stats.GetHealthDisplayString()}");
-            sb.AppendLine($"gold: {stats.m_Gold}");
-            FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(stats.GetPipe());
-            sb.AppendLine($"pipe: {FTKHub.Localized<TextItems>(pipe.m_DisplayName)}({(int)stats.GetPipe()}) (upgraded at the market)");
-            // Context.Send(sb.ToString());
-            string json = $"[your character turn] {Jason.Serialize(test)}\n";
+            string json = $"[your character] {Jason.Serialize(test)}";
             Plugin.Logger.LogWarning(json);
-            Context.Send(json);
+            return json;
+            // CharacterStats stats = _cow.m_CharacterStats;
+            // StringBuilder sb = new();
+            // sb.AppendLine($"[{stats.m_CharacterName}({stats.m_CharacterClass}) turn]");
+            // sb.AppendLine($"lvl: {stats.m_PlayerLevel}");
+            // sb.AppendLine($"xp: {stats.GetXpDisplayString()}");
+            // sb.AppendLine($"health: {stats.GetHealthDisplayString()}");
+            // sb.AppendLine($"gold: {stats.m_Gold}");
+            // FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(stats.GetPipe());
+            // sb.AppendLine($"pipe: {FTKHub.Localized<TextItems>(pipe.m_DisplayName)}({(int)stats.GetPipe()}) (upgraded at the market)");
+            // Context.Send(sb.ToString());
         }
 
         public static void CtxCombatTurnBeginPlayer()

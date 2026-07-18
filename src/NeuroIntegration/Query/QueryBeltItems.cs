@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Text;
-using FTKItemName;
 using GridEditor;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
@@ -18,12 +16,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            List<FTK_itembase.ID> items = cow.m_CharacterStats.GetBeltItems();
             StringBuilder sb = new();
             sb.Append("[usable belt items] ");
-            foreach (FTK_itembase.ID item in items)
+            foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow))
             {
-                if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
                 sb.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
             }
             if (sb.Length == "[usable belt items] ".Length) sb.Append("none");

@@ -71,17 +71,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             registeredActions.Add(queryLocation);
             INeuroAction queryBeltItems = new QueryBeltItems(cow);
             registeredActions.Add(queryBeltItems);
-            Dictionary<string, FTK_itembase.ID> items = [];
-            foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())
-            {
-                if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
-                items.Add(ItemData.GetItemName(item), item);
-            }
-            if (items.Count > 0)
-            {
-                INeuroAction useBeltItem = new UseBeltItemAction(items, cow);
-                registeredActions.Add(useBeltItem);
-            }
             NeuroActionHandler.RegisterActions(registeredActions);
         }
 

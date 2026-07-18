@@ -29,7 +29,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             HexTiles = [];
             Vector3 itemPos;
             Vector2 pos;
-            foreach (HexLand hex in OverworldMovement.tiles)
+            foreach (HexLand hex in OverworldFlow.tiles)
             {
                 itemPos = hex.GetPosition();
                 pos = new(itemPos.x, itemPos.z);

@@ -5,19 +5,24 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class MovementAction(Dictionary<string, HexLand> _hexPositions) : NeuroAction<HexLand>
+    public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateAction(CharacterOverworld _instance, string ctx, List<INeuroAction> actions)
+        public static ActionWindow CreateAction2(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict)
         {
-            ActionWindow window = ActionWindow.Create(_instance.gameObject);
-            if (actions.Count == 0) Plugin.Logger.LogError("no movement actions to register");
+            ActionWindow window = ActionWindow.Create(_cow.gameObject);
+            window.AddAction(new MovementAction(hexPositions, _cow));
+            if (!GlobalConfig.debug_mode) window.AddAction(new EndTurnAction());
+            if (questDict != null & questDict.Count > 0)
+            {
+                window.AddAction(new GoToQuestAction(new(questDict)));
+            }
             window.SetContext(ctx);
-            foreach (INeuroAction action in actions) window.AddAction(action);
-            window.SetForce(0, "choose an action for this movement turn", "you have rolled for movement", true);
+            window.SetForce(0, "choose an action for this movement turn", "", true);
             window.Register();
             return window;
         }
@@ -47,18 +52,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 Plugin.Logger.LogError($"did not find {parsedData} in tiles");
                 Context.Send($"an issue occurred with the {Name} action", true);
-                OverworldMovement.CreateActionWindow();
+                OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            OverworldMovement.ReverseCheckHoverPath(Movement.Instance, parsedData);
-            if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            OverworldFlow.ReverseCheckHoverPath(Movement.Instance, parsedData);
+            if (!OverworldFlow.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
                 Context.Send($"an issue occurred with the {Name} action", true);
-                OverworldMovement.CreateActionWindow();
+                OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            OverworldMovement.ReverseCheckClickPath(Movement.Instance, parsedData, false, false, false);
+            OverworldFlow.ReverseCheckClickPath(Movement.Instance, parsedData, false, false, false);
             Context.Send($"moving to {parsedData}");
         }
 
@@ -87,7 +92,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             else
             {
                 Context.Send("cannot end turn right now");
-                OverworldMovement.CreateActionWindow();
+                OverworldFlow.CreateActionWindow(GameLogic.Instance.GetCurrentCOW());
             }
         }
 
@@ -97,7 +102,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class GoToHexAction(Dictionary<string, QuestLogicBase> _questDict) : NeuroAction<string>
+    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
         protected override string Description => "choose a quest location to travel to. if the location is out of range you will move to the furthest tile along the path";
@@ -119,29 +124,30 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             if (!_questDict.TryGetValue(parsedData, out QuestLogicBase quest))
             {
                 Plugin.Logger.LogError("quest not found");
                 Context.Send($"an issue occurred with the {Name} action, try another one", true);
-                OverworldMovement.CreateActionWindow();
+                OverworldFlow.CreateActionWindow(cow);
                 return;
             }
             // hover destination to generate path list
             HexLand dest = quest.GetHexLandDestination();
-            OverworldMovement.ReverseCheckHoverPath(Movement.Instance, dest);
-            if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            OverworldFlow.ReverseCheckHoverPath(Movement.Instance, dest);
+            if (!OverworldFlow.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
-                Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
+                Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
                 Context.Send($"an issue occurred with the {Name} action, try another one", true);
+                OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             // the generated move path
             dest = Movement.Instance.m_HexListPartial.Last();
             bool failed = true;
             for (int i = Movement.Instance.m_HexListPartial.Count-1; i >= 0; i--)
             {
-                if (OverworldMovement.CanTravel(dest, cow))
+                if (OverworldFlow.CanTravel(dest, cow))
                 {
                     dest = Movement.Instance.m_HexListPartial[i];
                     failed = false;
@@ -155,7 +161,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Context.Send($"an issue occurred with the {Name} action, try another one", true);
                 return;
             }
-            OverworldMovement.ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
+            OverworldFlow.ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
             Context.Send($"moving to {parsedData}", true);
         }
 
@@ -182,18 +188,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             HexLand hex = cow.GetHexLand();
             if (!hex.HasPOI())
             {
-                Context.Send("this character is not on a tile with something to interact with");
-                OverworldMovement.CreateActionWindow();
+                Context.Send("this character is not on a tile with something to interact with", true);
+                OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            OverworldMovement.ReverseCheckHoverPath(Movement.Instance, hex);
-            if (!OverworldMovement.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            OverworldFlow.ReverseCheckHoverPath(Movement.Instance, hex);
+            if (!OverworldFlow.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
-                Context.Send($"an issue occurred with the {Name} action", true);
+                Context.Send($"an issue occurred with the {Name} action, try another one", true);
                 return;
             }
-            OverworldMovement.ReverseCheckClickPath(Movement.Instance, hex, false, false, false);
+            OverworldFlow.ReverseCheckClickPath(Movement.Instance, hex, false, false, false);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
