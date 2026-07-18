@@ -7,7 +7,6 @@ using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
-using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -27,7 +26,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 window.AddAction(new InteractWithCurrentHex());
             }
             window.SetContext(ctx);
-            window.SetForce(0, "choose an action for this movement turn", "", true);
+            window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "", true);
             window.Register();
             return window;
         }
@@ -61,7 +60,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             Context.Send($"moving to {OverworldFlow.GetContextForHex(cow, parsedData)}");
-            cow.StartCoroutine(OverworldFlow.MoveToHex(cow, parsedData));
+            cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, parsedData));
         }
 
 
@@ -130,7 +129,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             HexLand dest = quest.GetHexLandDestination();
-            OverworldFlow.MoveToHex(cow, dest, true);
+            cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, dest, true));
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -158,16 +157,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 Context.Send("this character is not on a tile with something to interact with", true);
                 OverworldFlow.CreateActionWindow(cow);
+                // MovementAction.CreateAction(cow, "", OverworldFlow.hexPositions, OverworldFlow.questDict);
                 return;
             }
-            OverworldFlow.ReverseCheckHoverPath(Movement.Instance, hex);
-            if (!OverworldFlow.isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
-            {
-                Plugin.Logger.LogWarning("tried to execute move action while character is not in tracking state");
-                Context.Send($"an issue occurred with the {Name} action, try another one", true);
-                return;
-            }
-            OverworldFlow.ReverseCheckClickPath(Movement.Instance, hex, false, false, false);
+            cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, hex, false, true));
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

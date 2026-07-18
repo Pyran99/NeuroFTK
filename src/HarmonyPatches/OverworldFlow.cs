@@ -151,7 +151,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
-        public static IEnumerator MoveToHex(CharacterOverworld cow, HexLand hex, bool outOfRange = false)
+        public static IEnumerator MoveToHexCoroutine(CharacterOverworld cow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
         {
             HexLand dest = hex;
             // hover destination to generate path list
@@ -196,6 +196,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             yield return new WaitForSeconds(0.5f);
             string ctx = $"moving to {GetContextForHex(cow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
+            if (isSameHex) ctx = "interacting with this tiles point of interest";
             Context.Send(ctx, true);
             ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
         }

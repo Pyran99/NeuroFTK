@@ -271,12 +271,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCombatCOW();
-            RegisterDisposableActions(cow);
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
             actions.Clear();
             string ctx = GetAttackContext(_instance, _proficiencies);
             ctx += GetBeltDetails(cow);
+            RegisterDisposableActions(cow);
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
             offense.Clear();
             defense.Clear();
