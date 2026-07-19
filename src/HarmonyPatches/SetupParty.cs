@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
-using Google2u;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.NeuroIntegration;
+using NeuroSdk.Internal;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -67,19 +67,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject);
         }
 
-        static void SendPartyDetails()
+        static void SendPartyDetails(bool addClassData = true)
         {
-            FTK_playerGameStartDB db = FTK_playerGameStartDB.GetDB();
             string data = "";
-            foreach (uiQuickPlayerCreate player in players) //TODO serialized data
+            if (addClassData)
             {
-                List<string> details = GetClassDetails((FTK_playerGameStart.ID)player.m_ClassID, db);
-                string joined = string.Join(", ", [.. details]);
-                joined = StringReplace.ReplaceNewLine(joined);
-                data += joined + "\n";
+                FTK_playerGameStartDB db = FTK_playerGameStartDB.GetDB();
+                foreach (uiQuickPlayerCreate player in players)
+                {
+                    string serialized = Jason.Serialize(CharacterType.SerializeGameClass(db.GetEntry((FTK_playerGameStart.ID)player.m_ClassID)));
+                    data += $"{serialized}.\n";
+                }
+                Context.Send($"[current party classes] {data}");
             }
-            // name: Hunter, class description:
-            Context.Send($"[current party classes] {data}");
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
             data = "[party setup is] ";
@@ -110,42 +110,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 names.Add(player.m_PlayerClass.text);
             }
             return names;
-        }
-
-        static List<string> GetClassDetails(FTK_playerGameStart.ID id, FTK_playerGameStartDB db)
-        {
-            FTK_playerGameStart entry = db.GetEntry(id);
-            List<string> msg = [];
-            string name = entry.GetDisplayName();
-            float statBonus = GameFlow.Instance.GameDif.m_StatBonus;
-            string toughness = FTKUtil.RoundToInt((entry._toughness + statBonus) * 100f).ToString();
-            string fortitude = FTKUtil.RoundToInt((entry._fortitude + statBonus) * 100f).ToString();
-            string talent = FTKUtil.RoundToInt((entry._talent + statBonus) * 100f).ToString();
-            string awareness = FTKUtil.RoundToInt((entry._awareness + statBonus) * 100f).ToString();
-            string quickness = FTKUtil.RoundToInt((entry._quickness + statBonus) * 100f).ToString();
-            string vitality = FTKUtil.RoundToInt((entry._vitality + statBonus) * 100f).ToString();
-            string classFlavor = FTKHub.Localized<TextCharacters>(entry.m_Flavor);
-            string classAbility = entry.m_CharacterSkills.GetSkillDisplay(false);
-            msg.Add($"{{[{name}] {classFlavor}");
-            msg.Add($"[gold] {entry._startinggold + GameFlow.Instance.GameDif.m_ExtraGold}");
-            if (entry.m_StartWeapon != FTK_itembase.ID.None)
-            {
-                msg.Add($"[starting weapon] {FTKHub.Instance.GetItemDisplayName(entry.m_StartWeapon)}");
-            }
-            string items = "";
-            foreach (FTK_itembase.ID _id in entry.m_StartItems)
-            {
-                items += $"{FTKHub.Instance.GetItemDisplayName(_id)}, ";
-            }
-            msg.Add($"[starting items] {{{items}}}");
-            msg.Add($"[toughness] {toughness}");
-            msg.Add($"[fortitude] {fortitude}");
-            msg.Add($"[talent] {talent}");
-            msg.Add($"[awareness] {awareness}");
-            msg.Add($"[quickness] {quickness}");
-            msg.Add($"[vitality] {vitality}");
-            msg.Add($"[class abilities] {classAbility}}}. ");
-            return msg;
         }
 
         static void ActionStartGame()
@@ -179,9 +143,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 msg += $"'{name}' ";
             }
+            SendPartyDetails(false);
             Context.Send(msg);
-            yield return new WaitForSeconds(0.5f);
-            SendPartyDetails();
             Context.Send("tell chat about your party members while the game begins");
             yield return new WaitForSeconds(waitTime);
             ActionStartGame();
@@ -207,3 +170,39 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     }
 }
 
+// // old
+// static List<string> GetClassDetails(FTK_playerGameStart.ID id, FTK_playerGameStartDB db)
+// {
+//     FTK_playerGameStart entry = db.GetEntry(id);
+//     List<string> msg = [];
+//     string name = entry.GetDisplayName();
+//     float statBonus = GameFlow.Instance.GameDif.m_StatBonus;
+//     string toughness = FTKUtil.RoundToInt((entry._toughness + statBonus) * 100f).ToString();
+//     string fortitude = FTKUtil.RoundToInt((entry._fortitude + statBonus) * 100f).ToString();
+//     string talent = FTKUtil.RoundToInt((entry._talent + statBonus) * 100f).ToString();
+//     string awareness = FTKUtil.RoundToInt((entry._awareness + statBonus) * 100f).ToString();
+//     string quickness = FTKUtil.RoundToInt((entry._quickness + statBonus) * 100f).ToString();
+//     string vitality = FTKUtil.RoundToInt((entry._vitality + statBonus) * 100f).ToString();
+//     string classFlavor = FTKHub.Localized<TextCharacters>(entry.m_Flavor);
+//     string classAbility = entry.m_CharacterSkills.GetSkillDisplay(false);
+//     msg.Add($"{{[{name}] {classFlavor}");
+//     msg.Add($"[gold] {entry._startinggold + GameFlow.Instance.GameDif.m_ExtraGold}");
+//     if (entry.m_StartWeapon != FTK_itembase.ID.None)
+//     {
+//         msg.Add($"[starting weapon] {FTKHub.Instance.GetItemDisplayName(entry.m_StartWeapon)}");
+//     }
+//     string items = "";
+//     foreach (FTK_itembase.ID _id in entry.m_StartItems)
+//     {
+//         items += $"{FTKHub.Instance.GetItemDisplayName(_id)}, ";
+//     }
+//     msg.Add($"[starting items] {{{items}}}");
+//     msg.Add($"[toughness] {toughness}");
+//     msg.Add($"[fortitude] {fortitude}");
+//     msg.Add($"[talent] {talent}");
+//     msg.Add($"[awareness] {awareness}");
+//     msg.Add($"[quickness] {quickness}");
+//     msg.Add($"[vitality] {vitality}");
+//     msg.Add($"[class abilities] {classAbility}}}. ");
+//     return msg;
+// }

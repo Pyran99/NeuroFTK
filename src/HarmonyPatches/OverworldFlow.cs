@@ -25,6 +25,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly List<Vector3> questPositions = [];
         static StringBuilder sbQuest = new();
         public static readonly Dictionary<string, HexLand> hexPositions = [];
+        static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = []; 
 
         public static bool isFirstAction = false;
 
@@ -154,7 +155,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
-        static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = []; 
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld cow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
         {
@@ -413,6 +413,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #endregion
 
+
         public static void CreateActionWindow(CharacterOverworld _cow)
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
@@ -427,7 +428,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     Vector3 pos = lastDestinations[_cow].GetPosition();
                     Vector2 pos2 = new(pos.x, pos.z);
-                    ctx += $" the last hex you tried to move with this character was {pos2}";
+                    ctx += $" the last hex you tried to move to with this character was {pos2}";
                 }
             }
             Context.Send(ctx);

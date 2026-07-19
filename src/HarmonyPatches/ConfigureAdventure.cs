@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static string AdventuresContext(GameConfig instance)
         {
-            string details = "Adventure details: ";
+            string details = "[Adventure details] ";
             bool forceFirst = (bool)Plugin.config["force_first_adventure"];
             string description;
             foreach (GameDefButton btn in instance.m_GameDefButtons)
