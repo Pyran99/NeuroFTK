@@ -1,8 +1,22 @@
+using System;
+
 namespace Pyran.NeuroFTK.Utils
 {
-    public class CharacterClass
+    public class CharacterType
     {
-        
+        string Name { get; set; }
+        string Description { get; set; }
+
+        public static CharacterType SerializeGameClass()
+        {
+            throw new NotImplementedException();
+        }
+
+        private CharacterType()
+        {
+            Name = "";
+            Description = "";
+        }
     }
 }
 
@@ -20,10 +34,10 @@ namespace Pyran.NeuroFTK.Utils
 //     private SerializeTest(CharacterOverworld cow)
 //     {
 //         Plugin.Logger.LogWarning("Create serialize test");
-//         Name = cow.m_CharacterStats.m_CharacterName;
+//         Name = CharacterData.GetCharacterName(cow);
 //         Level = cow.m_CharacterStats.m_PlayerLevel;
 //         Xp = cow.m_CharacterStats.m_PlayerXP;
-//         Health = cow.m_CharacterStats.GetHealthDisplayString();
+//         Health = CharacterData.GetCharacterHealth(cow);
 //         Gold = cow.m_CharacterStats.m_Gold;
 //         FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(cow.m_CharacterStats.GetPipe());
 //         PipeItemLevel = (int)pipe.m_PipeItem;

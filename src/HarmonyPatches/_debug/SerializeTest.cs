@@ -1,4 +1,5 @@
 using GridEditor;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -16,10 +17,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         private SerializeTest(CharacterOverworld cow)
         {
             Plugin.Logger.LogWarning("Create serialize test");
-            Name = cow.m_CharacterStats.m_CharacterName;
+            Name = CharacterData.GetCharacterName(cow);
             Level = cow.m_CharacterStats.m_PlayerLevel;
             Xp = cow.m_CharacterStats.m_PlayerXP;
-            Health = cow.m_CharacterStats.GetHealthDisplayString();
+            Health = CharacterData.GetCharacterHealth(cow);
             Gold = cow.m_CharacterStats.m_Gold;
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(cow.m_CharacterStats.GetPipe());
             PipeItemLevel = (int)pipe.m_PipeItem; //FIXME incorrect level

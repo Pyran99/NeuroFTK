@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
@@ -7,12 +8,13 @@ using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateAction(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
@@ -27,6 +29,28 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             window.SetContext(ctx);
             window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "", true);
+            window.Register();
+            return window;
+        }
+
+        public static ActionWindow CreateTurnBeginWindow(Dictionary<string, FTK_itembase.ID> items, string beltCtx)
+        {
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            ActionWindow window = ActionWindow.Create(cow.gameObject);
+            List<INeuroAction> registerActions = [];
+            registerActions.Add(new BeginMovementAction());
+            if (items.Count > 0)
+            {
+                registerActions.Add(new UseBeltItemAction(items, cow));
+                window.SetContext(beltCtx);
+            }
+            if (cow.GetHexLand()?.HasPOI() ?? false)
+            {
+                registerActions.Add(new InteractWithCurrentHex());
+            }
+            string query = $"your turn for {CharacterData.GetCharacterName(cow)} has started. use items or begin your movement choices";
+            foreach (INeuroAction action in registerActions) window.AddAction(action);
+            window.SetForce(0, query, BeginTurns.CtxOverworldTurnBeginStats(cow));
             window.Register();
             return window;
         }
@@ -157,10 +181,44 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 Context.Send("this character is not on a tile with something to interact with", true);
                 OverworldFlow.CreateActionWindow(cow);
-                // MovementAction.CreateAction(cow, "", OverworldFlow.hexPositions, OverworldFlow.questDict);
                 return;
             }
             cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, hex, false, true));
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
+        }
+    }
+
+    public class BeginMovementAction : NeuroAction
+    {
+        public override string Name => "begin_movement";
+        protected override string Description => "begins your movement choice";
+        protected override JsonSchema Schema => null;
+
+        protected override void Execute()
+        {
+            OverworldFlow.isFirstAction = false;
+            OverworldFlow.StartTracking();
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
+        }
+    }
+
+    public class ChangeEquipment : NeuroAction
+    {
+        public override string Name => "change_equipment";
+        protected override string Description => "";
+        protected override JsonSchema Schema => null;
+
+        protected override void Execute()
+        {
+            
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

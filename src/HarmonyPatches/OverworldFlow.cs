@@ -33,7 +33,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void TurnSkipped(CharacterOverworld _cow)
         {
-            Context.Send($"{_cow.m_CharacterStats.m_CharacterName} had their turn skipped");
+            Context.Send($"{CharacterData.GetCharacterName(_cow)} had their turn skipped");
             DisposeActions();
         }
 
@@ -54,7 +54,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 beltCtx.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, __instance)}");
             }
             Plugin.Logger.LogWarning("first turn action");
-            QuickTimerCallback timer = new(() => OWBeginTurnAction.CreateWindow(items, beltCtx.ToString()), __instance.gameObject, 2.0f);
+            QuickTimerCallback timer = new(() => MovementAction.CreateTurnBeginWindow(items, beltCtx.ToString()), __instance.gameObject, 2.0f);
 
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
@@ -154,6 +154,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
+        static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = []; 
+
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld cow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
         {
             HexLand dest = hex;
@@ -202,6 +204,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (isSameHex) ctx = "interacting with this tiles point of interest";
             Context.Send(ctx, true);
             ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
+            lastDestinations[cow] = dest;
         }
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -415,9 +418,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             string _quests = GetQuestData();
             if (_quests != "") Context.Send(_quests);
-            Context.Send($"it is your turn, you are controlling {_cow.m_CharacterStats.m_CharacterName}", true);
+            Vector3 cowPos = _cow.GetHexLand().GetPosition();
+            Vector2 cowPos2 = new(cowPos.x, cowPos.z);
+            string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {cowPos2}.";
+            if (lastDestinations.ContainsKey(_cow))
+            {
+                if (lastDestinations[_cow] != null && lastDestinations[_cow] != _cow.GetHexLand())
+                {
+                    Vector3 pos = lastDestinations[_cow].GetPosition();
+                    Vector2 pos2 = new(pos.x, pos.z);
+                    ctx += $" the last hex you tried to move with this character was {pos2}";
+                }
+            }
+            Context.Send(ctx);
             string tileCtx = GetTileContext(tiles);
-            window = MovementAction.CreateAction(_cow, tileCtx, hexPositions, questDict);
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict);
             isSearching = false;
         }
 

@@ -74,7 +74,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // this.m_NameText.text = this.m_ItemInfo.GetLocalizedName() + "(" + this.GetItemCount().ToString() + ")";
                 buyList.Add(_item.m_NameText.text, _item);
             }
-            Context.Send($"{_cow.m_CharacterStats.m_CharacterName} has {_cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
+            Context.Send($"{CharacterData.GetCharacterName(_cow)} has {_cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
             StringBuilder sb = new();
             sb.Append("[market items ([name](cost) description)] \n");
             foreach (uiItemIcon _item in buyList.Values)
