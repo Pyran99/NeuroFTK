@@ -79,7 +79,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class EndTurnAction : NeuroAction
     {
         public override string Name => "end_turn";
-        protected override string Description => "end the current turn early and recover HP from the remaining movement points";
+        protected override string Description => "end your turn early and recover HP from the remaining movement points";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()

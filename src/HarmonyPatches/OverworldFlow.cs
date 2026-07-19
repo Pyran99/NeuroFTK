@@ -290,7 +290,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             hexPositions.Clear();
             StringBuilder sb = new();
-            sb.Append("[all tiles in range] (displayed as [(position x,z) (name/realm)(quest)other info]) ");
+            sb.Append("[all tiles in range (displayed as [(position x,z) (name/realm)(quest)other info])] ");
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             foreach (HexLand hex in _tiles)
             {
@@ -343,7 +343,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #region quests
 
-        public static void GetQuestData()
+        public static string GetQuestData()
         {
             questDict.Clear();
             questPositions.Clear();
@@ -356,7 +356,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 AddValidQuests(q);
             }
-            if (sbQuest.Length > 0) Context.Send(sbQuest.ToString());
+            return sbQuest.ToString();
         }
 
         static void AddValidQuests(uiQuestItem questItem)
@@ -405,7 +405,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateActionWindow(CharacterOverworld _cow)
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            GetQuestData();
+            string _quests = GetQuestData();
+            if (_quests != "") Context.Send(_quests);
             Context.Send($"it is your turn, you are controlling {_cow.m_CharacterStats.m_CharacterName}", true);
             string tileCtx = GetTileContext(tiles);
             window = MovementAction.CreateAction(_cow, tileCtx, hexPositions, questDict);
