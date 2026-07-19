@@ -53,6 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 items.Add(ItemData.GetItemName(item), item);
                 beltCtx.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, __instance)}");
             }
+            Plugin.Logger.LogWarning("first turn action");
             QuickTimerCallback timer = new(() => OWBeginTurnAction.CreateWindow(items, beltCtx.ToString()), __instance.gameObject, 2.0f);
 
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
@@ -68,6 +69,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isTracking = true;
             if (isFirstAction) return;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
+            Plugin.Logger.LogWarning("start tracking create window");
             QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), Movement.Instance.m_CursorHexRenderer.gameObject);
         }
 
@@ -111,6 +113,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("movement focus added");
             Object.Destroy(window);
             tiles.Clear();
+            Plugin.Logger.LogWarning("convert create window");
             GetValidMoveTiles(RollSystem.currentCOW);
         }
 
@@ -215,6 +218,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator GetValidTiles(HexLand.SelectType type = HexLand.SelectType.Same)
         {
+            if (isFirstAction)
+            {
+                Plugin.Logger.LogWarning("skip first tile action");
+                yield break;
+            }
             if (isSearching) yield break;
             isSearching = true;
             tiles.Clear();

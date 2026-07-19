@@ -32,7 +32,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string context = AdventuresContext(instance);
             window.SetContext(context);
             window.AddAction(new ChooseAdventureAction(instance));
-            window.SetForce(5, "select an adventure to play", "you are in the adventure select screen", true);
+            window.SetForce(4, "select an adventure to play", "you are in the adventure select screen", true);
             UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
             window.Register();
         }
@@ -61,7 +61,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     if (prev.GetDisplayName() == "For the King")
                     {
                         description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                        details += $"[name] {prev.GetDisplayName()} [description] {description}]\n";
+                        details += $"name: {prev.GetDisplayName()}. description: {description}\n";
                         break;
                     }
                     continue;
@@ -70,7 +70,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // gold rush is multiplayer only
                 if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
                 description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                details += $"[name] {prev.GetDisplayName()} [description] {description}]\n";
+                details += $"name: {prev.GetDisplayName()}. description: {description}\n";
             }
             return details;
         }
@@ -96,11 +96,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield return null;
             }
             GameDefinitionBase level = instance.GetCurrentGameDefPreview();
-            Context.Send($"[Selected adventure] {level.GetDisplayName()}, {level.GetDisplayInfoText()}");
-            yield return new WaitForSeconds(0.5f);
+            Context.Send($"you selected the adventure {level.GetDisplayName()}: {level.GetDisplayInfoText()}");
+            yield return new WaitForSeconds(1.0f);
             SetDifficulty(instance);
             SetGameMode(instance);
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(1.0f);
             SetRulesBeforeStartGame(instance);
         }
 

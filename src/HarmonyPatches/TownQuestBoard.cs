@@ -123,7 +123,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send("Quest accepted: " + StringReplace.RemoveStyling(_item.m_QuestDetail?.m_Text.text));
             Button btn = _item.m_Button;
             uiFTKButton btnComp = btn.GetComponent<uiFTKButton>();
-            if (btnComp != null) SelectButton.StartCoroutine(btnComp);
+            if (btnComp != null && !_item.m_QuestDetail.gameObject.activeInHierarchy) SelectButton.StartCoroutine(btnComp);
             else SelectButton.StartUnityBtnCoroutine(_item.m_Button);
             _item.StartCoroutine(AcceptQuest(_item.m_QuestDetail));
         }

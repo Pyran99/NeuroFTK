@@ -71,7 +71,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             FTK_playerGameStartDB db = FTK_playerGameStartDB.GetDB();
             string data = "";
-            foreach (uiQuickPlayerCreate player in players)
+            foreach (uiQuickPlayerCreate player in players) //TODO serialized data
             {
                 List<string> details = GetClassDetails((FTK_playerGameStart.ID)player.m_ClassID, db);
                 string joined = string.Join(", ", [.. details]);

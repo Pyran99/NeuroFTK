@@ -108,10 +108,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static Dictionary<string, string> levelUps = [];
         static bool isLevelUpWait = false;
+        public static bool overworldInitialized = false; // check fixed below = not called on first load overworld
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
         [HarmonyPostfix]
-        static void PlayerLeveled(CharacterStats __instance)
+        static void PlayerLeveled(CharacterStats __instance) //FIXME also called when the game begins. for new game this is before health is set. also move to another script?
         {
 // this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
 // this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
@@ -130,6 +131,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isLevelUpWait = true;
             yield return new WaitForEndOfFrame();
+            if (!overworldInitialized)
+            {
+                overworldInitialized = true;
+                yield break;
+            }
             StringBuilder sb = new();
             foreach (KeyValuePair<string, string> kvp in levelUps)
             {

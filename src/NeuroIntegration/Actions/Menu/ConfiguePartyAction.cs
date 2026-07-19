@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new ConfiguePartyAction());
             window.AddAction(new ChoosePartyNamesAction());
-            window.SetForce(5, "choose to randomize the classes of your party or give 3 names for them and begin the game", "you are at the character party creation screen", true);
+            window.SetForce(3, "choose to randomize the classes of your party or give 3 names for them and begin the game", "you are at the character party creation screen", true);
             UnregisterDisabledObject.QuickCreate(owner, window);
             window.Register();
         }

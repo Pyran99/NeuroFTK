@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK
         }
 
         public override string Name => "choose_quest";
-        protected override string Description => "choose a side quest to accept from this town. only 1 quest can be accepted at a time";
+        protected override string Description => "choose a side quest to accept from this town. only 1 quest can be accepted from each town at a time";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()

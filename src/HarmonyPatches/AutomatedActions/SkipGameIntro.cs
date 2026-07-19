@@ -1,6 +1,7 @@
 using System.Collections;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.GameConfigs;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
@@ -17,7 +18,7 @@ public class SkipGameIntro
     [HarmonyPostfix]
     static void AfterSplashScreenStart()
     {
-        Context.Send(GAME_DESCRIPTION);
+        Context.Send($"you are playing 'For the King'. {GAME_DESCRIPTION}");
     }
 
     // DisplayScene uses an input key press to skip, always return true
@@ -44,7 +45,8 @@ public class SkipGameIntro
     static IEnumerator Wait()
     {
         Context.Send(PREPARE_TO_DIE_MSG);
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(2f);
+        Plugin.Logger.LogWarning($"debug_mode is {GlobalConfig.debug_mode}");
         Plugin.Logger.LogMessage("skipping difficulty warning");
         uiStartGame.Instance.OnPrepareToDie();
     }

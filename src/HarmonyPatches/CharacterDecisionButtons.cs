@@ -57,8 +57,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 activeWindow.AddAction(new CharacterDecisionAction(kvp.Key, kvp.Value));
             }
-            activeWindow.SetContext($"[{instance.m_Prompt.text}] if multiple characters can be chosen, only the character you choose to make the decision will act on it (collect will add to the chosen characters inventory, pass will skip for all characters, etc.). collected items can be sold at a market. discard should be avoided for most loot");
-            activeWindow.SetForce(0, "choose a character to perform an action with", "");
+            activeWindow.SetForce(0, $"[{instance.m_Prompt.text}] choose a character to perform the action with. if multiple characters can be chosen, only the character you choose to make the decision will act on it (collect will add to the chosen characters inventory, pass will skip for all characters, etc.). collected items can be sold at a market. discard should be avoided for most loot", "");
             activeWindow.Register();
         }
 

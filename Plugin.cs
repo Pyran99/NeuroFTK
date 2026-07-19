@@ -102,6 +102,5 @@ public class Plugin : BaseUnityPlugin
         CustomHouseRules.SET_CUSTOM_RULES = (bool)_config["use_custom_rules"];
         GlobalConfig.debug_mode = (bool)_config["debug_mode"];
         Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", (string)_config["environment_web_socket"]);
-        Logger.LogWarning($"debug_mode is {GlobalConfig.debug_mode}");
     }
 }
