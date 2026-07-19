@@ -5,7 +5,6 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
-using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 
@@ -47,21 +46,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            switch (parsedData)
-            {
-                case "new game":
-                    SelectedButton(MainMenu.newGameBtn);
-                    break;
-                case "resume game":
-                    SelectedButton(MainMenu.resumeBtn);
-                    break;
-                case "spend lore":
-                    SelectedButton(MainMenu.loreBtn);
-                    break;
-                default:
-                    Plugin.Logger.LogError($"invalid main menu action '{parsedData}'");
-                    break;
-            }
+            MainMenu.NeuroDecision(parsedData);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -92,11 +77,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (resumeGame) availableActions += "Resume a saved game. ";
             if (spendLore) availableActions += "Spend lore points on unlocking various upgrades. ";
             return availableActions;
-        }
-
-        void SelectedButton(uiFTKButton button)
-        {
-            SelectButton.StartCoroutine(button, 1.0f);
         }
     }
 }

@@ -7,7 +7,6 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using GridEditor;
 using Pyran.NeuroFTK.Utils;
-using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
 
@@ -32,7 +31,7 @@ public class MainMenu
         yield return new WaitForSeconds(1.0f);
         FindButtons(instance);
         bool purchase = HasPurchasableLore();
-        activeWindow = MainMenuAction.RegisterAction(instance, resumeBtn.isActiveAndEnabled, purchase);
+        activeWindow = MainMenuAction.RegisterAction(instance, resumeBtn?.isActiveAndEnabled ?? false, purchase);
         UnregisterDisabledObject.QuickCreate(instance.gameObject, activeWindow);
     }
 
@@ -48,7 +47,6 @@ public class MainMenu
         int lorePoints = LorePersistence.Instance.GetLore();
         int purchasableItemsCount = GetPurchasableLoreCount();
         Context.Send($"You have {lorePoints} lore points and there are {purchasableItemsCount} items you can afford. These can be used in the lore store to unlock new events, characters, equipment, and cosmetics, if you have enough points, or saved for another time.");
-        // LoggerTest.Instance?.LogMsg($"You have {lorePoints} lore points and there are {purchasableItemsCount} items you can afford. These can be used in the lore store to unlock new events, characters, equipment, and cosmetics, if you have enough points, or saved for another time.");
         return purchasableItemsCount > 0;
     }
 
@@ -69,5 +67,29 @@ public class MainMenu
         if (item.IsPurchased()) return false;
         if (!item.IsRevealed()) return false; // dlc is also checked here
         return true;
+    }
+
+    public static void NeuroDecision(string decision)
+    {
+        switch (decision)
+        {
+                case "new game":
+                    SelectedButton(newGameBtn);
+                    break;
+                case "resume game":
+                    SelectedButton(resumeBtn);
+                    break;
+                case "spend lore":
+                    SelectedButton(loreBtn);
+                    break;
+                default:
+                    Plugin.Logger.LogError($"invalid main menu action '{decision}'");
+                    break;
+        }
+    }
+
+    static void SelectedButton(uiFTKButton button)
+    {
+        SelectButton.StartCoroutine(button, 1.0f);
     }
 }
