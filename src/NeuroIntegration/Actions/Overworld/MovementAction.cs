@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
-            if (!GlobalConfig.debug_mode) window.AddAction(new EndTurnAction());
+            if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
             if (questDict != null & questDict.Count > 0)
             {
                 window.AddAction(new GoToQuestAction(new(questDict)));

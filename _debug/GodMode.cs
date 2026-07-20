@@ -91,7 +91,7 @@ namespace Pyran.NeuroFTK.ModDebug
         public static void Create()
         {
             if (Instance != null) return;
-            if (GlobalConfig.debug_mode == false) return;
+            if (!GlobalConfig.IsDebugMode()) return;
             var obj = new GameObject("ToggleGodModeEffects");
             DontDestroyOnLoad(obj);
             Instantiate(obj);
@@ -120,7 +120,7 @@ namespace Pyran.NeuroFTK.ModDebug
         private void Update() {
             if (Input.GetKeyDown(KeyCode.LeftBracket))
             {
-                if (!GlobalConfig.debug_mode) return;
+                if (!GlobalConfig.IsDebugMode()) return;
                 godModeType += 1;
                 if (godModeType > GodModeType.FULL_HEALTH) godModeType = GodModeType.NONE;
                 GameCheat.Instance.m_IsGodMode = godModeType != GodModeType.NONE;

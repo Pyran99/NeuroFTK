@@ -1,3 +1,4 @@
+using Google2u;
 using GridEditor;
 
 namespace Pyran.NeuroFTK.Utils
@@ -22,7 +23,7 @@ namespace Pyran.NeuroFTK.Utils
         public readonly int Xp;
         public readonly string Health;
         public readonly int Gold;
-        public readonly int PipeItemLevel;
+        public readonly string PipeItem;
 
         public static SerializedCharacterData Calculate(CharacterOverworld cow) => new(cow);
 
@@ -34,7 +35,7 @@ namespace Pyran.NeuroFTK.Utils
             Health = CharacterData.GetCharacterHealth(cow);
             Gold = cow.m_CharacterStats.m_Gold;
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(cow.m_CharacterStats.GetPipe());
-            PipeItemLevel = int.Parse(pipe.m_ID.Replace("pipe", "")) - 1;
+            PipeItem = $"{FTKHub.Localized<TextItems>(pipe.m_DisplayName)} (lvl {int.Parse(pipe.m_ID.Replace("pipe", "")) - 1})";
         }
         
     }

@@ -113,14 +113,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         // always choose apprentice for now
         static void SetDifficulty(GameConfig instance)
         {
-            if(GlobalConfig.debug_mode) LogDifficulties(instance);
+            if(GlobalConfig.IsDebugMode()) LogDifficulties(instance);
             instance.m_Difficulty.value = 0;
         }
 
         // always choose solo for now
         static void SetGameMode(GameConfig instance)
         {
-            if(GlobalConfig.debug_mode) LogGameModes(instance);
+            if(GlobalConfig.IsDebugMode()) LogGameModes(instance);
             instance.m_GameType.value = 0;
         }
 

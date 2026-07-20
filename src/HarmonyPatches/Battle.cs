@@ -78,7 +78,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void PlayerDied(FTKPlayerID _victim, FTKPlayerID _attacker)
         {
             FTKPlayerID ph = _victim;
-            string victim = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
+            string victim = CharacterData.GetCharacterName(ph.GetCow());
             Context.Send($"{victim} has died");
         }
 
@@ -87,7 +87,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CombatPlayerFled(FTKPlayerID _fid)
         {
             FTKPlayerID ph = _fid;
-            string player = ph.GetCow().m_CurrentDummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName;
+            string player = CharacterData.GetCharacterName(ph.GetCow());
             Context.Send($"{player} has fled the battle");
         }
 
@@ -116,13 +116,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
         [HarmonyPostfix]
-        static void PlayerLeveled(CharacterStats __instance) //FIXME also called when the game begins. for new game this is before health is set. also move to another script?
+        static void PlayerLeveled(CharacterStats __instance)
         {
 // this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
 // this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
 // this.TallyCharacterHealth(this.m_PlayerLevel, true, false);
             string name = __instance.m_CharacterName;
             int level = __instance.m_PlayerLevel;
+            if (level == 0) return;
             playerHealths[name] = __instance.m_HealthCurrent;
             string ctx = $"{name} leveled up to {level}! health {__instance.GetHealthDisplayString()}";
             levelUps[name] = ctx;
@@ -135,6 +136,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isLevelUpWait = true;
             yield return new WaitForEndOfFrame();
+            isLevelUpWait = false;
             if (!overworldInitialized)
             {
                 overworldInitialized = true;
@@ -147,18 +149,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             Context.Send(sb.ToString());
             levelUps = [];
-            isLevelUpWait = false;
         }
 
         static void PlayerHealthChange(CharacterOverworld character, int change)
         {
+            string name = CharacterData.GetCharacterName(character);
+            string health = CharacterData.GetCharacterHealth(character);
             if (change >= 0)
             {
-                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} took {change} damage (health {character.m_CharacterStats.GetHealthDisplayString()})");
+                dmgTakenString.AppendLine($"{name} took {change} damage (health {health})");
             }
             else if (change < 0)
             {
-                dmgTakenString.AppendLine($"{character.m_CharacterStats.m_CharacterName} healed {-change} (health {character.m_CharacterStats.GetHealthDisplayString()})");
+                dmgTakenString.AppendLine($"{name} healed {-change} (health {health})");
             }
             if (isHealthChangeWait) return;
             GameLogic.Instance.StartCoroutine(PlayerHealthWait());
@@ -238,7 +241,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             int oldHealth = enemyHealths[_enemyID];
             int dif = oldHealth - _newHealth;
             string name = CombatUtils.GetEnemyName(EncounterSession.Instance.m_EnemyDummies[_enemyID]);
-            if (dif > 0)
+            if (dif >= 0)
             {
                 enemySb.AppendLine($"[enemy] {name} took {dif} damage (health {_newHealth})");
             }
@@ -246,6 +249,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 enemySb.AppendLine($"[enemy] {name} healed {dif} (health {_newHealth})");
             }
+            enemyHealths[_enemyID] = _newHealth;
             if (isWaitingEnemyHealth) return;
             EncounterSession.Instance.StartCoroutine(EnemyHealthWait());
         }
@@ -351,7 +355,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 actions.Add(new CombatFriendlyAction(defense));
             }
-            if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.debug_mode)
+            if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.IsDebugMode())
             {
                 sb.Append(HandleBtnContext(_instance.m_FleeButton, _proficiencies));
                 actions.Add(new CombatFleeAction(_instance.m_FleeButton));
@@ -366,7 +370,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append(HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
                 actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
-            if (CanUseBtn(_instance.m_EquipWeaponButton) && !GlobalConfig.debug_mode)
+            if (CanUseBtn(_instance.m_EquipWeaponButton) && !GlobalConfig.IsDebugMode())
             {
                 sb.Append(HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
                 actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));

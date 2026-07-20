@@ -4,7 +4,7 @@ namespace Pyran.NeuroFTK.GameConfigs
 {
     public class GlobalConfig
     {
-        public static bool debug_mode = false;
+        public static bool debugMode = false;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
         {
@@ -13,5 +13,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             { "use_custom_rules", CustomHouseRules.SET_CUSTOM_RULES },
             { "force_first_adventure", false },
         };
+
+        public static bool IsDebugMode() => debugMode;
     }
 }

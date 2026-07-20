@@ -185,7 +185,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             Context.Send(successMsg);
             yield return new WaitForSeconds(delay);
-            if (!GlobalConfig.debug_mode) card.CommitToLorePurchase(); // skips confirm popup, debug_mode skips purchase fully
+            if (!GlobalConfig.IsDebugMode()) card.CommitToLorePurchase(); // skips confirm popup, debugMode skips purchase fully
             yield return new WaitForSeconds(delay);
             OnItemPurchased();
             isPurchasing = false;

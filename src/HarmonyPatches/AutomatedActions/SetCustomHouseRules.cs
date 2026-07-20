@@ -68,9 +68,9 @@ public class SetCustomHouseRules
                 }
             }
             Plugin.Logger.LogMessage("Applied custom rules");
-            if (GlobalConfig.debug_mode)
+            if (GlobalConfig.IsDebugMode())
             {
-                Plugin.Logger.LogMessage("Awaiting key input 'RightBracket' to close. from debug_mode");
+                Plugin.Logger.LogMessage("Awaiting key input 'RightBracket' to close. from debugMode");
                 while (!Input.GetKeyDown(KeyCode.RightBracket))
                 {
                     yield return null;

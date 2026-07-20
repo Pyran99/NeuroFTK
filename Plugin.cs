@@ -46,14 +46,14 @@ public class Plugin : BaseUnityPlugin
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Equals))
         {
-            if (!GlobalConfig.debug_mode) return;
+            if (!GlobalConfig.IsDebugMode()) return;
             doSpam = !doSpam;
             Logger.LogWarning("CHANGED DEBUG SPAM TO " + doSpam);
         }
         if (Input.GetKeyDown(KeyCode.Minus))
         {
-            GlobalConfig.debug_mode = !GlobalConfig.debug_mode;
-            Logger.LogWarning("CHANGED DEBUG MODE TO " + GlobalConfig.debug_mode);
+            GlobalConfig.debugMode = !GlobalConfig.debugMode;
+            Logger.LogWarning("CHANGED DEBUG MODE TO " + GlobalConfig.IsDebugMode());
         }
         if (Input.GetKeyDown(KeyCode.BackQuote))
         {
@@ -100,7 +100,7 @@ public class Plugin : BaseUnityPlugin
     void SetConfigValues(Dictionary<string, object> _config)
     {
         CustomHouseRules.SET_CUSTOM_RULES = (bool)_config["use_custom_rules"];
-        GlobalConfig.debug_mode = (bool)_config["debug_mode"];
+        GlobalConfig.debugMode = (bool)_config["debug_mode"];
         Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", (string)_config["environment_web_socket"]);
     }
 }

@@ -2,21 +2,26 @@ using System;
 using System.Linq;
 using System.Text;
 using HarmonyLib;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.GameConfigs;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.Utils
 {
     [HarmonyPatch]
     public class PingHexData
     {
-        [HarmonyPatch(typeof(HexLand), nameof(HexLand.TogglePing))]
+        [HarmonyPatch(typeof(HexLand), nameof(HexLand.Ping))]
         [HarmonyPostfix]
-        static void Ping(HexLand __instance)
+        static void Ping(HexLand __instance, bool _on, CharacterOverworld _cow)
         {
-            if (GlobalConfig.debug_mode == false) return;
-            Plugin.Logger.LogMessage("ping data");
+            if (!_on) return;
+            Vector2 pos = HexData.GetVec2Pos(__instance);
+            Context.Send($"{CharacterData.GetCharacterName(_cow)} pinged {pos}. you are {Math.Round(HexLand.Distance(Multiplayer.GetOwnCow().m_HexLand, __instance), 2)} distance away");
+            if (!GlobalConfig.IsDebugMode()) return;
             StringBuilder sb = new();
-            sb.AppendLine($"\nid: {__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex}");
+            sb.AppendLine("ping data");
+            sb.AppendLine($"id: {__instance.GetHexLandID().m_BigIndex} - {__instance.GetHexLandID().m_SmallIndex}");
             sb.AppendLine($"pos: {__instance.GetPosition()}");
             sb.AppendLine($"realm: {__instance.GetRealm()}"); // GuardianForest
             sb.AppendLine($"boat: {__instance.IsBoat()}");

@@ -328,8 +328,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string hasDeadPlayers = "";
             string questName = "";
             string name = hex.GetLocationDisplayValue(cow);
-            Vector3 itemPos = hex.GetPosition();
-            Vector2 pos = new(itemPos.x, itemPos.z);
+            Vector2 pos = HexData.GetVec2Pos(hex);
             QuestLogicBase _quest = TileHasQuestObjective(hex);
             if (_quest != null && !_quest.IsConsiderComplete())
             {
@@ -388,12 +387,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             dest = quest.GetHexLandDestination();
             if (dest != null)
             {
-                Vector3 pos1 = dest.GetPosition();
-                Vector2 pos2 = new(pos1.x, pos1.z);
-                if (questDict.ContainsKey(pos2.ToString())) return;
-                questDict.Add(pos2.ToString(), quest);
-                questPositions.Add(pos1);
-                sbQuest.AppendLine($"[{type} quest at {pos2}]: {description}");
+                Vector2 pos = HexData.GetVec2Pos(dest);
+                if (questDict.ContainsKey(pos.ToString())) return;
+                questDict.Add(pos.ToString(), quest);
+                questPositions.Add(dest.GetPosition());
+                sbQuest.AppendLine($"[{type} quest at {pos}]: {description}");
                 // [Warning:Neuro For the King] quest desc: Kill the Chaos Leader in The Guardian Forest
                 // [Warning:Neuro For the King] quest pos: (85.1, 117.5)
             }
@@ -419,25 +417,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateActionWindow(CharacterOverworld _cow)
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            Vector3 cowPos = _cow.GetHexLand().GetPosition();
-            Vector2 cowPos2 = new(cowPos.x, cowPos.z);
-            string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {cowPos2}.";
+            Vector2 pos = HexData.GetVec2Pos(_cow.GetHexLand());
+            string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
             if (lastDestinations.ContainsKey(_cow))
             {
                 if (lastDestinations[_cow] != null && lastDestinations[_cow] != _cow.GetHexLand())
                 {
-                    cowPos = lastDestinations[_cow].GetPosition();
-                    cowPos2 = new(cowPos.x, cowPos.z);
-                    ctx += $" the last hex you tried to move to with this character was {cowPos2}.";
+                    pos = HexData.GetVec2Pos(lastDestinations[_cow]);
+                    ctx += $" the last hex you tried to move to with this character was {pos}.";
                 }
             }
             foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
             {
                 if (player == _cow) continue;
                 string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
-                cowPos = player.GetHexLand().GetPosition();
-                cowPos2 = new(cowPos.x, cowPos.z);
-                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {cowPos2},";
+                pos = HexData.GetVec2Pos(player.GetHexLand());
+                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {pos},";
             }
             Context.Send(ctx);
             string _quests = GetQuestData();
