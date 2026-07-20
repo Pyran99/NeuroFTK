@@ -1,3 +1,5 @@
+using NeuroSdk.Messages.Outgoing;
+
 namespace Pyran.NeuroFTK.Utils
 {
     public class Multiplayer
@@ -21,6 +23,11 @@ namespace Pyran.NeuroFTK.Utils
             }
             Plugin.Logger.LogWarning("not your cow");
             return false;
+        }
+
+        public static void SendOtherPlayerTurnCtx()
+        {
+            Context.Send($"another player is taking their turn", true);
         }
     }
 }

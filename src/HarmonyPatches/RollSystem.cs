@@ -52,8 +52,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // combat rolls are after choice
             if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
-                // currentCOW = GameLogic.Instance.GetCurrentCOW();
-                // QuickTimerCallback timer = new(() => OverworldFlow.GetValidMoveTiles(currentCOW), null, 1500f);
             }
         }
 

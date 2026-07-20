@@ -33,7 +33,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
-            if (!Multiplayer.IsOwnerTurn(__instance.CombatCow)) return;
+            if (!Multiplayer.IsOwnerTurn(__instance.CombatCow))
+            {
+                Multiplayer.SendOtherPlayerTurnCtx();
+                return;
+            }
             StanceBtnInstance = __instance;
             BeginTurns.CtxCombatTurnBeginEnemy();
             BeginTurns.CtxCombatTurnBeginPlayer();

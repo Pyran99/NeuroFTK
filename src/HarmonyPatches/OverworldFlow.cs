@@ -41,7 +41,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
-            Multiplayer.IsOwnerTurn(__instance);
+            if (!Multiplayer.IsOwnerTurn(__instance))
+            {
+                Multiplayer.SendOtherPlayerTurnCtx();
+                yield return __result.Current;
+            }
             isFirstAction = true;
             isSearching = false;
             Object.Destroy(window);
