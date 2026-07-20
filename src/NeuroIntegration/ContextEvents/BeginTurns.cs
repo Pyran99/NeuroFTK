@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text;
-using Google2u;
 using GridEditor;
 using NeuroSdk.Internal;
 using NeuroSdk.Messages.Outgoing;
@@ -14,19 +13,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static string CtxOverworldTurnBeginStats(CharacterOverworld _cow)
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
-            SerializeTest test = SerializeTest.Calculate(_cow);
+            SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
             string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
             return json;
-            // CharacterStats stats = _cow.m_CharacterStats;
-            // StringBuilder sb = new();
-            // sb.AppendLine($"[{stats.m_CharacterName}({stats.m_CharacterClass}) turn]");
-            // sb.AppendLine($"lvl: {stats.m_PlayerLevel}");
-            // sb.AppendLine($"xp: {stats.GetXpDisplayString()}");
-            // sb.AppendLine($"health: {stats.GetHealthDisplayString()}");
-            // sb.AppendLine($"gold: {stats.m_Gold}");
-            // FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(stats.GetPipe());
-            // sb.AppendLine($"pipe: {FTKHub.Localized<TextItems>(pipe.m_DisplayName)}({(int)stats.GetPipe()}) (upgraded at the market)");
-            // Context.Send(sb.ToString());
         }
 
         public static void CtxCombatTurnBeginPlayer()
@@ -43,6 +32,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string coherent = cow.Value.IsCoherent() ? "" : "stunned";
                 sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}.");
             }
+            sb.AppendLine($"it is {CharacterData.GetCharacterName(GameLogic.Instance.GetCurrentCombatCOW())}'s turn.");
             Context.Send(sb.ToString());
         }
 

@@ -59,13 +59,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            if (!Multiplayer.IsOwnerTurn(cow)) return;
             Plugin.Logger.LogWarning("START tracking first:" + isFirstAction);
             isTracking = true;
             if (isFirstAction) return;
-            RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
-            Multiplayer.IsOwnerTurn(RollSystem.currentCOW);
+            RollSystem.currentCOW = cow;
             Plugin.Logger.LogWarning("start tracking create window");
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), Movement.Instance.m_CursorHexRenderer.gameObject);
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject);
         }
 
         // when movement begins
@@ -421,16 +422,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (lastDestinations[_cow] != null && lastDestinations[_cow] != _cow.GetHexLand())
                 {
-                    Vector3 pos = lastDestinations[_cow].GetPosition();
-                    Vector2 pos2 = new(pos.x, pos.z);
-                    ctx += $" the last hex you tried to move to with this character was {pos2}.";
+                    cowPos = lastDestinations[_cow].GetPosition();
+                    cowPos2 = new(cowPos.x, cowPos.z);
+                    ctx += $" the last hex you tried to move to with this character was {cowPos2}.";
                 }
             }
             foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
             {
                 if (player == _cow) continue;
                 string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
-                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {player.GetHexLand().GetPosition()},";
+                cowPos = player.GetHexLand().GetPosition();
+                cowPos2 = new(cowPos.x, cowPos.z);
+                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {cowPos2},";
             }
             Context.Send(ctx);
             string _quests = GetQuestData();
