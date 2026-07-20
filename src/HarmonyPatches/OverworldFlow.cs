@@ -421,8 +421,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     Vector3 pos = lastDestinations[_cow].GetPosition();
                     Vector2 pos2 = new(pos.x, pos.z);
-                    ctx += $" the last hex you tried to move to with this character was {pos2}";
+                    ctx += $" the last hex you tried to move to with this character was {pos2}.";
                 }
+            }
+            foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (player == _cow) continue;
+                string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
+                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {player.GetHexLand().GetPosition()},";
             }
             Context.Send(ctx);
             string _quests = GetQuestData();

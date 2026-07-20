@@ -23,13 +23,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Health = CharacterData.GetCharacterHealth(cow);
             Gold = cow.m_CharacterStats.m_Gold;
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(cow.m_CharacterStats.GetPipe());
-            PipeItemLevel = (int)pipe.m_PipeItem; //FIXME incorrect level
-            Plugin.Logger.LogWarning("pipe id = " + pipe.m_ID);
-        }
-
-        private void EmptyFunc()
-        {
-            int i;
+            PipeItemLevel = int.Parse(pipe.m_ID.Replace("pipe", ""));
         }
     }
 }

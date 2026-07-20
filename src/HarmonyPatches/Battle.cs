@@ -11,7 +11,6 @@ using Google2u;
 using System.Linq;
 using Pyran.NeuroFTK.GameConfigs;
 using System.Text;
-using FTKItemName;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -291,9 +290,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void RegisterDisposableActions(CharacterOverworld cow)
         {
             Dictionary<string, FTK_itembase.ID> items = [];
-            foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())
+            foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow))
             {
-                if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
                 items.Add(ItemData.GetItemName(item), item);
             }
             disposableActions.Clear();
@@ -315,13 +313,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static string GetBeltDetails(CharacterOverworld cow)
         {
             StringBuilder sb = new();
-            List<FTK_itembase.ID> items = cow.m_CharacterStats.GetBeltItems();
+            List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(cow);
             if (items.Count == 0) return "";
             sb.AppendLine();
             sb.Append("[usable belt items] ");
             foreach (FTK_itembase.ID item in items)
             {
-                if ((bool)!FTKItem.Get(item)?.CanUse(cow)) continue;
                 sb.AppendLine($"({ItemData.GetItemName(item)}){ItemData.GetItemDescription(item, true, cow)}");
             }
             return sb.ToString();
