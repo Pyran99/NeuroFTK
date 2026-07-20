@@ -41,6 +41,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
+            Multiplayer.IsOwnerTurn(__instance);
             isFirstAction = true;
             isSearching = false;
             Object.Destroy(window);
@@ -62,6 +63,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isTracking = true;
             if (isFirstAction) return;
             RollSystem.currentCOW = GameLogic.Instance.GetCurrentCOW();
+            Multiplayer.IsOwnerTurn(RollSystem.currentCOW);
             Plugin.Logger.LogWarning("start tracking create window");
             QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), Movement.Instance.m_CursorHexRenderer.gameObject);
         }

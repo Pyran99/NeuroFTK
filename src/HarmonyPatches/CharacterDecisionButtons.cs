@@ -21,6 +21,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void VoteContainerShow(VoteButtonContainer __instance)
         {
+            if (!Multiplayer.IsOwnerTurn(__instance.m_PlayerHud.m_Cow)) return;
             string name = __instance.m_PlayerHud.m_Cow.m_CharacterStats.m_CharacterName;
             Plugin.Logger.LogWarning("decision: " + name); // bug 14
             voteButtons[name] = [];

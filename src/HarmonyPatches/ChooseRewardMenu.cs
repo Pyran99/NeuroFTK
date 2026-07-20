@@ -15,19 +15,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static ActionWindow window = null;
         static List<uiChooseRewardButton> buttons = [];
         static string title = "";
+        static bool isOwner = false;
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), "BaseInitialize")]
         [HarmonyPostfix]
-        static void Init(string _title, uiChooseRewardMenu.RewardType _rType)
+        static void Init(string _title, uiChooseRewardMenu.RewardType _rType, CharacterOverworld _cow)
         {
             buttons.Clear();
             title = _title;
+            isOwner = Multiplayer.IsOwnerTurn(_cow);
         }
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), "BaseInitialize2")]
         [HarmonyPostfix]
         static void Init2(uiChooseRewardMenu __instance, List<uiChooseRewardButton> ___m_AllButtons)
         {
+            if (!isOwner) return;
             if (title.IsNullOrEmpty())
             {
                 Plugin.Logger.LogError("reward title was empty");
