@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using FTKItemName;
 using Google2u;
 using GridEditor;
@@ -44,7 +45,7 @@ namespace Pyran.NeuroFTK.Utils
             List<FTK_itembase.ID> list = [];
             foreach (FTK_itembase.ID item in _cow.m_CharacterStats.GetBeltItems())
             {
-                if ((bool)!FTKItem.Get(item)?.CanUse(_cow)) continue;
+                if (!FTKItem.Get(item).CanUse(_cow)) continue;
                 list.Add(item);
             }
             return list;

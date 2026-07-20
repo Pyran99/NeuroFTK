@@ -116,6 +116,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateAction()
         {
             window = TownQuestBoardAction.CreateWindow(itemsById);
+            UnregisterDisabledObject.QuickCreate(uiGetQuestMenu.Instance.m_ListRoot.gameObject, window, true);
         }
 
         public static void NeuroDecision(QuestListItem _item)
@@ -123,18 +124,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send("Quest accepted: " + StringReplace.RemoveStyling(_item.m_QuestDetail?.m_Text.text));
             Button btn = _item.m_Button;
             uiFTKButton btnComp = btn.GetComponent<uiFTKButton>();
-            if (btnComp != null && !_item.m_QuestDetail.gameObject.activeInHierarchy) SelectButton.StartCoroutine(btnComp);
-            else SelectButton.StartUnityBtnCoroutine(_item.m_Button);
+            if (btnComp != null && !_item.m_QuestDetail.gameObject.activeSelf) SelectButton.StartCoroutine(btnComp, 0.25f);
             _item.StartCoroutine(AcceptQuest(_item.m_QuestDetail));
         }
 
         static IEnumerator AcceptQuest(uiQuestDetail _detail)
         {
             Plugin.Logger.LogWarning("wait for details");
+            yield return new WaitForSeconds(0.3f);
             GameObject obj = uiGetQuestMenu.Instance.m_ListRoot.gameObject;
             while (!_detail.gameObject.activeInHierarchy)
             {
-                if (!obj.activeInHierarchy)
+                if (!obj.GetActive())
                 {
                     Plugin.Logger.LogError("quest menu was closed");
                     Context.Send("there was an issue accepting the quest", true);

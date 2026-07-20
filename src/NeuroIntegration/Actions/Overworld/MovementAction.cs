@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
@@ -33,16 +34,27 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return window;
         }
 
-        public static ActionWindow CreateTurnBeginWindow(Dictionary<string, FTK_itembase.ID> items, string beltCtx)
+        public static ActionWindow CreateTurnBeginWindow(Dictionary<string, FTK_itembase.ID> _items, string _beltCtx)
         {
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             ActionWindow window = ActionWindow.Create(cow.gameObject);
             List<INeuroAction> registerActions = [];
             registerActions.Add(new BeginMovementAction());
+
+            List<FTK_itembase.ID> beltItems = ItemData.GetUsableBeltItems(cow);
+            Dictionary<string, FTK_itembase.ID> items = [];
+            StringBuilder beltCtx = new();
+            beltCtx.Append("[usable belt items] ");
+            foreach (FTK_itembase.ID item in beltItems)
+            {
+                items.Add(ItemData.GetItemName(item), item);
+                beltCtx.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
+            }
+
             if (items.Count > 0)
             {
                 registerActions.Add(new UseBeltItemAction(items, cow));
-                window.SetContext(beltCtx);
+                window.SetContext(beltCtx.ToString());
             }
             if (cow.GetHexLand()?.HasPOI() ?? false)
             {
