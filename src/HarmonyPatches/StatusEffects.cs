@@ -1,6 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using GridEditor;
 using HarmonyLib;
+using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.GameConfigs;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -8,29 +13,53 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class StatusEffects
     {
-
-        readonly Dictionary<string, List<GameObject>> immunities = [];
-        readonly Dictionary<string, List<GameObject>> ailments = [];
+        static readonly Dictionary<string, List<GameObject>> immunities = [];
+        static readonly Dictionary<string, List<GameObject>> ailments = [];
         
-        [HarmonyPatch(typeof(uiPlayerMainHudStatus), nameof(uiPlayerMainHudStatus.SetStatusIcons))] //1. each on game start | 2. turn start, overworld: before tracking
-        [HarmonyPostfix]
+        // [HarmonyPatch(typeof(uiPlayerMainHudStatus), nameof(uiPlayerMainHudStatus.SetStatusIcons))] //1. each on game start | 2. turn start, overworld: before tracking, combat | 3. with each movement | 4. combat btn hovered //FIXME find another place to check
+        // [HarmonyPostfix]
         static void OnSetIcons(uiPlayerMainHudStatus __instance)
         {
             // uiPlayerMainHud\DisplayRoot\playerMainHudStatus
+            if (!GlobalConfig.gameInitialized) return;
             Plugin.Logger.LogWarning("testSetStatusIcons");
             uiPlayerMainHud hud = __instance.transform.parent.transform.parent.GetComponent<uiPlayerMainHud>();
-            CharacterOverworld cow;
-            GameObject immunities = __instance.transform.Find("immunities").gameObject;
-            GameObject ailments = __instance.transform.Find("aliments").gameObject;
-            foreach (Transform child in immunities.transform)
+            CharacterOverworld cow = hud.m_Cow;
+            GameObject _immunities = __instance.transform.Find("immunities").gameObject;
+            GameObject _ailments = __instance.transform.Find("aliments").gameObject;
+            string name = CharacterData.GetCharacterName(cow);
+            if (!immunities.ContainsKey(name)) immunities.Add(name, []);
+            if (!ailments.ContainsKey(name)) ailments.Add(name, []);
+            Dictionary<string, string> result = [];
+            foreach (Transform child in _immunities.transform)
             {
-                if (!child.gameObject.activeSelf) continue;
-                Plugin.Logger.LogWarning($"immunity {child.name}: {(effects2.TryGetValue(child.name, out Dictionary<string, string> _effect) ? $"{_effect.First().Key}, {_effect.First().Value}" : child.name)}");
+                if (!child.gameObject.activeSelf)
+                {
+                    if (immunities[name].Remove(child.gameObject))
+                    {
+                        Context.Send($"immunity removed {child.name}: {(effects2.TryGetValue(child.name, out result) ? $"{result.First().Key}, {result.First().Value}" : child.name)}");
+                    }
+                    continue;
+                }
+                Plugin.Logger.LogWarning($"immunity {child.name}: {(effects2.TryGetValue(child.name, out result) ? $"{result.First().Key}, {result.First().Value}" : child.name)}");
+                if (immunities[name].Contains(child.gameObject)) continue;
+                immunities[name].Add(child.gameObject);
+                Context.Send($"immunity applied {child.name}: {(effects2.TryGetValue(child.name, out result) ? $"{result.First().Key}, {result.First().Value}" : child.name)}");
             }
-            foreach (Transform child in ailments.transform)
+            foreach (Transform child in _ailments.transform)
             {
-                if (!child.gameObject.activeSelf) continue;
-                Plugin.Logger.LogWarning($"ailment {child.name}: {(effects2.TryGetValue(child.name, out Dictionary<string, string> _effect) ? $"{_effect.First().Key}, {_effect.First().Value}" : child.name)}");
+                if (!child.gameObject.activeSelf)
+                {
+                    if (ailments[name].Remove(child.gameObject))
+                    {
+                        Context.Send($"ailment removed {child.name}: {(effects2.TryGetValue(child.name, out result) ? $"{result.First().Key}, {result.First().Value}" : child.name)}");
+                    }
+                    continue;
+                }
+                Plugin.Logger.LogWarning($"ailment {child.name}: {(effects2.TryGetValue(child.name, out result) ? $"{result.First().Key}, {result.First().Value}" : child.name)}");
+                if (ailments[name].Contains(child.gameObject)) continue;
+                ailments[name].Add(child.gameObject);
+                Context.Send($"ailment applied {child.name}: {(effects2.TryGetValue(child.name, out result) ? $"{result.First().Key}, {result.First().Value}" : child.name)}");
             }
         }
 
@@ -48,17 +77,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 
             }
         }
-
-        readonly Dictionary<CharacterStats.CurseType, string> curses = new()
-        {
-            {CharacterStats.CurseType.Blind, "Blind"},
-        };
-
-        readonly Dictionary<ProficiencyBase.Category, string> proficiencies = new()
-        {
-            {ProficiencyBase.Category.Acid, "Blind"},
-        };
-
 
         static readonly Dictionary<string, Dictionary<string, string>> effects2 = new()
         {
@@ -185,5 +203,294 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {"[1] disease", "Curse Lethargic"},
             {"petrified", "Curse Lethargic"},
         };
+
+
+        #region testing
+
+        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.AddProfToDummy))]
+        [HarmonyPostfix]
+        static void AddProfToDummy(FTK_proficiencyTable.ID[] _prof, CharacterDummy __instance)
+        {
+            Plugin.Logger.LogWarning($"profs added to dummy: {string.Join(", ", [.. _prof.Select(x => x.ToString())])}");
+            for (int i = 0; i < _prof.Length; i++)
+            {
+                ProficiencyBase proficiencyBase = ProficiencyManager.Instance.Get(_prof[i]);
+                if (proficiencyBase)
+                {
+                    if (proficiencyBase.IsImmune(__instance))
+                    {
+                        Plugin.Logger.LogWarning($"immune to {_prof[i]}");
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RemoveSpecificProficiency))]
+        [HarmonyPrefix]
+        static void RemovedProficiency(ProficiencyBase.Category _c, CharacterDummy __instance)
+        {
+            if (__instance.m_SufferingProficiencies.ContainsKey(_c))
+            {
+                ProficiencyBase.Category _c2 = _c;
+                Plugin.Logger.LogWarning("removed proficiency " + _c2.ToString());
+            }
+        }
+
+        [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.RemoveAllProficiencies))]
+        [HarmonyPrefix]
+        static void RemovedAllProficiency(ProficiencyBase.Category _c, CharacterDummy __instance)
+        {
+            List<ProficiencyBase.Category> list = [];
+            StringBuilder sb = new();
+            foreach (ProficiencyBase.Category category in __instance.m_SufferingProficiencies.Keys)
+            {
+                ProficiencyBase.Category _c2 = _c;
+                sb.AppendLine("removed proficiency " + _c2.ToString());
+            }
+            if (sb.Length == 0) return;
+            Plugin.Logger.LogWarning(sb.ToString());
+        }
+
+        [HarmonyPatch(typeof(ProficiencyBase), nameof(ProficiencyBase.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyBase __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category} => is this called for overrides (curse poison)");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyBleed), nameof(ProficiencyBleed.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyBleed __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyCure), nameof(ProficiencyCure.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyCure __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyCurse), nameof(ProficiencyCurse.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyCurse __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyDarkness), nameof(ProficiencyDarkness.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyDarkness __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyDeath), nameof(ProficiencyDeath.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyDeath __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyDebuff), nameof(ProficiencyDebuff.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyDebuff __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyDisease), nameof(ProficiencyDisease.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyDisease __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyDrainLife), nameof(ProficiencyDrainLife.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyDrainLife __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyEntangle), nameof(ProficiencyEntangle.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyEntangle __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyFireBase), nameof(ProficiencyFireBase.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyFireBase __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyFocus), nameof(ProficiencyFocus.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyFocus __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyFullCure), nameof(ProficiencyFullCure.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyFullCure __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyIce), nameof(ProficiencyIce.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyIce __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyIlluminate), nameof(ProficiencyIlluminate.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyIlluminate __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyInterrupt), nameof(ProficiencyInterrupt.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyInterrupt __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyInvulnerability), nameof(ProficiencyInvulnerability.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyInvulnerability __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyLightning), nameof(ProficiencyLightning.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyLightning __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyPanaxCure), nameof(ProficiencyPanaxCure.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyPanaxCure __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyPetrify), nameof(ProficiencyPetrify.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyPetrify __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyPoison), nameof(ProficiencyPoison.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyPoison __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyQuickness), nameof(ProficiencyQuickness.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyQuickness __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyResistDeath), nameof(ProficiencyResistDeath.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyResistDeath __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyRush), nameof(ProficiencyRush.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyRush __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyScare), nameof(ProficiencyScare.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyScare __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyShield), nameof(ProficiencyShield.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyShield __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealBeltItem), nameof(ProficiencyStealBeltItem.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyStealBeltItem __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealEquippedItem), nameof(ProficiencyStealEquippedItem.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyStealEquippedItem __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealGold), nameof(ProficiencyStealGold.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyStealGold __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealPackItem), nameof(ProficiencyStealPackItem.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyStealPackItem __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStunned), nameof(ProficiencyStunned.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyStunned __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyTaunt), nameof(ProficiencyTaunt.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyTaunt __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyVex), nameof(ProficiencyVex.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyVex __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyWater), nameof(ProficiencyWater.AddToDummy))]
+        [HarmonyPostfix]
+        static void AddProficiency(CharacterDummy _dummy, ProficiencyWater __instance)
+        {
+            Plugin.Logger.LogWarning($"added prof to {_dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName}: {__instance.m_Category}");
+        }
+
+
+        #endregion
+
     }
 }

@@ -7,6 +7,7 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using GridEditor;
 using Pyran.NeuroFTK.Utils;
+using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
 
@@ -24,6 +25,7 @@ public class MainMenu
     static void OnSetFocus(MainScreen __instance)
     {
         __instance.StartCoroutine(DelayMainMenuAction(__instance));
+        GlobalConfig.gameInitialized = false;
     }
 
     static IEnumerator DelayMainMenuAction(MainScreen instance)

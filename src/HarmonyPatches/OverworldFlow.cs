@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -41,6 +42,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
+            GlobalConfig.gameInitialized = true;
             if (!Multiplayer.IsOwnerTurn(__instance))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();

@@ -33,6 +33,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
+            GlobalConfig.gameInitialized = true;
             if (!Multiplayer.IsOwnerTurn(__instance.CombatCow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
@@ -112,7 +113,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static Dictionary<string, string> levelUps = [];
         static bool isLevelUpWait = false;
-        public static bool overworldInitialized = false; // check fixed below = not called on first load overworld
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
         [HarmonyPostfix]
@@ -121,9 +121,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 // this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
 // this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
 // this.TallyCharacterHealth(this.m_PlayerLevel, true, false);
-            string name = __instance.m_CharacterName;
             int level = __instance.m_PlayerLevel;
             if (level == 0) return;
+            string name = __instance.m_CharacterName;
+            if (playerHealths[name] == __instance.m_HealthCurrent) return;
             playerHealths[name] = __instance.m_HealthCurrent;
             string ctx = $"{name} leveled up to {level}! health {__instance.GetHealthDisplayString()}";
             levelUps[name] = ctx;
@@ -137,11 +138,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isLevelUpWait = true;
             yield return new WaitForEndOfFrame();
             isLevelUpWait = false;
-            if (!overworldInitialized)
-            {
-                overworldInitialized = true;
-                yield break;
-            }
             StringBuilder sb = new();
             foreach (KeyValuePair<string, string> kvp in levelUps)
             {

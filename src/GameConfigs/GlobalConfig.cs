@@ -5,6 +5,7 @@ namespace Pyran.NeuroFTK.GameConfigs
     public class GlobalConfig
     {
         public static bool debugMode = false;
+        public static bool gameInitialized = false;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
         {
