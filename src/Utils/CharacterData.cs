@@ -39,6 +39,19 @@ namespace Pyran.NeuroFTK.Utils
             FTK_pipe.ID pipeID = cow.m_CharacterStats.GetPipe();
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(pipeID);
             PipeItem = $"{FTKHub.Localized<TextItems>(pipe.m_DisplayName)} (lvl {(int)pipeID})";
+            StatusEffects = GetStatusEffects(cow);
+        }
+
+        private List<string> GetStatusEffects(CharacterOverworld cow)
+        {
+            List<string> result = [];
+            CharacterDummy dummy = cow.GetCurrentDummy();
+            if (dummy == null) return result;
+            foreach (CharacterDummy.ProficiencyRecord value in dummy.m_SufferingProficiencies.Values)
+            {
+                result.Add(value.m_Proficiency.m_ProficiencyData.GetLocalizedDisplayName());
+            }
+            return result;
         }
         
     }
