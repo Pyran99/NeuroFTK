@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Google2u;
 using GridEditor;
 
@@ -24,6 +25,7 @@ namespace Pyran.NeuroFTK.Utils
         public readonly string Health;
         public readonly int Gold;
         public readonly string PipeItem;
+        public readonly List<string> StatusEffects = [];
 
         public static SerializedCharacterData Calculate(CharacterOverworld cow) => new(cow);
 
