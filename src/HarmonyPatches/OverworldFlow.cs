@@ -43,6 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
             GlobalConfig.gameInitialized = true;
+            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) yield return __result.Current;
             if (!Multiplayer.IsOwnerTurn(__instance))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
@@ -53,8 +54,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
             while (__result.MoveNext()) yield return __result.Current;
             Plugin.Logger.LogWarning("first turn action");
-            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow([], ""), __instance.gameObject);
-            // QuickTimerCallback timer = new(() => MovementAction.CreateTurnBeginWindow(items, beltCtx.ToString()), __instance.gameObject, 2.0f);
+            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(), __instance.gameObject);
 
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);

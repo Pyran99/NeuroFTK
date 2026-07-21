@@ -23,7 +23,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (!Multiplayer.IsOwnerTurn(__instance.m_PlayerHud.m_Cow)) return;
             string name = __instance.m_PlayerHud.m_Cow.m_CharacterStats.m_CharacterName;
-            Plugin.Logger.LogWarning("decision: " + name); // bug 14
+            Plugin.Logger.LogWarning("decision bug14 checking: " + name); // bug 14
             voteButtons[name] = [];
             Button[] btns = __instance.GetComponentsInChildren<Button>();
             foreach (Button btn in btns)

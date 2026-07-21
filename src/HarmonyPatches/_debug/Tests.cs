@@ -103,13 +103,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("39 CommenceBattleRPC");
         }
 
-        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.DisplayLootItem))]
-        [HarmonyPostfix]
-        static void Test47(string _item)
-        {
-            Plugin.Logger.LogMessage("47 DisplayLootItem: " + _item);
-        }
-
         // quest message
         [HarmonyPatch(typeof(MessagePresenter), "WaitPortraitToClose")]
         [HarmonyPatch([typeof(int),typeof(Action),typeof(Action<ContinueFSM, int>),typeof(QuestLogicBase),typeof(GameEventManager.QuestMessageType),typeof(bool)])]

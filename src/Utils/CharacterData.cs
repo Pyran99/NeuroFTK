@@ -36,10 +36,9 @@ namespace Pyran.NeuroFTK.Utils
             Xp = cow.m_CharacterStats.m_PlayerXP;
             Health = CharacterData.GetCharacterHealth(cow);
             Gold = cow.m_CharacterStats.m_Gold;
-            FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(cow.m_CharacterStats.GetPipe());
-            int _pipe = (int)cow.m_CharacterStats.GetPipe();
-            Plugin.Logger.LogWarning($"pipe lvl = {_pipe}");
-            PipeItem = $"{FTKHub.Localized<TextItems>(pipe.m_DisplayName)} (lvl {int.Parse(pipe.m_ID.Replace("pipe", "")) - 1})";
+            FTK_pipe.ID pipeID = cow.m_CharacterStats.GetPipe();
+            FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(pipeID);
+            PipeItem = $"{FTKHub.Localized<TextItems>(pipe.m_DisplayName)} (lvl {(int)pipeID})";
         }
         
     }

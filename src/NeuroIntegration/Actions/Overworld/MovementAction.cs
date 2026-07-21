@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return window;
         }
 
-        public static ActionWindow CreateTurnBeginWindow(Dictionary<string, FTK_itembase.ID> _items, string _beltCtx)
+        public static ActionWindow CreateTurnBeginWindow()
         {
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             ActionWindow window = ActionWindow.Create(cow.gameObject);

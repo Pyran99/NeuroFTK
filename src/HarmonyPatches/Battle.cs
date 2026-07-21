@@ -34,6 +34,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
             GlobalConfig.gameInitialized = true;
+            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                Plugin.Logger.LogError("wrong mode for battle");
+                return;
+            }
             if (!Multiplayer.IsOwnerTurn(__instance.CombatCow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
@@ -124,7 +129,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             int level = __instance.m_PlayerLevel;
             if (level == 0) return;
             string name = __instance.m_CharacterName;
-            if (playerHealths[name] == __instance.m_HealthCurrent) return;
+            if (!playerHealths.ContainsKey(name) || playerHealths[name] == __instance.m_HealthCurrent) return;
             playerHealths[name] = __instance.m_HealthCurrent;
             string ctx = $"{name} leveled up to {level}! health {__instance.GetHealthDisplayString()}";
             levelUps[name] = ctx;
