@@ -28,7 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 window.AddAction(action);
             }
-            window.SetForce(3, $"it is your turn with {_instance.CombatCow.m_CharacterStats.m_CharacterName}, choose an attack action", "", true);
+            window.SetForce(0, $"it is your turn with {_instance.CombatCow.m_CharacterStats.m_CharacterName}, choose an attack action", "", true);
             window.Register();
             return window;
         }

@@ -14,6 +14,7 @@ namespace Pyran.NeuroFTK.Utils
             {"View Wares", "purchase items."},
             {"Journal", "view this adventurers journal."},
             {"Devote", "become a champion for this sanctums god."},
+            {"Enter Party", "begin this dungeon with all party members"},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()
@@ -24,6 +25,17 @@ namespace Pyran.NeuroFTK.Utils
             {MiniHexServiceType.Priest, "remove all curses"},
             {MiniHexServiceType.BoatRepair, "fully repair all adjacent ships"},
             {MiniHexServiceType.BoatReclaim, "exchange an adjacent ship for a ship deed (ship must be fully repaired)"},
+        };
+
+        private static readonly Dictionary<string, string> AlternateLocLookUp = new()
+        {
+            { "Ice", "Freeze" },
+            { "Lightning", "Shock" },
+            { "Dazed", "Stun" },
+            { "Stunned", "Stun" },
+            { "Death", "DeathMark" },
+            { "StealItem", "Steal" },
+            { "StealGold", "Steal" }
         };
     }
 }

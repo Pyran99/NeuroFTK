@@ -29,7 +29,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             window.SetContext($"(Items and their descriptions you can afford) {sb}");
             // LoggerTest.Instance?.LogMsg($"(Items and their descriptions you can afford) {sb}");
-            window.SetForce(5, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks", true);
+            window.SetForce(0, "purchase lore items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now", "You are in the lore store for game unlocks", true);
             window.Register();
             return window;
         }

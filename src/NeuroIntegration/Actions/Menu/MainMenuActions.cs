@@ -16,7 +16,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             window.AddAction(new MainMenuAction(instance, _resumeGame, _canSpendLore));
-            window.SetForce(5, "Begin the game or spend lore points if you can afford anything", "you are at the games main menu", true);
+            window.SetForce(0, "Begin the game or spend lore points if you can afford anything", "you are at the games main menu", true);
             window.Register();
             return window;
         }

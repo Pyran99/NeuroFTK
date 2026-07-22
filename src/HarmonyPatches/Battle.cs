@@ -46,7 +46,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             StanceBtnInstance = __instance;
             BeginTurns.CtxCombatTurnBeginEnemy();
-            BeginTurns.CtxCombatTurnBeginPlayer();
+            BeginTurns.CtxCombatTurnBeginPlayer(__instance.CombatCow);
             CreateActionWindow(StanceBtnInstance, m_Proficiencies);
         }
 
@@ -289,7 +289,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
             actions.Clear();
-            string ctx = GetAttackContext(_instance, _proficiencies);
+            string ctx = GetAttackContextAndRegisterAction(_instance, _proficiencies);
             ctx += GetBeltDetails(cow);
             RegisterDisposableActions(cow);
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
@@ -334,7 +334,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return sb.ToString();
         }
 
-        static string GetAttackContext(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
+        static string GetAttackContextAndRegisterAction(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             StringBuilder sb = new();
             sb.Append("[your attacks] ");

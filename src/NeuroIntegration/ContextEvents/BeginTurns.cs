@@ -18,13 +18,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return json;
         }
 
-        public static void CtxCombatTurnBeginPlayer()
+        public static void CtxCombatTurnBeginPlayer(CharacterOverworld _cow)
         {
             StringBuilder sb = new();
-            sb.Append("[team state]");
+            SerializedCharacterData data = SerializedCharacterData.Calculate(_cow);
+            string json = $"[{data.Name} turn] {Jason.Serialize(data)}";
+            sb.AppendLine(json);
+            sb.Append("[teammates state]");
             foreach (KeyValuePair<FTKPlayerID, CharacterDummy> cow in EncounterSession.Instance.m_PlayerDummies)
             {
                 if (!cow.Value.m_IsAlive) continue;
+                if (cow.Value.m_CharacterOverworld == _cow) continue;
                 CharacterStats stats = cow.Value.m_CharacterOverworld.m_CharacterStats;
                 string name = $"{stats.m_CharacterName}";
                 string lvl = $"{stats.m_PlayerLevel}";
@@ -32,7 +36,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string coherent = cow.Value.IsCoherent() ? "" : "stunned";
                 sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}.");
             }
-            sb.AppendLine($"it is {CharacterData.GetCharacterName(GameLogic.Instance.GetCurrentCombatCOW())}'s turn.");
             Context.Send(sb.ToString());
         }
 
@@ -50,6 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string lvl = $"{_enemy.GetEnemyLevelDisplay()}";
                 string health = $"{_dummy.GetEnemyInfo().GetCurrentHealth()}";
                 string coherent = _dummy.IsCoherent() ? "" : "stunned";
+                //TODO immunities
                 sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}.");
             }
             Context.Send(sb.ToString());

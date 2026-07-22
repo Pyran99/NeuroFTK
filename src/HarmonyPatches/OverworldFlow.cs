@@ -43,7 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
             GlobalConfig.gameInitialized = true;
-            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) yield return __result.Current;
+            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) yield break;
             if (!Multiplayer.IsOwnerTurn(__instance))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
@@ -65,6 +65,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
+            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             if (!Multiplayer.IsOwnerTurn(cow)) return;
             Plugin.Logger.LogWarning("START tracking first:" + isFirstAction);

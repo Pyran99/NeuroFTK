@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Text;
-using Google2u;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
@@ -38,7 +37,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     Plugin.Logger.LogWarning($"immune to {_prof[i]}");
                     continue;
                 }
-                StatusAppliedCtx(FTK_proficiencyTableDB.Get(_prof[i]), __instance);
+                StatusAppliedCtx(proficiencyBase, __instance);
             }
             if (statusCtx.Length == 0) return;
             if (statusWaiting) return;
@@ -51,14 +50,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ProfEnd(ProficiencyBase __instance, CharacterDummy _dummy)
         {
             if (!_dummy.m_SufferingProficiencies.ContainsKey(__instance.m_Category)) return;
-            StatusRemoveCtx(FTK_proficiencyTableDB.Get(__instance.m_ProficiencyID), _dummy);
+            StatusRemoveCtx(__instance, _dummy);
         }
 
-        static void StatusAppliedCtx(FTK_proficiencyTable table, CharacterDummy _dummy)
+        static void StatusAppliedCtx(ProficiencyBase prof, CharacterDummy _dummy)
         {
-            string statusName = table.GetLocalizedDisplayName();
-            string desc = GetCategoryDescription(table);
-            // Slowed (speed down) applied to Wolf
+            string statusName = prof.m_ProficiencyData.GetLocalizedDisplayName(); // used for spawned text
+            string desc = GetCategoryDescription(prof);
+            // Burning (Take frequent light damage) applied to Goblin Assassin
             if (_dummy.m_CharacterOverworld == null)
             {
                 // enemy dummy doesnt have overworld
@@ -77,10 +76,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             statusCtx = new();
         }
 
-        static void StatusRemoveCtx(FTK_proficiencyTable table, CharacterDummy _dummy)
+        static void StatusRemoveCtx(ProficiencyBase prof, CharacterDummy _dummy)
         {
-            string statusName = table.GetLocalizedDisplayName();
-            string desc = GetCategoryDescription(table);
+            string statusName = prof.m_ProficiencyData.GetLocalizedDisplayName();
+            string desc = GetCategoryDescription(prof);
             if (_dummy.m_CharacterOverworld == null)
             {
                 statusEndCtx.AppendLine($"{statusName} ({desc}) removed from {CombatUtils.GetEnemyName(_dummy as EnemyDummy)}");
@@ -100,92 +99,113 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             statusEndCtx = new();
         }
 
-        static string GetCategoryDescription(FTK_proficiencyTable table)
+        static string GetCategoryDescription(ProficiencyBase prof)
         {
-			string text = string.Empty;
-			if (table.m_ProficiencyPrefab)
-			{
-				ProficiencyBase proficiencyBase = ProficiencyManager.Instance.Get(FTK_proficiencyTable.GetEnum(table.m_ID));
-				switch (table.m_ProficiencyPrefab.m_Category)
-				{
-				case ProficiencyBase.Category.Bleed:
-					return FTKHub.Localized<TextMisc>("STR_profBleed");
-				case ProficiencyBase.Category.Death:
-					return FTKHub.Localized<TextMisc>("STR_profDeathmark");
-				case ProficiencyBase.Category.Focus:
-					return FTKHub.Localized<TextMisc>("STR_profFocus");
-				case ProficiencyBase.Category.Fire:
-					return FTKHub.Localized<TextMisc>("STR_profIgnite");
-				case ProficiencyBase.Category.Ice:
-					return FTKHub.Localized<TextMisc>("STR_profFreeze");
-				case ProficiencyBase.Category.Lightning:
-					return FTKHub.Localized<TextMisc>("STR_profShock");
-				case ProficiencyBase.Category.Stunned:
-					return FTKHub.Localized<TextMisc>("STR_profStun");
-				case ProficiencyBase.Category.Time:
-					if (proficiencyBase.m_CustomValue > 0) text = FTKHub.Localized<TextMisc>("STR_HudSpeedUp");
-					else text = FTKHub.Localized<TextMisc>("STR_HudSpeedDown");
-					return text;
-				case ProficiencyBase.Category.Debuff:
-					return FTKHub.Localized<TextMisc>("STR_profDebuff");
-				case ProficiencyBase.Category.Attack:
-					if (proficiencyBase.m_CustomValue > 0) text = FTKHub.Localized<TextMisc>("STR_profAttackUp");
-					else text = FTKHub.Localized<TextMisc>("STR_profAttackDown");
-					return text;
-				case ProficiencyBase.Category.Armor:
-					if (proficiencyBase.m_CustomValue > 0) text = FTKHub.Localized<TextMisc>("STR_profArmorUp");
-					else text = FTKHub.Localized<TextMisc>("STR_profArmorDown");
-					return text;
-				case ProficiencyBase.Category.Scare:
-					return FTKHub.Localized<TextMisc>("STR_profScare");
-				case ProficiencyBase.Category.Reflect:
-					return FTKHub.Localized<TextMisc>("STR_profReflect");
-				case ProficiencyBase.Category.Interrupt:
-					return FTKHub.Localized<TextMisc>("STR_profReset");
-				case ProficiencyBase.Category.Rush:
-					return FTKHub.Localized<TextMisc>("STR_profRush");
-				case ProficiencyBase.Category.Cure:
-					return FTKHub.Localized<TextMisc>("STR_profCure");
-				case ProficiencyBase.Category.Resist:
-					if (proficiencyBase.m_CustomValue > 0) text = FTKHub.Localized<TextMisc>("STR_profResistUp");
-					else text = FTKHub.Localized<TextMisc>("STR_profResistDown");
-					return text;
-				case ProficiencyBase.Category.Evade:
-					if (proficiencyBase.m_CustomValue > 0) text = FTKHub.Localized<TextMisc>("STR_profEvadeUp");
-					else text = FTKHub.Localized<TextMisc>("STR_profEvadeDown");
-					return text;
-				case ProficiencyBase.Category.LifeDrain:
-					return FTKHub.Localized<TextMisc>("STR_profLifeDrain");
-				case ProficiencyBase.Category.Protect:
-					if (table.m_Target == CharacterDummy.TargetType.Aoe)text = FTKHub.Localized<TextMisc>("STR_profProtect2");
-					else text = FTKHub.Localized<TextMisc>("STR_profProtect");
-					return text;
-				case ProficiencyBase.Category.Dazed:
-					return FTKHub.Localized<TextMisc>("STR_profDaze");
-				case ProficiencyBase.Category.Water:
-					return FTKHub.Localized<TextMisc>("STR_profWater");
-				}
-				text = "GetCategoryDescription #" + table.m_ProficiencyPrefab.m_Category.ToString() + "#";
-			}
-			return text;
+			string result = string.Empty;
+			if (!prof) return "";
+            switch (prof.m_Category)
+            {
+                case ProficiencyBase.Category.Acid:
+                    result = "STR_statusAcidInfo";
+                    break;
+                case ProficiencyBase.Category.Armor:
+                    if (prof.m_CustomValue > 0) result = "STR_statusArmorUpInfo";
+                    else result = "STR_statusArmorDownInfo";
+                    break;
+                case ProficiencyBase.Category.Attack:
+                    if (prof.m_CustomValue > 0) result = "STR_statusAttackUpInfo";
+                    else result = "STR_statusAttackDownInfo";
+                    break;
+                case ProficiencyBase.Category.Bleed:
+                    result = "STR_statusBleedingInfo";
+                    break;
+                case ProficiencyBase.Category.Confuse:
+                    result = "STR_statusConfusedInfo";
+                    break;
+                // case ProficiencyBase.Category.Cure:
+                //     result = "";
+                //     break;
+                // case ProficiencyBase.Category.Curse:
+                //     //TODO type of curse. blind, clumsy, feeble, foolish, lethargic, unlucky, unwell, 
+                //     break;
+                // case ProficiencyBase.Category.Darkness:
+                //     result = "";
+                //     break;
+                case ProficiencyBase.Category.Dazed:
+                    result = "STR_statusDazedInfo";
+                    break;
+                case ProficiencyBase.Category.Death:
+                    result = "STR_statusDeathMarkedInfo";
+                    break;
+                case ProficiencyBase.Category.Disease:
+                    result = "STR_statusDiseasedInfo";
+                    break;
+                case ProficiencyBase.Category.Entangle:
+                    result = "STR_statusEntangledInfo";
+                    break;
+                case ProficiencyBase.Category.Fire:
+                    result = "STR_statusEnflamedInfo";
+                    break;
+                case ProficiencyBase.Category.Ice:
+                    result = "STR_statusFrozenInfo";
+                    break;
+                // case ProficiencyBase.Category.LifeDrain:
+                //     result = "";
+                //     break;
+                case ProficiencyBase.Category.Lightning:
+                    result = "STR_statusShockedInfo";
+                    break;
+                case ProficiencyBase.Category.Petrify:
+                    result = "STR_statusPetrifiedInfo";
+                    break;
+                case ProficiencyBase.Category.Poison:
+                    result = "STR_statusPoisonInfo";
+                    break;
+                case ProficiencyBase.Category.Protect:
+                    result = "STR_statusProtectInfo";
+                    break;
+                case ProficiencyBase.Category.Reflect:
+                    result = "STR_statusDamageReflectInfo";
+                    break;
+                case ProficiencyBase.Category.Scare:
+                    result = "STR_statusFleeingInfo";
+                    break;
+                // case ProficiencyBase.Category.Shield:
+                //     result = "";
+                //     break;
+                // case ProficiencyBase.Category.StealGold:
+                //     result = "";
+                //     break;
+                // case ProficiencyBase.Category.StealItem:
+                //     result = "";
+                //     break;
+                case ProficiencyBase.Category.Stunned:
+                    result = "STR_statusStunnedInfo";
+                    break;
+                case ProficiencyBase.Category.Taunt:
+                    result = "STR_skillsTauntInfo";
+                    break;
+                case ProficiencyBase.Category.Time:
+                    if (prof.m_CustomValue > 0) result = "STR_statusSpedInfo";
+                    else result = "STR_statusSlowedInfo";
+                    break;
+                case ProficiencyBase.Category.Water:
+                    result = "STR_statusWetInfo";
+                    break;
+                case ProficiencyBase.Category.Evade:
+                    if (prof.m_CustomValue > 0) result = "STR_statusEvadeUpInfo";
+                    else result = "STR_statusEvadeDownInfo";
+                    break;
+                case ProficiencyBase.Category.ResistDeath:
+                    result = "STR_statusResistDeathInfo";
+                    break;
+                case ProficiencyBase.Category.Resist:
+                    if (prof.m_CustomValue > 0) result = "STR_statusResistUpInfo";
+                    else result = "STR_statusResistDownInfo";
+                    break;
+            }
+            if (result == string.Empty) Plugin.Logger.LogError("no data for status effect " + prof.m_Category);
+			return result;
         }
-
-        // // called often with any ui update. hover decision btns
-        // static readonly Dictionary<string, List<GameObject>> immunities = [];
-        // static readonly Dictionary<string, List<GameObject>> ailments = [];
-
-        // [HarmonyPatch(typeof(uiPlayerMainHudStatus), nameof(uiPlayerMainHudStatus.SetStatusIcons))]
-        // [HarmonyPostfix]
-        // static void OnSetIcons(uiPlayerMainHudStatus __instance)
-        // {
-        //     // uiPlayerMainHud\DisplayRoot\playerMainHudStatus
-        //     if (!GlobalConfig.gameInitialized) return;
-        //     Plugin.Logger.LogWarning("testSetStatusIcons");
-        //     uiPlayerMainHud hud = __instance.transform.parent.transform.parent.GetComponent<uiPlayerMainHud>();
-        //     CharacterOverworld cow = hud.m_Cow;
-        //     GameObject _immunities = __instance.transform.Find("immunities").gameObject;
-        //     GameObject _ailments = __instance.transform.Find("aliments").gameObject;
-        // }
-
     }
 }

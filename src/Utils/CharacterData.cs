@@ -26,6 +26,8 @@ namespace Pyran.NeuroFTK.Utils
         public readonly int Gold;
         public readonly string PipeItem;
         public readonly List<string> StatusEffects = [];
+        public readonly List<string> Immunities = [];
+        public readonly List<string> Curses = [];
 
         public static SerializedCharacterData Calculate(CharacterOverworld cow) => new(cow);
 
@@ -40,6 +42,8 @@ namespace Pyran.NeuroFTK.Utils
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(pipeID);
             PipeItem = $"{FTKHub.Localized<TextItems>(pipe.m_DisplayName)} (lvl {(int)pipeID})";
             StatusEffects = GetStatusEffects(cow);
+            Immunities = GetImmunities(cow);
+            Curses = GetCurses(cow);
         }
 
         private List<string> GetStatusEffects(CharacterOverworld cow)
@@ -50,6 +54,34 @@ namespace Pyran.NeuroFTK.Utils
             foreach (CharacterDummy.ProficiencyRecord value in dummy.m_SufferingProficiencies.Values)
             {
                 result.Add(value.m_Proficiency.m_ProficiencyData.GetLocalizedDisplayName());
+            }
+            return result;
+        }
+
+        private List<string> GetImmunities(CharacterOverworld cow)
+        {
+            List<string> result = [];
+            CharacterStats stats = cow.m_CharacterStats;
+            // foreach (ProficiencyBase.Category immunity in stats.m_ActiveImmunities)
+            // {
+                
+            // }
+            // CharacterDummy dummy = cow.GetCurrentDummy();
+            // if (dummy == null) return result;
+            // foreach (CharacterDummy.ProficiencyRecord value in dummy.m_SufferingProficiencies.Values)
+            // {
+            //     result.Add(value.m_Proficiency.m_ProficiencyData.GetLocalizedDisplayName());
+            // }
+            return result;
+        }
+
+        private List<string> GetCurses(CharacterOverworld cow)
+        {
+            List<string> result = [];
+            CharacterStats stats = cow.m_CharacterStats;
+            foreach (CharacterStats.CurseType curse in stats.m_ActiveCurses)
+            {
+                result.Add(curse.ToString());
             }
             return result;
         }
