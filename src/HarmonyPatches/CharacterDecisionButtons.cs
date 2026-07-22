@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.NeuroIntegration;
@@ -62,18 +63,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             activeWindow.SetForce(0, $"[{instance.m_Prompt.text}] choose a character to perform the action with. if multiple characters can be chosen, only the character you choose to make the decision will act on it (collect will add to the chosen characters inventory, pass will skip for all characters, etc.). collected items can be sold at a market. discard should be avoided for most loot", "");
             //TODO dungeon encounter roll chances as context here?
-            string ctx = DungeonEncounterRolls();
-            if (ctx != "")
+            StringBuilder sb = new(DungeonEncounterRolls());
+            if (sb.Length != 0)
             {
-                ctx += $""; // these roll chances are based on your {profile.m_SkillRequired} stat
-                activeWindow.SetContext(ctx);
+                sb.Append($"these roll chances are based on your (NYI) stat");
+                activeWindow.SetContext(sb.ToString());
             }
             activeWindow.Register();
         }
 
         static string DungeonEncounterRolls()
         {
-            string result = "";
+            StringBuilder sb = new();
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
                 CharacterOverworld cow = kvp.Key;
@@ -82,13 +83,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (VoteButton btn in kvp.Value)
                 {
                     // [Disarm ()]
-                    result += $"[{btn.m_Option} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]\n";
+                    sb.AppendLine($"[{btn.m_Option} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]");
                     // 0(2%) = Failure
-                    result += $"{CombatUtils.GetDungeonSlotLegend(cow, btn.m_Option)}\n";
+                    sb.AppendLine($"{CombatUtils.GetDungeonSlotLegend(cow, btn.m_Option)}");
                 }
             }
-            Plugin.Logger.LogWarning(result);
-            return result;
+            if (sb.Length == 0) return "";
+            sb.Insert(0, "(dungeon encounter rolls (actions with no roll results will always succeed) displayed as: [action (description)] total successful rolls(chance for this result) = outcome result)\n");
+            Plugin.Logger.LogWarning(sb.ToString());
+            return sb.ToString();
         }
 
         // [HarmonyPatch(typeof(VoteButtonContainer), "_showFadeIn")] // not called
