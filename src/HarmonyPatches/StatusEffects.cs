@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Linq;
 using System.Text;
+using Google2u;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
@@ -205,7 +207,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     break;
             }
             if (result == string.Empty) Plugin.Logger.LogError("no data for status effect " + prof.m_Category);
-			return result;
+            if (!TextInfo.Instance.rowNames.Contains(result)) return result;
+			return FTKHub.Localized<TextInfo>(result);
         }
     }
 }

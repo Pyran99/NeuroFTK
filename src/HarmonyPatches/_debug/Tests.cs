@@ -51,6 +51,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Test2()
         {
             Plugin.Logger.LogWarning("2 EncounterSessionMC.DungeonMiniEncounterCompleteMC");
+            // after quest dungeon
+            
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // entered dungeon
