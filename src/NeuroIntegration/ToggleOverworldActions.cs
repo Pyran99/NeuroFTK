@@ -59,7 +59,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             mode = _mode;
             // string name = Enum.GetName(typeof(uiGameTrackerHUD.GameTrackerMode), _mode);
             // var test = Enum.Parse(typeof(uiGameTrackerHUD.GameTrackerMode), name);
-            Plugin.Logger.LogMessage($"game track mode changed to {_mode}"); // game track mode changed to Overworld - Overworld - Overworld
+            // Plugin.Logger.LogMessage($"game track mode changed to {_mode}");
         }
         
         public static void EnableDisposableActions(bool _override = false)

@@ -43,21 +43,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
             GlobalConfig.gameInitialized = true;
-            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) yield break;
-            if (!Multiplayer.IsOwnerTurn(__instance))
-            {
-                Multiplayer.SendOtherPlayerTurnCtx();
-                yield return __result.Current;
-            }
             isFirstAction = true;
             isSearching = false;
             Object.Destroy(window);
             while (__result.MoveNext()) yield return __result.Current;
             Plugin.Logger.LogWarning("first turn action");
-            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(), __instance.gameObject);
-
+            BeginTurn2(__instance);
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
+        }
+
+        static void BeginTurn2(CharacterOverworld cow)
+        {
+            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            if (!Multiplayer.IsOwnerTurn(cow))
+            {
+                Multiplayer.SendOtherPlayerTurnCtx();
+                return;
+            }
+            isFirstAction = true;
+            isSearching = false;
+            Object.Destroy(window);
+            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(), cow.gameObject);
         }
 
         // when movement choice starts
