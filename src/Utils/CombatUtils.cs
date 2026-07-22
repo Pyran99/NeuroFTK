@@ -7,6 +7,8 @@ namespace Pyran.NeuroFTK.Utils
 {
     public static class CombatUtils
     {
+        public static FTK_slotOutput entry;
+
         public static CharacterDummy GetDummyInCombat(FTKPlayerID id)
         {
             foreach (KeyValuePair<FTKPlayerID, CharacterDummy> dummy in EncounterSession.Instance.m_Dummies)
@@ -31,7 +33,7 @@ namespace Pyran.NeuroFTK.Utils
             return StringReplace.ReplaceNewLineSpace(name);
         }
 
-        /// <returns>0(2%) = Failure</returns>
+        /// <returns>example => 0(2%) = Failure</returns>
         public static string GetDungeonSlotLegend(CharacterOverworld cow, VoteButton.VoteOption option)
         {
             if (!cow.IsInDungeon()) return "";
@@ -39,7 +41,6 @@ namespace Pyran.NeuroFTK.Utils
             DioramaDungeon diorama = EncounterSession.Instance.GetDioramaDungeon();
             MiniHexDungeon.EncounterType type = dungeon.m_EncounterType;
             FTK_slotOutput.ID outputId = FTK_slotOutput.ID.None;
-            FTK_slotOutput entry = null;
             switch (type)
             {
                 case MiniHexDungeon.EncounterType.Trap1:
@@ -59,7 +60,7 @@ namespace Pyran.NeuroFTK.Utils
                 default:
                     if (type != MiniHexDungeon.EncounterType.Door)
                     {
-                        if (type != MiniHexDungeon.EncounterType.DungeonMiniEncounter){} // needed
+                        if (type != MiniHexDungeon.EncounterType.DungeonMiniEncounter){} // needed?
                         else if (option == VoteButton.VoteOption.Attempt || option == VoteButton.VoteOption.Unlocked || option == VoteButton.VoteOption.Open)
                         {
                             outputId = diorama.m_DungeonEncounter.m_EncounterObject.GetDBEntry().m_SlotRoll;
@@ -81,7 +82,7 @@ namespace Pyran.NeuroFTK.Utils
             StringBuilder sb = new();
             foreach (KeyValuePair<string, Dictionary<string, string>> outcome in data)
             {
-                //TODO theory 0(2%) = Failure
+                // 0(2%) = Failure <= for each roll
                 sb.AppendLine($"{outcome.Key}({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
             }
             return sb.ToString();

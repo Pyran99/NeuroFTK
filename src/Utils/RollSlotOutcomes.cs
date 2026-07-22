@@ -6,10 +6,6 @@ namespace Pyran.NeuroFTK.Utils
 {
     public class RollSlotOutcomes
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="_id"></param>
         /// <returns>{roll: {chance: result}}<br/>{ 1: { 95%: Success } }</returns>
         public static Dictionary<string, Dictionary<string, string>> GetOutcomes(FTK_slotOutput.ID _id)
         {
@@ -18,27 +14,6 @@ namespace Pyran.NeuroFTK.Utils
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             FTK_slotOutput entry = FTK_slotOutputDB.GetDB().GetEntry(_id);
             SetSlotLegendResult(entry, _id, cow, ref result);
-            // FTK_weaponStats2.SkillType _skill = entry.m_TestSkill;
-            // int slotAmount = entry.m_SlotAmount + 1;
-            // uiSlotLegend.SlotOutput[] outputs = new uiSlotLegend.SlotOutput[slotAmount];
-
-            // for (int i = 0; i < outputs.Length; i++)
-            // {
-            //     outputs[i] = uiSlotLegend.Instance.GetSlotOutputResult(i, _id, progID);
-            // }
-            // float skillMod = 0f;
-            // if (cow.m_HexLand.m_POI)
-            // {
-            //     skillMod = cow.m_HexLand.m_POI.GetSkillModifier(_id, cow);
-            // }
-            // float skillRoll = cow.m_CharacterStats.GetSkillValue(_skill, true, skillMod);
-            // DisplayEachOutput
-            // for (int i = 0; i < outputs.Length; i++)
-            // {
-            //     if (!result.ContainsKey(i.ToString())) result[i.ToString()] = [];
-            //     float percent = GetRollPercent(i, skillRoll, outputs.Length);
-            //     result[i.ToString()] = RollResult(percent, outputs[i]);
-            // }
             return result;
         }
 
@@ -101,8 +76,6 @@ namespace Pyran.NeuroFTK.Utils
             return id;
         }
 
-        /// <summary>
-        /// </summary>
         /// <returns>{ 5%: failure }</returns>
         public static Dictionary<string, string> RollResult(float percent, uiSlotLegend.SlotOutput outcome)
         {
@@ -112,13 +85,13 @@ namespace Pyran.NeuroFTK.Utils
             };
         }
 
-        public static float GetRollPercent(int count, float skillRoll, int slotOutputLength)
+        public static float GetRollPercent(int count, float skillRoll, int slotOutputLength, int spentFocus = 0)
         {
             float percent = 0f;
-            if (count >= 0) // assumes no spend focus, only give base values
+            if (count >= spentFocus)
             {
-                int num2 = slotOutputLength - 1; // - spentFocus
-                int num3 = count - 0; // spentFocus
+                int num2 = slotOutputLength - 1 - spentFocus;
+                int num3 = count - spentFocus;
                 percent = Combination(num2, num3) * Mathf.Pow(skillRoll, num3) * Mathf.Pow(1f - skillRoll, num2 - num3);
             }
             return percent;

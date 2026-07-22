@@ -14,6 +14,7 @@ namespace Pyran.NeuroFTK.Utils
             {"View Wares", "purchase items."},
             {"Journal", "view this adventurers journal."},
             {"Devote", "become a champion for this sanctums god."},
+            {"Tribute", "activate this statue."},
             {"Enter Party", "begin this dungeon with all party members"},
         };
 
@@ -27,7 +28,7 @@ namespace Pyran.NeuroFTK.Utils
             {MiniHexServiceType.BoatReclaim, "exchange an adjacent ship for a ship deed (ship must be fully repaired)"},
         };
 
-        private static readonly Dictionary<string, string> AlternateLocLookUp = new()
+        public static readonly Dictionary<string, string> AlternateLocLookUp = new()
         {
             { "Ice", "Freeze" },
             { "Lightning", "Shock" },
@@ -35,7 +36,8 @@ namespace Pyran.NeuroFTK.Utils
             { "Stunned", "Stun" },
             { "Death", "DeathMark" },
             { "StealItem", "Steal" },
-            { "StealGold", "Steal" }
+            { "StealGold", "Steal" },
+            { "Knockdown", "Bash" },
         };
 
         public static Dictionary<VoteButton.VoteOption, string> VoteOptionDescriptions = new()
@@ -46,7 +48,7 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Equip, "equip NYI"},
             {VoteButton.VoteOption.Use, "use NYI"},
             {VoteButton.VoteOption.Pass, "pass NYI"},
-            {VoteButton.VoteOption.Knockdown, "knockdown NYI"},
+            {VoteButton.VoteOption.Knockdown, "bash NYI"},
             {VoteButton.VoteOption.Disarm, "disarm NYI"},
             {VoteButton.VoteOption.Proceed, "proceed NYI"},
             {VoteButton.VoteOption.Attempt, "attempt NYI"},
