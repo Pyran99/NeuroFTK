@@ -17,8 +17,7 @@ namespace Pyran.NeuroFTK.Utils
             Dictionary<string, Dictionary<string, string>> result = [];
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             FTK_slotOutput entry = FTK_slotOutputDB.GetDB().GetEntry(_id);
-            FTK_progressionTier.ID progID = FTK_progressionTier.ID.None;
-            SetSlotLegendResult(entry, _id, progID, cow, ref result);
+            SetSlotLegendResult(entry, _id, cow, ref result);
             // FTK_weaponStats2.SkillType _skill = entry.m_TestSkill;
             // int slotAmount = entry.m_SlotAmount + 1;
             // uiSlotLegend.SlotOutput[] outputs = new uiSlotLegend.SlotOutput[slotAmount];
@@ -125,8 +124,16 @@ namespace Pyran.NeuroFTK.Utils
             return percent;
         }
 
-        public static void SetSlotLegendResult(FTK_slotOutput entry, FTK_slotOutput.ID outputId, FTK_progressionTier.ID progID, CharacterOverworld cow, ref Dictionary<string, Dictionary<string, string>> data)
+        /// <summary>
+        /// adds to ref data with ex. { 0 { 5%: failure } }
+        /// </summary>
+        public static void SetSlotLegendResult(FTK_slotOutput entry, FTK_slotOutput.ID outputId, CharacterOverworld cow, ref Dictionary<string, Dictionary<string, string>> data, FTK_progressionTier.ID progID = FTK_progressionTier.ID.None)
         {
+            if (entry.m_Category == FTK_slotOutput.SlotCategory.Dungeon)
+            {
+                MiniHexDungeon dungeon = (MiniHexDungeon)cow.GetPOI();
+                progID = FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfDungeon(dungeon.m_ID, dungeon.GetDungeonType(), dungeon.m_HexLand.m_HexInfo.m_Realm, dungeon.m_HexLand.m_HexInfo.m_StageIndex, dungeon.m_Level, dungeon.m_InstanceID);
+            }
             FTK_weaponStats2.SkillType skill = entry.m_TestSkill;
             int slotAmount = entry.m_SlotAmount + 1;
             uiSlotLegend.SlotOutput[] outputs = new uiSlotLegend.SlotOutput[slotAmount];

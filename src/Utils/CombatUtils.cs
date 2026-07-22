@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using GridEditor;
 
 namespace Pyran.NeuroFTK.Utils
@@ -29,16 +31,15 @@ namespace Pyran.NeuroFTK.Utils
             return StringReplace.ReplaceNewLineSpace(name);
         }
 
+        /// <returns>0(2%) = Failure</returns>
         public static string GetDungeonSlotLegend(CharacterOverworld cow, VoteButton.VoteOption option)
         {
-            string result = "";
-            Dictionary<string, Dictionary<string, string>> data = [];
+            if (!cow.IsInDungeon()) return "";
             MiniHexDungeon dungeon = (MiniHexDungeon)cow.GetPOI();
             DioramaDungeon diorama = EncounterSession.Instance.GetDioramaDungeon();
-            FTK_progressionTier.ID progID = FTK_progressionTier.ID.None;
             MiniHexDungeon.EncounterType type = dungeon.m_EncounterType;
-            FTK_slotOutput entry = null;
             FTK_slotOutput.ID outputId = FTK_slotOutput.ID.None;
+            FTK_slotOutput entry = null;
             switch (type)
             {
                 case MiniHexDungeon.EncounterType.Trap1:
@@ -48,64 +49,42 @@ namespace Pyran.NeuroFTK.Utils
                     {
                         outputId = diorama.m_ActiveTrap.GetDisarmOutput(cow);
                         entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
-                        if (entry.m_Category != FTK_slotOutput.SlotCategory.Dungeon) break;
-                        progID = FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfDungeon(dungeon.m_ID, dungeon.GetDungeonType(), dungeon.m_HexLand.m_HexInfo.m_Realm, dungeon.m_HexLand.m_HexInfo.m_StageIndex, dungeon.m_Level, dungeon.m_InstanceID);
                     }
                     else if (option == VoteButton.VoteOption.Proceed)
                     {
-                        
+                        outputId = diorama.m_ActiveTrap.GetProceedOutput(cow);
+                        entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
                     }
                     break;
                 default:
                     if (type != MiniHexDungeon.EncounterType.Door)
                     {
-                        if (type != MiniHexDungeon.EncounterType.DungeonMiniEncounter)
-                        {
-                            
-                        }
+                        if (type != MiniHexDungeon.EncounterType.DungeonMiniEncounter){} // needed
                         else if (option == VoteButton.VoteOption.Attempt || option == VoteButton.VoteOption.Unlocked || option == VoteButton.VoteOption.Open)
                         {
-                            
+                            outputId = diorama.m_DungeonEncounter.m_EncounterObject.GetDBEntry().m_SlotRoll;
+                            if (outputId != FTK_slotOutput.ID.None)
+                            {
+                                entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
+                            }
                         }
                     }
                     else if (option == VoteButton.VoteOption.Knockdown)
                     {
-                        
+                        outputId = diorama.m_DoorToBash.GetComponent<DungeonDoor>().GetDoorBashOutput(cow);
+                        entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
                     }
                     break;
             }
-            //TODO this part done?
-            RollSlotOutcomes.SetSlotLegendResult(entry, outputId, progID, cow, ref data);
-            // foreach (KeyValuePair<string, Dictionary<string, string>> outcome in data)
-            // {
-            //     result += $"[{outcome.Key}]\n";
-            //     foreach (KeyValuePair<string, string> value in outcome.Value)
-            //     {
-            //         result += $"{value.Key}({value.Value})\n";
-            //     }
-            // }
-            return result;
+            Dictionary<string, Dictionary<string, string>> data = [];
+            RollSlotOutcomes.SetSlotLegendResult(entry, outputId, cow, ref data);
+            StringBuilder sb = new();
+            foreach (KeyValuePair<string, Dictionary<string, string>> outcome in data)
+            {
+                //TODO theory 0(2%) = Failure
+                sb.AppendLine($"{outcome.Key}({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
+            }
+            return sb.ToString();
         }
-
-        static void DisarmData()
-        {
-            
-        }
-
-        static void ProceedData()
-        {
-            
-        }
-
-        static void AttemptData() //attempt, unlocked, open
-        {
-            
-        }
-
-        static void BashData()
-        {
-            
-        }
-
     }
 }

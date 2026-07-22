@@ -37,5 +37,27 @@ namespace Pyran.NeuroFTK.Utils
             { "StealItem", "Steal" },
             { "StealGold", "Steal" }
         };
+
+        public static Dictionary<VoteButton.VoteOption, string> VoteOptionDescriptions = new()
+        {
+            {VoteButton.VoteOption.Unlocked, "unlocked NYI"},
+            {VoteButton.VoteOption.Open, "open NYI"},
+            {VoteButton.VoteOption.Collect, "collect NYI"},
+            {VoteButton.VoteOption.Equip, "equip NYI"},
+            {VoteButton.VoteOption.Use, "use NYI"},
+            {VoteButton.VoteOption.Pass, "pass NYI"},
+            {VoteButton.VoteOption.Knockdown, "knockdown NYI"},
+            {VoteButton.VoteOption.Disarm, "disarm NYI"},
+            {VoteButton.VoteOption.Proceed, "proceed NYI"},
+            {VoteButton.VoteOption.Attempt, "attempt NYI"},
+            {VoteButton.VoteOption.Ready, "ready NYI"},
+            {VoteButton.VoteOption.Identify, "identify NYI"},
+            {VoteButton.VoteOption.Shop, "shop NYI"},
+            {VoteButton.VoteOption.Destroy, "destroy NYI"},
+            {VoteButton.VoteOption.PartyHeal, "partyheal NYI"},
+            {VoteButton.VoteOption.DungeonRest, "dungeonrest NYI"},
+            {VoteButton.VoteOption.Share, "share NYI"},
+            {VoteButton.VoteOption.AttemptNoRoll, "attemptnoroll NYI"},
+        };
     }
 }

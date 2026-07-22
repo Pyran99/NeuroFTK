@@ -116,11 +116,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 GetButtonData(btn, flavorData, ref rollData);
             }
-            string context = "(this encounters actions (actions with no roll results will always succeed) displayed as: [action: description] total successful rolls(chance for this result) = outcome result)\n";
+            string context = "(this encounters actions (actions with no roll results will always succeed) displayed as: [action (description)] total successful rolls(chance for this result) = outcome result)\n";
             foreach (KeyValuePair<string, object> data in rollData)
             {
-                // [ambush: (ambush flavor)]
-                context += $"[{data.Key}: {flavorData[data.Key]}] \n";
+                // [ambush (ambush flavor)]
+                context += $"[{data.Key} ({flavorData[data.Key]})] \n";
                 foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
                 {
                     // string value = JsonConvert.SerializeObject(outcome.Value);
