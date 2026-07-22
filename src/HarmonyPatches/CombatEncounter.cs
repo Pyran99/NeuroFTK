@@ -114,7 +114,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Dictionary<string, object> rollData = [];
             foreach (uiPoiButton btn in activeButtons.Values)
             {
-                GetButtonData(btn, flavorData, rollData);
+                GetButtonData(btn, flavorData, ref rollData);
             }
             string context = "(this encounters actions (actions with no roll results will always succeed) displayed as: [action: description] total successful rolls(chance for this result) = outcome result)\n";
             foreach (KeyValuePair<string, object> data in rollData)
@@ -139,7 +139,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// <summary>
         /// adds data to flavorData and rollData
         /// </summary>
-        static void GetButtonData(uiPoiButton btn, Dictionary<string, string> flavorData, Dictionary<string, object> rollData)
+        static void GetButtonData(uiPoiButton btn, Dictionary<string, string> flavorData, ref Dictionary<string, object> rollData)
         {
                 if (flavorData.ContainsKey(btn.m_ButtonText.text)) return;
                 flavorData.Add(btn.m_ButtonText.text, EncounterButton.GetString(btn.m_ButtonInfo.m_ButtonType));

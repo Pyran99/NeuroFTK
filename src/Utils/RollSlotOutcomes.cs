@@ -18,28 +18,28 @@ namespace Pyran.NeuroFTK.Utils
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             FTK_slotOutput entry = FTK_slotOutputDB.GetDB().GetEntry(_id);
             FTK_progressionTier.ID progID = FTK_progressionTier.ID.None;
-            FTK_weaponStats2.SkillType _skill = entry.m_TestSkill;
-            FTK_slotOutput entry2 = FTK_slotOutputDB.GetDB().GetEntry(_id);
-            int slotAmount = entry2.m_SlotAmount + 1;
-            uiSlotLegend.SlotOutput[] outputs = new uiSlotLegend.SlotOutput[slotAmount];
+            SetSlotLegendResult(entry, _id, progID, cow, ref result);
+            // FTK_weaponStats2.SkillType _skill = entry.m_TestSkill;
+            // int slotAmount = entry.m_SlotAmount + 1;
+            // uiSlotLegend.SlotOutput[] outputs = new uiSlotLegend.SlotOutput[slotAmount];
 
-            for (int i = 0; i < outputs.Length; i++)
-            {
-                outputs[i] = uiSlotLegend.Instance.GetSlotOutputResult(i, _id, progID);
-            }
-            float skillMod = 0f;
-            if (cow.m_HexLand.m_POI)
-            {
-                skillMod = cow.m_HexLand.m_POI.GetSkillModifier(_id, cow);
-            }
-            float skillRoll = cow.m_CharacterStats.GetSkillValue(_skill, true, skillMod);
+            // for (int i = 0; i < outputs.Length; i++)
+            // {
+            //     outputs[i] = uiSlotLegend.Instance.GetSlotOutputResult(i, _id, progID);
+            // }
+            // float skillMod = 0f;
+            // if (cow.m_HexLand.m_POI)
+            // {
+            //     skillMod = cow.m_HexLand.m_POI.GetSkillModifier(_id, cow);
+            // }
+            // float skillRoll = cow.m_CharacterStats.GetSkillValue(_skill, true, skillMod);
             // DisplayEachOutput
-            for (int i = 0; i < outputs.Length; i++)
-            {
-                if (!result.ContainsKey(i.ToString())) result[i.ToString()] = [];
-                float percent = GetRollPercent(i, skillRoll, outputs.Length);
-                result[i.ToString()] = RollResult(percent, outputs[i]);
-            }
+            // for (int i = 0; i < outputs.Length; i++)
+            // {
+            //     if (!result.ContainsKey(i.ToString())) result[i.ToString()] = [];
+            //     float percent = GetRollPercent(i, skillRoll, outputs.Length);
+            //     result[i.ToString()] = RollResult(percent, outputs[i]);
+            // }
             return result;
         }
 
@@ -104,7 +104,7 @@ namespace Pyran.NeuroFTK.Utils
 
         /// <summary>
         /// </summary>
-        /// <returns>{ 0: {5%: failure} }</returns>
+        /// <returns>{ 5%: failure }</returns>
         public static Dictionary<string, string> RollResult(float percent, uiSlotLegend.SlotOutput outcome)
         {
             return new()
@@ -123,6 +123,30 @@ namespace Pyran.NeuroFTK.Utils
                 percent = Combination(num2, num3) * Mathf.Pow(skillRoll, num3) * Mathf.Pow(1f - skillRoll, num2 - num3);
             }
             return percent;
+        }
+
+        public static void SetSlotLegendResult(FTK_slotOutput entry, FTK_slotOutput.ID outputId, FTK_progressionTier.ID progID, CharacterOverworld cow, ref Dictionary<string, Dictionary<string, string>> data)
+        {
+            FTK_weaponStats2.SkillType skill = entry.m_TestSkill;
+            int slotAmount = entry.m_SlotAmount + 1;
+            uiSlotLegend.SlotOutput[] outputs = new uiSlotLegend.SlotOutput[slotAmount];
+            for (int i = 0; i < outputs.Length; i++)
+            {
+                outputs[i] = uiSlotLegend.Instance.GetSlotOutputResult(i, outputId, progID);
+            }
+            float skillMod = 0f;
+            if (cow.m_HexLand.m_POI)
+            {
+                skillMod = cow.m_HexLand.m_POI.GetSkillModifier(outputId, cow);
+            }
+            float skillRoll = cow.m_CharacterStats.GetSkillValue(skill, true, skillMod);
+            // DisplayEachOutput
+            for (int i = 0; i < outputs.Length; i++)
+            {
+                if (!data.ContainsKey(i.ToString())) data[i.ToString()] = [];
+                float percent = GetRollPercent(i, skillRoll, outputs.Length);
+                data[i.ToString()] = RollResult(percent, outputs[i]);
+            }
         }
 
     }
