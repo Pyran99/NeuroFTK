@@ -8,7 +8,14 @@ namespace Pyran.NeuroFTK.Utils
 {
     public static class CombatUtils
     {
-        public static FTK_slotOutput entry;
+        public static FTK_slotOutput Entry { get; private set; }
+        public static FTK_slotOutput.ID OutputId { get; private set; }
+
+        public static void ResetSlotOutput()
+        {
+            Entry = null;
+            OutputId = FTK_slotOutput.ID.None;
+        }
 
         public static CharacterDummy GetDummyInCombat(FTKPlayerID id)
         {
@@ -38,12 +45,11 @@ namespace Pyran.NeuroFTK.Utils
         public static string GetDungeonSlotLegend(CharacterOverworld cow, VoteButton btn)
         {
             if (!cow.IsInDungeon()) return "";
-            entry = null; // this is reset for every char & btn list => maybe set once then reset after caller
+            ResetSlotOutput();
             VoteButton.VoteOption option = btn.m_Option;
             MiniHexDungeon dungeon = (MiniHexDungeon)cow.GetPOI();
             DioramaDungeon diorama = EncounterSession.Instance.GetDioramaDungeon();
             MiniHexDungeon.EncounterType type = dungeon.m_EncounterType;
-            FTK_slotOutput.ID outputId = FTK_slotOutput.ID.None;
             switch (type)
             {
                 case MiniHexDungeon.EncounterType.Trap1:
@@ -51,40 +57,40 @@ namespace Pyran.NeuroFTK.Utils
                 case MiniHexDungeon.EncounterType.Trap3:
                     if (option == VoteButton.VoteOption.Disarm)
                     {
-                        outputId = diorama.m_ActiveTrap.GetDisarmOutput(cow);
-                        entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
+                        OutputId = diorama.m_ActiveTrap.GetDisarmOutput(cow);
+                        Entry = FTK_slotOutputDB.GetDB().GetEntry(OutputId);
                     }
                     else if (option == VoteButton.VoteOption.Proceed)
                     {
-                        outputId = diorama.m_ActiveTrap.GetProceedOutput(cow);
-                        entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
+                        OutputId = diorama.m_ActiveTrap.GetProceedOutput(cow);
+                        Entry = FTK_slotOutputDB.GetDB().GetEntry(OutputId);
                     }
                     break;
                 default:
                     if (type != MiniHexDungeon.EncounterType.Door)
                     {
-                        if (type != MiniHexDungeon.EncounterType.DungeonMiniEncounter){} // needed?
+                        if (type != MiniHexDungeon.EncounterType.DungeonMiniEncounter){} // needed
                         else if (option == VoteButton.VoteOption.Attempt || option == VoteButton.VoteOption.Unlocked || option == VoteButton.VoteOption.Open)
                         {
-                            outputId = diorama.m_DungeonEncounter.m_EncounterObject.GetDBEntry().m_SlotRoll;
-                            if (outputId != FTK_slotOutput.ID.None)
+                            OutputId = diorama.m_DungeonEncounter.m_EncounterObject.GetDBEntry().m_SlotRoll;
+                            if (OutputId != FTK_slotOutput.ID.None)
                             {
-                                entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
+                                Entry = FTK_slotOutputDB.GetDB().GetEntry(OutputId);
                             }
                         }
                     }
                     else if (option == VoteButton.VoteOption.Knockdown)
                     {
-                        outputId = diorama.m_DoorToBash.GetComponent<DungeonDoor>().GetDoorBashOutput(cow);
-                        entry = FTK_slotOutputDB.GetDB().GetEntry(outputId);
+                        OutputId = diorama.m_DoorToBash.GetComponent<DungeonDoor>().GetDoorBashOutput(cow);
+                        Entry = FTK_slotOutputDB.GetDB().GetEntry(OutputId);
                     }
                     break;
             }
             Dictionary<string, Dictionary<string, string>> data = [];
-            Plugin.Logger.LogWarning(Jason.Serialize(entry));
-            if (outputId != FTK_slotOutput.ID.None)
+            Plugin.Logger.LogWarning(Jason.Serialize(Entry));
+            if (OutputId != FTK_slotOutput.ID.None)
             {
-                RollSlotOutcomes.SetSlotLegendResult(entry, outputId, cow, data);
+                RollSlotOutcomes.SetSlotLegendResult(Entry, OutputId, cow, data);
             }
             StringBuilder sb = new();
             foreach (KeyValuePair<string, Dictionary<string, string>> outcome in data)

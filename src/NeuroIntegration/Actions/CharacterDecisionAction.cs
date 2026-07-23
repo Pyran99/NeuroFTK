@@ -3,15 +3,16 @@ using System.Linq;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class CharacterDecisionAction(string _key, List<VoteButton> _values) : NeuroAction<string>
+    public class CharacterDecisionAction(string _key, List<VoteButton> _values) : NeuroAction<VoteButton>
     {
         public override string Name => $"{_key.Replace(" ", "_")}_decision";
-        protected override string Description => $"make the decision for {_key}";
+        protected override string Description => $"choose a button with {_key}";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -19,39 +20,34 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,
-                Required = ["decision"],
+                Required = ["button"],
                 Properties = new()
                 {
-                    ["decision"] = QJS.Enum(_values.Select(v => v.m_Option.ToString()))
+                    ["button"] = QJS.Enum(_values.Select(v => v.m_Option.ToString()))
                 },
             };
             return schema;
         }
 
-        protected override void Execute(string parsedData)
+        protected override void Execute(VoteButton parsedData)
         {
-            foreach (VoteButton btn in _values)
-            {
-                if (btn.m_Option.ToString() == parsedData)
-                {
-                    SelectButton.StartCoroutine(btn, 1.0f);
-                    break;
-                }
-            }
+            Context.Send($"selecting button {parsedData.m_Option} with {_key}", true);
+            SelectButton.StartCoroutine(parsedData, 1.0f);
         }
 
-        protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
+        protected override ExecutionResult Validate(ActionJData actionData, out VoteButton parsedData)
         {
-            Plugin.Logger.LogWarning($"chosen action {actionData.Data}");
-            parsedData = actionData.Data.Value<string>("decision");
+            parsedData = null;
+            string result = actionData.Data.Value<string>("button");
             foreach (VoteButton btn in _values)
             {
-                if (btn.m_Option.ToString() == parsedData)
+                if (btn.m_Option.ToString() == result)
                 {
+                    parsedData = btn;
                     return ExecutionResult.Success();
                 }
             }
-            return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("decision"));
+            return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("button"));
         }
     }
 }

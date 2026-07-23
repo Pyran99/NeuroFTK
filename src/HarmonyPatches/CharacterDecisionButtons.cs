@@ -27,7 +27,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             activeContainers.Add(__instance);
             if (!Multiplayer.IsYourCow(cow)) return;
             string name = cow.m_CharacterStats.m_CharacterName;
-            // Plugin.Logger.LogWarning("decision bug14 checking: " + name); // bug 14
             voteButtons[cow] = [];
             VoteButton[] btns = __instance.GetComponentsInChildren<VoteButton>();
             foreach (VoteButton btn in btns)
@@ -48,7 +47,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void VoteContainerHide(VoteButtonContainer __instance)
         {
-            Plugin.Logger.LogWarning("vote btns hide for " + __instance.m_PlayerHud.m_Cow.m_CharacterStats.m_CharacterName);
             if (activeContainers.Contains(__instance)) activeContainers.Remove(__instance);
             if (activeContainers.Count > 0) return;
             // if (!Multiplayer.IsYourCow(__instance.m_PlayerHud.m_Cow)) return;
@@ -70,11 +68,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StringBuilder sb = new(DungeonEncounterRolls());
             if (sb.Length != 0)
             {
-                if (CombatUtils.entry != null)
+                if (CombatUtils.Entry != null)
                 {
-                    sb.Append($"these roll chances are based on your {CombatUtils.entry?.m_TestSkill} stat");
-                    activeWindow.SetContext(sb.ToString());
+                    sb.Append($"these roll chances are based on your {CombatUtils.Entry?.m_TestSkill} stat");
                 }
+                activeWindow.SetContext(sb.ToString());
             }
             activeWindow.Register();
         }
@@ -104,7 +102,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     //expected => Cow [Disarm ()] 0(2%) = Failure
                 }
             }
-            if (sb.Length == detail.Length) return "";
+            if (sb.Length == detail.Length) sb = new();
             string encounterMsg = StaticMessage.Message;
             if (encounterMsg.Length != 0)
             {
