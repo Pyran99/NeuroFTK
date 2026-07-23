@@ -87,17 +87,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 CharacterOverworld cow = kvp.Key;
                 if (!cow.IsInDungeon()) continue;
                 if (cow.m_HexLand.m_POI == null) continue;
+                // sb.Append($"buttons for {CharacterData.GetCharacterName(cow)} ");
                 foreach (VoteButton btn in kvp.Value)
                 {
                     string btnName = btn.GetComponentInChildren<Text>().text;
                     // if btn text doesnt work
-                    // if (GameDescriptions.AlternateLocLookUp.ContainsKey(btn.m_Option.ToString()))
-                    // {
-                    //     btnName = GameDescriptions.AlternateLocLookUp[btn.m_Option.ToString()];
-                    // }
-                    sb.AppendLine($"buttons for {CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]");
+                    // if (GameDescriptions.AlternateLocLookUp.ContainsKey(btn.m_Option.ToString())) btnName = GameDescriptions.AlternateLocLookUp[btn.m_Option.ToString()];
+                    sb.AppendLine($"{CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]"); // alternate
+                    // sb.Append($"[{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]");
                     string slotResults = CombatUtils.GetDungeonSlotLegend(cow, btn);
-                    if (slotResults.Length == 0) continue;
+                    if (slotResults.Length == 0)
+                    {
+                        // sb.AppendLine();
+                        continue;
+                    }
                     sb.AppendLine($"{slotResults}");
                     //expected => Cow [Disarm ()] 0(2%) = Failure
                 }

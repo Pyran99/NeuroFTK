@@ -43,22 +43,22 @@ namespace Pyran.NeuroFTK.Utils
         public static Dictionary<VoteButton.VoteOption, string> VoteOptionDescriptions = new()
         {
             {VoteButton.VoteOption.Unlocked, "unlocked NYI"},
-            {VoteButton.VoteOption.Open, "open NYI"},
-            {VoteButton.VoteOption.Collect, "collect NYI"},
-            {VoteButton.VoteOption.Equip, "equip NYI"},
-            {VoteButton.VoteOption.Use, "use NYI"},
-            {VoteButton.VoteOption.Pass, "pass NYI"},
+            {VoteButton.VoteOption.Open, "open container, may receive loot"},
+            {VoteButton.VoteOption.Collect, "gather the loot"},
+            {VoteButton.VoteOption.Equip, "equip the loot"},
+            {VoteButton.VoteOption.Use, "use the item right away"},
+            {VoteButton.VoteOption.Pass, "throw away the loot"}, // discard
             {VoteButton.VoteOption.Knockdown, "breakdown the object blocking your path"},
-            {VoteButton.VoteOption.Disarm, "disarm NYI"},
+            {VoteButton.VoteOption.Disarm, "disarm the trap"},
             {VoteButton.VoteOption.Proceed, "proceed NYI"},
             {VoteButton.VoteOption.Attempt, "attempt NYI"},
             {VoteButton.VoteOption.Ready, "continue to the next room"},
             {VoteButton.VoteOption.Identify, "identify NYI"},
-            {VoteButton.VoteOption.Shop, "shop NYI"},
+            {VoteButton.VoteOption.Shop, "view the shop"},
             {VoteButton.VoteOption.Destroy, "destroy NYI"},
             {VoteButton.VoteOption.PartyHeal, "partyheal NYI"},
-            {VoteButton.VoteOption.DungeonRest, "dungeonrest NYI"},
-            {VoteButton.VoteOption.Share, "share NYI"},
+            {VoteButton.VoteOption.DungeonRest, "setup a tinder pouch camp to heal all party members (dont use all of them)"}, // party rest
+            {VoteButton.VoteOption.Share, "split the rewards between all involved party members"},
             {VoteButton.VoteOption.AttemptNoRoll, "attemptnoroll NYI"},
         };
     }
