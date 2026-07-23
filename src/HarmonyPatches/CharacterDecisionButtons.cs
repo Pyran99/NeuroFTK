@@ -64,13 +64,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 activeWindow.AddAction(new CharacterDecisionAction(kvp.Key.m_CharacterStats.m_CharacterName, kvp.Value));
             }
-            activeWindow.SetForce(0, $"[{instance.m_Prompt.text}] choose a character to perform the action with. if multiple characters can be chosen, only the character you choose to make the decision will act on it (collect will add to the chosen characters inventory, pass will skip for all characters, etc.). collected items can be sold at a market. discard should be avoided for most loot", "");
+            activeWindow.SetForce(0, StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text), "");
             StringBuilder sb = new(DungeonEncounterRolls());
             if (sb.Length != 0)
             {
                 if (CombatUtils.Entry != null)
                 {
-                    sb.Append($"these roll chances are based on your {CombatUtils.Entry?.m_TestSkill} stat");
+                    sb.Append(StringMessages.RollSkillType.Format(CombatUtils.Entry.m_TestSkill.ToString()));
                 }
                 activeWindow.SetContext(sb.ToString());
             }
@@ -80,7 +80,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string DungeonEncounterRolls()
         {
             StringBuilder sb = new();
-            string detail = "(roll chances (buttons with no roll results will always succeed) displayed as: character [button (description)] total successful rolls(chance for this result) = outcome result)";
+            string detail = StringMessages.DungeonRolls;
             sb.AppendLine(detail);
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
@@ -111,6 +111,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 sb.Insert(0, $"encountered {StaticMessage.Message}\n");
             }
+            Plugin.Logger.LogWarning("[verify dont send ctx if empty] " + sb.ToString());
+            if (sb.Length == 0) return "";
             return sb.ToString();
         }
     }

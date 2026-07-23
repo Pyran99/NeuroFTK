@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HarmonyLib;
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.GameConfigs;
@@ -47,7 +48,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isSearching = false;
             Object.Destroy(window);
             while (__result.MoveNext()) yield return __result.Current;
-            Plugin.Logger.LogWarning("first turn action");
             BeginTurn2(__instance);
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
@@ -76,11 +76,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             if (!Multiplayer.IsYourCow(cow)) return;
-            Plugin.Logger.LogWarning("START tracking first:" + isFirstAction);
             isTracking = true;
             if (isFirstAction) return;
             RollSystem.currentCOW = cow;
-            Plugin.Logger.LogWarning("start tracking create window");
+            Plugin.Logger.LogMessage("start tracking create window");
             QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject);
         }
 
@@ -89,7 +88,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void StopTracking()
         {
-            Plugin.Logger.LogWarning("STOP tracking");
             isTracking = false;
             isSearching = false;
             isFirstAction = false;
@@ -101,6 +99,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EndTurn()
         {
+            ToggleDisposableActions.ToggleOverworldActions(false);
             tiles.Clear();
             isTracking = false;
             isSearching = false;
@@ -176,7 +175,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!isTracking || GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
-                Context.Send($"an issue occurred with the move action", true);
+                Context.Send(StringMessages.ActionIssueOccured.Format(["movement"]) + NeuroSdkStrings.ModFaultSuffix, true);
                 CreateActionWindow(cow);
                 yield break;
             }
@@ -199,14 +198,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     if (i == 0)
                     {
                         Plugin.Logger.LogError("could not find any valid tiles");
-                        Context.Send("could not find any valid tiles", true);
+                        Context.Send("could not find any valid tiles for the movement action", true);
                         yield break;
                     }
                 }
                 if (failed)
                 {
                     Plugin.Logger.LogError("failed to auto travel to last hex");
-                    Context.Send($"an issue occurred with the go_to_quest action, try another one", true);
+                    Context.Send(StringMessages.ActionIssueOccured.Format(["go_to_quest"]), true);
                     yield break;
                 }
             }
@@ -232,11 +231,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator GetValidTiles(HexLand.SelectType type = HexLand.SelectType.Same)
         {
-            if (isFirstAction)
-            {
-                Plugin.Logger.LogWarning("skip first tile action");
-                yield break;
-            }
+            if (isFirstAction) yield break;
             if (isSearching) yield break;
             isSearching = true;
             tiles.Clear();
@@ -247,6 +242,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             double startTime = Time.time;
             Task task = Task.Factory.StartNew(() => tiles = [.. LoopNeighbors(currentCOW, points)]);
             yield return task.IsCompleted;
+
             Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
             QuickTimerCallback timer = new(() => CreateActionWindow(currentCOW), currentCOW.gameObject, 0.5f);
         }
@@ -312,7 +308,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             hexPositions.Clear();
             StringBuilder sb = new();
-            sb.Append("[all tiles in range (displayed as [(position x,z) (name/realm)(quest)other info])] ");
+            sb.Append(StringMessages.HexContext);
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             foreach (HexLand hex in _tiles)
             {

@@ -76,7 +76,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogMessage("combat victory overworld skip");
                 return;
             }
-            Context.Send("you have won the battle!");
+            Context.Send(StringMessages.BattleWon);
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))]
@@ -85,7 +85,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             FTKPlayerID ph = _victim;
             string victim = CharacterData.GetCharacterName(ph.GetCow());
-            Context.Send($"{victim} has died");
+            Context.Send(StringMessages.UnitDied.Format(victim));
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerFlee))]
@@ -94,7 +94,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             FTKPlayerID ph = _fid;
             string player = CharacterData.GetCharacterName(ph.GetCow());
-            Context.Send($"{player} has fled the battle");
+            Context.Send(StringMessages.UnitFled.Format(player));
         }
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetSpecificHealthRPC))]
@@ -158,11 +158,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string health = CharacterData.GetCharacterHealth(character);
             if (change >= 0)
             {
-                dmgTakenString.AppendLine($"{name} took {change} damage (health {health})");
+                // dmgTakenString.AppendLine($"{name} took {change} damage (health {health})");
+                dmgTakenString.AppendLine(StringMessages.UnitTakeDamage.Format([name, change, health]));
             }
             else if (change < 0)
             {
-                dmgTakenString.AppendLine($"{name} healed {-change} (health {health})");
+                // dmgTakenString.AppendLine($"{name} healed {-change} (health {health})");
+                dmgTakenString.AppendLine(StringMessages.UnitHealed.Format([name, change, health]));
             }
             if (isHealthChangeWait) return;
             GameLogic.Instance.StartCoroutine(PlayerHealthWait());
@@ -208,7 +210,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_enemyID);
             if (dummy == null) return;
             string enemy = CombatUtils.GetEnemyName(dummy as EnemyDummy);
-            Context.Send($"[enemy] {enemy} has fled the battle");
+            Context.Send(StringMessages.UnitFled.Format(enemy));
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatEnemyDie))]
@@ -217,7 +219,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             CharacterDummy dummy = EncounterSession.Instance.GetDummyByFID(_victim);
             if (dummy == null) return;
-            enemyDiedSB.AppendLine($"[enemy] {CombatUtils.GetEnemyName(dummy as EnemyDummy)} has died");
+            enemyDiedSB.AppendLine(StringMessages.UnitDied.Format(CombatUtils.GetEnemyName(dummy as EnemyDummy)));
             if (isEnemyDeathWait) return;
             EncounterSession.Instance.StartCoroutine(EnemyDiedWait());
         }
@@ -244,11 +246,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string name = CombatUtils.GetEnemyName(EncounterSession.Instance.m_EnemyDummies[_enemyID]);
             if (dif >= 0)
             {
-                enemySb.AppendLine($"[enemy] {name} took {dif} damage (health {_newHealth})");
+                enemySb.AppendLine(StringMessages.UnitTakeDamage.Format([name, dif, _newHealth]));
             }
             else
             {
-                enemySb.AppendLine($"[enemy] {name} healed {dif} (health {_newHealth})");
+                enemySb.AppendLine(StringMessages.UnitHealed.Format([name, dif, _newHealth]));
             }
             enemyHealths[_enemyID] = _newHealth;
             if (isWaitingEnemyHealth) return;

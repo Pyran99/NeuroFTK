@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -62,6 +64,31 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             buttons.Clear();
             Object.Destroy(window);
+        }
+
+        [HarmonyPatch(typeof(MiniEncounterMenuBase), nameof(MiniEncounterMenuBase.CultDeviceCallBack))]
+        [HarmonyPostfix]
+        static void CultDeviceRoll(uiSlotLegend.SlotOutput _output)
+        {
+            if (_output.m_Passed)
+            {
+                Context.Send(StringMessages.CultDeviceDestroyed);
+                return;
+            }
+            Context.Send(StringMessages.CultDeviceDestroyedFail);
+        }
+
+        [HarmonyPatch(typeof(MiniEncounterMenuBase), nameof(MiniEncounterMenuBase.FairyFountainCallBack))]
+        [HarmonyPostfix]
+        static void FairyFountainRoll(uiSlotLegend.SlotOutput _output)
+        {
+            Plugin.Logger.LogWarning("fairy fountain callback NYI");
+            if (_output.m_Meaning == FTK_slotOutputMeaning.ID.Fight)
+            {
+                // Context.Send();
+                return;
+            }
+            // Context.Send();
         }
 
         static void CreateAction(uiChooseRewardMenu _instance, Dictionary<string, uiChooseRewardButton> _buttons, string _title)

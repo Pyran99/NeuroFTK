@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         {
             Plugin.Logger.LogMessage("npc talking");
             string msg = StringReplace.RemoveStyling(_message);
-            Context.Send($"{__instance.m_Speaker.text} ({__instance.m_SpeakerTitle.text}) says: {msg}");
+            Context.Send(StringMessages.PortraitMsg.Format([__instance.m_Speaker.text, __instance.m_SpeakerTitle.text, msg]));
             ContinueAfterMessageSent(__instance);
         }
 
@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         {
             Plugin.Logger.LogMessage("user talking");
             string msg = StringReplace.RemoveStyling(_message);
-            Context.Send($"{__instance.m_Speaker.text} ({__instance.m_SpeakerTitle.text}) says: {msg}");
+            Context.Send(StringMessages.PortraitMsg.Format([__instance.m_Speaker.text, __instance.m_SpeakerTitle.text, msg]));
             ContinueAfterMessageSent(__instance);
         }
 
@@ -43,13 +43,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static void MessageClosed()
         {
             UnityEngine.Object.Destroy(activeWindow);
-        }
-
-        static void ContinueAfterMessageSent(uiPortraitMessageHud instance)
-        {
-            if (activeWindow != null) return;
-            QuickTimerCallback timer = new(() => activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject), instance.m_MessagePanel.gameObject, 2000f);
-            // instance.StartCoroutine(Continue(instance));
         }
 
         // this may not always be called
@@ -70,7 +63,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             int num = (int)_arguments[0];
             QuestLogicBase quest = GameLogic.Instance.GetQuestByID(num);
             _ = quest.m_Destination;
-            Plugin.Logger.LogMessage($"{quest.m_Destination.m_BigIndex} - {quest.m_Destination.m_SmallIndex}"); // 13 - 18
+            // Plugin.Logger.LogMessage($"{quest.m_Destination.m_BigIndex} - {quest.m_Destination.m_SmallIndex}"); // 13 - 18
             // quest.CheckIsComplete();
             // quest.DetermineDestinations();
             // quest.GetCurrentDestinationLocation();
@@ -78,6 +71,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             //MessagePresenter.Instance.PresentMessage(_mi.m_ID, closeFunc, closePartFunc, questByID, questMessageType, flag);
             //base.StartCoroutine(this.WaitPortraitToClose(_msgInstanceID, _messageCloseCallback, _msgPartCloseCB, _quest, _questMsgType, _enableButton));
         }
+
+        static void ContinueAfterMessageSent(uiPortraitMessageHud instance)
+        {
+            ToggleDisposableActions.ToggleOverworldActions(false);
+            if (activeWindow != null) return;
+            QuickTimerCallback timer = new(() => activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject), instance.m_MessagePanel.gameObject);
+            // instance.StartCoroutine(Continue(instance));
+        }
+
     }
 }
 
