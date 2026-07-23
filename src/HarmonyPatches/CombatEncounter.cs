@@ -38,7 +38,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (generating) return;
             generating = true;
             instance = __instance.m_Owner;
-            ToggleOverworldActions.DisposeActions();
+            // ToggleDisposableActions.ToggleOverworldActions(false);
             __instance.StartCoroutine(Wait(__instance.m_Buttons));
         }
 

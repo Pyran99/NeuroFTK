@@ -22,13 +22,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 sb.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
             }
-            if (sb.Length == "[usable belt items] ".Length) sb.Append("none");
+            if (sb.Length == "[usable belt items] ".Length) sb.Append("there are no items you can use right now");
             Context.Send(sb.ToString());
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
         {
-            NeuroActionHandler.UnregisterActions(this);
+            ToggleDisposableActions.DisposeAction(this);
             return ExecutionResult.Success();
         }
     }

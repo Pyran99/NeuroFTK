@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             OverworldFlow.isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
             // combat rolls are after choice
-            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
             }
         }

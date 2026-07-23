@@ -19,20 +19,19 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 Plugin.Logger.LogError("query location failed: no active character");
                 Context.Send("query location failed" + NeuroSdkStrings.ModFaultSuffix);
-                ToggleOverworldActions.DisposeActions();
                 return;
             }
             string name = current.m_CharacterStats.m_CharacterName;
             HexLand hex = current.GetHexLand();
-            Context.Send($"[{name}] is at {hex.GetPosition()} {hex}. This tile contains ({hex.GetPOI()?.GetIDString()})");
+            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This tile contains ({hex.GetPOI()?.GetIDString()})");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
         {
+            ToggleDisposableActions.DisposeAction(this);
             return ExecutionResult.Success();
         }
 
-        //TODO NYI
         string GetHexData(HexLand hex)
         {
             string data = "";

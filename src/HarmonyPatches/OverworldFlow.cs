@@ -55,7 +55,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void BeginTurn2(CharacterOverworld cow)
         {
-            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
             if (!Multiplayer.IsYourCow(cow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
@@ -65,6 +65,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isSearching = false;
             Object.Destroy(window);
             QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(), cow.gameObject);
+            ToggleDisposableActions.ToggleOverworldActions(true, true);
         }
 
         // when movement choice starts
@@ -72,7 +73,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
-            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             if (!Multiplayer.IsYourCow(cow)) return;
             Plugin.Logger.LogWarning("START tracking first:" + isFirstAction);
@@ -145,7 +146,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ReturnedToOverworld()
         {
-            // ToggleOverworldActions.EnableDisposableActions();
         }
 
         #region end turn procs
@@ -164,7 +164,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
-
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld cow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
         {
             HexLand dest = hex;
@@ -174,7 +173,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             // hover destination to generate path list
             ReverseCheckHoverPath(Movement.Instance, dest);
-            if (!isTracking || ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            if (!isTracking || GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
                 Context.Send($"an issue occurred with the move action", true);
@@ -426,7 +425,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateActionWindow(CharacterOverworld _cow)
         {
-            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             Vector2 pos = HexData.GetVec2Pos(_cow.GetHexLand());
             string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
             if (lastDestinations.ContainsKey(_cow))

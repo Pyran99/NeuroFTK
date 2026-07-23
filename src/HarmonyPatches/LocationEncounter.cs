@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void MenuDisplayPostShow()
         {
             Plugin.Logger.LogMessage("show location menu");
-            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
             {
                 Plugin.Logger.LogWarning("dungeon loc_menu skipped");
                 return;

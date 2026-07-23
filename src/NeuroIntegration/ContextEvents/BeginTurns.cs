@@ -12,7 +12,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         public static string CtxOverworldTurnBeginStats(CharacterOverworld _cow)
         {
-            if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
             SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
             string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
             return json;

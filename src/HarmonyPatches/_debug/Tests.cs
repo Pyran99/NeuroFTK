@@ -1,5 +1,6 @@
 using System;
 using HarmonyLib;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -60,7 +61,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Test30()
         {
             Plugin.Logger.LogMessage("30 InitiateEncounterSessionRPC");
-            ToggleOverworldActions.DisposeActions();
+            ToggleDisposableActions.ToggleOverworldActions(false);
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateNextEncounter))]
@@ -104,6 +105,44 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Plugin.Logger.LogMessage("39 CommenceBattleRPC");
         }
+
+        [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DungeonEncounter))]
+        [HarmonyPrefix]
+        static void Test1(CharacterOverworld __instance)
+        {
+            Plugin.Logger.LogMessage("dungeon encounter: " + __instance.m_CharacterStats.m_CharacterName);
+        }
+
+        [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))]
+        [HarmonyPostfix]
+        static void DungeonExit()
+        {
+            Plugin.Logger.LogMessage("dungeon exit");
+            Context.Send("returning to overworld", true);
+        }
+
+        // to next room, from popup menu
+        [HarmonyPatch(typeof(uiExploreDungeonMenu), nameof(uiExploreDungeonMenu.OnExplore))]
+        [HarmonyPrefix]
+        static void Test3()
+        {
+            Plugin.Logger.LogMessage("explore dungeon menu on explore");
+        }
+
+        [HarmonyPatch(typeof(uiEnterDungeonMenu), nameof(uiEnterDungeonMenu.OnEnter))]
+        [HarmonyPrefix]
+        static void Test4()
+        {
+            Plugin.Logger.LogMessage("enter dungeon menu OnEnter");
+        }
+
+        [HarmonyPatch(typeof(uiEnterDungeonMenu), nameof(uiEnterDungeonMenu.OnLeave))]
+        [HarmonyPostfix]
+        static void Test5()
+        {
+            Plugin.Logger.LogMessage("enter dungeon menu OnLeave");
+        }
+
 
         // quest message
         [HarmonyPatch(typeof(MessagePresenter), "WaitPortraitToClose")]

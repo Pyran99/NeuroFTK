@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
             GlobalConfig.gameInitialized = true;
-            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError("wrong mode for battle");
                 return;
@@ -71,7 +71,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CombatPlayerVictory()
         {
             UnregisterDisposableActions();
-            if (ToggleOverworldActions.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
             {
                 Plugin.Logger.LogMessage("combat victory overworld skip");
                 return;
