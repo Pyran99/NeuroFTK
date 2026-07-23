@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using HarmonyLib;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.NeuroIntegration;
+using NeuroSdk.Actions;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
     [HarmonyPatch]
     public class GlobalMessagePatch
     {
+        static ActionWindow window;
 
         [HarmonyPatch(typeof(uiGlobalMessageHUD), "ActivateMessagePanel")]
         [HarmonyPostfix]
@@ -16,6 +19,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             while (__result.MoveNext()) yield return __result.Current;
             QuickTimerCallback timer = new(() => GetButtons(__instance), __instance.m_MessagePanel.gameObject);
+        }
+
+        [HarmonyPatch(typeof(uiGlobalMessageHUD), nameof(uiGlobalMessageHUD.OnClose))]
+        [HarmonyPrefix]
+        static void MessageClosed()
+        {
+            Object.Destroy(window);
         }
 
         static void GetButtons(uiGlobalMessageHUD _instance)
@@ -30,7 +40,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 buttons.Add("continue", _instance.m_ClickAnywhere);
             }
-            GlobalMessageAction.RegisterAction(_instance, new(buttons));
+            window = GlobalMessageAction.RegisterAction(_instance, new(buttons));
         }
     }
 }

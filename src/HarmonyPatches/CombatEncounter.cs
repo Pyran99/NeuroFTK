@@ -97,6 +97,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void OnMenuOpened(uiEncounterMenu _instance, Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
         {
+            ToggleDisposableActions.ToggleOverworldActions(false);
             instance = _instance;
             SetButtonData(_buttons);
         }

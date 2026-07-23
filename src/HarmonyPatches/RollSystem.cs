@@ -39,7 +39,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 ctx = $"{dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName} rolled {success}/{_slotResults.Length}";
             }
-            Context.Send(ctx);
+            Context.Send(ctx, true);
         }
 
         // enumerator to show the rolled values

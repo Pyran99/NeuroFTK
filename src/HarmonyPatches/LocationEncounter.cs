@@ -86,6 +86,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateAction()
         {
+            ToggleDisposableActions.ToggleOverworldActions(false);
             Object.Destroy(window);
             string ctx = GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
             Context.Send(ctx);
