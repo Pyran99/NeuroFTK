@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GridEditor;
+using NeuroSdk.Internal;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -34,9 +35,11 @@ namespace Pyran.NeuroFTK.Utils
         }
 
         /// <returns>example => 0(2%) = Failure</returns>
-        public static string GetDungeonSlotLegend(CharacterOverworld cow, VoteButton.VoteOption option)
+        public static string GetDungeonSlotLegend(CharacterOverworld cow, VoteButton btn)
         {
             if (!cow.IsInDungeon()) return "";
+            entry = null; // this is reset for every char & btn list => maybe set once then reset after caller
+            VoteButton.VoteOption option = btn.m_Option;
             MiniHexDungeon dungeon = (MiniHexDungeon)cow.GetPOI();
             DioramaDungeon diorama = EncounterSession.Instance.GetDioramaDungeon();
             MiniHexDungeon.EncounterType type = dungeon.m_EncounterType;
@@ -78,7 +81,11 @@ namespace Pyran.NeuroFTK.Utils
                     break;
             }
             Dictionary<string, Dictionary<string, string>> data = [];
-            RollSlotOutcomes.SetSlotLegendResult(entry, outputId, cow, ref data);
+            Plugin.Logger.LogWarning(Jason.Serialize(entry));
+            if (outputId != FTK_slotOutput.ID.None)
+            {
+                RollSlotOutcomes.SetSlotLegendResult(entry, outputId, cow, data);
+            }
             StringBuilder sb = new();
             foreach (KeyValuePair<string, Dictionary<string, string>> outcome in data)
             {

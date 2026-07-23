@@ -39,7 +39,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogError("wrong mode for battle");
                 return;
             }
-            if (!Multiplayer.IsOwnerTurn(__instance.CombatCow))
+            if (!Multiplayer.IsYourCow(__instance.CombatCow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
                 return;

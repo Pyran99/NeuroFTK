@@ -56,7 +56,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void BeginTurn2(CharacterOverworld cow)
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
-            if (!Multiplayer.IsOwnerTurn(cow))
+            if (!Multiplayer.IsYourCow(cow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
                 return;
@@ -74,7 +74,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (ToggleOverworldActions.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
-            if (!Multiplayer.IsOwnerTurn(cow)) return;
+            if (!Multiplayer.IsYourCow(cow)) return;
             Plugin.Logger.LogWarning("START tracking first:" + isFirstAction);
             isTracking = true;
             if (isFirstAction) return;

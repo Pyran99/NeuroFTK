@@ -17,39 +17,44 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static readonly Dictionary<CharacterOverworld, List<VoteButton>> voteButtons = [];
         public static VoteButtonContainer instance;
         static ActionWindow activeWindow;
+        static readonly List<VoteButtonContainer> activeContainers = [];
 
         [HarmonyPatch(typeof(VoteButtonContainer), nameof(VoteButtonContainer.Show))] // called for each available character
         [HarmonyPostfix]
         static void VoteContainerShow(VoteButtonContainer __instance)
         {
-            if (!Multiplayer.IsOwnerTurn(__instance.m_PlayerHud.m_Cow)) return;
             CharacterOverworld cow = __instance.m_PlayerHud.m_Cow;
+            activeContainers.Add(__instance);
+            if (!Multiplayer.IsYourCow(cow)) return;
             string name = cow.m_CharacterStats.m_CharacterName;
             // Plugin.Logger.LogWarning("decision bug14 checking: " + name); // bug 14
             voteButtons[cow] = [];
-            Button[] btns = __instance.GetComponentsInChildren<Button>();
-            foreach (Button btn in btns)
+            VoteButton[] btns = __instance.GetComponentsInChildren<VoteButton>();
+            foreach (VoteButton btn in btns)
             {
-                VoteButton voteButton = btn.GetComponent<VoteButton>();
-                if (voteButton != null)
+                if (btn != null)
                 {
-                    voteButtons[cow].Add(voteButton);
+                    voteButtons[cow].Add(btn);
                 }
             }
-
             if (isShowing) return;
             isShowing = true;
             instance = __instance;
             Object.Destroy(activeWindow);
-            QuickTimerCallback timer = new(CreateAction, __instance.m_Prompt.gameObject);
+            QuickTimerCallback timer = new(CreateAction, __instance.gameObject);
         }
 
         [HarmonyPatch(typeof(VoteButtonContainer), nameof(VoteButtonContainer.Hide))]
         [HarmonyPrefix]
         static void VoteContainerHide(VoteButtonContainer __instance)
         {
+            Plugin.Logger.LogWarning("vote btns hide for " + __instance.m_PlayerHud.m_Cow.m_CharacterStats.m_CharacterName);
+            if (activeContainers.Contains(__instance)) activeContainers.Remove(__instance);
+            if (activeContainers.Count > 0) return;
+            // if (!Multiplayer.IsYourCow(__instance.m_PlayerHud.m_Cow)) return;
             voteButtons.Clear();
             isShowing = false;
+            instance = null;
             Object.Destroy(activeWindow);
         }
 
@@ -65,8 +70,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StringBuilder sb = new(DungeonEncounterRolls());
             if (sb.Length != 0)
             {
-                sb.Append($"these roll chances are based on your {CombatUtils.entry.m_TestSkill} stat");
-                activeWindow.SetContext(sb.ToString());
+                if (CombatUtils.entry != null)
+                {
+                    sb.Append($"these roll chances are based on your {CombatUtils.entry?.m_TestSkill} stat");
+                    activeWindow.SetContext(sb.ToString());
+                }
             }
             activeWindow.Register();
         }
@@ -74,6 +82,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string DungeonEncounterRolls()
         {
             StringBuilder sb = new();
+            string detail = "(roll chances (buttons with no roll results will always succeed) displayed as: character [button (description)] total successful rolls(chance for this result) = outcome result)";
+            sb.AppendLine(detail);
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
                 CharacterOverworld cow = kvp.Key;
@@ -87,14 +97,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     // {
                     //     btnName = GameDescriptions.AlternateLocLookUp[btn.m_Option.ToString()];
                     // }
-                    sb.AppendLine($"{CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]");
-                    sb.AppendLine($"{CombatUtils.GetDungeonSlotLegend(cow, btn.m_Option)}");
+                    sb.AppendLine($"buttons for {CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]");
+                    string slotResults = CombatUtils.GetDungeonSlotLegend(cow, btn);
+                    if (slotResults.Length == 0) continue;
+                    sb.AppendLine($"{slotResults}");
                     //expected => Cow [Disarm ()] 0(2%) = Failure
                 }
             }
-            if (sb.Length == 0) return "";
-            sb.Insert(0, "(dungeon encounter rolls (actions with no roll results will always succeed) displayed as: character [action (description)] total successful rolls(chance for this result) = outcome result)\n");
-            Plugin.Logger.LogWarning(sb.ToString());
+            if (sb.Length == detail.Length) return "";
+            string encounterMsg = StaticMessage.Message;
+            if (encounterMsg.Length != 0)
+            {
+                sb.Insert(0, $"encountered {StaticMessage.Message}\n");
+            }
             return sb.ToString();
         }
     }

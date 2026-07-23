@@ -168,7 +168,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 else
                 {
-                    outcome = RollSlotOutcomes.GetOutcomes(id);
+                    outcome = RollSlotOutcomes.GetOutcomes(GameLogic.Instance.GetCurrentCOW(), id);
                 }
                 // { "ambush": { 0: {5%: failure} }, { 1: {5%: success} }
                 rollData.Add(btn.m_ButtonText.text, outcome);

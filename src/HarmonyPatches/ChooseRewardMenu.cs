@@ -23,7 +23,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             buttons.Clear();
             title = _title;
-            isOwner = Multiplayer.IsOwnerTurn(_cow);
+            isOwner = Multiplayer.IsYourCow(_cow);
         }
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), "BaseInitialize2")]

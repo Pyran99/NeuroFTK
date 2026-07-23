@@ -7,13 +7,12 @@ namespace Pyran.NeuroFTK.Utils
     public class RollSlotOutcomes
     {
         /// <returns>{roll: {chance: result}}<br/>{ 1: { 95%: Success } }</returns>
-        public static Dictionary<string, Dictionary<string, string>> GetOutcomes(FTK_slotOutput.ID _id)
+        public static Dictionary<string, Dictionary<string, string>> GetOutcomes(CharacterOverworld cow, FTK_slotOutput.ID _id)
         {
             if (_id == FTK_slotOutput.ID.None) return [];
             Dictionary<string, Dictionary<string, string>> result = [];
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             FTK_slotOutput entry = FTK_slotOutputDB.GetDB().GetEntry(_id);
-            SetSlotLegendResult(entry, _id, cow, ref result);
+            SetSlotLegendResult(entry, _id, cow, result);
             return result;
         }
 
@@ -98,9 +97,10 @@ namespace Pyran.NeuroFTK.Utils
         }
 
         /// <summary>
-        /// adds to ref data with ex. { 0 { 5%: failure } }
+        /// adds to data with ex. { 0 { 5%: failure } }
         /// </summary>
-        public static void SetSlotLegendResult(FTK_slotOutput entry, FTK_slotOutput.ID outputId, CharacterOverworld cow, ref Dictionary<string, Dictionary<string, string>> data, FTK_progressionTier.ID progID = FTK_progressionTier.ID.None)
+        /// /// <param name="data">the dictionary to add results to</param>
+        public static void SetSlotLegendResult(FTK_slotOutput entry, FTK_slotOutput.ID outputId, CharacterOverworld cow, Dictionary<string, Dictionary<string, string>> data, FTK_progressionTier.ID progID = FTK_progressionTier.ID.None)
         {
             if (entry.m_Category == FTK_slotOutput.SlotCategory.Dungeon)
             {
@@ -119,7 +119,11 @@ namespace Pyran.NeuroFTK.Utils
             {
                 skillMod = cow.m_HexLand.m_POI.GetSkillModifier(outputId, cow);
             }
-            float skillRoll = cow.m_CharacterStats.GetSkillValue(skill, true, skillMod);
+            float skillRoll = 0f;
+            if (skill != FTK_weaponStats2.SkillType.none || skill != FTK_weaponStats2.SkillType.COUNT)
+            {
+                skillRoll = cow.m_CharacterStats.GetSkillValue(skill, true, skillMod);
+            }
             // DisplayEachOutput
             for (int i = 0; i < outputs.Length; i++)
             {
