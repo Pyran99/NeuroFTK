@@ -85,16 +85,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
                 CharacterOverworld cow = kvp.Key;
-                if (!cow.IsInDungeon()) continue;
+                if (!cow.IsInDungeon() || !cow.m_CharacterStats.m_IsInCombat) continue;
                 if (cow.m_HexLand.m_POI == null) continue;
-                // sb.Append($"buttons for {CharacterData.GetCharacterName(cow)} ");
                 foreach (VoteButton btn in kvp.Value)
                 {
                     string btnName = btn.GetComponentInChildren<Text>().text;
                     // if btn text doesnt work
                     // if (GameDescriptions.AlternateLocLookUp.ContainsKey(btn.m_Option.ToString())) btnName = GameDescriptions.AlternateLocLookUp[btn.m_Option.ToString()];
                     sb.AppendLine($"{CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]"); // alternate
-                    // sb.Append($"[{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]");
                     string slotResults = CombatUtils.GetDungeonSlotLegend(cow, btn);
                     if (slotResults.Length == 0)
                     {
@@ -105,14 +103,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     //expected => Cow [Disarm ()] 0(2%) = Failure
                 }
             }
-            if (sb.Length == detail.Length) sb = new();
+            Plugin.Logger.LogWarning("[lengths compare] " + sb.Length + " == " + detail.Length);
+            // if (sb.Length == detail.Length) sb = new();
             string encounterMsg = StaticMessage.Message;
             if (encounterMsg.Length != 0)
             {
                 sb.Insert(0, $"encountered {StaticMessage.Message}\n");
             }
-            Plugin.Logger.LogWarning("[verify dont send ctx if empty] " + sb.ToString());
-            if (sb.Length == 0) return "";
+            // Plugin.Logger.LogWarning("[verify dont send ctx if empty] " + sb.ToString());
+            // if (sb.Length == 0) return "";
             return sb.ToString();
         }
     }

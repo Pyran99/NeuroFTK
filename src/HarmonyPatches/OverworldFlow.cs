@@ -80,7 +80,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (isFirstAction) return;
             RollSystem.currentCOW = cow;
             Plugin.Logger.LogMessage("start tracking create window");
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject);
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject, 0.5f);
         }
 
         // when movement begins

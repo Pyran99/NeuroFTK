@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static bool shownOnce = false;
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
-        static readonly float waitTime = 5.0f;
+        static readonly float waitTime = 3.0f;
 
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.Show))]
