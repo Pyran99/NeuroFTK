@@ -85,7 +85,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
                 CharacterOverworld cow = kvp.Key;
-                if (!cow.IsInDungeon() || !cow.m_CharacterStats.m_IsInCombat) continue;
                 if (cow.m_HexLand.m_POI == null) continue;
                 foreach (VoteButton btn in kvp.Value)
                 {
@@ -103,15 +102,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     //expected => Cow [Disarm ()] 0(2%) = Failure
                 }
             }
-            Plugin.Logger.LogWarning("[lengths compare] " + sb.Length + " == " + detail.Length);
-            // if (sb.Length == detail.Length) sb = new();
             string encounterMsg = StaticMessage.Message;
             if (encounterMsg.Length != 0)
             {
                 sb.Insert(0, $"encountered {StaticMessage.Message}\n");
             }
-            // Plugin.Logger.LogWarning("[verify dont send ctx if empty] " + sb.ToString());
-            // if (sb.Length == 0) return "";
             return sb.ToString();
         }
     }

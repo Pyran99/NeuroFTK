@@ -164,7 +164,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             else if (change < 0)
             {
                 // dmgTakenString.AppendLine($"{name} healed {-change} (health {health})");
-                dmgTakenString.AppendLine(StringMessages.UnitHealed.Format([name, change, health]));
+                dmgTakenString.AppendLine(StringMessages.UnitHealed.Format([name, -change, health]));
             }
             if (isHealthChangeWait) return;
             GameLogic.Instance.StartCoroutine(PlayerHealthWait());

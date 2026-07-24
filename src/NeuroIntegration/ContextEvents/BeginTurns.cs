@@ -73,7 +73,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (enemyCombat.m_ImmuneFire) result.Add("fire");
             if (enemyCombat.m_ImmuneIce) result.Add("freeze");
             if (enemyCombat.m_ImmuneLightning) result.Add("shock");
-            if (enemyCombat.m_ImmuneStun) result.Add("stun");
+            if (enemyCombat.m_ImmuneStun) result.Add("stun/daze");
             if (enemyCombat.m_ImmuneWater) result.Add("wet");
             return result;
         }
