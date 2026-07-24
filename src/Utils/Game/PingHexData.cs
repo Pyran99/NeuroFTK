@@ -15,7 +15,7 @@ namespace Pyran.NeuroFTK.Utils
         [HarmonyPostfix]
         static void Ping(HexLand __instance, bool _on, CharacterOverworld _cow)
         {
-            if (!_on) return;
+            if (!_on || !GlobalConfig.gameInitialized) return;
             Vector2 pos = HexData.GetVec2Pos(__instance);
             Context.Send($"{CharacterData.GetCharacterName(_cow)} pinged {pos}. you are {Math.Round(HexLand.Distance(Multiplayer.GetOwnCow().m_HexLand, __instance), 2)} distance away");
             if (!GlobalConfig.IsDebugMode()) return;
