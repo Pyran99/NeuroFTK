@@ -21,9 +21,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             QuickTimerCallback timer = new(() => GetButtons(__instance), __instance.m_MessagePanel.gameObject);
         }
 
-        [HarmonyPatch(typeof(uiGlobalMessageHUD), nameof(uiGlobalMessageHUD.OnClose))]
+        [HarmonyPatch(typeof(uiGlobalMessageHUD), nameof(uiGlobalMessageHUD.UseOkayButton))]
         [HarmonyPrefix]
-        static void MessageClosed()
+        static void MessageClosedOkay()
+        {
+            WindowClosed();
+        }
+
+        [HarmonyPatch(typeof(uiGlobalMessageHUD), nameof(uiGlobalMessageHUD.UseYesButton))]
+        [HarmonyPrefix]
+        static void MessageClosedYes()
+        {
+            WindowClosed();
+        }
+
+        [HarmonyPatch(typeof(uiGlobalMessageHUD), nameof(uiGlobalMessageHUD.UseNoButton))]
+        [HarmonyPrefix]
+        static void MessageClosedNo()
+        {
+            WindowClosed();
+        }
+
+        static void WindowClosed()
         {
             Object.Destroy(window);
         }

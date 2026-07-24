@@ -30,7 +30,7 @@ public class MainMenu
 
     static IEnumerator DelayMainMenuAction(MainScreen instance)
     {
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.5f);
         FindButtons(instance);
         bool purchase = HasPurchasableLore();
         activeWindow = MainMenuAction.RegisterAction(instance, resumeBtn?.isActiveAndEnabled ?? false, purchase);
