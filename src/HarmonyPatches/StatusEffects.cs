@@ -20,7 +20,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetNewCurseRPC))]
         [HarmonyPostfix]
-        static void NewCurse()
+        static void NewCurse(CharacterStats.CurseType _type)
         {
             Plugin.Logger.LogWarning("testNewCurse NYI");
         }
@@ -48,10 +48,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
         [HarmonyPatch(typeof(ProficiencyBase), nameof(ProficiencyBase.End))] // dummy RemoveProf calls, all overrides call base
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         static void ProfEnd(ProficiencyBase __instance, CharacterDummy _dummy)
         {
-            if (!_dummy.m_SufferingProficiencies.ContainsKey(__instance.m_Category)) return;
+            // if (!_dummy.m_SufferingProficiencies.ContainsKey(__instance.m_Category)) return;
             StatusRemoveCtx(__instance, _dummy);
         }
 
@@ -63,10 +63,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (_dummy.m_CharacterOverworld == null)
             {
                 // enemy dummy doesnt have overworld
-                statusCtx.AppendLine($"{statusName} ({desc}) applied to {CombatUtils.GetEnemyName(_dummy as EnemyDummy)}");
+                statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format([statusName, desc, CombatUtils.GetEnemyName(_dummy as EnemyDummy)]));
                 return;
             }
-            statusCtx.AppendLine($"{statusName} ({desc}) applied to {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
+            statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format([statusName, desc, CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)]));
             // AddToDummy is called here on prof base
         }
 
@@ -84,10 +84,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string desc = GetCategoryDescription(prof);
             if (_dummy.m_CharacterOverworld == null)
             {
-                statusEndCtx.AppendLine($"{statusName} ({desc}) removed from {CombatUtils.GetEnemyName(_dummy as EnemyDummy)}");
+                statusEndCtx.AppendLine(StringMessages.StatusEffectRemoved.Format([statusName, desc, CombatUtils.GetEnemyName(_dummy as EnemyDummy)]));
                 return;
             }
-            statusEndCtx.AppendLine($"{statusName} ({desc}) removed from {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
+            statusEndCtx.AppendLine(StringMessages.StatusEffectRemoved.Format([statusName, desc, CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)]));
             if (statusEndWaiting) return;
             statusEndWaiting = true;
             _dummy.StartCoroutine(StatusRemovedWait());
@@ -101,7 +101,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             statusEndCtx = new();
         }
 
-        static string GetCategoryDescription(ProficiencyBase prof)
+        public static string GetCategoryDescription(ProficiencyBase prof)
         {
 			string result = string.Empty;
 			if (!prof) return "";

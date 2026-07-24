@@ -10,7 +10,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static void ToggleOverworldActions(bool enable, bool overwrite = true)
         {
-            // belt, location, 
+            // belt, location, status, 
             if (enable)
             {
                 if (overworldActions.Count > 0 && !overwrite) return;
@@ -24,8 +24,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 }
                 INeuroAction queryLocation = new QueryCurrentCOWLocation();
                 overworldActions.Add(queryLocation);
-                INeuroAction queryBeltItems = new QueryBeltItems(cow);
+                INeuroAction queryBeltItems = new QueryBeltItems();
                 overworldActions.Add(queryBeltItems);
+                INeuroAction queryStatus = new QueryStatusEffects();
+                overworldActions.Add(queryStatus);
                 NeuroActionHandler.RegisterActions(overworldActions);
             }
             else
@@ -37,7 +39,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static void ToggleCombatActions(bool enable, bool overwrite)
         {
-            // belt, 
+            // belt, status, 
             if (enable)
             {
                 if (combatActions.Count > 0 && !overwrite) return;
@@ -49,8 +51,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     Plugin.Logger.LogWarning("tried to register combat actions in overworld");
                     return;
                 }
-                INeuroAction queryBeltItems = new QueryBeltItems(cow);
+                INeuroAction queryBeltItems = new QueryBeltItems();
                 combatActions.Add(queryBeltItems);
+                INeuroAction queryStatus = new QueryStatusEffects();
+                combatActions.Add(queryStatus);
                 NeuroActionHandler.RegisterActions(combatActions);
             }
             else
@@ -114,14 +118,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static void DisposeAction(INeuroAction action)
         {
-            if (overworldActions.Remove(action))
-            {
-                NeuroActionHandler.UnregisterActions(action);
-            }
-            if (combatActions.Remove(action))
-            {
-                NeuroActionHandler.UnregisterActions(action);
-            }
+            overworldActions.Remove(action);
+            combatActions.Remove(action);
+            NeuroActionHandler.UnregisterActions(action);
         }
     }
 }

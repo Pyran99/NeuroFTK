@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Google2u;
 using GridEditor;
 
@@ -14,6 +15,54 @@ namespace Pyran.NeuroFTK.Utils
         public static string GetCharacterHealth(CharacterOverworld cow)
         {
             return cow.m_CharacterStats.GetHealthDisplayString();
+        }
+
+        public static CharacterOverworld GetNeuroCow()
+        {
+            CharacterOverworld cow;
+            if (Multiplayer.IsMultiplayer())
+            {
+                cow = Multiplayer.GetOwnCow();
+            }
+            else
+            {
+                cow = GameLogic.Instance.GetCurrentCOW();
+                if (cow.m_CharacterStats.m_IsInCombat || cow.IsInDungeon())
+                {
+                    cow = GameLogic.Instance.GetCurrentCombatCOW();
+                }
+            }
+            return cow;
+        }
+
+        public static List<ProficiencyBase> GetStatusEffects(CharacterOverworld cow)
+        {
+            List<ProficiencyBase> result = [];
+            CharacterDummy dummy = cow.GetCurrentDummy();
+            if (dummy == null) return result;
+            foreach (CharacterDummy.ProficiencyRecord value in dummy.m_SufferingProficiencies.Values)
+            {
+                result.Add(value.m_Proficiency);
+            }
+            return result;
+        }
+
+        public static List<ProficiencyBase.Category> GetImmunities(CharacterOverworld cow)
+        {
+            CharacterStats stats = cow.m_CharacterStats;
+            List<ProficiencyBase.Category> result = stats.GetAllActiveImmunities();
+            return result;
+        }
+
+        public static List<CharacterStats.CurseType> GetCurses(CharacterOverworld cow)
+        {
+            List<CharacterStats.CurseType> result = [];
+            CharacterStats stats = cow.m_CharacterStats;
+            foreach (CharacterStats.CurseType curse in stats.m_ActiveCurses)
+            {
+                result.Add(curse);
+            }
+            return result;
         }
     }
 
@@ -41,49 +90,9 @@ namespace Pyran.NeuroFTK.Utils
             FTK_pipe.ID pipeID = cow.m_CharacterStats.GetPipe();
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(pipeID);
             PipeItem = $"{FTKHub.Localized<TextItems>(pipe.m_DisplayName)} (lvl {(int)pipeID})";
-            StatusEffects = GetStatusEffects(cow);
-            Immunities = GetImmunities(cow);
-            Curses = GetCurses(cow);
-        }
-
-        private List<string> GetStatusEffects(CharacterOverworld cow)
-        {
-            List<string> result = [];
-            CharacterDummy dummy = cow.GetCurrentDummy();
-            if (dummy == null) return result;
-            foreach (CharacterDummy.ProficiencyRecord value in dummy.m_SufferingProficiencies.Values)
-            {
-                result.Add(value.m_Proficiency.m_ProficiencyData.GetLocalizedDisplayName());
-            }
-            return result;
-        }
-
-        private List<string> GetImmunities(CharacterOverworld cow)
-        {
-            List<string> result = [];
-            CharacterStats stats = cow.m_CharacterStats;
-            // foreach (ProficiencyBase.Category immunity in stats.m_ActiveImmunities)
-            // {
-                
-            // }
-            // CharacterDummy dummy = cow.GetCurrentDummy();
-            // if (dummy == null) return result;
-            // foreach (CharacterDummy.ProficiencyRecord value in dummy.m_SufferingProficiencies.Values)
-            // {
-            //     result.Add(value.m_Proficiency.m_ProficiencyData.GetLocalizedDisplayName());
-            // }
-            return result;
-        }
-
-        private List<string> GetCurses(CharacterOverworld cow)
-        {
-            List<string> result = [];
-            CharacterStats stats = cow.m_CharacterStats;
-            foreach (CharacterStats.CurseType curse in stats.m_ActiveCurses)
-            {
-                result.Add(curse.ToString());
-            }
-            return result;
+            StatusEffects = [.. CharacterData.GetStatusEffects(cow).Select(x => x.m_ProficiencyData.GetLocalizedDisplayName())];
+            Immunities = [.. CharacterData.GetImmunities(cow).Select(x => x.ToString())];
+            Curses = [.. CharacterData.GetCurses(cow).Select(x => x.ToString())];
         }
         
     }
