@@ -20,9 +20,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.SetNewCurseRPC))]
         [HarmonyPostfix]
-        static void NewCurse(CharacterStats.CurseType _type)
+        static void NewCurse(CharacterStats.CurseType _type, CharacterStats __instance)
         {
-            Plugin.Logger.LogWarning("testNewCurse NYI");
+            Context.Send($"curse {_type} applied to {CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}");
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.RemoveAllActiveCurses))]
+        [HarmonyPostfix]
+        static void RemovedAllCurses(CharacterStats __instance)
+        {
+            Context.Send($"removed all curses from {CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}");
         }
 
         [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.AddProfToDummy))]
