@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
+using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
@@ -23,6 +25,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             instance = __instance;
             SetCustomHouseRules.configInstance = __instance;
+            if (__instance.m_IsResume)
+            {
+                ActionWindow window = ActionWindow.Create(__instance.gameObject);
+                window.AddAction(new ResumeAdventureAction(__instance));
+                window.SetForce(0, "resume your adventure", "you are in the adventure select screen", true);
+                UnregisterDisabledObject.QuickCreate(__instance.gameObject, window);
+                window.Register();
+                return;
+            }
             CreateActionWindow(__instance);
         }
 
@@ -148,6 +159,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string[] modes = GameDefinitionBase.GetSupportedGameModeString(selected.GetSupportedGameMode());
             Plugin.Logger.LogMessage($"game modes: {string.Join(", ", modes)}");
             //game modes: Solo Adventure, Online Co-Op, Local Co-Op
+        }
+    }
+
+    internal class ResumeAdventureAction(GameConfig instance) : NeuroAction
+    {
+        public override string Name => "resume_game";
+        protected override string Description => "resumes the last save";
+        protected override JsonSchema Schema => null;
+
+        protected override void Execute()
+        {
+            SelectButton.StartCoroutine(instance.m_CreateGame.GetComponent<uiFTKButton>());
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData)
+        {
+            return ExecutionResult.Success();
         }
     }
 }
