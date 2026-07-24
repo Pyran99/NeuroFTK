@@ -23,22 +23,29 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string statusName;
             string statusDesc;
             List<ProficiencyBase> effects = CharacterData.GetStatusEffects(cow);
+            bool added = false;
             foreach (ProficiencyBase prof in effects)
             {
                 statusName = prof.m_ProficiencyData.GetLocalizedDisplayName();
                 statusDesc = StatusEffects.GetCategoryDescription(prof);
                 sb.Append($"{statusName} ({statusDesc}), ");
+                added = true;
             }
+            if (!added) sb.Append("none");
             sb.Append("\n[Curses] ");
             List<CharacterStats.CurseType> curses = CharacterData.GetCurses(cow);
+            added = false;
             foreach (CharacterStats.CurseType curse in curses)
             {
                 statusName = curse.ToString();
                 statusDesc = FTKHub.Localized<TextInfo>("STR_status" + curse.ToString() + "Info");
                 sb.Append($"{statusName} ({statusDesc}), ");
+                added = true;
             }
+            if (!added) sb.Append("none");
             sb.Append("\n[Immunities] ");
             List<ProficiencyBase.Category> immunities = CharacterData.GetImmunities(cow);
+            added = false;
             foreach (ProficiencyBase.Category immunity in immunities)
             {
                 statusName = immunity.ToString();
@@ -47,7 +54,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     statusName = GameDescriptions.AlternateLocLookUp[statusName];
                 }
                 sb.Append($"{statusName}, ");
+                added = true;
             }
+            if (!added) sb.Append("none");
             Context.Send(sb.ToString());
         }
 

@@ -71,9 +71,11 @@ namespace Pyran.NeuroFTK.Utils
         public readonly string Name;
         public readonly int Level;
         public readonly int Xp;
-        public readonly string Health;
         public readonly int Gold;
         public readonly string PipeItem;
+        public readonly string Health;
+        public readonly int Armor;
+        public readonly int Resistance;
         public readonly List<string> StatusEffects = [];
         public readonly List<string> Immunities = [];
         public readonly List<string> Curses = [];
@@ -93,6 +95,8 @@ namespace Pyran.NeuroFTK.Utils
             StatusEffects = [.. CharacterData.GetStatusEffects(cow).Select(x => x.m_ProficiencyData.GetLocalizedDisplayName())];
             Immunities = [.. CharacterData.GetImmunities(cow).Select(x => x.ToString())];
             Curses = [.. CharacterData.GetCurses(cow).Select(x => x.ToString())];
+            Armor = cow.m_CharacterStats.TotalArmor;
+            Resistance = cow.m_CharacterStats.TotalResist;
         }
         
     }

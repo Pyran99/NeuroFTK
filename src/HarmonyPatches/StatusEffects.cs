@@ -102,6 +102,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator StatusRemovedWait()
         {
+            yield return new WaitForEndOfFrame(); // may need 3 to combine at end of battle
+            yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
             statusEndWaiting = false;
             Context.Send(statusEndCtx.ToString());

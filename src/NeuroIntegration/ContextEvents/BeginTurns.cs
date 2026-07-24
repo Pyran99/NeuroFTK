@@ -1,9 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using GridEditor;
 using NeuroSdk.Internal;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string lvl = $"{stats.m_PlayerLevel}";
                 string health = $"{stats.GetHealthDisplayString()}";
                 string coherent = cow.Value.IsCoherent() ? "" : "stunned";
-                sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}.");
+                sb.AppendLine($"{name}, lvl {lvl}, health {health}, {coherent}");
             }
             Context.Send(sb.ToString());
         }
@@ -53,10 +53,29 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string lvl = $"{_enemy.GetEnemyLevelDisplay()}";
                 string health = $"{_dummy.GetEnemyInfo().GetCurrentHealth()}";
                 string coherent = _dummy.IsCoherent() ? "" : "stunned";
-                //TODO immunities
-                sb.AppendLine($"{name} (lvl {lvl}, health {health}) {coherent}.");
+                int armor = _dummy.GetArmor();
+                int resist = _dummy.GetResist();
+                List<string> immunities = EnemyImmunities(_dummy);
+                string immunes = string.Join(", ", [.. immunities.Select(x => x)]);
+                if (immunes.Length == 0) immunes = "none";
+                sb.AppendLine($"{name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes})");
             }
             Context.Send(sb.ToString());
+        }
+
+        static List<string> EnemyImmunities(EnemyDummy _enemy)
+        {
+            EnemyInfo enemy = _enemy.GetEnemyInfo();
+            FTK_enemyCombat enemyCombat = enemy.m_EnemyCombat;
+            List<string> result = [];
+            if (enemyCombat.m_ImmuneBleed) result.Add("bleed");
+            if (enemyCombat.m_ImmuneDistract) result.Add("distract");
+            if (enemyCombat.m_ImmuneFire) result.Add("fire");
+            if (enemyCombat.m_ImmuneIce) result.Add("freeze");
+            if (enemyCombat.m_ImmuneLightning) result.Add("shock");
+            if (enemyCombat.m_ImmuneStun) result.Add("stun");
+            if (enemyCombat.m_ImmuneWater) result.Add("wet");
+            return result;
         }
         
     }
