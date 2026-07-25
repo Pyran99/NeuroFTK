@@ -2,8 +2,6 @@ using System.Collections;
 using HarmonyLib;
 using HutongGames.PlayMaker;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.Utils;
-using Pyran.NeuroFTK.NeuroIntegration;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -13,9 +11,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static CharacterOverworld currentCOW;
         public static int rollCount;
 
-        [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))]
+        [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))] // for MOVEMENT rolls
         [HarmonyPrefix]
-        static void RollResults(SlotControl __instance, FTKPlayerID _player, string[] _slotResults)
+        static void MovementRollResults(SlotControl __instance, FTKPlayerID _player, string[] _slotResults)
         {
             int success = 0;
             foreach (string result in _slotResults)
@@ -45,7 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         // enumerator to show the rolled values
         [HarmonyPatch(typeof(SlotControl), "DisplaySlots")]
         [HarmonyPostfix]
-        static IEnumerator SlotResults(IEnumerator __result)
+        static IEnumerator MovementSlotResults(IEnumerator __result)
         {
             OverworldFlow.isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
@@ -53,6 +51,31 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
             }
+        }
+
+        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.SetEncounterSlotResults))]
+        [HarmonyPostfix]
+        static void EncounterRollResults(EncounterSession __instance, FTKPlayerID _playerID, string[] _slotResults)
+        {
+            int success = 0;
+            foreach (string result in _slotResults)
+            {
+                if (IsFailedRoll(result)) continue;
+                success++;
+            }
+            rollCount = success;
+            CharacterOverworld cow = FTKHub.Instance.GetCharacterOverworldByFID(_playerID);
+            CharacterDummy dummy = cow.m_CurrentDummy;
+            string ctx = $"{dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName} rolled {success}/{_slotResults.Length}";
+            Context.Send(ctx, true);
+        }
+
+        [HarmonyPatch(typeof(uiEncounterSlots), nameof(uiEncounterSlots.DisplaySlots))]
+        [HarmonyPostfix]
+        static IEnumerator EncounterSlotResults(IEnumerator __result)
+        {
+            while (__result.MoveNext()) yield return __result.Current;
+            Context.Send("encounter rolled", true);
         }
 
         static CharacterDummy GetDummy(CharacterOverworld _cow, SlotControl _slots)
