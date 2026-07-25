@@ -60,7 +60,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             if (cow.GetHexLand()?.HasPOI() ?? false)
             {
-                registerActions.Add(new InteractWithCurrentHex());
+                MiniHexInfo poi = cow.GetHexLand().GetPOI();
+                if (!HexData.IsPoiComplete(poi)) registerActions.Add(new InteractWithCurrentHex());
             }
             string query = $"your turn for {CharacterData.GetCharacterName(cow)} has started. use items or begin your movement choices";
             foreach (INeuroAction action in registerActions) window.AddAction(action);
@@ -97,7 +98,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            Context.Send($"moving to {OverworldFlow.GetContextForHex(cow, parsedData)}");
+            Context.Send($"moving to {HexData.GetContextForHex(cow, parsedData)}");
             cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, parsedData));
         }
 

@@ -147,6 +147,25 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
         }
 
+        [HarmonyPatch(typeof(MiniHexInfo), nameof(MiniHexInfo.DeactivateHex))]
+        [HarmonyPostfix]
+        static void HexDeactivated(MiniHexInfo __instance)
+        {
+            if (!GlobalConfig.gameInitialized) return;
+            // skip types that dont matter
+            if (!HexData.IsUsedDeactivateCtx(__instance.m_MiniHexType)) return;
+            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
+        }
+
+        [HarmonyPatch(typeof(MiniHexAlluringPool), nameof(MiniHexAlluringPool.DeactivateHex))]
+        [HarmonyPostfix]
+        static void HexDeactivatedPool(MiniHexAlluringPool __instance)
+        {
+            if (!GlobalConfig.gameInitialized) return;
+            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
+        }
+
+
         #region end turn procs
 
         [HarmonyPatch(typeof(CharacterSkills), nameof(CharacterSkills.Refocus))]
@@ -156,21 +175,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("NYI end turn refocus skill proc");
         }
 
-        [HarmonyPatch(typeof(MiniEncounter), nameof(MiniEncounter.DeactivateHex))]
-        [HarmonyPostfix]
-        static void HexDeactivated(MiniEncounter __instance)
-        {
-            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
-        }
-
-        [HarmonyPatch(typeof(MiniHexAlluringPool), nameof(MiniHexAlluringPool.DeactivateHex))]
-        [HarmonyPostfix]
-        static void HexDeactivatedPool(MiniHexAlluringPool __instance)
-        {
-            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
-        }
-
         #endregion
+
 
         static void DisposeActions()
         {
@@ -201,7 +207,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 bool failed = true;
                 for (int i = Movement.Instance.m_HexListPartial.Count-1; i >= 0; i--)
                 {
-                    if (CanTravel(dest, cow))
+                    if (HexData.CanTravel(dest, cow))
                     {
                         dest = Movement.Instance.m_HexListPartial[i];
                         failed = false;
@@ -224,7 +230,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
             }
             yield return new WaitForSeconds(0.5f);
-            string ctx = $"moving to {GetContextForHex(cow, dest)}";
+            string ctx = $"moving to {HexData.GetContextForHex(cow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
             if (isSameHex) ctx = "interacting with this tiles point of interest";
             Context.Send(ctx, true);
@@ -279,7 +285,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (neighbor == initialHex) continue;
                         if (hasChecked.Contains(neighbor)) continue;
                         hasChecked.Add(neighbor);
-                        if (neighbor.CanTravel() && CanTravel(neighbor, owner))
+                        if (neighbor.CanTravel() && HexData.CanTravel(neighbor, owner))
                         {
                             validNeighbors.Add(neighbor);
                             nextLoop.Add(neighbor);
@@ -294,27 +300,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return validNeighbors;
         }
 
-        public static bool CanTravel(HexLand hex, CharacterOverworld cow)
-        {
-            bool isLand = hex.m_Type == HexLand.Type.Land;
-            bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
-            bool onBoat = cow.IsInBoat();
-            //if hex is land & cow on land => land=>land
-            if (isLand && cowOnLand) return true;
-            //if hex is land & cow on boat => boat=>land
-            if (isLand && onBoat) return true;
-            //if hex is water & cow on land => land=>water
-            if (!isLand && cowOnLand) return false;
-            //if hex is water & cow on boat => boat=>water
-            if (!isLand && onBoat) return true;
-            //if hex has boat & cow on land => land=>boat
-            if (hex.IsBoat() && cowOnLand) return true;
-            // what would 2 boats do
-            // what about air
-            return false;
-        }
-
-
         /// <summary>
         /// display as [(position x,z) (name/realm)(quest name)other info]
         /// </summary>
@@ -326,54 +311,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             foreach (HexLand hex in _tiles)
             {
-                sb.AppendLine(GetContextForHex(cow, hex, true));
+                sb.AppendLine(HexData.GetContextForHex(cow, hex, true));
             }
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="addToList">adds to member hexPositions</param>
-        /// <returns>[(155.8, 20.0): (The Guardian Forest)(). Woodsmoke]</returns>
-        public static string GetContextForHex(CharacterOverworld cow, HexLand hex, bool addToList = false)
-        {
-            // FTK_realm.ID realm;
-            // realm = hex.GetRealm();
-            // GuardianForest | GoldenPlains
-            // Plugin.Logger.LogWarning("realm: " + realm);
-            // distance = (float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2);
-            string poi = "";
-            string hasDeadPlayers = "";
-            string questName = "";
-            string name = hex.GetLocationDisplayValue(cow);
-            Vector2 pos = HexData.GetVec2Pos(hex);
-            QuestLogicBase _quest = TileHasQuestObjective(hex);
-            if (_quest != null && !_quest.IsConsiderComplete())
-            {
-                if (_quest.HasQuestDefID())
-                {
-                    // _quest.m_StoryQuestID 
-                    questName = "story quest";
-                }
-                else questName = "quest location";
-                // quest.GetCurrentDestinationLocation();
-            }
-            if (hex.GetDeadPlayerCount() > 0)
-            {
-                hasDeadPlayers = "has dead character to revive";
-            }
-            MiniHexInfo hexInfo = hex.GetPOI();
-            if (hexInfo != null)
-            {
-                poi = hexInfo.GetPOIDisplayValue();
-                if (HexData.IsPoiComplete(hexInfo))
-                {
-                    poi += " (completed)";
-                }
-            }
-            if (addToList) hexPositions.Add(pos.ToString(), hex);
-            return $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]";
         }
 
 
@@ -423,11 +363,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static QuestLogicBase TileHasQuestObjective(HexLand hex)
         {
-            MiniHexInfo poi = hex.GetPOI();
-            if (poi?.HasEncounterQuest() ?? false)
-            {
-                return poi.GetEncounterQuest();
-            }
+            QuestLogicBase quest = HexData.TileHasQuestObjective(hex);
+            if (quest != null) return quest;
             if (questPositions.Contains(hex?.GetPosition() ?? Vector3.positiveInfinity))
             {
                 return GameLogic.Instance.GetQuestByID(questPositions.IndexOf(hex.GetPosition()));
