@@ -85,7 +85,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
                 CharacterOverworld cow = kvp.Key;
-                if (cow.m_HexLand.m_POI == null) continue;
                 foreach (VoteButton btn in kvp.Value)
                 {
                     string btnName = btn.GetComponentInChildren<Text>().text;

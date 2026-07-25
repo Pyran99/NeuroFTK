@@ -37,7 +37,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
         }
 
-        public static void ToggleCombatActions(bool enable, bool overwrite)
+        public static void ToggleCombatActions(bool enable, bool overwrite = true)
         {
             // belt, status, 
             if (enable)

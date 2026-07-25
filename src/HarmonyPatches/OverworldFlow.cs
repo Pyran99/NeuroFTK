@@ -156,6 +156,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("NYI end turn refocus skill proc");
         }
 
+        [HarmonyPatch(typeof(MiniEncounter), nameof(MiniEncounter.DeactivateHex))]
+        [HarmonyPostfix]
+        static void HexDeactivated(MiniEncounter __instance)
+        {
+            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
+        }
+
+        [HarmonyPatch(typeof(MiniHexAlluringPool), nameof(MiniHexAlluringPool.DeactivateHex))]
+        [HarmonyPostfix]
+        static void HexDeactivatedPool(MiniHexAlluringPool __instance)
+        {
+            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
+        }
+
         #endregion
 
         static void DisposeActions()
@@ -353,13 +367,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (hexInfo != null)
             {
                 poi = hexInfo.GetPOIDisplayValue();
-                if (hexInfo.m_MiniHexType == MiniHexInfo.MiniHexType.MiniEncounter)
+                if (HexData.IsPoiComplete(hexInfo))
                 {
-                    MiniEncounter encounter = hexInfo as MiniEncounter;
-                    if (encounter && encounter.m_HasBeenConsumed)
-                    {
-                        poi += " (completed)";
-                    }
+                    poi += " (completed)";
                 }
             }
             if (addToList) hexPositions.Add(pos.ToString(), hex);

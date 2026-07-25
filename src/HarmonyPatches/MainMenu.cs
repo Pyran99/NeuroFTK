@@ -25,6 +25,8 @@ public class MainMenu
     static void OnSetFocus(MainScreen __instance)
     {
         GlobalConfig.gameInitialized = false;
+        ToggleDisposableActions.ToggleOverworldActions(false);
+        ToggleDisposableActions.ToggleCombatActions(false);
         if (GlobalConfig.IsMultiplayer)
         {
             Plugin.Logger.LogWarning("config multiplayer is true, normal action window is disabled");

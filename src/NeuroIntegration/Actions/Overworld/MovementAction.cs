@@ -27,19 +27,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             HexLand hex = _cow.GetHexLand();
             if (hex?.HasPOI() ?? false)
             {
-                //TODO if poi can be interacted with (cleared cult device = false)
                 MiniHexInfo poi = hex.GetPOI();
-                if (poi)
-                {
-                    if (poi.m_MiniHexType == MiniHexInfo.MiniHexType.MiniEncounter)
-                    {
-                        MiniEncounter encounter = poi as MiniEncounter;
-                        if (encounter != null && !encounter.m_HasBeenConsumed && !encounter.m_CantUseThisTurn)
-                        {
-                            window.AddAction(new InteractWithCurrentHex());
-                        }
-                    }
-                }
+                if (!HexData.IsPoiComplete(poi)) window.AddAction(new InteractWithCurrentHex());
             }
             window.SetContext(ctx);
             window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "", true);
