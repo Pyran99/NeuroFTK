@@ -24,8 +24,13 @@ public class MainMenu
     [HarmonyPostfix]
     static void OnSetFocus(MainScreen __instance)
     {
-        __instance.StartCoroutine(DelayMainMenuAction(__instance));
         GlobalConfig.gameInitialized = false;
+        if (GlobalConfig.IsMultiplayer)
+        {
+            Plugin.Logger.LogWarning("config multiplayer is true, normal action window is disabled");
+            return;
+        }
+        __instance.StartCoroutine(DelayMainMenuAction(__instance));
     }
 
     static IEnumerator DelayMainMenuAction(MainScreen instance)

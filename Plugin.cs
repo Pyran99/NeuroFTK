@@ -10,6 +10,7 @@ using Pyran.NeuroFTK.HarmonyPatches;
 using Newtonsoft.Json;
 using NeuroSdk;
 using UnityEngine;
+using NeuroSdk.Internal;
 
 namespace Pyran.NeuroFTK;
 
@@ -84,14 +85,14 @@ public class Plugin : BaseUnityPlugin
             }
             if (keyAdded)
             {
-                string json = JsonConvert.SerializeObject(config, Formatting.Indented);
+                string json = Jason.Serialize(config);
                 File.WriteAllText(configPath, json);
             }
             SetConfigValues(config);
             return;
         }
         Dictionary<string, object> _config = GlobalConfig.defaultConfig;
-        string jsonString = JsonConvert.SerializeObject(_config, Formatting.Indented);
+        string jsonString = Jason.Serialize(_config);
         File.WriteAllText(configPath, jsonString);
         config = new Dictionary<string, object>(_config);
         SetConfigValues(config);
@@ -99,8 +100,6 @@ public class Plugin : BaseUnityPlugin
 
     void SetConfigValues(Dictionary<string, object> _config)
     {
-        CustomHouseRules.SET_CUSTOM_RULES = (bool)_config["use_custom_rules"];
-        GlobalConfig.debugMode = (bool)_config["debug_mode"];
-        Environment.SetEnvironmentVariable("NEURO_SDK_WS_URL", (string)_config["environment_web_socket"]);
+        GlobalConfig.SetValues(_config);
     }
 }

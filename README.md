@@ -18,12 +18,17 @@ Name | Default | Description
 `debug_mode` | false | some actions will be handled differently when `true`. Enables god mode toggle with KeyCode.LeftBracket
 `use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. 
 `force_first_adventure` | false | only let neuro choose the first adventure map For the King
+`is_multiplayer` | false | disables normal main menu actions
 
 > [!CAUTION]
-> Co-op has NOT been tested & will likely break things
+> Multiplayer has NOT been tested & will likely break things
 
 ## Current State
 > [!NOTE]
 > Some things may be in a working state but code is commented out/altered in a way to facilitate testing
 
-Main menu actions for purchasing lore unlocks, pressing resume, or pressing new game
+- main menu actions for single player
+- lore store purchasing
+- adventure & party config for new game. Resume last save
+- overworld => land movement, use quick items, many encounters (missing ctx), 
+- combat => unit states ctx, attack choices, use quick items
