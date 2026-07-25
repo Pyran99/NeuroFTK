@@ -212,6 +212,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     if (prof.m_CustomValue > 0) result = "STR_statusResistUpInfo";
                     else result = "STR_statusResistDownInfo";
                     break;
+                case ProficiencyBase.Category.Debuff:
+                    // result = "STR_statusDebuffInfo";
+                    break;
             }
             if (result == string.Empty) Plugin.Logger.LogError("no data for status effect " + prof.m_Category);
             if (!TextInfo.Instance.rowNames.Contains(result)) return result;

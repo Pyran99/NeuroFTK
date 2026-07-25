@@ -11,7 +11,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Tests
     {
-
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))]
         [HarmonyPostfix]
         static void Popup1()

@@ -3,6 +3,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -23,7 +24,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             string name = current.m_CharacterStats.m_CharacterName;
             HexLand hex = current.GetHexLand();
-            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This tile contains ({hex.GetPOI()?.GetIDString()})");
+            MiniHexInfo hexInfo = hex.GetPOI();
+            string complete = "";
+            if (hexInfo != null)
+            {
+                if (HexData.IsPoiComplete(hexInfo)) complete = " (completed)";
+            }
+            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This hex contains ({hexInfo?.GetPOIDisplayValue()}{complete})");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
