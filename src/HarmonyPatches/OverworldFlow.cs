@@ -349,9 +349,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 hasDeadPlayers = "has dead character to revive";
             }
-            if (hex.GetPOI() != null)
+            MiniHexInfo hexInfo = hex.GetPOI();
+            if (hexInfo != null)
             {
-                poi = hex.GetPOI().GetPOIDisplayValue();
+                poi = hexInfo.GetPOIDisplayValue();
+                if (hexInfo.m_MiniHexType == MiniHexInfo.MiniHexType.MiniEncounter)
+                {
+                    MiniEncounter encounter = hexInfo as MiniEncounter;
+                    if (encounter && encounter.m_HasBeenConsumed)
+                    {
+                        poi += " (completed)";
+                    }
+                }
             }
             if (addToList) hexPositions.Add(pos.ToString(), hex);
             return $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]";
