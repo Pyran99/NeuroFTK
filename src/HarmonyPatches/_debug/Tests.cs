@@ -2,6 +2,7 @@ using System;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -11,18 +12,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Tests
     {
-        [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))]
+        [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))] // click item in inventory 
         [HarmonyPostfix]
         static void Popup1()
         {
             Plugin.Logger.LogWarning("popupMenu.Show");
         }
 
-        [HarmonyPatch(typeof(uiPopupMenu), "OnClick")]
+        [HarmonyPatch(typeof(uiPopupMenu), "OnClick")] // btns from popup menu of item
         [HarmonyPostfix]
         static void Popup2(uiPopupMenu.Action _a)
         {
-            Plugin.Logger.LogWarning("popupMenu.OnClick " + _a);
+            Plugin.Logger.LogWarning("popupMenu.OnClick " + _a); // close, equip
         }
 
         [HarmonyPatch(typeof(uiItemMenu), "ShowBuyMenu")]
@@ -101,7 +102,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void Test1(CharacterOverworld __instance)
         {
-            Plugin.Logger.LogMessage("dungeon encounter: " + __instance.m_CharacterStats.m_CharacterName);
+            Plugin.Logger.LogMessage("dungeon encounter: " + CharacterData.GetCharacterName(__instance));
         }
 
         [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))]

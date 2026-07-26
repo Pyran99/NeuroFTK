@@ -45,8 +45,8 @@ public class SkipGameIntro
     static IEnumerator Wait()
     {
         Context.Send(PREPARE_TO_DIE_MSG);
-        yield return new WaitForSeconds(2f);
         Plugin.Logger.LogWarning($"debugMode is {GlobalConfig.IsDebugMode()}");
+        yield return new WaitForSeconds(2f);
         Plugin.Logger.LogMessage("skipping difficulty warning");
         uiStartGame.Instance.OnPrepareToDie();
     }

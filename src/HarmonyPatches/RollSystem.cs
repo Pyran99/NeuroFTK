@@ -70,20 +70,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CharacterDummy dummy = _cow.m_CurrentDummy;
             string ctx = StringMessages.RollResults.Format([CharacterData.GetCharacterName(dummy.m_CharacterOverworld), success, _results.Length]);
             Context.Send(ctx, true);
-            // if sneak set happens at wrong time
-            // FTK_progressionTier.ID progression = FTK_progressionTier.ID.None;
-            // if (_cow.GetPOI() is MiniHexDungeon miniHexDungeon)
-            // {
-            //     progression = FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfDungeon(miniHexDungeon.m_ID, miniHexDungeon.GetDungeonType(), miniHexDungeon.m_HexLand.m_HexInfo.m_Realm, miniHexDungeon.m_HexLand.m_HexInfo.m_StageIndex, miniHexDungeon.m_Level, miniHexDungeon.m_InstanceID);
-            // }
-            // uiSlotLegend.SlotOutput output = uiSlotLegend.Instance.GetSlotOutputResult(_slotSuccess, _slotOutputID, progression);
-            // if (_slotOutputID == FTK_slotOutput.ID.sneak || _slotOutputID == FTK_slotOutput.ID.campSneak || _slotOutputID == FTK_slotOutput.ID.skilledSneak)
-            // {
-            //     if (output.m_Passed)
-            //     {
-            //         OverworldFlow.isSneakMovement = true;
-            //     }
-            // }
             while (__result.MoveNext()) yield return __result.Current;
         }
 

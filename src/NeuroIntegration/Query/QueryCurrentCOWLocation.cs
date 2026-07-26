@@ -22,15 +22,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Context.Send("query location failed" + NeuroSdkStrings.ModFaultSuffix);
                 return;
             }
-            string name = current.m_CharacterStats.m_CharacterName;
+            string name = CharacterData.GetCharacterName(current);
             HexLand hex = current.GetHexLand();
             MiniHexInfo hexInfo = hex.GetPOI();
             string complete = "";
+            string hexData = "nothing";
             if (hexInfo != null)
             {
                 if (HexData.IsPoiComplete(hexInfo)) complete = " (completed)";
+                hexData = $"{hexInfo.GetPOIDisplayValue()}: {hexInfo.m_MiniHexType}{complete}";
             }
-            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This hex contains ({hexInfo?.GetPOIDisplayValue()}: {hexInfo.m_MiniHexType}{complete})");
+            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This hex contains ({hexData})");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
