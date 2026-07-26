@@ -215,6 +215,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
+            ToggleDisposableActions.ToggleOverworldActions(false);
             OverworldFlow.isFirstAction = false;
             OverworldFlow.StartTracking();
         }

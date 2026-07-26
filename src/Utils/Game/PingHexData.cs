@@ -32,7 +32,7 @@ namespace Pyran.NeuroFTK.Utils
             sb.AppendLine($"path end: {last?.GetPosition()}"); // is giving correct last valid move hex for hex's to far
             MiniHexInfo poi = __instance.GetPOI();
             sb.AppendLine($"poi skill: {poi?.GetPOIProfile().m_SkillRequired}"); // fortitude
-            sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()}"); // Cult Device
+            sb.AppendLine($"poi display: {poi?.GetPOIDisplayValue()} {poi.m_MiniHexType}"); // Cult Device
             if (TileHasQuestObjective(__instance, out QuestLogicBase quest))
             {
                 sb.AppendLine($"quest desc: {StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc())}"); // Kill the <color=#FBB060>Chaos Leader</color> in <color=#FBB060>The Guardian Forest</color>

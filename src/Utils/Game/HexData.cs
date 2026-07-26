@@ -88,7 +88,7 @@ namespace Pyran.NeuroFTK.Utils
             MiniHexInfo hexInfo = hex.GetPOI();
             if (hexInfo != null)
             {
-                poi = hexInfo.GetPOIDisplayValue();
+                poi = hexInfo.GetPOIDisplayValue() + " " + hexInfo.m_MiniHexType;
                 if (IsPoiComplete(hexInfo))
                 {
                     poi += " (completed)";

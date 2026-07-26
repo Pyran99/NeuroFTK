@@ -20,6 +20,8 @@ namespace Pyran.NeuroFTK.Utils
         public static readonly NeuroSdkFormatString UnitHealed = "{0} healed {1} (health {2})";
         public static readonly NeuroSdkFormatString StatusEffectApplied = "{0} ({1}) applied to {2}";
         public static readonly NeuroSdkFormatString StatusEffectRemoved = "{0} ({1}) removed from {2}";
+        public static readonly NeuroSdkFormatString RollResults = "{0} rolled {1}/{2}";
+
 
 
 

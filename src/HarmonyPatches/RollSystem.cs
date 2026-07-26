@@ -2,6 +2,7 @@ using System.Collections;
 using HarmonyLib;
 using HutongGames.PlayMaker;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -11,7 +12,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static CharacterOverworld currentCOW;
         public static int rollCount;
 
-        [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))] // for MOVEMENT rolls
+        [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))] // combat
         [HarmonyPrefix]
         static void MovementRollResults(SlotControl __instance, FTKPlayerID _player, string[] _slotResults)
         {
@@ -30,17 +31,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (dummy is EnemyDummy)
                 {
-                    ctx = $"{(dummy as EnemyDummy).m_EnemyCombat.GetEnemyDisplay()} rolled {success}/{_slotResults.Length}";
+                    // (dummy as EnemyDummy).m_EnemyCombat.GetEnemyDisplay()
+                    ctx = StringMessages.RollResults.Format([CombatUtils.GetEnemyName(dummy as EnemyDummy), success, _slotResults.Length]);
                 }
             }
             else // playerSlotSystem or MovementSlots
             {
-                ctx = $"{dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName} rolled {success}/{_slotResults.Length}";
+                ctx = StringMessages.RollResults.Format([CharacterData.GetCharacterName(dummy.m_CharacterOverworld), success, _slotResults.Length]);
             }
             Context.Send(ctx, true);
         }
 
-        // enumerator to show the rolled values
+        // enumerator to show the rolled values combat
         [HarmonyPatch(typeof(SlotControl), "DisplaySlots")]
         [HarmonyPostfix]
         static IEnumerator MovementSlotResults(IEnumerator __result)
@@ -53,29 +55,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
         }
 
-        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.SetEncounterSlotResults))]
+        [HarmonyPatch(typeof(uiEncounterSlots), nameof(uiEncounterSlots.DisplaySlots))]
         [HarmonyPostfix]
-        static void EncounterRollResults(EncounterSession __instance, FTKPlayerID _playerID, string[] _slotResults)
+        static IEnumerator EncounterSlotResults(IEnumerator __result, CharacterOverworld _cow, string[] _results)
         {
+            while (__result.MoveNext()) yield return __result.Current;
             int success = 0;
-            foreach (string result in _slotResults)
+            foreach (string result in _results)
             {
                 if (IsFailedRoll(result)) continue;
                 success++;
             }
             rollCount = success;
-            CharacterOverworld cow = FTKHub.Instance.GetCharacterOverworldByFID(_playerID);
-            CharacterDummy dummy = cow.m_CurrentDummy;
-            string ctx = $"{dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterName} rolled {success}/{_slotResults.Length}";
+            CharacterDummy dummy = _cow.m_CurrentDummy;
+            string ctx = StringMessages.RollResults.Format([CharacterData.GetCharacterName(dummy.m_CharacterOverworld), success, _results.Length]);
             Context.Send(ctx, true);
-        }
-
-        [HarmonyPatch(typeof(uiEncounterSlots), nameof(uiEncounterSlots.DisplaySlots))]
-        [HarmonyPostfix]
-        static IEnumerator EncounterSlotResults(IEnumerator __result)
-        {
-            while (__result.MoveNext()) yield return __result.Current;
-            Context.Send("encounter rolled", true);
         }
 
         static CharacterDummy GetDummy(CharacterOverworld _cow, SlotControl _slots)
