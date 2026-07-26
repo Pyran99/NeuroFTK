@@ -17,7 +17,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class OverworldFlow
     {
-        static ActionWindow window;
+        public static ActionWindow window;
         public static bool isSearching = false;
         public static bool isTracking = false;
         public static List<HexLand> tiles = [];
@@ -29,6 +29,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = []; 
 
         public static bool isFirstAction = false;
+        public static bool isSneakMovement = false;
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -51,21 +52,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             BeginTurn2(__instance);
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
             // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
-        }
-
-        static void BeginTurn2(CharacterOverworld cow)
-        {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
-            if (!Multiplayer.IsYourCow(cow))
-            {
-                Multiplayer.SendOtherPlayerTurnCtx();
-                return;
-            }
-            isFirstAction = true;
-            isSearching = false;
-            Object.Destroy(window);
-            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(), cow.gameObject);
-            ToggleDisposableActions.ToggleOverworldActions(true, true);
         }
 
         // when movement choice starts
@@ -91,6 +77,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isTracking = false;
             isSearching = false;
             isFirstAction = false;
+            isSneakMovement = false;
             tiles.Clear();
             DisposeActions();
         }
@@ -99,7 +86,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EndTurn()
         {
-            ToggleDisposableActions.ToggleOverworldActions(false);
             tiles.Clear();
             isTracking = false;
             isSearching = false;
@@ -177,6 +163,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #endregion
 
+
+        public static void BeginMovementTurn()
+        {
+            isFirstAction = false;
+            StartTracking();
+        }
 
         static void DisposeActions()
         {
@@ -374,6 +366,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         #endregion
 
+
+        static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
+        {
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            if (!Multiplayer.IsYourCow(cow))
+            {
+                Multiplayer.SendOtherPlayerTurnCtx();
+                return;
+            }
+            isFirstAction = true;
+            isSearching = false;
+            Object.Destroy(window);
+            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), cow.gameObject);
+            ToggleDisposableActions.ToggleOverworldActions(true);
+        }
 
         public static void CreateActionWindow(CharacterOverworld _cow)
         {

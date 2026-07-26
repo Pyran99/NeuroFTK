@@ -55,14 +55,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // entered dungeon
-        [HarmonyPostfix]
-        static void Test30()
-        {
-            Plugin.Logger.LogMessage("30 InitiateEncounterSessionRPC");
-            ToggleDisposableActions.ToggleOverworldActions(false);
-        }
-
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateNextEncounter))]
         [HarmonyPostfix]
         static void Test31()

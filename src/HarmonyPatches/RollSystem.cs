@@ -1,4 +1,5 @@
 using System.Collections;
+using GridEditor;
 using HarmonyLib;
 using HutongGames.PlayMaker;
 using NeuroSdk.Messages.Outgoing;
@@ -57,9 +58,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(uiEncounterSlots), nameof(uiEncounterSlots.DisplaySlots))]
         [HarmonyPostfix]
-        static IEnumerator EncounterSlotResults(IEnumerator __result, CharacterOverworld _cow, string[] _results)
+        static IEnumerator EncounterSlotResults(IEnumerator __result, CharacterOverworld _cow, string[] _results, FTK_slotOutput.ID _slotOutputID, int _slotSuccess)
         {
-            while (__result.MoveNext()) yield return __result.Current;
             int success = 0;
             foreach (string result in _results)
             {
@@ -70,6 +70,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CharacterDummy dummy = _cow.m_CurrentDummy;
             string ctx = StringMessages.RollResults.Format([CharacterData.GetCharacterName(dummy.m_CharacterOverworld), success, _results.Length]);
             Context.Send(ctx, true);
+            // if sneak set happens at wrong time
+            // FTK_progressionTier.ID progression = FTK_progressionTier.ID.None;
+            // if (_cow.GetPOI() is MiniHexDungeon miniHexDungeon)
+            // {
+            //     progression = FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfDungeon(miniHexDungeon.m_ID, miniHexDungeon.GetDungeonType(), miniHexDungeon.m_HexLand.m_HexInfo.m_Realm, miniHexDungeon.m_HexLand.m_HexInfo.m_StageIndex, miniHexDungeon.m_Level, miniHexDungeon.m_InstanceID);
+            // }
+            // uiSlotLegend.SlotOutput output = uiSlotLegend.Instance.GetSlotOutputResult(_slotSuccess, _slotOutputID, progression);
+            // if (_slotOutputID == FTK_slotOutput.ID.sneak || _slotOutputID == FTK_slotOutput.ID.campSneak || _slotOutputID == FTK_slotOutput.ID.skilledSneak)
+            // {
+            //     if (output.m_Passed)
+            //     {
+            //         OverworldFlow.isSneakMovement = true;
+            //     }
+            // }
+            while (__result.MoveNext()) yield return __result.Current;
         }
 
         static CharacterDummy GetDummy(CharacterOverworld _cow, SlotControl _slots)

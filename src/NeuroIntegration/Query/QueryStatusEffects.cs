@@ -62,7 +62,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override ExecutionResult Validate(ActionJData actionData)
         {
-            ToggleDisposableActions.DisposeAction(this);
             return ExecutionResult.Success();
         }
     }

@@ -38,7 +38,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (generating) return;
             generating = true;
             instance = __instance.m_Owner;
-            // ToggleDisposableActions.ToggleOverworldActions(false);
             __instance.StartCoroutine(Wait(__instance.m_Buttons));
         }
 
@@ -85,6 +84,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("EndTurn");
         }
 
+        [HarmonyPatch(typeof(uiEnemyPoiMenu), nameof(uiEnemyPoiMenu.SneakCallBack))]
+        [HarmonyPrefix]
+        static void SneakMovement2(uiSlotLegend.SlotOutput _output)
+        {
+            Plugin.Logger.LogWarning("sneak bool set should be before movement tracking");
+            if (_output.m_Passed)
+            {
+                OverworldFlow.isSneakMovement = true;
+                return;
+            }
+            OverworldFlow.isSneakMovement = false;
+        }
+
         #endregion
 
         static void CreateAction()
@@ -97,7 +109,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void OnMenuOpened(uiEncounterMenu _instance, Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
         {
-            ToggleDisposableActions.ToggleOverworldActions(false);
             instance = _instance;
             SetButtonData(_buttons);
         }
@@ -143,7 +154,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void GetButtonData(uiPoiButton btn, Dictionary<string, string> flavorData, ref Dictionary<string, object> rollData)
         {
                 if (flavorData.ContainsKey(btn.m_ButtonText.text)) return;
-                flavorData.Add(btn.m_ButtonText.text, EncounterButton.GetString(btn.m_ButtonInfo.m_ButtonType));
+                flavorData.Add(btn.m_ButtonText.text, GameDescriptions.GetEncounterBtnFlavor(btn.m_ButtonInfo.m_ButtonType));
                 FTK_slotOutput.ID id = FTK_slotOutput.ID.None;
                 if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Ambush)
                 {

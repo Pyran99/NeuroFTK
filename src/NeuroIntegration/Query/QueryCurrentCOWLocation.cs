@@ -30,12 +30,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 if (HexData.IsPoiComplete(hexInfo)) complete = " (completed)";
             }
-            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This hex contains ({hexInfo?.GetPOIDisplayValue()} {hexInfo.m_MiniHexType}{complete})");
+            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This hex contains ({hexInfo?.GetPOIDisplayValue()}: {hexInfo.m_MiniHexType}{complete})");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
         {
-            ToggleDisposableActions.DisposeAction(this);
             return ExecutionResult.Success();
         }
 

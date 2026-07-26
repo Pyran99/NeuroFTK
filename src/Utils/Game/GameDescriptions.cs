@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Google2u;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -10,6 +11,8 @@ namespace Pyran.NeuroFTK.Utils
             {"Market", "purchase items."},
             {"Quest Board", "grab a side quest to complete for rewards."},
             {"Leave", "close this menu."},
+            {"Rest", "recover HP and end turn."},
+            {"Meditate", "recover Focus and end turn."},
             {"End Turn", "end this characters turn."},
             {"View Wares", "purchase items."},
             {"Journal", "view this adventurers journal."},
@@ -61,5 +64,31 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Share, "split the rewards between all involved party members"},
             {VoteButton.VoteOption.AttemptNoRoll, "attemptnoroll NYI"},
         };
+
+        public static string GetEncounterBtnFlavor(SubPanelBaseBase.ButtonID id)
+        {
+            return id switch
+            {
+                SubPanelBaseBase.ButtonID.Fight => FTKHub.Localized<TextInfo>("STR_CombatFightSelect"),
+                SubPanelBaseBase.ButtonID.Ambush => FTKHub.Localized<TextInfo>("STR_CombatAmbushSelect") + "(based on awareness stat)",
+                SubPanelBaseBase.ButtonID.Defend => FTKHub.Localized<TextInfo>("STR_CombatDefendSelect"),
+                SubPanelBaseBase.ButtonID.Sneak => FTKHub.Localized<TextInfo>("STR_CombatSneakSelect") + "(based on speed stat)",
+                SubPanelBaseBase.ButtonID.Attempt => FTKHub.Localized<TextInfo>("attempt to disable the device"),
+                SubPanelBaseBase.ButtonID.BuyIn => FTKHub.Localized<TextInfo>("buy in NYI"),
+                SubPanelBaseBase.ButtonID.Collect => FTKHub.Localized<TextInfo>("collect NYI"),
+                SubPanelBaseBase.ButtonID.Devote => FTKHub.Localized<TextInfo>("devote NYI"),
+                SubPanelBaseBase.ButtonID.Drink => FTKHub.Localized<TextInfo>("drink from the well"),
+                SubPanelBaseBase.ButtonID.EndTurn => FTKHub.Localized<TextInfo>("leave this encounter and end turn"),
+                SubPanelBaseBase.ButtonID.Leave => FTKHub.Localized<TextInfo>("leave this encounter"),
+                SubPanelBaseBase.ButtonID.Enter => FTKHub.Localized<TextInfo>("enter this location"),
+                SubPanelBaseBase.ButtonID.Investigate => FTKHub.Localized<TextInfo>("investigate this encounter"),
+                SubPanelBaseBase.ButtonID.ThrowCoins => FTKHub.Localized<TextInfo>("spend gold to increase your chance of success"),
+                SubPanelBaseBase.ButtonID.Engage => FTKHub.Localized<TextInfo>("STR_CombatEngageSelect"),
+                SubPanelBaseBase.ButtonID.Retreat => FTKHub.Localized<TextInfo>("STR_CombatRetreatSelect"),
+                SubPanelBaseBase.ButtonID.Revive0 => FTKHub.Localized<TextMisc>("STR_ReviveMessage"),
+                SubPanelBaseBase.ButtonID.Revive1 => FTKHub.Localized<TextMisc>("STR_ReviveMessage"),
+                _ => ""
+            };
+        }
     }
 }

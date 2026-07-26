@@ -27,6 +27,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static StringBuilder dmgTakenString = new();
         static bool isHealthChangeWait = false;
 
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))]
+        [HarmonyPostfix]
+        static void EnteredDungeon()
+        {
+            ToggleDisposableActions.ToggleOverworldActions(false);
+            Plugin.Logger.LogMessage("entered batte");
+        }
+
         #region Player
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Initialize))]
@@ -48,6 +56,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             BeginTurns.CtxCombatTurnBeginEnemy();
             BeginTurns.CtxCombatTurnBeginPlayer(__instance.CombatCow);
             CreateActionWindow(StanceBtnInstance, m_Proficiencies);
+            ToggleDisposableActions.ToggleCombatActions(true, false);
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]
@@ -71,6 +80,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CombatPlayerVictory()
         {
             UnregisterDisposableActions();
+            ToggleDisposableActions.ToggleCombatActions(false);
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
             {
                 Plugin.Logger.LogMessage("combat victory overworld skip");

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Google2u;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -54,7 +53,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void LocationMenuClosed()
         {
-            
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.StartShutdown))] // before tracking resumes, called after dungeon battle
@@ -82,11 +80,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Plugin.Logger.LogWarning("loc_display_SwitchSubMenu");
             Plugin.Logger.LogWarning("TODO submenu actions");
+            Object.Destroy(window);
         }
 
         static void CreateAction()
         {
-            ToggleDisposableActions.ToggleOverworldActions(false);
             Object.Destroy(window);
             string ctx = GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
             Context.Send(ctx);

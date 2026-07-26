@@ -74,7 +74,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
 
         static void ContinueAfterMessageSent(uiPortraitMessageHud instance)
         {
-            ToggleDisposableActions.ToggleOverworldActions(false);
             if (activeWindow != null) return;
             QuickTimerCallback timer = new(() => activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject), instance.m_MessagePanel.gameObject);
             // instance.StartCoroutine(Continue(instance));

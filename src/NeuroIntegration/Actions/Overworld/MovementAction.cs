@@ -19,16 +19,19 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
-            if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
-            if (questDict != null & questDict.Count > 0)
+            if (!OverworldFlow.isSneakMovement)
             {
-                window.AddAction(new GoToQuestAction(new(questDict)));
-            }
-            HexLand hex = _cow.GetHexLand();
-            if (hex?.HasPOI() ?? false)
-            {
-                MiniHexInfo poi = hex.GetPOI();
-                if (!HexData.IsPoiComplete(poi)) window.AddAction(new InteractWithCurrentHex());
+                if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
+                if (questDict != null & questDict.Count > 0)
+                {
+                    window.AddAction(new GoToQuestAction(new(questDict)));
+                }
+                HexLand hex = _cow.GetHexLand();
+                if (hex?.HasPOI() ?? false)
+                {
+                    MiniHexInfo poi = hex.GetPOI();
+                    if (!HexData.IsPoiComplete(poi)) window.AddAction(new InteractWithCurrentHex());
+                }
             }
             window.SetContext(ctx);
             window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "", true);
@@ -36,7 +39,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return window;
         }
 
-        public static ActionWindow CreateTurnBeginWindow()
+        public static ActionWindow CreateTurnBeginWindow(bool registerBelt = true)
         {
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             ActionWindow window = ActionWindow.Create(cow.gameObject);
@@ -47,25 +50,28 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             Dictionary<string, FTK_itembase.ID> items = [];
             StringBuilder beltCtx = new();
             beltCtx.Append("[usable belt items] ");
-            foreach (FTK_itembase.ID item in beltItems)
+            if (registerBelt)
             {
-                items.Add(ItemData.GetItemName(item), item);
-                beltCtx.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
+                foreach (FTK_itembase.ID item in beltItems)
+                {
+                    items.Add(ItemData.GetItemName(item), item);
+                    beltCtx.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
+                }
             }
-
             if (items.Count > 0)
             {
-                registerActions.Add(new UseBeltItemAction(items, cow));
-                window.SetContext(beltCtx.ToString());
+                registerActions.Add(new UseBeltItemAction(items, cow, true));
+                Context.Send(beltCtx.ToString());
             }
-            if (cow.GetHexLand()?.HasPOI() ?? false)
-            {
-                MiniHexInfo poi = cow.GetHexLand().GetPOI();
-                if (!HexData.IsPoiComplete(poi)) registerActions.Add(new InteractWithCurrentHex());
-            }
+            // if (cow.GetHexLand()?.HasPOI() ?? false)
+            // {
+            //     MiniHexInfo poi = cow.GetHexLand().GetPOI();
+            //     if (!HexData.IsPoiComplete(poi)) registerActions.Add(new InteractWithCurrentHex());
+            // }
             string query = $"your turn for {CharacterData.GetCharacterName(cow)} has started. use items or begin your movement choices";
             foreach (INeuroAction action in registerActions) window.AddAction(action);
-            window.SetForce(0, query, BeginTurns.CtxOverworldTurnBeginStats(cow));
+            window.SetContext(BeginTurns.CtxOverworldTurnBeginStats(cow));
+            window.SetForce(5, query, "", true);
             window.Register();
             return window;
         }
@@ -215,9 +221,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            ToggleDisposableActions.ToggleOverworldActions(false);
-            OverworldFlow.isFirstAction = false;
-            OverworldFlow.StartTracking();
+            OverworldFlow.BeginMovementTurn();
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
