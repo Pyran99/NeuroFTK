@@ -27,12 +27,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static StringBuilder dmgTakenString = new();
         static bool isHealthChangeWait = false;
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))]
-        [HarmonyPostfix]
-        static void EnteredDungeon()
+
+        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.StartEncounterSession))]
+        [HarmonyPrefix]
+        static void EnteredBattle()
         {
             ToggleDisposableActions.ToggleOverworldActions(false);
-            Plugin.Logger.LogMessage("entered batte");
+            Plugin.Logger.LogMessage("entered battle");
+            Context.Send("starting a battle", true);
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
+        [HarmonyPostfix]
+        static void Test39()
+        {
+            Plugin.Logger.LogMessage("39 CommenceBattleRPC");
         }
 
         #region Player

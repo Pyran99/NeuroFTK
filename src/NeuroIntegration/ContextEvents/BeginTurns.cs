@@ -39,6 +39,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send(sb.ToString());
         }
 
+        public static string GetSimplifiedTeamState()
+        {
+            StringBuilder sb = new();
+            foreach (KeyValuePair<FTKPlayerID, CharacterDummy> cow in EncounterSession.Instance.m_PlayerDummies)
+            {
+                if (!cow.Value.m_IsAlive) continue;
+                CharacterStats stats = cow.Value.m_CharacterOverworld.m_CharacterStats;
+                string name = $"{stats.m_CharacterName}";
+                string health = $"{stats.GetHealthDisplayString()}";
+                string coherent = cow.Value.IsCoherent() ? "" : "stunned";
+                sb.AppendLine($"({name}) health {health}, {coherent}");
+            }
+            return sb.ToString();
+        }
+
         public static void CtxCombatTurnBeginEnemy()
         {
             StringBuilder sb = new();

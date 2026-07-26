@@ -63,11 +63,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 registerActions.Add(new UseBeltItemAction(items, cow, true));
                 Context.Send(beltCtx.ToString());
             }
-            // if (cow.GetHexLand()?.HasPOI() ?? false)
-            // {
-            //     MiniHexInfo poi = cow.GetHexLand().GetPOI();
-            //     if (!HexData.IsPoiComplete(poi)) registerActions.Add(new InteractWithCurrentHex());
-            // }
             string query = $"your turn for {CharacterData.GetCharacterName(cow)} has started. use items or begin your movement choices";
             foreach (INeuroAction action in registerActions) window.AddAction(action);
             window.SetContext(BeginTurns.CtxOverworldTurnBeginStats(cow));

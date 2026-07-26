@@ -4,6 +4,7 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using WebSocketSharp;
@@ -18,7 +19,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             menuName = Regex.Replace(menuName, " ", "_").ToLower();
             ActionWindow window = ActionWindow.Create(owner.gameObject);
             window.AddAction(new RewardMenuAction(menuName, _buttons));
-            window.SetForce(0, "choose a reward or revive a character", "");
+            if (ChooseRewardMenu.teamState != string.Empty) window.SetContext(ChooseRewardMenu.teamState);
+            ChooseRewardMenu.teamState = string.Empty;
+            window.SetForce(0, "choose a reward or select a character", "");
             window.Register();
             return window;
         }
@@ -50,7 +53,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             uiChooseRewardButton btn = _buttons[parsedData];
-            SelectButton.StartCoroutine(btn, 1.0f);
+            SelectButton.StartCoroutine(btn, 0.5f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

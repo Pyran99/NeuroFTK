@@ -18,6 +18,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static List<uiChooseRewardButton> buttons = [];
         static string title = "";
         static bool isOwner = false;
+        public static string teamState = "";
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), "BaseInitialize")]
         [HarmonyPostfix]

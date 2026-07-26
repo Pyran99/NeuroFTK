@@ -1,7 +1,6 @@
 using System;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -12,6 +11,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Tests
     {
+
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))] // click item in inventory 
         [HarmonyPostfix]
         static void Popup1()
@@ -89,13 +89,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Test38()
         {
             Plugin.Logger.LogMessage("38 CommenceVoteEncounter");
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))] // context => enemy data
-        [HarmonyPostfix]
-        static void Test39()
-        {
-            Plugin.Logger.LogMessage("39 CommenceBattleRPC");
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DungeonEncounter))]
