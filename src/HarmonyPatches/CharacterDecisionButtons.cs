@@ -26,7 +26,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CharacterOverworld cow = __instance.m_PlayerHud.m_Cow;
             activeContainers.Add(__instance);
             if (!Multiplayer.IsYourCow(cow)) return;
-            string name = cow.m_CharacterStats.m_CharacterName;
+            string name = CharacterData.GetCharacterName(cow);
             voteButtons[cow] = [];
             VoteButton[] btns = __instance.GetComponentsInChildren<VoteButton>();
             foreach (VoteButton btn in btns)
@@ -62,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             activeWindow = ActionWindow.Create(instance.gameObject);
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
-                activeWindow.AddAction(new CharacterDecisionAction(kvp.Key.m_CharacterStats.m_CharacterName, kvp.Value));
+                activeWindow.AddAction(new CharacterDecisionAction(CharacterData.GetCharacterName(kvp.Key), kvp.Value));
             }
             activeWindow.SetForce(0, StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text), "");
             StringBuilder sb = new(DungeonEncounterRolls());

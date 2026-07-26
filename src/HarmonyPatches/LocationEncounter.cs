@@ -181,7 +181,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void PortraitInitPlayer(FTKPlayerID _pid)
         {
             CharacterOverworld player = FTKHub.Instance.GetCharacterOverworldByFID(_pid);
-            players.Add(player.m_CharacterStats.m_CharacterName);
+            players.Add(CharacterData.GetCharacterName(player));
         }
 
 

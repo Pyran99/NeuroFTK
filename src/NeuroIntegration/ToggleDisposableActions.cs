@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.HarmonyPatches;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -48,7 +49,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 combatActions.Clear();
                 CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
                 CharacterOverworld test = GameLogic.Instance.GetCurrentCombatCOW();
-                Plugin.Logger.LogWarning($"cur cow = {cow.m_CharacterStats.m_CharacterName}; cur combat cow = {test.m_CharacterStats.m_CharacterName}");
+                Plugin.Logger.LogWarning($"cur cow = {CharacterData.GetCharacterName(cow)}; cur combat cow = {CharacterData.GetCharacterName(test)}");
                 if (!cow.IsInDungeon() || !cow.m_CharacterStats.m_IsInCombat || GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
                 {
                     Plugin.Logger.LogWarning("tried to register combat actions in overworld");

@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Context.Send("query location failed" + NeuroSdkStrings.ModFaultSuffix);
                 return;
             }
-            string name = current.m_CharacterStats.m_CharacterName;
+            string name = CharacterData.GetCharacterName(current);
             HexLand hex = current.GetHexLand();
             MiniHexInfo hexInfo = hex.GetPOI();
             string complete = "";

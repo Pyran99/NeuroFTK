@@ -28,7 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 window.AddAction(action);
             }
-            window.SetForce(5, $"it is your turn with {_instance.CombatCow.m_CharacterStats.m_CharacterName}, choose an attack action", "", true);
+            window.SetForce(5, $"it is your turn with {CharacterData.GetCharacterName(instance.CombatCow)}, choose an attack action", "", true);
             window.Register();
             return window;
         }
@@ -40,7 +40,36 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Plugin.Logger.LogError("battle buttons instance null");
                 return;
             }
-            instance.SelectEnemyDummy(target, _item);
+            Plugin.Logger.LogWarning(instance.CombatCow.m_CharacterStats.m_CharacterName);
+            Plugin.Logger.LogWarning(target.GetCow().m_CharacterStats.m_CharacterName);
+            // attempt fix bug-25
+            FTK_proficiencyTable.ID prof = instance.GetCurrentSelectedProf();
+            CharacterDummy.TargetType _targetType = CharacterDummy.TargetType.None;
+            bool canSelectEnemy = true;
+            if (prof != FTK_proficiencyTable.ID.None)
+            {
+                FTK_proficiencyTable fTK_proficiencyTable = FTK_proficiencyTableDB.GetDB().GetEntry(prof);
+                _targetType = fTK_proficiencyTable.m_Target;
+                if (_targetType == CharacterDummy.TargetType.PickFriendly || _targetType == CharacterDummy.TargetType.Aoe || fTK_proficiencyTable.m_TargetFriendly)
+                {
+                    Plugin.Logger.LogWarning("pick friendly target type");
+                    canSelectEnemy = false;
+                    return;
+                }
+            }
+            if (_targetType == CharacterDummy.TargetType.OthersFriendly)
+            {
+                Plugin.Logger.LogWarning("pick others friendly target type");
+                canSelectEnemy = false;
+            }
+            if (_targetType == CharacterDummy.TargetType.None)
+            {
+                Plugin.Logger.LogWarning("no target type");
+                canSelectEnemy = false;
+            }
+            // target must be enemy here
+            // if there are problems with friendly targetting, do something here
+            if (canSelectEnemy) instance.SelectEnemyDummy(target, _item);
         }
     }
 
@@ -76,7 +105,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(object[] parsedData)
         {
-            Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
+            Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData)); // labore mollPresto
             defense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
             FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
             if (target == null)
@@ -85,6 +114,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             btn.OnPointerEnter(null); // may be needed to allow friendly targeting?
+            Plugin.Logger.LogWarning("friendly test1 = " + target.GetCow().m_CharacterStats.m_CharacterName);
             CombatActions.SelectTarget(target);
             SelectButton.StartCoroutine(btn, 1.0f);
         }
@@ -108,7 +138,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             // EncounterSessionMC.Instance.m_AllCombtatantsAlive // used by enemy targeting
             foreach (var player in players)
             {
-                names.Add(player.Key, player.Value.m_CharacterOverworld.m_CharacterStats.m_CharacterName);
+                names.Add(player.Key, CharacterData.GetCharacterName(player.Value.m_CharacterOverworld));
             }
             return names;
         }
