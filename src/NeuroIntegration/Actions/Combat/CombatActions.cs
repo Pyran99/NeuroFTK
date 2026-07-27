@@ -41,36 +41,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Plugin.Logger.LogError("battle buttons instance null");
                 return;
             }
-            Plugin.Logger.LogWarning(instance.CombatCow.m_CharacterStats.m_CharacterName);
-            Plugin.Logger.LogWarning(target.GetCow().m_CharacterStats.m_CharacterName);
-            // attempt fix bug-25
-            FTK_proficiencyTable.ID prof = instance.GetCurrentSelectedProf();
-            CharacterDummy.TargetType _targetType = CharacterDummy.TargetType.None;
-            bool canSelectEnemy = true;
-            if (prof != FTK_proficiencyTable.ID.None)
-            {
-                FTK_proficiencyTable fTK_proficiencyTable = FTK_proficiencyTableDB.GetDB().GetEntry(prof);
-                _targetType = fTK_proficiencyTable.m_Target;
-                if (_targetType == CharacterDummy.TargetType.PickFriendly || _targetType == CharacterDummy.TargetType.Aoe || fTK_proficiencyTable.m_TargetFriendly)
-                {
-                    Plugin.Logger.LogWarning("pick friendly target type");
-                    canSelectEnemy = false;
-                    return;
-                }
-            }
-            if (_targetType == CharacterDummy.TargetType.OthersFriendly)
-            {
-                Plugin.Logger.LogWarning("pick others friendly target type");
-                canSelectEnemy = false;
-            }
-            if (_targetType == CharacterDummy.TargetType.None)
-            {
-                Plugin.Logger.LogWarning("no target type");
-                canSelectEnemy = false;
-            }
-            // target must be enemy here
-            // if there are problems with friendly targetting, do something here
-            if (canSelectEnemy) instance.SelectEnemyDummy(target, _item);
+            instance.SelectEnemyDummy(target, _item);
         }
     }
 
@@ -177,8 +148,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         Dictionary<FTKPlayerID, string> GetListOfEnemies()
         {
             names = [];
-            Dictionary<FTKPlayerID, EnemyDummy> enemies = new(EncounterSession.Instance.m_EnemyDummies);
             int count = 0;
+            Dictionary<FTKPlayerID, EnemyDummy> enemies = new(EncounterSession.Instance.m_EnemyDummies);
             foreach (var enemy in enemies)
             {
                 if (!enemy.Value.m_IsAlive) continue;
