@@ -46,7 +46,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogWarning(parsedData);
             if (!_buttons.ContainsKey(parsedData))
             {
                 Plugin.Logger.LogError("invalid reward key " + parsedData);

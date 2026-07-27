@@ -59,7 +59,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                return;
+            }
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
@@ -124,12 +127,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]
         [HarmonyReversePatch]
         public static void ReverseCheckHoverPath(object instance, HexLand _hexland)
-        {
-        }
-
-        [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]
-        [HarmonyPostfix]
-        static void ReturnedToOverworld()
         {
         }
 

@@ -1,6 +1,7 @@
 using System;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -77,13 +78,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("36 CommenceMiniEncounterBattle");
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceStair))]
-        [HarmonyPostfix]
-        static void Test37()
-        {
-            Plugin.Logger.LogMessage("37 CommenceStair");
-        }
-
         [HarmonyPatch(typeof(EncounterSessionMC), "CommenceVoteEncounter")] // chest at end of dungeon
         [HarmonyPostfix]
         static void Test38()
@@ -91,28 +85,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("38 CommenceVoteEncounter");
         }
 
-        [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DungeonEncounter))]
-        [HarmonyPrefix]
-        static void Test1(CharacterOverworld __instance)
-        {
-            Plugin.Logger.LogMessage("dungeon encounter: " + CharacterData.GetCharacterName(__instance));
-        }
-
-        [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))]
-        [HarmonyPostfix]
-        static void DungeonExit()
-        {
-            Plugin.Logger.LogMessage("dungeon exit");
-            Context.Send("returning to overworld", true);
-        }
-
-        // to next room, from popup menu
-        [HarmonyPatch(typeof(uiExploreDungeonMenu), nameof(uiExploreDungeonMenu.OnExplore))]
-        [HarmonyPrefix]
-        static void Test3()
-        {
-            Plugin.Logger.LogMessage("explore dungeon menu on explore");
-        }
+        // [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DungeonEncounter))]
+        // [HarmonyPrefix]
+        // static void Test1(CharacterOverworld __instance)
+        // {
+        //     Plugin.Logger.LogMessage("dungeon encounter: " + CharacterData.GetCharacterName(__instance));
+        // }
 
         [HarmonyPatch(typeof(uiEnterDungeonMenu), nameof(uiEnterDungeonMenu.OnEnter))]
         [HarmonyPrefix]

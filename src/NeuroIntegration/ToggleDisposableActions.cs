@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 NeuroActionHandler.UnregisterActions(overworldActions);
                 overworldActions.Clear();
                 CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
-                if (cow.IsInDungeon())
+                if (cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat)
                 {
                     Plugin.Logger.LogWarning("tried to register overworld actions in dungeon");
                     return;
@@ -48,9 +48,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 NeuroActionHandler.UnregisterActions(combatActions);
                 combatActions.Clear();
                 CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
-                CharacterOverworld test = GameLogic.Instance.GetCurrentCombatCOW();
-                Plugin.Logger.LogWarning($"cur cow = {CharacterData.GetCharacterName(cow)}; cur combat cow = {CharacterData.GetCharacterName(test)}");
-                if (!cow.IsInDungeon() || !cow.m_CharacterStats.m_IsInCombat || GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
+                if ((!cow.IsInDungeon() && !cow.m_CharacterStats.m_IsInCombat) || GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
                 {
                     Plugin.Logger.LogWarning("tried to register combat actions in overworld");
                     return;

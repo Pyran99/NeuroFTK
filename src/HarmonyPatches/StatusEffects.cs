@@ -131,15 +131,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case ProficiencyBase.Category.Confuse:
                     result = "STR_statusConfusedInfo";
                     break;
-                // case ProficiencyBase.Category.Cure:
-                //     result = "";
-                //     break;
-                // case ProficiencyBase.Category.Curse:
-                //     //TODO type of curse. blind, clumsy, feeble, foolish, lethargic, unlucky, unwell, 
-                //     break;
-                // case ProficiencyBase.Category.Darkness:
-                //     result = "";
-                //     break;
                 case ProficiencyBase.Category.Dazed:
                     result = "STR_statusDazedInfo";
                     break;
@@ -182,12 +173,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // case ProficiencyBase.Category.Shield:
                 //     result = "";
                 //     break;
-                // case ProficiencyBase.Category.StealGold:
-                //     result = "";
-                //     break;
-                // case ProficiencyBase.Category.StealItem:
-                //     result = "";
-                //     break;
                 case ProficiencyBase.Category.Stunned:
                     result = "STR_statusStunnedInfo";
                     break;
@@ -213,8 +198,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     else result = "STR_statusResistDownInfo";
                     break;
                 case ProficiencyBase.Category.Debuff:
-                    // result = "STR_statusDebuffInfo";
+                    result = "remove buffs";
                     break;
+                case ProficiencyBase.Category.Rush:
+                    result = "rush NYI";
+                    break;
+                // case ProficiencyBase.Category.Cure:
+                //     result = "";
+                //     break;
+                // case ProficiencyBase.Category.Curse:
+                //     //TODO type of curse. blind, clumsy, feeble, foolish, lethargic, unlucky, unwell, 
+                //     break;
+                // case ProficiencyBase.Category.Darkness:
+                //     result = "";
+                //     break;
+                // case ProficiencyBase.Category.StealGold:
+                //     result = "";
+                //     break;
+                // case ProficiencyBase.Category.StealItem:
+                //     result = "";
+                //     break;
             }
             if (result == string.Empty) Plugin.Logger.LogError("no data for status effect " + prof.m_Category);
             if (!TextInfo.Instance.rowNames.Contains(result)) return result;

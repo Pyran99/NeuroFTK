@@ -87,7 +87,7 @@ namespace Pyran.NeuroFTK.Utils
                     break;
             }
             Dictionary<string, Dictionary<string, string>> data = [];
-            Plugin.Logger.LogWarning("testing entry serialize " + Jason.Serialize(Entry));
+            // Plugin.Logger.LogWarning("testing entry serialize " + Jason.Serialize(Entry));
             if (OutputId != FTK_slotOutput.ID.None)
             {
                 RollSlotOutcomes.SetSlotLegendResult(Entry, OutputId, cow, data);
