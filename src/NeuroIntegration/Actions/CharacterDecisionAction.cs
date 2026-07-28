@@ -11,7 +11,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class CharacterDecisionAction(string _key, List<VoteButton> _values) : NeuroAction<VoteButton>
     {
-        public override string Name => $"{_key.Replace(" ", "_")}_decision";
+        public override string Name => $"{_key.Replace(" ", "_").ToLower()}_decision";
         protected override string Description => $"choose a button with {_key}";
         protected override JsonSchema Schema => GetSchema();
 

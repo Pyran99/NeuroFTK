@@ -11,7 +11,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class QueryBeltItems() : NeuroAction
     {
         public override string Name => "query_belt_items";
-        protected override string Description => "see what items from your belt slots you can use right now";
+        protected override string Description => "see what items are on your belt";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()
@@ -19,11 +19,20 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CharacterOverworld cow = CharacterData.GetNeuroCow();
             string title = "[usable belt items] ";
             StringBuilder sb = new(title);
-            foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow))
+            string blacklist = "";
+            foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())
             {
-                sb.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
+                if (ItemData.IsBlacklistItem(item))
+                {
+                    blacklist = "(this item is not implemented for you yet)";
+                }
+                sb.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}{blacklist}");
             }
-            if (sb.Length == title.Length) sb.Append("there are no items you can use right now");
+            // foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow))
+            // {
+            //     sb.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
+            // }
+            if (sb.Length == title.Length) sb.Append($"there are no items on {CharacterData.GetCharacterName(cow)}'s belt");
             Context.Send(sb.ToString());
         }
 

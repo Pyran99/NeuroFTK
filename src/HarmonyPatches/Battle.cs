@@ -51,6 +51,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
+            Plugin.Logger.LogMessage("battle btns initialized");
             GlobalConfig.gameInitialized = true;
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
@@ -322,7 +323,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
-            Object.Destroy(window);
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCombatCOW();
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
@@ -335,7 +335,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 beltActionUsed = true;
                 Dictionary<string, FTK_itembase.ID> items = [];
                 foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow)) items.Add(ItemData.GetItemName(item), item);
-                if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow, false, true));
+                if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow, false));
             }
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
             offense.Clear();

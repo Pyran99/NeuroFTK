@@ -52,7 +52,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GlobalConfig.gameInitialized = true;
             isFirstAction = true;
             isSearching = false;
-            Object.Destroy(window);
             while (__result.MoveNext()) yield return __result.Current;
             BeginTurn2(__instance);
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
@@ -401,7 +400,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             isFirstAction = true;
             isSearching = false;
-            Object.Destroy(window);
+            DisposeActions();
             QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), cow.gameObject);
             ToggleDisposableActions.ToggleOverworldActions(true);
         }
