@@ -54,7 +54,7 @@ namespace Pyran.NeuroFTK.Utils
             List<FTK_itembase.ID> list = [];
             foreach (FTK_itembase.ID item in _cow.m_CharacterStats.GetBeltItems())
             {
-                if (!IsBlacklistItem(item)) continue;
+                if (IsBlacklistItem(item)) continue;
                 if (!FTKItem.Get(item).CanUse(_cow)) continue;
                 list.Add(item);
             }
@@ -65,10 +65,10 @@ namespace Pyran.NeuroFTK.Utils
         {
             if (blacklistItems.Contains(id))
             {
-                Plugin.Logger.LogWarning("skipped blacklist item " + id);
-                return false;
+                Plugin.Logger.LogMessage("blacklist item " + id);
+                return true;
             }
-            return true;
+            return false;
         }
 
         /// <summary>

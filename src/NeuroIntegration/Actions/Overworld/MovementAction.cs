@@ -31,7 +31,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (hex?.HasPOI() ?? false)
                 {
                     MiniHexInfo poi = hex.GetPOI();
-                    if (!HexData.IsPoiComplete(poi)) window.AddAction(new InteractWithCurrentHex());
+                    if (!HexData.IsPoiComplete(poi)) window.AddAction(new InteractWithCurrentHex(_cow));
                 }
             }
             window.SetContext(ctx);
@@ -202,7 +202,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class InteractWithCurrentHex : NeuroAction
+    public class InteractWithCurrentHex(CharacterOverworld cow) : NeuroAction
     {
         public override string Name => "interact_with_this_tile";
         protected override string Description => "interact with the point of interest on the tile the current character is at";
@@ -210,13 +210,22 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             HexLand hex = cow.GetHexLand();
             if (!hex.HasPOI())
             {
                 Context.Send("this character is not on a tile with something to interact with", true);
                 OverworldFlow.CreateActionWindow(cow);
                 return;
+            }
+            MiniHexInfo poi = hex.GetPOI();
+            if (poi is MiniHexAlluringPool)
+            {
+                if ((poi as MiniHexAlluringPool).GetAlluringPoolOptions().Count == 0)
+                {
+                    Context.Send("you need to find other alluring pools to activate the teleport system");
+                    OverworldFlow.CreateActionWindow(cow);
+                    return;
+                }
             }
             cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, hex, false, true));
         }

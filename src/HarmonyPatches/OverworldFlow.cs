@@ -164,6 +164,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
         }
 
+        [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.PortalMoveTo))]
+        [HarmonyPostfix]
+        static void OnTeleported(HexLand _newLand)
+        {
+            Context.Send($"{CharacterData.GetCharacterName(GameLogic.Instance.GetCurrentCOW())} teleported to {HexData.GetVec2Pos(_newLand)}");
+        }
+
 
         #region end turn procs
 
@@ -266,6 +273,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             tiles.Clear();
             Object.Destroy(window);
             CharacterOverworld currentCOW = GameLogic.Instance.GetCurrentCOW();
+            if (!Multiplayer.IsYourCow(currentCOW))
+            {
+                Plugin.Logger.LogError("tried to generate move action from another players cow");
+                yield break;
+            }
             int points = currentCOW.m_CharacterStats.m_ActionPoints;
             RollSystem.rollCount = points;
             double startTime = Time.time;
