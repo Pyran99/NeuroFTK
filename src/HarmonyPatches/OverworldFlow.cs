@@ -172,7 +172,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void Refocus()
         {
-            Plugin.Logger.LogWarning("NYI end turn refocus skill proc");
+            Context.Send("gained focus points from end of turn skill", true);
         }
 
         #endregion

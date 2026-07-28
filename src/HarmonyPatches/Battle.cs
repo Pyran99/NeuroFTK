@@ -82,7 +82,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void BtnsOff()
         {
             Object.Destroy(window);
-            UnregisterDisposableActions();
+            // UnregisterDisposableActions();
             m_Proficiencies = [];
         }
 
@@ -90,7 +90,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void CombatPlayerVictory()
         {
-            UnregisterDisposableActions();
+            // UnregisterDisposableActions();
             ToggleDisposableActions.ToggleCombatActions(false);
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
             {
@@ -342,28 +342,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             defense.Clear();
         }
 
-        static void RegisterDisposableActions(CharacterOverworld cow)
-        {
-            Dictionary<string, FTK_itembase.ID> items = [];
-            foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow))
-            {
-                items.Add(ItemData.GetItemName(item), item);
-            }
-            disposableActions.Clear();
-            disposableActions.Add(new SillyAction());
-            if (items.Count > 0)
-            {
-                disposableActions.Add(new UseBeltItemAction(items, cow));
-            }
-            NeuroActionHandler.RegisterActions(disposableActions);
-        }
+        // static void RegisterDisposableActions(CharacterOverworld cow)
+        // {
+        //     Dictionary<string, FTK_itembase.ID> items = [];
+        //     foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow))
+        //     {
+        //         items.Add(ItemData.GetItemName(item), item);
+        //     }
+        //     disposableActions.Clear();
+        //     disposableActions.Add(new SillyAction());
+        //     if (items.Count > 0)
+        //     {
+        //         disposableActions.Add(new UseBeltItemAction(items, cow));
+        //     }
+        //     NeuroActionHandler.RegisterActions(disposableActions);
+        // }
 
-        static void UnregisterDisposableActions()
-        {
-            if (disposableActions.Count == 0) return;
-            NeuroActionHandler.UnregisterActions(disposableActions);
-            disposableActions.Clear();
-        }
+        // static void UnregisterDisposableActions()
+        // {
+        //     if (disposableActions.Count == 0) return;
+        //     NeuroActionHandler.UnregisterActions(disposableActions);
+        //     disposableActions.Clear();
+        // }
 
         public static string GetBeltDetails(CharacterOverworld cow)
         {

@@ -154,7 +154,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Properties = new()
                 {
                     ["destination"] = QJS.Enum(GetInRangeQuests()),
-                    // ["destination"] = QJS.Enum(_questDict.Select(kvp => kvp.Key)),
                 }
             };
             return schema;

@@ -5,6 +5,7 @@ using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
@@ -33,10 +34,19 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(FTK_itembase.ID parsedData)
         {
-            FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Backpack);
+            if (cow.m_PlayerInventory.GetItemCount(PlayerInventory.ContainerID.Backpack, parsedData) > 0)
+            {
+                FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Backpack);
+            }
+            else
+            {
+                Plugin.Logger.LogError("tried to use an item not on belt " + parsedData);
+                Context.Send("the item you tried to use was not in your inventory", true);
+            }
             if (remakeOverworld)
             {
                 QuickTimerCallback timer = new(OverworldFlow.BeginMovementTurn, cow.gameObject, 0.3f);
+                // NeuroActionHandler.UnregisterActions(["use_belt_item"]);
             }
             else if (remakeCombat)
             {
@@ -56,7 +66,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 return ExecutionResult.Failure($"cannot use item {parsedData}: {FTKItem.Get(parsedData).GetCannotUseReason(cow)}");
             }
-            NeuroActionHandler.UnregisterActions(this);
             return ExecutionResult.Success();
         }
     }

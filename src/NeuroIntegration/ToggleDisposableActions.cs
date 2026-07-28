@@ -15,8 +15,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             // belt, location, status, 
             if (enable)
             {
-                if (overworldActions.Count > 0 && !overwrite) return;
-                NeuroActionHandler.UnregisterActions(overworldActions);
+                if (overworldActions.Count > 0)
+                {
+                    if (overwrite)
+                    {
+                        NeuroActionHandler.UnregisterActions(overworldActions);
+                    }
+                    else return;
+                }
                 overworldActions.Clear();
                 CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
                 if (cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat)
@@ -34,6 +40,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             else
             {
+                if (overworldActions.Count == 0) return;
                 NeuroActionHandler.UnregisterActions(overworldActions);
                 overworldActions.Clear();
             }
@@ -44,8 +51,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             // belt, status, 
             if (enable)
             {
-                if (combatActions.Count > 0 && !overwrite) return;
-                NeuroActionHandler.UnregisterActions(combatActions);
+                if (combatActions.Count > 0)
+                {
+                    if (overwrite)
+                    {
+                        NeuroActionHandler.UnregisterActions(combatActions);
+                    }
+                    else return;
+                }
                 combatActions.Clear();
                 CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
                 if ((!cow.IsInDungeon() && !cow.m_CharacterStats.m_IsInCombat) || GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
@@ -61,6 +74,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             else
             {
+                if (combatActions.Count == 0) return;
                 NeuroActionHandler.UnregisterActions(combatActions);
                 combatActions.Clear();
             }
