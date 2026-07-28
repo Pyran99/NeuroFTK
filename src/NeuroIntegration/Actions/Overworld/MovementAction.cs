@@ -23,9 +23,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (!OverworldFlow.isSneakMovement)
             {
                 if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
-                if (questDict != null & questDict.Count > 0)
+                if (questDict != null && questDict.Count > 0)
                 {
-                    window.AddAction(new GoToQuestAction(new(questDict), _cow));
+                    if (questDict.Count != 1 || questDict.First().Value.GetHexLandDestination()?.GetPosition() != _cow.GetHexLand().GetPosition())
+                    {
+                        window.AddAction(new GoToQuestAction(new(questDict), _cow));
+                    }
                 }
                 HexLand hex = _cow.GetHexLand();
                 if (hex?.HasPOI() ?? false)
@@ -165,7 +168,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (!_questDict.TryGetValue(parsedData, out QuestLogicBase quest))
             {
                 Plugin.Logger.LogError("quest not found");
-                Context.Send($"an issue occurred with the {Name} action, try another one", true);
+                Context.Send($"an issue occurred with the {Name} action, try another one (if your choice was 'none' then you should choose a different action)", true);
                 OverworldFlow.CreateActionWindow(cow);
                 return;
             }
@@ -178,6 +181,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             parsedData = "";
             string data = actionData.Data.Value<string>("destination");
             if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
+            if (data == "none") return ExecutionResult.Success();
             if (!_questDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
             parsedData = data;
             return ExecutionResult.Success();
@@ -190,6 +194,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             foreach (KeyValuePair<string, QuestLogicBase> kvp in _questDict)
             {
                 Vector3 dest = kvp.Value.GetHexLandDestination()?.GetPosition() ?? Vector3.positiveInfinity;
+                if (dest == _cow.GetHexLand().GetPosition()) continue;
                 if (positions.Contains(dest))
                 {
                     if ((dest - _cow.GetHexLand().GetPosition()).magnitude < 2.8866f * 15f)
@@ -197,6 +202,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                         result.Add(kvp.Key);
                     }
                 }
+            }
+            if (result.Count == 0)
+            {
+                Plugin.Logger.LogError("there were no valid quests for the action");
+                result.Add("none");
             }
             return result;
         }
@@ -254,6 +264,34 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 {
                     Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex");
                     interactable = false;
+                }
+            }
+            if (poi is MiniHexDungeon)
+            {
+                //VERIFY failed remake actions after interact with dungeon while party not ready
+                MiniHexDungeon dungeon = poi as MiniHexDungeon;
+                if (!dungeon.IsDungeonCleared())
+                {
+                    List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
+                    int num = 0;
+                    foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
+                    {
+                        if (!readyPlayers.Contains(_cow.m_FTKPlayerID))
+                        {
+                            if (!GameFlow.Instance.IsPermaDeath || !_cow.m_WaitForRespawn)
+                            {
+                                num++;
+                            }
+                        }
+                    }
+                    if (num != 0)
+                    {
+                        if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
+                        {
+                            Context.Send("your entire party needs to be alive and within range to enter the dungeon");
+                            interactable = false;
+                        }
+                    }
                 }
             }
             if (!interactable)

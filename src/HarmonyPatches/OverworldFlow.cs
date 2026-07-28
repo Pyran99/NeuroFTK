@@ -31,11 +31,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isFirstAction = false;
         public static bool isSneakMovement = false;
 
-        public static List<Vector3> GetQuestPositions()
-        {
-            return questPositions;
-        }
-
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
         [HarmonyPostfix]
@@ -375,6 +370,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Vector2 pos = HexData.GetVec2Pos(dest);
                 if (questDict.ContainsKey(pos.ToString())) return;
+                if (dest.GetPosition() == cowHex)
+                {
+                    questDict.Add(pos.ToString(), quest);
+                    questPositions.Add(dest.GetPosition());
+                    sbQuest.AppendLine($"[{type} quest at {pos}]: {description} (you are currently at this hex)");
+                    return;
+                }
                 string outOfRange = "";
                 if ((dest.GetPosition() - cowHex).magnitude > 2.8866f * 15f)
                 {
@@ -397,6 +399,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return GameLogic.Instance.GetQuestByID(questPositions.IndexOf(hex.GetPosition()));
             }
             return null;
+        }
+
+        public static List<Vector3> GetQuestPositions()
+        {
+            return questPositions;
         }
 
         #endregion

@@ -34,9 +34,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(FTK_itembase.ID parsedData)
         {
-            if (cow.m_PlayerInventory.GetItemCount(PlayerInventory.ContainerID.Backpack, parsedData) > 0)
+            if (cow.m_PlayerInventory.GetItemCount(PlayerInventory.ContainerID.Belt, parsedData) > 0)
             {
-                FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Backpack);
+                FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Belt);
             }
             else
             {
