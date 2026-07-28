@@ -63,7 +63,11 @@ namespace Pyran.NeuroFTK.Utils
 
         public static bool IsBlacklistItem(FTK_itembase.ID id)
         {
-            if (blacklistItems.Contains(id)) return false;
+            if (blacklistItems.Contains(id))
+            {
+                Plugin.Logger.LogWarning("skipped blacklist item " + id);
+                return false;
+            }
             return true;
         }
 

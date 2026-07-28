@@ -7,10 +7,11 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class UseBeltItemAction(Dictionary<string, FTK_itembase.ID> items, CharacterOverworld cow, bool remakeWindow = false) : NeuroAction<FTK_itembase.ID>
+    public class UseBeltItemAction(Dictionary<string, FTK_itembase.ID> items, CharacterOverworld cow, bool remakeOverworld = false, bool remakeCombat = false) : NeuroAction<FTK_itembase.ID>
     {
         public override string Name => "use_belt_item";
         protected override string Description => "choose an item to use from your belt slots";
@@ -33,9 +34,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(FTK_itembase.ID parsedData)
         {
             FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Backpack);
-            if (remakeWindow)
+            if (remakeOverworld)
             {
-                OverworldFlow.BeginMovementTurn();
+                QuickTimerCallback timer = new(OverworldFlow.BeginMovementTurn, cow.gameObject, 0.3f);
+            }
+            else if (remakeCombat)
+            {
+                QuickTimerCallback timer = new(() => Battle.CreateActionWindow(Battle.StanceBtnInstance, Battle.m_Proficiencies), Battle.StanceBtnInstance.gameObject, 0.3f);
             }
         }
 

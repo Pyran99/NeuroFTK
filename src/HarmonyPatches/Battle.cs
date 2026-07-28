@@ -18,14 +18,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class Battle
     {
 
+        public static uiBattleStanceButtons StanceBtnInstance;
+        public static List<uiBattleStanceButtons.ProfValues> m_Proficiencies = [];
         static ActionWindow window;
-        static uiBattleStanceButtons StanceBtnInstance;
-        static List<uiBattleStanceButtons.ProfValues> m_Proficiencies = [];
         static Dictionary<string, uiBattleButton> offense = [];
         static Dictionary<string, uiBattleButton> defense = [];
         static readonly Dictionary<string, int> playerHealths = [];
         static StringBuilder dmgTakenString = new();
         static bool isHealthChangeWait = false;
+        public static bool beltActionUsed = false;
 
 
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.StartEncounterSession))]
@@ -62,6 +63,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             StanceBtnInstance = __instance;
+            beltActionUsed = false;
             BeginTurns.CtxCombatTurnBeginEnemy();
             BeginTurns.CtxCombatTurnBeginPlayer(__instance.CombatCow);
             CreateActionWindow(StanceBtnInstance, m_Proficiencies);
@@ -318,15 +320,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly List<INeuroAction> actions = [];
         static readonly List<INeuroAction> disposableActions = [];
 
-        static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
+        public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
+            Object.Destroy(window);
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCombatCOW();
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
             actions.Clear();
             string ctx = GetAttackContextAndRegisterAction(_instance, _proficiencies);
             ctx += GetBeltDetails(cow);
-            RegisterDisposableActions(cow);
+            // RegisterDisposableActions(cow);
+            if (!beltActionUsed) // unsure where to put belt use
+            {
+                beltActionUsed = true;
+                Dictionary<string, FTK_itembase.ID> items = [];
+                foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow)) items.Add(ItemData.GetItemName(item), item);
+                if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow, false, true));
+            }
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
             offense.Clear();
             defense.Clear();
