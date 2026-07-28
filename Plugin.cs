@@ -13,6 +13,7 @@ using UnityEngine;
 using NeuroSdk.Internal;
 using System.Linq;
 using NeuroSdk.Websocket;
+using System.Collections;
 
 namespace Pyran.NeuroFTK;
 
@@ -62,9 +63,32 @@ public class Plugin : BaseUnityPlugin
         }
         if (Input.GetKeyDown(KeyCode.BackQuote))
         {
+            Logger.LogWarning("backquote");
             // LoggerTest.Instance?.ToggleConsole();
             // devConsole.gameObject.SetActive(!devConsole.gameObject.activeSelf);
         }
+    }
+
+    bool isRunning = false;
+    // no work
+    IEnumerator RotateCamera()
+    {
+        if (isRunning) yield break;
+        isRunning = true;
+        float elapsedTime = 0f;
+        Camera cam = FTKHub.Instance.m_OverworldCamera;
+        Quaternion startRot = cam.transform.rotation;
+        Vector3 addRot = new(0, 360, 0);
+        Quaternion targetRot = startRot * Quaternion.Euler(addRot);
+        while (elapsedTime < 1.0f)
+        {
+            float progress = elapsedTime / 1.0f;
+            cam.transform.rotation = Quaternion.Lerp(startRot, targetRot, progress);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        cam.transform.rotation = startRot;
+        isRunning = false;
     }
 
     void InitializeHarmony()

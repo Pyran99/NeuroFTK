@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using FTKItemName;
 using Google2u;
 using GridEditor;
@@ -11,6 +10,16 @@ namespace Pyran.NeuroFTK.Utils
     /// </summary>
     public class ItemData
     {
+        /// <summary>
+        /// items that arnt implemented or verified to work
+        /// </summary>
+        static readonly List<FTK_itembase.ID> blacklistItems =
+        [
+            FTK_itembase.ID.scrollteleport,
+            FTK_itembase.ID.scrollgroupteleport,
+            FTK_itembase.ID.scrollvision,
+        ];
+
         /// <returns>{name: description}</returns>
         public static Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
         {
@@ -45,10 +54,17 @@ namespace Pyran.NeuroFTK.Utils
             List<FTK_itembase.ID> list = [];
             foreach (FTK_itembase.ID item in _cow.m_CharacterStats.GetBeltItems())
             {
+                if (!IsBlacklistItem(item)) continue;
                 if (!FTKItem.Get(item).CanUse(_cow)) continue;
                 list.Add(item);
             }
             return list;
+        }
+
+        public static bool IsBlacklistItem(FTK_itembase.ID id)
+        {
+            if (blacklistItems.Contains(id)) return false;
+            return true;
         }
 
         /// <summary>
