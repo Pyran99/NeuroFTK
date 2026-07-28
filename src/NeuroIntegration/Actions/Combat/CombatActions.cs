@@ -4,6 +4,7 @@ using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
@@ -21,6 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (actions.Count == 0)
             {
                 Plugin.Logger.LogError("no combat actions to register");
+                Context.Send("something went very wrong with the combat actions, let vedal know there is a problem");
                 actions.Add(new CombatFleeAction(_instance.m_FleeButton));
             }
             ActionWindow window = ActionWindow.Create(_instance.gameObject);
@@ -55,8 +57,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     {
         readonly Dictionary<string, uiBattleButton> defense = new(_defense);
 
-        public override string Name => "ally_target";
-        protected override string Description => "heal/buff an ally or self";
+        public override string Name => "buff_ally";
+        protected override string Description => "heal/buff an ally or self. if the ability can be used on an ally you will be able to choose the target after";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()

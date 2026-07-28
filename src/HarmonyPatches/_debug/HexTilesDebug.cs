@@ -1,6 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using Pyran.NeuroFTK.GameConfigs;
-using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
@@ -17,7 +18,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ClickTarget(HexLand _hexland)
         {
             currentHover = _hexland;
-            Plugin.Logger.LogMessage($"check click path: ({_hexland.GetPosition()}) ({_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex})");
+            float dist = (_hexland.GetPosition() - GameLogic.Instance.GetCurrentCOW().GetHexLand().GetPosition()).magnitude;
+            Plugin.Logger.LogMessage($"check click path: ({_hexland.GetPosition()}) ({dist} ({dist < 2.8866f * 15f}))");
         }
 
         [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]
@@ -30,28 +32,42 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Vector2 pos = HexData.GetVec2Pos(_hexland);
             if (OverworldFlow.questDict.ContainsKey(pos.ToString()))
             {
-                Plugin.Logger.LogMessage($"valid id {_hexland.GetPosition()} = {_hexland.GetHexLandID().m_BigIndex} - {_hexland.GetHexLandID().m_SmallIndex}");
+                Plugin.Logger.LogMessage($"valid id {_hexland.GetPosition()}");
             }
         }
 
-        // // no calls, maybe controller?
-        // [HarmonyPatch(typeof(Movement), "TrackHexPickHover")]
-        // [HarmonyPostfix]
-        // static void Test2(HexLand hexLand)
+        // // was testing path finding
+        // static void Test()
         // {
-        //     if (hexLand != currentHover)
+        //     Plugin.Logger.LogWarning("testing quest hex movement");
+        //     List<HexLand> hexes = [];
+        //     foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>())
         //     {
-        //         currentHover = hexLand;
-        //         Plugin.Logger.LogWarning($"hex pick HOVER {hexLand.GetHexLandID().m_BigIndex} - {hexLand.GetHexLandID().m_SmallIndex}");
+        //         QuestLogicBase quest = q.m_Quest;
+        //         if (quest == null || quest.IsConsiderComplete()) continue;
+        //         hexes.Add(quest.GetHexLandDestination());
         //     }
+        //     foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>())
+        //     {
+        //         QuestLogicBase quest = q.m_Quest;
+        //         if (quest == null || quest.IsConsiderComplete()) continue;
+        //         hexes.Add(quest.GetHexLandDestination());
+        //     }
+        //     HexLand target = hexes[Random.Range(0, hexes.Count)];
+        //     if (target == null) return;
+        //     Plugin.Logger.LogWarning("max dist = " + 2.8866f * 15f);
+        //     Plugin.Logger.LogWarning("dist = " + (target.GetPosition() - GameLogic.Instance.GetCurrentCOW().GetHexLand().GetPosition()).magnitude);
+        //     // OverworldFlow.ReverseUpdateHexMove(Movement.Instance);
+        //     OverworldFlow.ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
+        //     Plugin.Logger.LogWarning("target1 = " + target?.GetPosition());
+        //     Plugin.Logger.LogWarning("last partial1 = " + Movement.Instance.m_HexListPartial.Last()?.GetPosition());
+        //     OverworldFlow.ReverseCheckHoverPath(Movement.Instance, target);
+        //     List<HexLand> temp = [];
+        //     HexLand.FindPath(GameLogic.Instance.GetCurrentCOW().GetHexLand(), target, HexLand.PathFindingStartState.OnLand, ref temp);
+        //     Plugin.Logger.LogWarning("target2 = " + target?.GetPosition());
+        //     Plugin.Logger.LogWarning("last partial2 = " + Movement.Instance.m_HexListPartial.Last()?.GetPosition());
+        //     OverworldFlow.ReverseUpdateHexMove(Movement.Instance);
         // }
-
-        // [HarmonyPatch(typeof(Movement), "TrackHexPickClick")]
-        // [HarmonyPostfix]
-        // static void Test3()
-        // {
-        //     Plugin.Logger.LogWarning("hex pick click");
-            
-        // }
+        
     }
 }

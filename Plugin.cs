@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using NeuroSdk;
 using UnityEngine;
 using NeuroSdk.Internal;
+using System.Linq;
+using NeuroSdk.Websocket;
 
 namespace Pyran.NeuroFTK;
 
@@ -39,6 +41,8 @@ public class Plugin : BaseUnityPlugin
         SetCustomHouseRules.LoadCustomRules();
         SetSettingsOptions.InitializeCustomSettings();
         NeuroSdkSetup.Initialize("For the King");
+        Logger.LogMessage("Character ID: " + WebsocketConnection.Instance.Character?.CharacterId);
+        Logger.LogMessage("display name: " + WebsocketConnection.Instance.Character?.DisplayName);
         // devConsole = Instantiate(new DeveloperConsole(), Instance.transform);
         // Logger.LogWarning("dev console = " + devConsole);
         // devConsole?.gameObject?.SetActive(false);

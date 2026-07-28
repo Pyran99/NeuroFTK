@@ -10,6 +10,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -24,7 +25,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
                 if (questDict != null & questDict.Count > 0)
                 {
-                    window.AddAction(new GoToQuestAction(new(questDict)));
+                    window.AddAction(new GoToQuestAction(new(questDict), _cow));
                 }
                 HexLand hex = _cow.GetHexLand();
                 if (hex?.HasPOI() ?? false)
@@ -138,7 +139,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict) : NeuroAction<string>
+    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, CharacterOverworld _cow) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
         protected override string Description => "choose a quest location to travel to. if the location is out of range you will move to the furthest tile along the path";
@@ -152,7 +153,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = ["destination"],
                 Properties = new()
                 {
-                    ["destination"] = QJS.Enum(_questDict.Select(kvp => kvp.Key)),
+                    ["destination"] = QJS.Enum(GetInRangeQuests()),
+                    // ["destination"] = QJS.Enum(_questDict.Select(kvp => kvp.Key)),
                 }
             };
             return schema;
@@ -180,6 +182,24 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (!_questDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
             parsedData = data;
             return ExecutionResult.Success();
+        }
+
+        List<string> GetInRangeQuests()
+        {
+            List<string> result = [];
+            List<Vector3> positions = OverworldFlow.GetQuestPositions();
+            foreach (KeyValuePair<string, QuestLogicBase> kvp in _questDict)
+            {
+                Vector3 dest = kvp.Value.GetHexLandDestination()?.GetPosition() ?? Vector3.positiveInfinity;
+                if (positions.Contains(dest))
+                {
+                    if ((dest - _cow.GetHexLand().GetPosition()).magnitude < 2.8866f * 15f)
+                    {
+                        result.Add(kvp.Key);
+                    }
+                }
+            }
+            return result;
         }
     }
 

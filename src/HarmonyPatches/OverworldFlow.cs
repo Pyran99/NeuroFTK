@@ -31,6 +31,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isFirstAction = false;
         public static bool isSneakMovement = false;
 
+        public static List<Vector3> GetQuestPositions()
+        {
+            return questPositions;
+        }
+
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
         [HarmonyPostfix]
@@ -130,6 +135,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
         }
 
+        [HarmonyPatch(typeof(Movement), "UpdateHexMove")]
+        [HarmonyReversePatch]
+        public static void ReverseUpdateHexMove(object instance)
+        {
+        }
+
+        [HarmonyPatch(typeof(Movement), "ClearDrawPath")]
+        [HarmonyReversePatch]
+        public static void ReverseClearDrawPath(object instance, List<HexLand> _path)
+        {
+        }
+
         [HarmonyPatch(typeof(MiniHexInfo), nameof(MiniHexInfo.DeactivateHex))]
         [HarmonyPostfix]
         static void HexDeactivated(MiniHexInfo __instance)
@@ -180,7 +197,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 lastDestinations[cow] = dest;
             }
             // hover destination to generate path list
+            ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
             ReverseCheckHoverPath(Movement.Instance, dest);
+            List<HexLand> hexes = [.. Movement.Instance.m_HexListPartial];
             if (!isTracking || GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
@@ -188,17 +207,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 CreateActionWindow(cow);
                 yield break;
             }
-            bool isSameTarget = Movement.Instance.m_HexListPartial.Contains(hex);
-            if (outOfRange)
+            bool isSameTarget = hexes.Contains(hex);
+            if (outOfRange && !isSameTarget)
             {
                 // the generated move path from hover
-                dest = Movement.Instance.m_HexListPartial.Last();
+                dest = hexes.Last();
                 bool failed = true;
-                for (int i = Movement.Instance.m_HexListPartial.Count-1; i >= 0; i--)
+                for (int i = hexes.Count-1; i >= 0; i--)
                 {
                     if (HexData.CanTravel(dest, cow))
                     {
-                        dest = Movement.Instance.m_HexListPartial[i];
+                        dest = hexes[i];
                         failed = false;
                         break;
                     }
@@ -208,6 +227,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     {
                         Plugin.Logger.LogError("could not find any valid tiles");
                         Context.Send("could not find any valid tiles for the movement action", true);
+                        CreateActionWindow(cow);
                         yield break;
                     }
                 }
@@ -215,15 +235,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     Plugin.Logger.LogError("failed to auto travel to last hex");
                     Context.Send(StringMessages.ActionIssueOccured.Format(["go_to_quest"]), true);
+                    CreateActionWindow(cow);
                     yield break;
                 }
             }
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.1f);
             string ctx = $"moving to {HexData.GetContextForHex(cow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
             if (isSameHex) ctx = "interacting with this tiles point of interest";
             Context.Send(ctx, true);
-            ReverseCheckClickPath(Movement.Instance, dest, false, false, false);
+            ReverseCheckClickPath(Movement.Instance, dest, true, false, false);
         }
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -313,18 +334,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             questDict.Clear();
             questPositions.Clear();
             sbQuest = new();
+            Vector3 cowHex = GameLogic.Instance.GetCurrentCOW().GetHexLand().GetPosition();
             foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>())
             {
-                AddValidQuests(q);
+                AddValidQuests(q, cowHex);
             }
             foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>())
             {
-                AddValidQuests(q);
+                AddValidQuests(q, cowHex);
             }
             return sbQuest.ToString();
         }
 
-        static void AddValidQuests(uiQuestItem questItem)
+        static void AddValidQuests(uiQuestItem questItem, Vector3 cowHex)
         {
             if (StringReplace.RemoveStyling(questItem.m_Display.text) == "??????") return;
             QuestLogicBase quest = questItem.m_Quest;
@@ -342,9 +364,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Vector2 pos = HexData.GetVec2Pos(dest);
                 if (questDict.ContainsKey(pos.ToString())) return;
+                string outOfRange = "";
+                if ((dest.GetPosition() - cowHex).magnitude > 2.8866f * 15f)
+                {
+                    outOfRange = " (out of pathfinding range)";
+                }
                 questDict.Add(pos.ToString(), quest);
                 questPositions.Add(dest.GetPosition());
-                sbQuest.AppendLine($"[{type} quest at {pos}]: {description}");
+                sbQuest.AppendLine($"[{type} quest at {pos}]: {description}{outOfRange}");
                 // [Warning:Neuro For the King] quest desc: Kill the Chaos Leader in The Guardian Forest
                 // [Warning:Neuro For the King] quest pos: (85.1, 117.5)
             }

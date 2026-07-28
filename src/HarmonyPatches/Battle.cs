@@ -33,15 +33,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void EnteredBattle()
         {
             ToggleDisposableActions.ToggleOverworldActions(false);
-            Plugin.Logger.LogMessage("entered battle");
-            Context.Send("starting a battle", true);
+            Plugin.Logger.LogMessage("40 StartEncounterSession");
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
         [HarmonyPostfix]
-        static void Test39()
+        static void BeginBattle()
         {
             Plugin.Logger.LogMessage("39 CommenceBattleRPC");
+            Context.Send("starting a battle", true);
         }
 
         #region Player
@@ -142,6 +142,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PlayerLeveled(CharacterStats __instance)
         {
+// level up is handled in Update
 // this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
 // this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
 // this.TallyCharacterHealth(this.m_PlayerLevel, true, false);
@@ -359,8 +360,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StringBuilder sb = new();
             List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(cow);
             if (items.Count == 0) return "";
-            sb.AppendLine();
-            sb.Append("[usable belt items] ");
+            sb.Append("\n[usable belt items] ");
             foreach (FTK_itembase.ID item in items)
             {
                 sb.AppendLine($"({ItemData.GetItemName(item)}){ItemData.GetItemDescription(item, true, cow)}");
