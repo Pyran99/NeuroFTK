@@ -218,21 +218,49 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             MiniHexInfo poi = hex.GetPOI();
-            if (poi is MiniHexAlluringPool)
-            {
-                if ((poi as MiniHexAlluringPool).GetAlluringPoolOptions().Count == 0)
-                {
-                    Context.Send("you need to find other alluring pools to activate the teleport system");
-                    OverworldFlow.CreateActionWindow(cow);
-                    return;
-                }
-            }
+            if (!IsInteractable(poi)) return;
             cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, hex, false, true));
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
         {
             return ExecutionResult.Success();
+        }
+
+        bool IsInteractable(MiniHexInfo poi)
+        {
+            Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
+            if (poi.m_Deactivated)
+            {
+                Context.Send("this tile has been deactivated");
+                OverworldFlow.CreateActionWindow(cow);
+                return false;
+            }
+            bool interactable = true;
+            if (poi is MiniHexAlluringPool)
+            {
+                if ((poi as MiniHexAlluringPool).GetAlluringPoolOptions().Count == 0)
+                {
+                    Context.Send("you need to find other alluring pools to activate the teleport system");
+                    interactable = false;
+                }
+            }
+            if (poi is MiniEncounter)
+            {
+                MiniEncounter encounter = poi as MiniEncounter;
+                Plugin.Logger.LogMessage("poi encounter type = " + (poi as MiniEncounter).m_Type);
+                if (encounter.m_HasBeenConsumed || encounter.m_CantUseThisTurn) interactable = false;
+                if (encounter.m_Type == FTK_miniEncounter.ID.kvHome)
+                {
+                    Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex");
+                    interactable = false;
+                }
+            }
+            if (!interactable)
+            {
+                OverworldFlow.CreateActionWindow(cow);
+            }
+            return interactable;
         }
     }
 
