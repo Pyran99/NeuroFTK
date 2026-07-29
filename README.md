@@ -27,8 +27,13 @@ Name | Default | Description
 > [!NOTE]
 > Some things may be in a working state but code is commented out/altered in a way to facilitate testing
 
-- main menu actions for single player
-- lore store purchasing
-- adventure & party config for new game. Resume last save
-- overworld => land movement, use quick items, many encounters (missing ctx), 
-- combat => unit states ctx, attack choices, use quick items
+- [x] Main menu
+  - [x] Lore store
+  - [x] Adventure setup
+- [ ] Overworld movement
+  - [x] Land
+  - [ ] Sea
+  - [ ] Air
+- [ ] Encounters
+  - [ ] 
+- [ ] Combat
