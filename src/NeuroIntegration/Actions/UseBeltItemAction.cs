@@ -34,14 +34,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(FTK_itembase.ID parsedData)
         {
-            if (cow.m_PlayerInventory.GetItemCount(PlayerInventory.ContainerID.Belt, parsedData) > 0)
+            if (cow.m_PlayerInventory.GetItemCount(PlayerInventory.ContainerID.Backpack, parsedData) > 0)
             {
-                FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Belt);
+                FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Backpack);
             }
             else
             {
                 Plugin.Logger.LogError("tried to use an item not on belt " + parsedData);
-                Context.Send("the item you tried to use was not in your inventory", true);
+                Context.Send("the item you tried to use was not in your inventory" + NeuroSdkStrings.ModFaultSuffix, true);
             }
             if (remakeOverworld)
             {
