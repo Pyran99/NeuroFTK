@@ -26,7 +26,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
                 if (cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat)
                 {
-                    Plugin.Logger.LogWarning("tried to register overworld actions in dungeon");
+                    Plugin.Logger.LogWarning("tried to register overworld actions in combat");
                     return;
                 }
                 INeuroAction queryLocation = new QueryCurrentCOWLocation();

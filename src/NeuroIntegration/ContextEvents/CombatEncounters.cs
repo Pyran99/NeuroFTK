@@ -1,6 +1,7 @@
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -34,10 +35,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void DungeonExit()
         {
             Plugin.Logger.LogMessage("dungeon exit");
-            Context.Send("returning to overworld", true);
+            Context.Send("returning to overworld", true); // is called from normal battle
             OverworldFlow.isFirstAction = false;
             ToggleDisposableActions.ToggleOverworldActions(true);
             ToggleDisposableActions.ToggleCombatActions(false);
+            CameraUtils.Zoom(100f);
+            FTKHub.Instance.m_OverworldCamera.GetComponent<RtsCamera>().Rotation = 0f;
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")] // dungeon only maybe? not called from normal battle
+        [HarmonyPatch]
+        static void ReturnToOverworld()
+        {
+            Plugin.Logger.LogMessage("NYI returning to overworld");
+            Context.Send("battle finished, returning to overworld", true);
+            CameraUtils.Zoom(100f);
+            FTKHub.Instance.m_OverworldCamera.GetComponent<RtsCamera>().Rotation = 0f;
         }
 
         // to next room, from popup menu

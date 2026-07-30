@@ -1,6 +1,7 @@
 using System;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -19,6 +20,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (cam.enabled)
             {
                 Plugin.Instance.StartCoroutine(CameraUtils.RotateCamera());
+                Context.Send("you are spinning!");
             }
         }
 
@@ -44,9 +46,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 {
                     ["zoom"] = new()
                     {
-                        Type = JsonSchemaType.Float,
-                        Minimum = cam.MinDistance,
-                        Maximum = cam.MaxDistance,
+                        Type = JsonSchemaType.Integer,
+                        Minimum = cam.MinDistance, // 20
+                        Maximum = cam.MaxDistance, // 70
                     }
                 }
             };
@@ -56,6 +58,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(float parsedData)
         {
             CameraUtils.Zoom(parsedData);
+            Context.Send("you have changed the camera zoom to " + parsedData);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out float parsedData)
