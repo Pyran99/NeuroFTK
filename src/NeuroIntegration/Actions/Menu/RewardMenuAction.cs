@@ -46,11 +46,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            if (!_buttons.ContainsKey(parsedData))
-            {
-                Plugin.Logger.LogError("invalid reward key " + parsedData);
-                return;
-            }
             uiChooseRewardButton btn = _buttons[parsedData];
             SelectButton.StartCoroutine(btn, 0.5f);
         }

@@ -412,6 +412,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            if (cow.m_WaitForRespawn || !cow.IsStillAlive())
+            {
+                Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
+                return;
+            }
             if (!Multiplayer.IsYourCow(cow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();

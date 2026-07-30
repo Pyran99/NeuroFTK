@@ -69,28 +69,6 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    bool isRunning = false;
-    // no work
-    IEnumerator RotateCamera()
-    {
-        if (isRunning) yield break;
-        isRunning = true;
-        float elapsedTime = 0f;
-        Camera cam = FTKHub.Instance.m_OverworldCamera;
-        Quaternion startRot = cam.transform.rotation;
-        Vector3 addRot = new(0, 360, 0);
-        Quaternion targetRot = startRot * Quaternion.Euler(addRot);
-        while (elapsedTime < 1.0f)
-        {
-            float progress = elapsedTime / 1.0f;
-            cam.transform.rotation = Quaternion.Lerp(startRot, targetRot, progress);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-        cam.transform.rotation = startRot;
-        isRunning = false;
-    }
-
     void InitializeHarmony()
     {
         string id = "Pyran." + MyPluginInfo.PLUGIN_GUID + ".ForTheKing";

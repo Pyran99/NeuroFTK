@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -19,6 +20,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string title = "";
         static bool isOwner = false;
         public static string teamState = "";
+        static readonly bool onlyOccupiedRealms = true;
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), "BaseInitialize")]
         [HarmonyPostfix]
@@ -42,17 +44,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             buttons = [.. ___m_AllButtons];
             Plugin.Logger.LogMessage($"{string.Join(", ", [.. buttons.Select(x => x.m_Text.text)])}");
             Dictionary<string, uiChooseRewardButton> dict = buttons.ToDictionary(x => x.m_Text.text);
-            if (buttons.Count == 1) // only cancel
-            {
-                uiChooseRewardButton first = buttons.First();
-                Plugin.Logger.LogWarning("only 1 reward button " + first.m_Text.text);
-                SelectButton.StartCoroutine(first, 1.0f);
-                return;
-            }
-            if (dict.ContainsKey("Cancel")) dict.Remove("Cancel"); // assume always choose valid
+            // if (buttons.Count == 1) // only cancel
+            // {
+            //     uiChooseRewardButton first = buttons.First();
+            //     Plugin.Logger.LogWarning("only 1 reward button " + first.m_Text.text);
+            //     Context.Send($"only 1 option in this menu, selecting {first.m_Text.text}", true);
+            //     SelectButton.StartCoroutine(first, 1.0f);
+            //     return;
+            // }
+            if (buttons.Count > 1 && dict.ContainsKey("Cancel")) dict.Remove("Cancel"); // assume always choose valid
             if (dict.Count == 0)
             {
                 Plugin.Logger.LogError("no valid reward buttons");
+                Context.Send("there were no options from the reward menu", true);
                 __instance.Close();
                 return;
             }
@@ -98,8 +102,61 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (!btn.isActiveAndEnabled) return;
             }
-            window = RewardMenuAction.RegisterActions(_instance, _buttons, _title);
+            Dictionary<string, uiChooseRewardButton> validChoices = new(_buttons);
+            if (_title == "Respawn In")
+            {
+                string ctx = GetRespawnData(validChoices);
+                Context.Send(ctx);
+            }
+            window = RewardMenuAction.RegisterActions(_instance, validChoices, _title);
             UnregisterDisabledObject.QuickCreate(_instance.gameObject, window, false);
+        }
+
+        static string GetRespawnData(Dictionary<string, uiChooseRewardButton> validChoices)
+        {
+            StringBuilder sb = new();
+            HexLand ownHex = GameLogic.Instance.GetCurrentCOW().GetHexLand();
+            // FTK_realm.ID currentRealm = ownHex.GetRealm();
+            List<FTK_realm.ID> cowRealms = [];
+            List<MiniHexInfo> towns = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Town);
+            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                HexLand hex = cow.GetHexLand();
+                if (!cowRealms.Contains(hex.GetRealm()))
+                {
+                    cowRealms.Add(hex.GetRealm());
+                }
+                float dist = float.PositiveInfinity;
+                MiniHexTown closest = null;
+                foreach (MiniHexTown town in towns.Cast<MiniHexTown>())
+                {
+                    float dist2 = HexLand.Distance(hex, town.m_HexLand);
+                    if (dist2 < dist)
+                    {
+                        dist = dist2;
+                        closest = town;
+                    }
+                }
+                if (ownHex == hex)
+                {
+                    sb.Append($" the reviving character {CharacterData.GetCharacterName(cow)} is near {closest.GetPOIDisplayValue()}.");
+                    continue;
+                }
+                sb.Append($" {CharacterData.GetCharacterName(cow)} is near {closest.GetPOIDisplayValue()}.");
+            }
+            for (int i = 0; i < towns.Count; i++)
+            {
+                MiniHexTown town = (MiniHexTown)towns[i];
+                if (town.m_VisitedBy.Count > 0)
+                {
+                    if (onlyOccupiedRealms && !cowRealms.Contains(town.m_HexLand.GetRealm()))
+                    {
+                        validChoices.Remove(town.GetPOIDisplayValue());
+                    }
+                }
+            }
+            if (validChoices.Count == 0) Plugin.Logger.LogError("there were no valid towns to revive in?");
+            return sb.ToString();
         }
     }
 }
