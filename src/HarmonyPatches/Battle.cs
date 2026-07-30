@@ -45,6 +45,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send("starting a battle", true);
         }
 
+        [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]
+        [HarmonyPatch]
+        static void ReturnToOverworld()
+        {
+            Plugin.Logger.LogMessage("returning to overworld");
+            Context.Send("battle finished, returning to overworld", true);
+            CameraUtils.Zoom(100f);
+            FTKHub.Instance.m_OverworldCamera.GetComponent<RtsCamera>().Rotation = 0f;
+        }
+
         #region Player
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Initialize))]

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.HarmonyPatches;
-using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -36,6 +35,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 overworldActions.Add(queryBeltItems);
                 INeuroAction queryStatus = new QueryStatusEffects();
                 overworldActions.Add(queryStatus);
+                INeuroAction zoomCamera = new CameraZoomAction(FTKHub.Instance.m_OverworldCamera.GetComponent<RtsCamera>());
+                overworldActions.Add(zoomCamera);
+                INeuroAction spinCamera = new CameraSpinAction();
+                overworldActions.Add(spinCamera);
                 NeuroActionHandler.RegisterActions(overworldActions);
             }
             else
