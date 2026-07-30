@@ -27,22 +27,32 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static StringBuilder dmgTakenString = new();
         static bool isHealthChangeWait = false;
         public static bool beltActionUsed = false;
+        static bool isCombatEncounter = false;
 
 
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.StartEncounterSession))]
         [HarmonyPrefix]
         static void EnteredBattle()
         {
+            isCombatEncounter = false;
             ToggleDisposableActions.ToggleOverworldActions(false);
-            Plugin.Logger.LogMessage("40 StartEncounterSession");
+            Plugin.Logger.LogMessage("StartEncounterSession");
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
         [HarmonyPostfix]
         static void BeginBattle()
         {
-            Plugin.Logger.LogMessage("39 CommenceBattleRPC");
+            isCombatEncounter = true;
             Context.Send("starting a battle", true);
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), "CommenceVoteEncounter")] // encounter with only decisions
+        [HarmonyPostfix]
+        static void VoteEncounter()
+        {
+            isCombatEncounter = false;
+            Plugin.Logger.LogMessage("CommenceVoteEncounter");
         }
 
         #region Player
@@ -98,7 +108,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogMessage("combat victory overworld skip");
                 return;
             }
-            Context.Send(StringMessages.BattleWon);
+            if (isCombatEncounter) Context.Send(StringMessages.BattleWon);
+            isCombatEncounter = false;
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))]

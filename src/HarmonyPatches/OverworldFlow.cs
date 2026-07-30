@@ -171,9 +171,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterSkills), nameof(CharacterSkills.Refocus))]
         [HarmonyPrefix]
-        static void Refocus()
+        static void Refocus(ref bool __result)
         {
-            Context.Send("gained focus points from end of turn skill", true);
+            if (__result) Context.Send("gained focus points from end of turn skill", true);
         }
 
         #endregion

@@ -1,6 +1,7 @@
 using System.Collections;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
+using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using UnityEngine;
 
@@ -18,6 +19,8 @@ public class SkipGameIntro
     [HarmonyPostfix]
     static void AfterSplashScreenStart()
     {
+        Plugin.Logger.LogMessage("Character ID: " + WebsocketConnection.Instance.Character?.CharacterId);
+        Plugin.Logger.LogMessage("display name: " + WebsocketConnection.Instance.Character?.DisplayName);
         Context.Send($"you are playing 'For the King'. {GAME_DESCRIPTION}");
     }
 

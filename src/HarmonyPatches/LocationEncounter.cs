@@ -18,14 +18,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static ActionWindow window;
         static MiniHexInfo miniHexInfo;
         static MiniHexInfo.MenuPOIDisplayValues menuDisplayValues;
+        static uiLocationMenuDisplay Instance;
 
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
         [HarmonyPrefix]
-        static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo)
+        static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo, uiLocationMenuDisplay __instance)
         {
             miniHexInfo = _miniHexInfo;
             menuDisplayValues = _miniHexInfo.GetMenuDisplayValues();
+            Instance = __instance;
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
@@ -83,75 +85,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
-        static void CreateAction()
-        {
-            Object.Destroy(window);
-            string ctx = GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
-            Context.Send(ctx);
-            QuickTimerCallback timer = new(() =>
-            {
-                Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
-                // {string.Join(", ", [.. _buttons.Select(x => x.Key)])}
-                string ctx = $"[buttons]";
-                foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
-                {
-                    string desc = button.Value.m_Text0.text;
-                    string btnInfo = "";
-                    if (GameDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
-                    {
-                        btnInfo = _value;
-                    }
-                    ctx += $"{desc}: {btnInfo}\n";
-                }
-                window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, ctx);
-            }, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
-        }
-
-        public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()
-        {
-            GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
-            GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
-            GameObject panel = menu2.transform.Find("MenuPanel").gameObject;
-            Dictionary<string, uiLocationMenuEntry> buttons = [];
-            foreach (Transform child in panel.transform)
-            {
-                uiLocationMenuEntry entry = child.GetComponent<uiLocationMenuEntry>();
-                if (entry == null) continue;
-                if (!entry.m_Button.interactable) continue;
-                Text comp = child.GetComponentInChildren<Text>();
-                buttons.Add(comp.text, entry);
-            }
-            Plugin.Logger.LogMessage(string.Join(", ", [.. buttons.Select(x => x.Key)]));
-            return buttons;
-        }
-
-        public static List<string> players = [];
-        public static Dictionary<string, Dictionary<string, string>> enemies = [];
-        static int count = 0;
-
-        public static void ResetContextData()
-        {
-            players = [];
-            enemies = [];
-            count = 0;
-        }
-
-        public static string GetEncounterContext(string name, string description, string flavor)
-        {
-            string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}";
-            string _players = "";
-            if (players.Count > 0)
-            {
-                _players = $"[characters involved] {string.Join(", ", [.. players.Select(x => x)])}";
-            }
-            string _enemies = "";
-            if (enemies.Count > 0)
-            {
-                _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
-            }
-            return $"{encounter}\n{_players}\n{_enemies}";
-        }
-
         [HarmonyPatch(typeof(uiEnemyEncounterPortrait), nameof(uiEnemyEncounterPortrait.Initialize))]
         [HarmonyPatch([typeof(string)])]
         [HarmonyPrefix]
@@ -181,7 +114,112 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void PortraitInitPlayer(FTKPlayerID _pid)
         {
             CharacterOverworld player = FTKHub.Instance.GetCharacterOverworldByFID(_pid);
-            players.Add(CharacterData.GetCharacterName(player));
+            players.Add(player);
+        }
+
+        [HarmonyPatch(typeof(uiWishingWellMenu), nameof(uiWishingWellMenu.UseThrowCoinsButton))]
+        [HarmonyPostfix]
+        static void OnWellCoinsThrown()
+        {
+            Context.Send($"you threw some gold into the well, your chance of a success drink increased");
+            //VERIFY remake action
+            QuickTimerCallback timer = new(CreateAction, Instance.m_DisplayRoot.gameObject);
+        }
+
+        [HarmonyPatch(typeof(uiWishingWellMenu), nameof(uiWishingWellMenu.UseDrinkWellButton))]
+        [HarmonyPostfix]
+        static void OnDrinkWell()
+        {
+            Context.Send($"you drank from the well");
+        }
+
+        static void CreateAction()
+        {
+            // Object.Destroy(window);
+            string ctx = GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
+            Context.Send(ctx);
+            QuickTimerCallback timer = new(() =>
+            {
+                Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
+                // {string.Join(", ", [.. _buttons.Select(x => x.Key)])}
+                string ctx = $"[buttons]";
+                foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
+                {
+                    string desc = button.Value.m_Text0.text;
+                    string btnInfo = "";
+                    if (GameDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
+                    {
+                        btnInfo = _value;
+                    }
+                    ctx += $"{desc}: {btnInfo}\n";
+                }
+                int cost = miniHexInfo.GetCost(GameLogic.Instance.GetCurrentCOW());
+                if (cost > 0)
+                {
+                    ctx += $"this encounter costs {cost} gold\n";
+                }
+                window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, ctx);
+            }, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
+        }
+
+        public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()
+        {
+            GameObject menu1 = uiLocationMenuDisplay.Instance.gameObject.transform.Find("mainMenu").gameObject;
+            GameObject menu2 = menu1.transform.Find("mainMenu").gameObject;
+            GameObject panel = menu2.transform.Find("MenuPanel").gameObject;
+            Dictionary<string, uiLocationMenuEntry> buttons = [];
+            foreach (Transform child in panel.transform)
+            {
+                uiLocationMenuEntry entry = child.GetComponent<uiLocationMenuEntry>();
+                if (entry == null) continue;
+                if (!entry.m_Button.interactable) continue;
+                Text comp = child.GetComponentInChildren<Text>();
+                buttons.Add(comp.text, entry);
+            }
+            Plugin.Logger.LogMessage(string.Join(", ", [.. buttons.Select(x => x.Key)]));
+            return buttons;
+        }
+
+        public static List<CharacterOverworld> players = [];
+        public static Dictionary<string, Dictionary<string, string>> enemies = [];
+        static int count = 0;
+
+        public static void ResetContextData()
+        {
+            players = [];
+            enemies = [];
+            count = 0;
+        }
+
+        public static string GetEncounterContext(string name, string description, string flavor)
+        {
+            string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}";
+            string _players = "";
+            if (players.Count > 0)
+            {
+                _players = $"[characters involved] {string.Join(", ", [.. players.Select(CharacterData.GetCharacterName)])}";
+            }
+            string _enemies = "";
+            if (enemies.Count > 0)
+            {
+                _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+            }
+            string diff = "";
+            if (Instance.m_DifficultyRoot.gameObject.activeInHierarchy)
+            {
+                diff = $"\nthis encounters enemies are lvl {Instance.m_Difficulty.text}";
+                float avg = 0f;
+                foreach (CharacterOverworld cow in players)
+                {
+                    avg += cow.m_CharacterStats.m_PlayerLevel;
+                }
+                if (avg > 0f)
+                {
+                    avg /= players.Count;
+                    diff += $"\nyour involved teams average lvl is {avg}";
+                }
+            }
+            return $"{encounter}\n{_players}\n{_enemies}{diff}";
         }
 
 
