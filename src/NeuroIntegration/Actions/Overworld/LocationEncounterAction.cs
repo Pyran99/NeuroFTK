@@ -49,7 +49,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return;
             }
             uiLocationMenuEntry entry = _buttons[parsedData];
-            Plugin.Logger.LogWarning("entry method call = " + entry.m_MethodInfo.ToString());
+            Plugin.Logger.LogWarning("entry method call = " + entry.m_MethodInfo.ToString()); // Void OnDevote
             // if (parsedData == "Enter Party") // scuff
             // {
             //     GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;

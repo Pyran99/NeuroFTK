@@ -58,10 +58,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
-            {
-                return;
-            }
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
@@ -80,6 +77,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isSearching = false;
             isFirstAction = false;
             isSneakMovement = false;
+            isRemake = false;
             tiles.Clear();
             DisposeActions();
         }
@@ -102,17 +100,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             
         }
 
+        static bool isRemake = false;
+
         // spending focus for more actions
         [HarmonyPatch(typeof(Movement), "ConvertFocusToAction")]
         [HarmonyPostfix]
         static void OnFocusAction()
         {
             if (RollSystem.rollCount == RollSystem.currentCOW.m_CharacterStats.m_ActionPoints) return; // no change
+            if (isRemake) return;
+            isRemake = true;
             Plugin.Logger.LogMessage("movement focus added");
-            Object.Destroy(window);
+            DisposeActions();
             tiles.Clear();
-            Plugin.Logger.LogWarning("convert create window");
-            GetValidMoveTiles(RollSystem.currentCOW);
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), RollSystem.currentCOW.gameObject, 0.5f);
         }
 
         // manual movement call
@@ -240,7 +241,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     yield break;
                 }
             }
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.25f);
             string ctx = $"moving to {HexData.GetContextForHex(cow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
             if (isSameHex) ctx = "interacting with this tiles point of interest";
@@ -250,6 +251,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
         {
+            isRemake = false;
             if (!isTracking) return;
             if (!routineOwner.isActiveAndEnabled)
             {

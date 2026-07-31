@@ -310,7 +310,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            OverworldFlow.BeginMovementTurn();
+            QuickTimerCallback timer = new(OverworldFlow.BeginMovementTurn, Movement.Instance.gameObject);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
