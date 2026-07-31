@@ -13,7 +13,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void DungeonStairs()
         {
-            Context.Send("entered a dungeon room with stairs to the next floor", true);
+            Context.Send("entered a dungeon room with stairs to the next floor. ", true);
+            BeginTurns.CtxCombatTurnBeginPlayer(GameLogic.Instance.GetCurrentCombatCOW());
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceEmptyRoom))]

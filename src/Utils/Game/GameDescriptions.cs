@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Collect, "gather the loot"},
             {VoteButton.VoteOption.Equip, "equip the loot"},
             {VoteButton.VoteOption.Use, "use the item right away"},
-            {VoteButton.VoteOption.Pass, "throw away the loot"}, // discard
+            {VoteButton.VoteOption.Pass, "throw away the loot or pass on the encounter"}, // discard
             {VoteButton.VoteOption.Knockdown, "breakdown the object blocking your path"},
             {VoteButton.VoteOption.Disarm, "disarm the trap"},
             {VoteButton.VoteOption.Proceed, "attempt to pass the encounter"},

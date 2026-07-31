@@ -116,6 +116,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"you drank from the well");
         }
 
+        [HarmonyPatch(typeof(MiniHexDungeon), nameof(MiniHexDungeon.GenerateDungeonEncounters))]
+        [HarmonyPrefix]
+        static void GeneratingDungeon() // VERIFY attempt fix move actions register on dungeon entering
+        {
+            Plugin.Logger.LogWarning("GeneratingDungeon");
+            GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;
+        }
+
         static void CreateLocationAction()
         {
             string ctx = Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);

@@ -4,6 +4,7 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using WebSocketSharp;
@@ -42,20 +43,22 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogMessage("execute " + parsedData);
             if (!uiLocationMenuDisplay.Instance.IsShowing())
             {
-                Plugin.Logger.LogWarning("location menu is not showing");
+                Plugin.Logger.LogError("location menu is not showing");
                 return;
             }
             uiLocationMenuEntry entry = _buttons[parsedData];
+            Plugin.Logger.LogWarning("entry method call = " + entry.m_MethodInfo.ToString());
+            // if (parsedData == "Enter Party") // scuff
+            // {
+            //     GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;
+            // }
             SelectButton.StartCoroutine(entry.GetComponent<ServiceButton>());
-            // SelectButton.StartUnityBtnCoroutine(entry.m_Button);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            Plugin.Logger.LogMessage(actionData.Data);
             parsedData = "";
             string data = actionData.Data.Value<string>("action") ?? "";
             if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("action"));

@@ -137,13 +137,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // }
         }
 
-        [HarmonyPatch(typeof(FTKUI), nameof(FTKUI.EnableEncounterMenu))]
-        [HarmonyPostfix]
-        static void EncounterMenu()
-        {
-            Plugin.Logger.LogWarning("TEST FTKUI.EnableEncounterMenu");
-        }
-
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Refresh))] // when shop item purchased
         [HarmonyPostfix]
         static void Location4()

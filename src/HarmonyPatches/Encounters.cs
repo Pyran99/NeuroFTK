@@ -39,8 +39,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void SubMenuGenerated(SubPanelBaseBase __instance)
         {
-            Plugin.Logger.LogWarning("SubPanelBaseBase.GenerateMenu");
-            if (generating) return;
+            if (generating) return; // called twice
             generating = true;
             encounterMenuInstance = __instance.m_Owner;
             __instance.StartCoroutine(Wait(__instance.m_Buttons));
@@ -48,6 +47,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             static IEnumerator Wait(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
             {
                 // wait for lower class to finish setup
+                Object.Destroy(window);
                 yield return new WaitForEndOfFrame();
                 MiniHexInfo.MenuPOIDisplayValues values = encounterMenuInstance.m_ThisMiniHex?.GetMenuDisplayValues();
                 string ctx = GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
@@ -138,7 +138,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             generating = false;
             if (!encounterMenuInstance.isActiveAndEnabled) return;
-            Object.Destroy(window);
             window = EncounterAction.CreateWindow(encounterMenuInstance, [.. activeButtons.Values], buttonsContext);
         }
 
@@ -158,6 +157,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("uiEncounterMenu.OpenOverworldTreasureChest");
         }
 
+        // [HarmonyPatch(typeof(FTKUI), nameof(FTKUI.EnableEncounterMenu))] // call initialize on encounter menu
+        // [HarmonyPostfix]
+        // static void EncounterMenu()
+        // {
+        // }
+
         public static void ResetContextData()
         {
             involvedPlayers = [];
@@ -172,7 +177,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static string GetEncounterContext(string name, string description, string flavor)
         {
             string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
-            StringBuilder sbPlayers = new();
+            StringBuilder sbPlayers = new("[character involved]");
             foreach (CharacterOverworld player in involvedPlayers)
             {
                 sbPlayers.AppendLine($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");

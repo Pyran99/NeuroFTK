@@ -6,6 +6,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
+using UnityEngine.UI;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -23,7 +24,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = ["button"],
                 Properties = new()
                 {
-                    ["button"] = QJS.Enum(_values.Select(v => v.m_Option.ToString()))
+                    ["button"] = QJS.Enum(_values.Select(v => v.GetComponentInChildren<Text>().text))
                 },
             };
             return schema;
@@ -31,7 +32,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(VoteButton parsedData)
         {
-            Context.Send($"selecting button {parsedData.m_Option} with {_key}", true);
+            Context.Send($"selecting button {parsedData.GetComponentInChildren<Text>().text} with {_key}", true);
             SelectButton.StartCoroutine(parsedData, 1.0f);
         }
 
@@ -41,7 +42,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string result = actionData.Data.Value<string>("button");
             foreach (VoteButton btn in _values)
             {
-                if (btn.m_Option.ToString() == result)
+                if (btn.GetComponentInChildren<Text>().text == result)
                 {
                     parsedData = btn;
                     return ExecutionResult.Success();

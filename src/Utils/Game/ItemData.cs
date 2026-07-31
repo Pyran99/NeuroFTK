@@ -18,6 +18,8 @@ namespace Pyran.NeuroFTK.Utils
             FTK_itembase.ID.scrollteleport,
             FTK_itembase.ID.scrollgroupteleport,
             FTK_itembase.ID.scrollvision,
+            FTK_itembase.ID.scrollidentify,
+            FTK_itembase.ID.scrollpurify,
         ];
 
         /// <returns>{name: description}</returns>
