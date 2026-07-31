@@ -19,8 +19,6 @@ public class SkipGameIntro
     [HarmonyPostfix]
     static void AfterSplashScreenStart()
     {
-        Plugin.Logger.LogMessage("Character ID: " + WebsocketConnection.Instance.Character?.CharacterId);
-        Plugin.Logger.LogMessage("display name: " + WebsocketConnection.Instance.Character?.DisplayName);
         Context.Send($"you are playing 'For the King'. {GAME_DESCRIPTION}");
     }
 
@@ -49,6 +47,8 @@ public class SkipGameIntro
     {
         Context.Send(PREPARE_TO_DIE_MSG);
         Plugin.Logger.LogWarning($"debugMode is {GlobalConfig.IsDebugMode()}");
+        Plugin.Logger.LogMessage("Character ID: " + WebsocketConnection.Instance.Character?.CharacterId);
+        Plugin.Logger.LogMessage("display name: " + WebsocketConnection.Instance.Character?.DisplayName);
         yield return new WaitForSeconds(2f);
         Plugin.Logger.LogMessage("skipping difficulty warning");
         uiStartGame.Instance.OnPrepareToDie();

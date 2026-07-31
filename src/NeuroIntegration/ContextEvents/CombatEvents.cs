@@ -6,7 +6,7 @@ using Pyran.NeuroFTK.Utils;
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
     [HarmonyPatch]
-    public class CombatEncounters
+    public class CombatEvents
     {
         
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceStair))]

@@ -89,6 +89,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Revive1 => FTKHub.Localized<TextMisc>("STR_ReviveMessage"),
                 SubPanelBaseBase.ButtonID.Loot => "loot the body",
                 SubPanelBaseBase.ButtonID.Give => "give gold to the stranger",
+                SubPanelBaseBase.ButtonID.Journal => "read the journal",
                 _ => ""
             };
         }

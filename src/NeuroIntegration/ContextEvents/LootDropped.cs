@@ -28,5 +28,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             Context.Send($"[Loot] {name}{amount} (Rarity) {StringReplace.RemoveStyling(rarity)} (Description) {description}");
             // [the loot item to decide on]Gold Coins [Rarity]Common [Description]Currency of Fahrul. Each coin worth its weight in gold.
         }
+
+        [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.AddItemToBackpackRPC))]
+        [HarmonyPostfix]
+        static void ItemLooted(CharacterOverworld __instance, FTK_itembase.ID _item)
+        {
+            Context.Send($"{CharacterData.GetCharacterName(__instance)} looted {ItemData.GetItemName(_item)}");
+        }
     }
 }

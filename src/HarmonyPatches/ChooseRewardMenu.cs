@@ -158,5 +158,70 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (validChoices.Count == 0) Plugin.Logger.LogError("there were no valid towns to revive in?");
             return sb.ToString();
         }
+
+        [HarmonyPatch(typeof(GameFlow), nameof(GameFlow.SetLifePool))]
+        [HarmonyPostfix]
+        static void LifePoolChanged(int _set)
+        {
+            Context.Send($"life pool is now {Mathf.Clamp(_set, 0, GameFlow.Instance.MaxLifePool)}");
+        }
+
+        [HarmonyPatch(typeof(GameFlow), nameof(GameFlow.RemoveScourge))]
+        [HarmonyPostfix]
+        static void RemoveScourge()
+        {
+            Context.Send($"removed 1 scourge event");
+        }
+
+        [HarmonyPatch(typeof(uiChooseRewardMenu), nameof(uiChooseRewardMenu))]
+        [HarmonyPostfix]
+        static void Reward(object _v)
+        {
+            object[] array = (object[])_v;
+            ChooseType type = (ChooseType)array[0];
+            switch (type)
+            {
+                case ChooseType.Life:
+                    break;
+                case ChooseType.Chaos:
+                case ChooseType.Alignment:
+                    // Context.Send($"reduced chaos level"); // generated a portrait msg instead
+                    break;
+                case ChooseType.Scourge:
+                    break;
+                case ChooseType.EquipItemCombat:
+                    break;
+                case ChooseType.LaunchBoatItem:
+                    break;
+                case ChooseType.ModArmor:
+                    break;
+                case ChooseType.ModResist:
+                    break;
+                case ChooseType.ModAwareness:
+                    break;
+                case ChooseType.ModEvade:
+                    break;
+                case ChooseType.ModFortitude:
+                    break;
+                case ChooseType.ModLuck:
+                    break;
+                case ChooseType.ModMaxFocus:
+                    break;
+                case ChooseType.ModMaxHealth:
+                    break;
+                case ChooseType.ModQuickness:
+                    break;
+                case ChooseType.ModTalent:
+                    break;
+                case ChooseType.ModToughness:
+                    break;
+                case ChooseType.ModVitality:
+                    break;
+                case ChooseType.Gold:
+                    break;
+                case ChooseType.XP:
+                    break;
+            }
+        }
     }
 }
