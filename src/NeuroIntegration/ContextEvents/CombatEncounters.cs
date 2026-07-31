@@ -40,17 +40,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ToggleDisposableActions.ToggleOverworldActions(true);
             ToggleDisposableActions.ToggleCombatActions(false);
             CameraUtils.Zoom(100f);
-            // FTKHub.Instance.m_OverworldCamera.GetComponent<RtsCamera>().Rotation = 0f;
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")] // dungeon only maybe? not called from normal battle
+        [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]
         [HarmonyPatch]
         static void ReturnToOverworld()
         {
-            Plugin.Logger.LogMessage("NYI returning to overworld");
-            Context.Send("battle finished, returning to overworld", true);
-            CameraUtils.Zoom(100f);
-            // FTKHub.Instance.m_OverworldCamera.GetComponent<RtsCamera>().Rotation = 0f;
+            Plugin.Logger.LogMessage("NYI ReturnToOverworld (no idea when called)");
+            // Context.Send("battle finished, returning to overworld", true);
+            // CameraUtils.Zoom(100f);
         }
 
         // to next room, from popup menu

@@ -118,7 +118,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             activeButtons.Clear();
             foreach (KeyValuePair<SubPanelBaseBase.ButtonID, uiPoiButton> kvp in buttons)
             {
-                if (!kvp.Value.isActiveAndEnabled) continue;
+                if (!kvp.Value.isActiveAndEnabled || kvp.Value.m_ButtonLock) continue;
                 if (activeButtons.ContainsKey(kvp.Key)) continue;
                 activeButtons.Add(kvp.Key, kvp.Value);
             }

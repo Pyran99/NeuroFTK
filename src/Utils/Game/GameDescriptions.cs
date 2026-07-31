@@ -45,7 +45,7 @@ namespace Pyran.NeuroFTK.Utils
 
         public static Dictionary<VoteButton.VoteOption, string> VoteOptionDescriptions = new()
         {
-            {VoteButton.VoteOption.Unlocked, "unlocked NYI"},
+            {VoteButton.VoteOption.Unlocked, "use lockpicks to open the object"},
             {VoteButton.VoteOption.Open, "open container, may receive loot"},
             {VoteButton.VoteOption.Collect, "gather the loot"},
             {VoteButton.VoteOption.Equip, "equip the loot"},
@@ -54,7 +54,7 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Knockdown, "breakdown the object blocking your path"},
             {VoteButton.VoteOption.Disarm, "disarm the trap"},
             {VoteButton.VoteOption.Proceed, "attempt to pass the encounter"},
-            {VoteButton.VoteOption.Attempt, "attempt NYI"},
+            {VoteButton.VoteOption.Attempt, "attempt to disable the device"},
             {VoteButton.VoteOption.Ready, "continue to the next room"},
             {VoteButton.VoteOption.Identify, "identify if the chest is a mimic"},
             {VoteButton.VoteOption.Shop, "view the shop"},
