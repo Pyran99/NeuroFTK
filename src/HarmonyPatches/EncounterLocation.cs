@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
@@ -34,7 +35,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2");
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
             {
-                Plugin.Logger.LogWarning("dungeon loc_menu skipped");
+                Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2 skipped in dungeon mode");
                 return;
             }
             CreateLocationAction();
@@ -81,7 +82,24 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(window);
         }
 
+        [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
+        [HarmonyPostfix]
+        static void GenerateEntries(uiLocationMenu __instance)
+        {
+            Plugin.Logger.LogWarning("loc_menu_generate");
+            List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
+            // m_Text0 // btn name
+            // m_Text1 // maybe mouseover description
+            // m_Function // func to call when clicked
+            // m_CheckFunction // ??
+        }
 
+        [HarmonyPatch(typeof(uiLocationMenuEntry), nameof(uiLocationMenuEntry.SetEntry))] // menu buttons
+        [HarmonyPostfix]
+        static void SetEntry(uiLocationMenuEntry __instance)
+        {
+            // Plugin.Logger.LogWarning($"{__instance.m_Menu?.m_Location?.GetType()}"); //MiniEncounter | MiniHexTown
+        }
 
 
         [HarmonyPatch(typeof(uiWishingWellMenu), nameof(uiWishingWellMenu.UseThrowCoinsButton))]
@@ -89,12 +107,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void OnWellCoinsThrown()
         {
             Context.Send($"you threw some gold into the well, your chance of a success drink increased");
-            //VERIFY remake action
-            // QuickTimerCallback timer = new(CreateAction2, Instance.m_DisplayRoot.gameObject);
         }
 
         [HarmonyPatch(typeof(uiWishingWellMenu), nameof(uiWishingWellMenu.UseDrinkWellButton))]
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         static void OnDrinkWell()
         {
             Context.Send($"you drank from the well");
@@ -108,28 +124,27 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 ctx += $"\nthis encounters enemies are lvl {locationMenuInstance.m_Difficulty.text}";
             }
             Context.Send(ctx);
-            QuickTimerCallback timer = new(() =>
+            QuickTimerCallback timer = new(CreateActionWindow, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
+        }
+
+        static void CreateActionWindow()
+        {
+            Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
+            // {string.Join(", ", [.. _buttons.Select(x => x.Key)])}
+            StringBuilder sb = new("[buttons]");
+            foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
             {
-                Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
-                // {string.Join(", ", [.. _buttons.Select(x => x.Key)])}
-                string ctx = $"[buttons]";
-                foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
+                string desc = button.Value.m_Text0.text;
+                string btnInfo = "";
+                if (GameDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
                 {
-                    string desc = button.Value.m_Text0.text;
-                    string btnInfo = "";
-                    if (GameDescriptions.EncounterDescriptions.TryGetValue(desc, out string _value))
-                    {
-                        btnInfo = _value;
-                    }
-                    ctx += $"{desc}: {btnInfo}\n";
+                    btnInfo = _value;
                 }
-                int cost = miniHexInfo.GetCost(GameLogic.Instance.GetCurrentCOW());
-                if (cost > 0)
-                {
-                    ctx += $"this encounter costs {cost} gold\n";
-                }
-                window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, ctx);
-            }, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
+                sb.AppendLine($"{desc}: {btnInfo}");
+            }
+            int cost = miniHexInfo.GetCost(GameLogic.Instance.GetCurrentCOW());
+            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold");
+            window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString());
         }
 
         public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()

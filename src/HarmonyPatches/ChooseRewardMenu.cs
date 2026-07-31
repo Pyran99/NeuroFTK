@@ -173,7 +173,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"removed 1 scourge event");
         }
 
-        [HarmonyPatch(typeof(uiChooseRewardMenu), nameof(uiChooseRewardMenu))]
+        [HarmonyPatch(typeof(uiChooseRewardMenu), nameof(uiChooseRewardMenu.AcceptChooseReward))]
         [HarmonyPostfix]
         static void Reward(object _v)
         {

@@ -9,7 +9,6 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
-using UnityEngine.UI;
 using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -17,14 +16,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Encounters
     {
-
-        #region encounter
-
         static ActionWindow window;
         static uiEncounterMenu encounterMenuInstance;
         static readonly Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> activeButtons = [];
         static string buttonsContext = "";
         static bool generating = false;
+
+        public static List<CharacterOverworld> involvedPlayers = [];
+        public static Dictionary<string, Dictionary<string, string>> involvedEnemies = [];
+        static int count = 0;
 
 
         [HarmonyPatch(typeof(SubPanelBaseBase), nameof(SubPanelBaseBase.GenerateMenu))]
@@ -80,14 +80,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void Leave()
         {
-            Plugin.Logger.LogWarning("LeaveOrEndTurn");
+            Plugin.Logger.LogWarning("uiEncounterMenu.LeaveOrEndTurn");
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.EndTurn))]
         [HarmonyPostfix]
         static void EndTurn()
         {
-            Plugin.Logger.LogWarning("EndTurn");
+            Plugin.Logger.LogWarning("uiEncounterMenu.EndTurn");
         }
 
         [HarmonyPatch(typeof(uiEnemyPoiMenu), nameof(uiEnemyPoiMenu.SneakCallBack))]
@@ -109,7 +109,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (_enemyId.IsNullOrEmpty() || _enemyId == "None")
             {
-                enemies[count.ToString()] = new() {{"unknown", ""}};
+                involvedEnemies[count.ToString()] = new() {{"unknown", ""}};
                 count++;
                 return;
             }
@@ -121,7 +121,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 id = FTK_enemyCombat.ID.None;
             }
             if (id != FTK_enemyCombat.ID.None) lvl = entry.GetEnemyLevelDisplay().ToString();
-            enemies[count.ToString()] = new() { {entry.GetEnemyDisplay(), lvl}, };
+            involvedEnemies[count.ToString()] = new() { {entry.GetEnemyDisplay(), lvl}, };
             count++;
         }
 
@@ -131,7 +131,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void PortraitInitPlayer(FTKPlayerID _pid)
         {
             CharacterOverworld player = FTKHub.Instance.GetCharacterOverworldByFID(_pid);
-            players.Add(player);
+            involvedPlayers.Add(player);
         }
 
         static void CreateEncounterAction()
@@ -157,48 +157,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Plugin.Logger.LogMessage("uiEncounterMenu.OpenOverworldTreasureChest");
         }
-        
-        // static readonly List<SubPanelBaseBase> menus = [];
-
-        // public static SubPanelBaseBase GetActiveMenu()
-        // {
-        //     if (menus.Count == 0)
-        //     {
-        //         Plugin.Logger.LogError("no menu in list");
-        //         return null;
-        //     }
-        //     return menus.First(x => x.isActiveAndEnabled);
-        // }
-
-        // static void SetupMenuList(uiEncounterMenu _instance)
-        // {
-        //     if (menus.Count == 0)
-        //     {
-        //         menus.Add(_instance.m_EnemyPanel);
-        //         menus.Add(_instance.m_DeadAdventurerPanel);
-        //         menus.Add(_instance.m_RevivalPanel);
-        //         menus.Add(_instance.m_WishingWellPanel);
-        //         menus.Add(_instance.m_SkillTestPanel);
-        //         menus.Add(_instance.m_ServicePanel);
-        //         menus.Add(_instance.m_CarnivalMenu);
-        //         menus.Add(_instance.m_GambleDenMenu);
-        //     }
-        // }
-
-        #endregion
-
-
-
-        #region location menu
-
-        public static List<CharacterOverworld> players = [];
-        public static Dictionary<string, Dictionary<string, string>> enemies = [];
-        static int count = 0;
 
         public static void ResetContextData()
         {
-            players = [];
-            enemies = [];
+            involvedPlayers = [];
+            involvedEnemies = [];
             count = 0;
         }
 
@@ -210,18 +173,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
             StringBuilder sbPlayers = new();
-            foreach (CharacterOverworld player in players)
+            foreach (CharacterOverworld player in involvedPlayers)
             {
                 sbPlayers.AppendLine($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
             }
-            // if (players.Count > 0)
-            // {
-            //     _players = $"[characters involved] {string.Join(", ", [.. players.Select(CharacterData.GetCharacterName)])}";
-            // }
             string _enemies = "";
-            if (enemies.Count > 0)
+            if (involvedEnemies.Count > 0)
             {
-                _enemies = $"[enemies involved] {string.Join(", ", [.. enemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+                _enemies = $"[enemies involved] {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
             }
             return $"{encounter}{sbPlayers}{_enemies}";
         }
@@ -244,7 +203,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 GetButtonData(btn, flavorData, rollData);
             }
-            StringBuilder sb = new("(this encounters actions (actions with no roll results will always succeed) displayed as: [action (description)] total successful rolls(chance for this result) = outcome result)\n");
+            StringBuilder sb = new("this encounters actions displayed as: [action (description)] total successful rolls(chance for this result) = outcome result. (actions with no roll results will always succeed)\n");
             foreach (KeyValuePair<string, object> data in rollData)
             {
                 // [ambush (ambush flavor)]
@@ -302,29 +261,33 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // { "ambush": { 0: {5%: failure} }, { 1: {5%: success} }
                 rollData.Add(btn.m_ButtonText.text, outcome);
         }
+        
+        // static readonly List<SubPanelBaseBase> menus = [];
 
-        [HarmonyPatch(typeof(uiLocationMenu), nameof(uiLocationMenu.GenerateMenuEntries))]
-        [HarmonyPostfix]
-        static void Location1(uiLocationMenu __instance)
-        {
-            List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
-            Plugin.Logger.LogWarning("loc_menu_generate");
-            // Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => FTKHub.Localized<TextMenu>(x.m_Text0))])}"); // btn names
-            // Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Text1)])}"); // empty, probably mouseover descriptions
-            // Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_Function)])}"); // call func when clicked
-            // Plugin.Logger.LogWarning($"{string.Join(", ", [.. entries.Select(x => x.m_CheckFunction)])}");
-        }
+        // public static SubPanelBaseBase GetActiveMenu()
+        // {
+        //     if (menus.Count == 0)
+        //     {
+        //         Plugin.Logger.LogError("no menu in list");
+        //         return null;
+        //     }
+        //     return menus.First(x => x.isActiveAndEnabled);
+        // }
 
-        [HarmonyPatch(typeof(uiLocationMenuEntry), nameof(uiLocationMenuEntry.SetEntry))] // menu buttons
-        [HarmonyPostfix]
-        static void Location2(uiLocationMenuEntry __instance)
-        {
-            // Plugin.Logger.LogWarning("loc_entry_set");
-            // Plugin.Logger.LogWarning($"{__instance.m_Menu?.m_Location?.GetType()}"); //MiniEncounter | MiniHexTown
-        }
-
-        #endregion
-
+        // static void SetupMenuList(uiEncounterMenu _instance)
+        // {
+        //     if (menus.Count == 0)
+        //     {
+        //         menus.Add(_instance.m_EnemyPanel);
+        //         menus.Add(_instance.m_DeadAdventurerPanel);
+        //         menus.Add(_instance.m_RevivalPanel);
+        //         menus.Add(_instance.m_WishingWellPanel);
+        //         menus.Add(_instance.m_SkillTestPanel);
+        //         menus.Add(_instance.m_ServicePanel);
+        //         menus.Add(_instance.m_CarnivalMenu);
+        //         menus.Add(_instance.m_GambleDenMenu);
+        //     }
+        // }
 
     }
 }
