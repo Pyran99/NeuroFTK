@@ -210,7 +210,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield break;
             }
             bool isSameTarget = hexes.Contains(hex);
-            if (outOfRange && !isSameTarget)
+            if (outOfRange && !isSameTarget && !isSameHex)
             {
                 // the generated move path from hover
                 dest = hexes.Last();
@@ -241,7 +241,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     yield break;
                 }
             }
-            yield return new WaitForSeconds(0.25f);
+            yield return new WaitForSeconds(0.1f);
+            ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
+            ReverseCheckHoverPath(Movement.Instance, dest); // make sure hex list is up to date
             string ctx = $"moving to {HexData.GetContextForHex(cow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
             if (isSameHex) ctx = "interacting with this tiles point of interest";

@@ -34,11 +34,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (hex?.HasPOI() ?? false)
                 {
                     MiniHexInfo poi = hex.GetPOI();
-                    if (!HexData.IsPoiComplete(poi)) window.AddAction(new InteractWithCurrentHex(_cow));
+                    Plugin.Logger.LogWarning("poi = " + poi.GetIDString());
+                    if (!HexData.IsPoiComplete(poi) || poi.m_MiniHexType == MiniHexInfo.MiniHexType.Town) window.AddAction(new InteractWithCurrentHex(_cow));
                 }
             }
             window.SetContext(ctx);
-            window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "", true);
+            window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "you are moving your characters around the overworld", true);
             window.Register();
             return window;
         }
@@ -169,7 +170,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 Plugin.Logger.LogError("quest not found");
                 Context.Send($"an issue occurred with the {Name} action, try another one (if your choice was 'none' then you should choose a different action)", true);
-                OverworldFlow.CreateActionWindow(cow);
+                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
                 return;
             }
             HexLand dest = quest.GetHexLandDestination();
@@ -223,12 +224,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             HexLand hex = cow.GetHexLand();
             if (!hex.HasPOI())
             {
-                Context.Send("this character is not on a tile with something to interact with", true);
-                OverworldFlow.CreateActionWindow(cow);
+                Context.Send("this character is not on a tile with something to interact with" + NeuroSdkStrings.ModFaultSuffix, true);
+                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
                 return;
             }
             MiniHexInfo poi = hex.GetPOI();
-            if (!IsInteractable(poi)) return;
+            if (!IsInteractable(poi))
+            {
+                Plugin.Logger.LogError($"{poi} was not interactable");
+                return;
+            }
             cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, hex, false, true));
         }
 
@@ -243,7 +248,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (poi.m_Deactivated)
             {
                 Context.Send("this tile has been deactivated");
-                OverworldFlow.CreateActionWindow(cow);
+                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
                 return false;
             }
             bool interactable = true;
@@ -296,7 +301,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             if (!interactable)
             {
-                OverworldFlow.CreateActionWindow(cow);
+                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
             }
             return interactable;
         }
