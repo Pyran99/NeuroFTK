@@ -61,6 +61,16 @@ public class Plugin : BaseUnityPlugin
             // LoggerTest.Instance?.ToggleConsole();
             // devConsole.gameObject.SetActive(!devConsole.gameObject.activeSelf);
         }
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            if (GlobalConfig.debugMode == false) return;
+            Logger.LogWarning("kill all");
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            foreach (EnemyDummy enemy in EncounterSession.Instance.m_EnemyDummies.Values)
+            {
+                enemy.GainSpecificHealth(-99);
+            }
+        }
     }
 
     void InitializeHarmony()
