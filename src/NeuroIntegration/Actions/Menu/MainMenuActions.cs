@@ -5,6 +5,7 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 
@@ -68,6 +69,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             List<string> availableActions = ["new game"];
             if (resumeGame) availableActions.Add("resume game");
             if (spendLore) availableActions.Add("spend lore");
+            if (GlobalConfig.AlwaysResume() && availableActions.Contains("resume game"))
+            {
+                availableActions.Remove("new game");
+            }
             return availableActions;
         }
 

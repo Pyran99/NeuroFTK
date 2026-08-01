@@ -19,6 +19,7 @@ Name | Default | Description
 `use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. 
 `force_first_adventure` | false | only let neuro choose the first adventure map For the King
 `is_multiplayer` | false | disables normal main menu actions
+`always_resume` | true | disables new game if there is a previous save to load
 
 > [!CAUTION]
 > Multiplayer has NOT been tested & will likely break things
