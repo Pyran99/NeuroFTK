@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using NeuroSdk;
 using UnityEngine;
 using NeuroSdk.Internal;
+using GridEditor;
 
 namespace Pyran.NeuroFTK;
 
@@ -66,10 +67,7 @@ public class Plugin : BaseUnityPlugin
             if (GlobalConfig.debugMode == false) return;
             Logger.LogWarning("kill all");
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            foreach (EnemyDummy enemy in EncounterSession.Instance.m_EnemyDummies.Values)
-            {
-                enemy.GainSpecificHealth(-99);
-            }
+            if (FTKUI.Instance.m_BattleStanceButtons.m_DisplayRoot.gameObject.activeSelf) FTKUI.Instance.m_BattleStanceButtons.CheatKillAll();
         }
     }
 
