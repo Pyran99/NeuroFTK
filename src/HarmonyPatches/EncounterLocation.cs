@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static MiniHexInfo miniHexInfo;
         static MiniHexInfo.MenuPOIDisplayValues menuDisplayValues;
         static ActionWindow window;
+        static bool isJournal = false;
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
         [HarmonyPrefix]
@@ -135,10 +137,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             QuickTimerCallback timer = new(CreateActionWindow, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
         }
 
-        static void CreateActionWindow()
+        public static void CreateActionWindow()
         {
             Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
             // {string.Join(", ", [.. _buttons.Select(x => x.Key)])}
+            if (_buttons.ContainsKey("Journal") && !isJournal)
+            {
+                isJournal = true;
+                uiLocationMenuDisplay.Instance.StartCoroutine(ReadJournal(_buttons));
+                return;
+            }
+            isJournal = false;
+            _buttons.Remove("Journal");
             StringBuilder sb = new("[buttons]");
             foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
             {
@@ -171,6 +181,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             Plugin.Logger.LogMessage(string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
+        }
+
+        static IEnumerator ReadJournal(Dictionary<string, uiLocationMenuEntry> _buttons)
+        {
+            yield return new WaitForSeconds(0.5f);
+            ServiceButton btn = _buttons["Journal"].GetComponent<ServiceButton>();
+            if (btn == null)
+            {
+                Plugin.Logger.LogError("journal btn is null");
+                CreateActionWindow();
+                yield break;
+            }
+            SelectButton.StartCoroutine(btn, 0.5f);
         }
         
     }
