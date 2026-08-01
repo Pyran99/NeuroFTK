@@ -5,10 +5,14 @@ The mod uses a [Modified SDK](https://github.com/Pyran99/neuro-sdk-net35) due to
 <img src="assets\FTK banner.jpg" width="500" style="vertical-align:middle;"> 
 
 ## Game Libraries
+not distributed here
 - Assembly-CSharp.dll
 - Assembly-CSharp-firstpass.dll
 - UnityEngine.UI.dll
 - PlayMaker.dll
+> [!IMPORTANT]
+> if you try to build this project yourself, I have the csproj setup to build directly to a custom file path. You must create a _TEXT_ file in the base folder called `output_path` with a file path to the folder you want the build to go to.  
+> example: (your pc stuff)\ForTheKing\BepInEx\plugins\NeuroFTK
 
 ## Config data
 Config files are automatically generated in the same folder as the dll
