@@ -16,8 +16,8 @@ Name | Default | Description
 --- | --- | ---
 `environment_web_socket` | ws://localhost:8000 | Websocket url
 `debug_mode` | false | some actions will be handled differently when `true`. Enables god mode toggle with KeyCode.LeftBracket
-`use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. 
-`force_first_adventure` | false | only let neuro choose the first adventure map For the King
+`use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
+`force_first_adventure` | false | only let neuro choose the first adventure map For the King (other maps not tested yet)
 `is_multiplayer` | false | disables normal main menu actions
 `always_resume` | true | disables new game if there is a previous save to load
 
@@ -25,16 +25,27 @@ Name | Default | Description
 > Multiplayer has NOT been tested & will likely break things
 
 ## Current State
-> [!NOTE]
-> Some things may be in a working state but code is commented out/altered in a way to facilitate testing
 
 - [x] Main menu
   - [x] Lore store
   - [x] Adventure setup
-- [ ] Overworld movement
-  - [x] Land
-  - [ ] Sea
-  - [ ] Air
+- [ ] Overworld flow
+  - [ ] movement
+    - [x] Land
+    - [ ] Sea
+    - [ ] Air
+  - [ ] change equipment
+  - [x] use items
 - [ ] Encounters
-  - [ ] 
-- [ ] Combat
+  - [x] towns
+    - [x] services
+    - [x] market
+      - [x] buying
+      - [ ] selling
+    - [x] quests
+  - [ ] other
+- [x] Combat
+  - [x] enter combat encounter
+  - [x] choose attack & target
+  - [x] use items
+  - [ ] change weapon
