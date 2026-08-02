@@ -20,6 +20,7 @@ namespace Pyran.NeuroFTK.Utils
             FTK_itembase.ID.scrollvision,
             FTK_itembase.ID.scrollidentify,
             FTK_itembase.ID.scrollpurify,
+            FTK_itembase.ID.scrollportal,
             // FTK_itembase.ID.townTeleport,
         ];
 

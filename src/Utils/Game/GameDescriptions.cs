@@ -10,6 +10,7 @@ namespace Pyran.NeuroFTK.Utils
             {"Services", "purchase health, focus points, remove debuffs, or remove curses."},
             {"Market", "purchase items."},
             {"Quest Board", "grab a side quest to complete for rewards."},
+            {"Enter", "enter this portal."},
             {"Leave", "close this menu."},
             {"Rest", "recover HP and end turn."},
             {"Meditate", "recover Focus and end turn."},
