@@ -19,7 +19,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static MiniHexInfo miniHexInfo;
         static MiniHexInfo.MenuPOIDisplayValues menuDisplayValues;
         static ActionWindow window;
-        static bool isJournal = false;
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
         [HarmonyPrefix]
@@ -141,15 +140,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateActionWindow()
         {
             Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
-            // {string.Join(", ", [.. _buttons.Select(x => x.Key)])}
-            if (_buttons.ContainsKey("Journal") && !isJournal)
-            {
-                isJournal = true;
-                uiLocationMenuDisplay.Instance.StartCoroutine(ReadJournal(_buttons));
-                return;
-            }
-            isJournal = false;
-            _buttons.Remove("Journal");
             StringBuilder sb = new("[buttons]");
             foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
             {
@@ -183,65 +173,5 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("btns: " + string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
         }
-
-        static IEnumerator ReadJournal(Dictionary<string, uiLocationMenuEntry> _buttons)
-        {
-            yield return new WaitForSeconds(0.5f);
-            ServiceButton btn = _buttons["Journal"].GetComponent<ServiceButton>();
-            if (btn == null)
-            {
-                Plugin.Logger.LogError("journal btn is null");
-                CreateActionWindow();
-                yield break;
-            }
-            SelectButton.StartCoroutine(btn, 0.5f);
-        }
-
-        #region tests
-
-        [HarmonyPatch(typeof(uiEncounterMenu), "SetEnemyMode")]
-        [HarmonyPostfix]
-        static void EnemyWindow()
-        {
-            Plugin.Logger.LogWarning("enemy encounter");
-        }
-
-        [HarmonyPatch(typeof(uiEncounterMenu), "SetDeadAdventurerMode")]
-        [HarmonyPostfix]
-        static void AdventureWindow()
-        {
-            Plugin.Logger.LogWarning("adventurer encounter");
-        }
-
-        [HarmonyPatch(typeof(uiEncounterMenu), "SetWishingWellMode")]
-        [HarmonyPostfix]
-        static void WellWindow()
-        {
-            Plugin.Logger.LogWarning("well encounter");
-        }
-
-        [HarmonyPatch(typeof(uiEncounterMenu), "SetRevivalMode")]
-        [HarmonyPostfix]
-        static void ReviveWindow()
-        {
-            Plugin.Logger.LogWarning("revive encounter");
-        }
-
-        [HarmonyPatch(typeof(uiEncounterMenu), "SetSkillTestMode")]
-        [HarmonyPostfix]
-        static void SkillWindow()
-        {
-            Plugin.Logger.LogWarning("skill encounter");
-        }
-
-        [HarmonyPatch(typeof(uiEncounterMenu), "SetServiceMode")]
-        [HarmonyPostfix]
-        static void ServiceWindow()
-        {
-            Plugin.Logger.LogWarning("service encounter");
-        }
-
-        #endregion
-        
     }
 }

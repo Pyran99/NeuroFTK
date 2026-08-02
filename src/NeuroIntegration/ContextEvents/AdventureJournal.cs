@@ -14,8 +14,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ShowMessage(string _messageHeader, string _message, float _delay, uiMoreInfoMenu __instance)
         {
             Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
-            Plugin.Logger.LogWarning("more info = " + uiMoreInfoMenu.Instance.gameObject.name);
-            Plugin.Logger.LogWarning("loc display = " + uiLocationMenuDisplay.Instance.gameObject.name);
             QuickTimerCallback timer = new(() => uiMoreInfoMenu.Instance.StartCoroutine(Wait()), uiLocationMenuDisplay.Instance.gameObject, 2.5f);
         }
 
@@ -23,7 +21,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             uiMoreInfoMenu.Instance.UseOkayButton();
             yield return new WaitForSeconds(uiMoreInfoMenu.Instance.m_DeactivateDelay + 0.1f);
-            EncounterLocation.CreateActionWindow();
+            Encounters.CreateEncounterAction();
         }
     }
 }

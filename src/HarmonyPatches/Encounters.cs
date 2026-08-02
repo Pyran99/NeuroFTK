@@ -21,6 +21,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> activeButtons = [];
         static string buttonsContext = "";
         static bool generating = false;
+        static bool isJournal = false;
 
         public static List<CharacterOverworld> involvedPlayers = [];
         public static Dictionary<string, Dictionary<string, string>> involvedEnemies = [];
@@ -49,10 +50,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // wait for lower class to finish setup
                 Object.Destroy(window);
                 yield return new WaitForEndOfFrame();
-                MiniHexInfo.MenuPOIDisplayValues values = encounterMenuInstance.m_ThisMiniHex?.GetMenuDisplayValues();
-                string ctx = GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
-                Context.Send(ctx);
-                SetButtonData(_buttons);
+                if (!SetButtonData(_buttons)) yield break;
                 QuickTimerCallback timer = new (CreateEncounterAction, encounterMenuInstance.m_MainPanel.gameObject);
                 // Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
             }
@@ -134,9 +132,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             involvedPlayers.Add(player);
         }
 
-        static void CreateEncounterAction()
+        public static void CreateEncounterAction()
         {
             Plugin.Logger.LogWarning("create encounter window");
+            MiniHexInfo.MenuPOIDisplayValues values = encounterMenuInstance.m_ThisMiniHex.GetMenuDisplayValues();
+            string ctx = GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
+            Context.Send(ctx);
             generating = false;
             if (!encounterMenuInstance.isActiveAndEnabled) return;
             window = EncounterAction.CreateWindow(encounterMenuInstance, [.. activeButtons.Values], buttonsContext);
@@ -202,7 +203,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// <summary>
         /// sets buttonsContext
         /// </summary>
-        static void SetButtonData(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> buttons)
+        static bool SetButtonData(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> buttons)
         {
             activeButtons.Clear();
             foreach (KeyValuePair<SubPanelBaseBase.ButtonID, uiPoiButton> kvp in buttons)
@@ -211,6 +212,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (activeButtons.ContainsKey(kvp.Key)) continue;
                 activeButtons.Add(kvp.Key, kvp.Value);
             }
+            if (HandleAutoJournal(activeButtons)) return false;
             Dictionary<string, string> flavorData = [];
             Dictionary<string, object> rollData = [];
             foreach (uiPoiButton btn in activeButtons.Values)
@@ -235,6 +237,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append($"these roll chances are based on your {profile.m_SkillRequired} stat");
             }
             buttonsContext = sb.ToString();
+            return true;
         }
 
         /// <summary>
@@ -275,6 +278,78 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // { "ambush": { 0: {5%: failure} }, { 1: {5%: success} }
                 rollData.Add(btn.m_ButtonText.text, outcome);
         }
+
+        static bool HandleAutoJournal(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _activeButtons)
+        {
+            if (_activeButtons.ContainsKey(SubPanelBaseBase.ButtonID.Journal) && !isJournal)
+            {
+                isJournal = true;
+                uiLocationMenuDisplay.Instance.StartCoroutine(ReadJournal(_activeButtons[SubPanelBaseBase.ButtonID.Journal]));
+                return true;
+            }
+            isJournal = false;
+            _activeButtons.Remove(SubPanelBaseBase.ButtonID.Journal);
+            return false;
+        }
+
+        static IEnumerator ReadJournal(uiPoiButton btn)
+        {
+            yield return new WaitForSeconds(0.5f);
+            if (btn == null)
+            {
+                Plugin.Logger.LogError("journal btn is null");
+                CreateEncounterAction();
+                yield break;
+            }
+            SelectButton.StartCoroutine(btn, 0.5f);
+        }
+
+        #region tests
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetEnemyMode")]
+        [HarmonyPostfix]
+        static void EnemyWindow()
+        {
+            Plugin.Logger.LogWarning("enemy encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetDeadAdventurerMode")]
+        [HarmonyPostfix]
+        static void AdventureWindow()
+        {
+            Plugin.Logger.LogWarning("adventurer encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetWishingWellMode")]
+        [HarmonyPostfix]
+        static void WellWindow()
+        {
+            Plugin.Logger.LogWarning("well encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetRevivalMode")]
+        [HarmonyPostfix]
+        static void ReviveWindow()
+        {
+            Plugin.Logger.LogWarning("revive encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetSkillTestMode")]
+        [HarmonyPostfix]
+        static void SkillWindow()
+        {
+            Plugin.Logger.LogWarning("skill encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetServiceMode")]
+        [HarmonyPostfix]
+        static void ServiceWindow()
+        {
+            Plugin.Logger.LogWarning("service encounter");
+        }
+
+        #endregion
+        
         
         // static readonly List<SubPanelBaseBase> menus = [];
 
