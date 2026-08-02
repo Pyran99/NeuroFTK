@@ -36,6 +36,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     MiniHexInfo poi = hex.GetPOI();
                     Plugin.Logger.LogWarning("poi = " + poi.GetIDString());
                     if (!HexData.IsPoiComplete(poi) || poi.m_MiniHexType == MiniHexInfo.MiniHexType.Town) window.AddAction(new InteractWithCurrentHex(_cow));
+                    else if (poi.m_MiniHexType == MiniHexInfo.MiniHexType.Sanctum && !(poi as MiniHexSanctum).m_SanctumClaimed) window.AddAction(new InteractWithCurrentHex(_cow));
                 }
             }
             window.SetContext(ctx);

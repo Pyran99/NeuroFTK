@@ -14,10 +14,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ShowMessage(string _messageHeader, string _message, float _delay, uiMoreInfoMenu __instance)
         {
             Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
-            QuickTimerCallback timer = new(() =>
-            {
-                uiMoreInfoMenu.Instance.StartCoroutine(Wait());
-            }, uiLocationMenuDisplay.Instance.gameObject, 2.5f);
+            Plugin.Logger.LogWarning(uiMoreInfoMenu.Instance.gameObject.name);
+            Plugin.Logger.LogWarning(uiLocationMenuDisplay.Instance.gameObject.name);
+            QuickTimerCallback timer = new(() => uiMoreInfoMenu.Instance.StartCoroutine(Wait()), uiLocationMenuDisplay.Instance.gameObject, 2.5f);
         }
 
         static IEnumerator Wait()

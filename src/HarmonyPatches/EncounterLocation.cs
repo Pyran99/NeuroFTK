@@ -128,6 +128,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateLocationAction()
         {
+            Plugin.Logger.LogWarning("create location encounter window");
             string ctx = Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
             if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy)
             {
@@ -161,7 +162,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine($"{desc}: {btnInfo}");
             }
             int cost = miniHexInfo.GetCost(GameLogic.Instance.GetCurrentCOW());
-            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold");
+            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {GameLogic.Instance.GetCurrentCOW().m_CharacterStats.m_Gold} gold");
             window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString());
         }
 
@@ -179,7 +180,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Text comp = child.GetComponentInChildren<Text>();
                 buttons.Add(comp.text, entry);
             }
-            Plugin.Logger.LogMessage(string.Join(", ", [.. buttons.Select(x => x.Key)]));
+            Plugin.Logger.LogMessage("btns: " + string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
         }
 
@@ -195,6 +196,52 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             SelectButton.StartCoroutine(btn, 0.5f);
         }
+
+        #region tests
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetEnemyMode")]
+        [HarmonyPostfix]
+        static void EnemyWindow()
+        {
+            Plugin.Logger.LogWarning("enemy encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetDeadAdventurerMode")]
+        [HarmonyPostfix]
+        static void AdventureWindow()
+        {
+            Plugin.Logger.LogWarning("adventurer encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetWishingWellMode")]
+        [HarmonyPostfix]
+        static void WellWindow()
+        {
+            Plugin.Logger.LogWarning("well encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetRevivalMode")]
+        [HarmonyPostfix]
+        static void ReviveWindow()
+        {
+            Plugin.Logger.LogWarning("revive encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetSkillTestMode")]
+        [HarmonyPostfix]
+        static void SkillWindow()
+        {
+            Plugin.Logger.LogWarning("skill encounter");
+        }
+
+        [HarmonyPatch(typeof(uiEncounterMenu), "SetServiceMode")]
+        [HarmonyPostfix]
+        static void ServiceWindow()
+        {
+            Plugin.Logger.LogWarning("service encounter");
+        }
+
+        #endregion
         
     }
 }

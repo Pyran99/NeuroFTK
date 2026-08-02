@@ -136,6 +136,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateEncounterAction()
         {
+            Plugin.Logger.LogWarning("create encounter window");
             generating = false;
             if (!encounterMenuInstance.isActiveAndEnabled) return;
             window = EncounterAction.CreateWindow(encounterMenuInstance, [.. activeButtons.Values], buttonsContext);
