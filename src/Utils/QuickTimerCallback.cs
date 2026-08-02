@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.Utils
@@ -9,12 +10,7 @@ namespace Pyran.NeuroFTK.Utils
     /// </summary>
     public class QuickTimerCallback
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="method"></param>
         /// <param name="owner">`null` will always invoke method</param>
-        /// <param name="ms"></param>
         public QuickTimerCallback(Action method, GameObject owner, float ms = 1000f)
         {
             Callback += method;
@@ -35,14 +31,29 @@ namespace Pyran.NeuroFTK.Utils
 
         private void Finished(Action method, GameObject owner)
         {
-            if (owner == null) Callback?.Invoke();
-            else if (owner.activeInHierarchy) Callback?.Invoke();
-            Dispose(method);
+            if (Mathf.Approximately(Time.timeScale, 0f)) Plugin.Instance.StartCoroutine(Wait(method, owner));
+            else DoCall(method, owner);
         }
 
         private void Dispose(Action method)
         {
             Callback -= method;
+        }
+
+        private IEnumerator Wait(Action method, GameObject owner)
+        {
+            while (Mathf.Approximately(Time.timeScale, 0f))
+            {
+                yield return null;
+            }
+            DoCall(method, owner);
+        }
+
+        private void DoCall(Action method, GameObject owner)
+        {
+            if (owner == null) Callback?.Invoke();
+            else if (owner.activeInHierarchy) Callback?.Invoke();
+            Dispose(method);
         }
     }
 }
