@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk;
 using NeuroSdk.Actions;
@@ -436,11 +437,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateActionWindow(CharacterOverworld _cow)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            Vector2 pos = HexData.GetVec2Pos(_cow.GetHexLand());
+            HexLand hex = _cow.GetHexLand();
+            Vector2 pos = HexData.GetVec2Pos(hex);
             string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
             if (lastDestinations.ContainsKey(_cow))
             {
-                if (lastDestinations[_cow] != null && lastDestinations[_cow] != _cow.GetHexLand())
+                if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
                 {
                     pos = HexData.GetVec2Pos(lastDestinations[_cow]);
                     ctx += $" the last hex you tried to move to with this character was {pos}.";
@@ -457,8 +459,127 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string _quests = GetQuestData();
             if (_quests != "") Context.Send(_quests);
             string tileCtx = GetTileContext(tiles);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict);
+            List<string> validQuests = GetInRangeQuests(_cow);
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, IsHexInteractable(hex.GetPOI(), _cow));
             isSearching = false;
+        }
+
+        static List<string> GetInRangeQuests(CharacterOverworld cow)
+        {
+            List<string> result = [];
+            List<Vector3> positions = GetQuestPositions();
+            foreach (KeyValuePair<string, QuestLogicBase> kvp in questDict)
+            {
+                Vector3 dest = kvp.Value.GetHexLandDestination()?.GetPosition() ?? Vector3.positiveInfinity;
+                if (dest == cow.GetHexLand().GetPosition()) continue;
+                if (positions.Contains(dest))
+                {
+                    if ((dest - cow.GetHexLand().GetPosition()).magnitude < 2.8866f * 15f)
+                    {
+                        result.Add(kvp.Key);
+                    }
+                }
+            }
+            return result;
+        }
+
+        public static void NeuroTryGoToQuest(CharacterOverworld cow, QuestLogicBase quest)
+        {
+            if (quest == null)
+            {
+                Plugin.Logger.LogError("chosen quest was null");
+                Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
+                QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 2.0f);
+                return;
+            }
+            HexLand dest = quest.GetHexLandDestination();
+            cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
+        }
+
+        public static void NeuroTryInteractWithHex(CharacterOverworld cow)
+        {
+            HexLand hex = cow.GetHexLand();
+            cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
+        }
+
+        static bool IsHexInteractable(MiniHexInfo poi, CharacterOverworld cow)
+        {
+            if (HexData.IsPoiComplete(poi)) return false;
+            Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
+            bool interactable = true;
+            switch (poi.m_MiniHexType)
+            {
+                case MiniHexInfo.MiniHexType.Town:
+                    return true;
+                case MiniHexInfo.MiniHexType.Sanctum:
+                    return !(poi as MiniHexSanctum).m_SanctumClaimed;
+                case MiniHexInfo.MiniHexType.AlluringPool:
+                    interactable = IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
+                    break;
+                case MiniHexInfo.MiniHexType.MiniEncounter:
+                    interactable = IsEncounterInteractable(poi as MiniEncounter, cow);
+                    break;
+                case MiniHexInfo.MiniHexType.Dungeon:
+                    interactable = IsDungeonInteractable(poi as MiniHexDungeon, cow);
+                    break;
+                default:
+                    break;
+            }
+            if (!interactable)
+            {
+                Plugin.Logger.LogMessage("this hex is not interactable");
+                // QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 0.5f);
+            }
+            return interactable;
+        }
+
+        static bool IsAlluringPoolInteractable(MiniHexAlluringPool poi)
+        {
+            if (poi.GetAlluringPoolOptions().Count == 0)
+            {
+                Context.Send("you need to find other alluring pools to activate the teleport system", true);
+                return false;
+            }
+            return true;
+        }
+
+        static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
+        {
+            Plugin.Logger.LogMessage("poi encounter type = " + encounter.m_Type);
+            if (encounter.m_HasBeenConsumed || encounter.m_CantUseThisTurn) return false;
+            if (encounter.m_Type == FTK_miniEncounter.ID.kvHome)
+            {
+                Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex", true);
+                return false;
+            }
+            return true;
+        }
+
+        static bool IsDungeonInteractable(MiniHexDungeon dungeon, CharacterOverworld cow)
+        {
+            //VERIFY failed remake actions after interact with dungeon while party not ready
+            if (dungeon.IsDungeonCleared()) return false;
+            List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
+            int num = 0;
+            foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (!readyPlayers.Contains(_cow.m_FTKPlayerID))
+                {
+                    if (!GameFlow.Instance.IsPermaDeath || !_cow.m_WaitForRespawn)
+                    {
+                        num++;
+                    }
+                }
+            }
+            if (num != 0)
+            {
+                if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
+                {
+                    Context.Send("your entire party needs to be alive and within range to enter the dungeon", true);
+                    return false;
+                }
+            }
+            return true;
         }
 
     }

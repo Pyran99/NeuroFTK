@@ -10,26 +10,24 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
-using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict, List<string> validQuests, bool isInteractable = false)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
             if (!OverworldFlow.isSneakMovement)
             {
                 if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
-                if (questDict != null && questDict.Count > 0)
+                if (validQuests.Count > 0)
                 {
-                    if (questDict.Count != 1 || questDict.First().Value.GetHexLandDestination()?.GetPosition() != _cow.GetHexLand().GetPosition())
-                    {
-                        window.AddAction(new GoToQuestAction(new(questDict), _cow));
-                    }
+                    window.AddAction(new GoToQuestAction(questDict, validQuests));
                 }
+                if (isInteractable) window.AddAction(new InteractWithCurrentHex(_cow));
+
                 HexLand hex = _cow.GetHexLand();
                 if (hex?.HasPOI() ?? false)
                 {
@@ -38,6 +36,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     if (!HexData.IsPoiComplete(poi) || poi.m_MiniHexType == MiniHexInfo.MiniHexType.Town) window.AddAction(new InteractWithCurrentHex(_cow));
                     else if (poi.m_MiniHexType == MiniHexInfo.MiniHexType.Sanctum && !(poi as MiniHexSanctum).m_SanctumClaimed) window.AddAction(new InteractWithCurrentHex(_cow));
                 }
+                
             }
             window.SetContext(ctx);
             window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "you are moving your characters around the overworld", true);
@@ -105,7 +104,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 OverworldFlow.CreateActionWindow(cow);
                 return;
             }
-            Context.Send($"moving to {HexData.GetContextForHex(cow, parsedData)}");
             cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, parsedData));
         }
 
@@ -144,7 +142,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, CharacterOverworld _cow) : NeuroAction<string>
+    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, List<string> validQuests) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
         protected override string Description => "choose a quest location to travel to. if the location is out of range you will move to the furthest tile along the path";
@@ -158,7 +156,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = ["destination"],
                 Properties = new()
                 {
-                    ["destination"] = QJS.Enum(GetInRangeQuests()),
+                    ["destination"] = QJS.Enum(validQuests),
                 }
             };
             return schema;
@@ -167,15 +165,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
-            if (!_questDict.TryGetValue(parsedData, out QuestLogicBase quest))
-            {
-                Plugin.Logger.LogError("quest not found");
-                Context.Send($"an issue occurred with the {Name} action, try another one (if your choice was 'none' then you should choose a different action)", true);
-                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
-                return;
-            }
-            HexLand dest = quest.GetHexLandDestination();
-            cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, dest, true));
+            OverworldFlow.NeuroTryGoToQuest(cow, _questDict.TryGetValue(parsedData, out QuestLogicBase quest) ? quest : null);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -188,30 +178,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             parsedData = data;
             return ExecutionResult.Success();
         }
-
-        List<string> GetInRangeQuests()
-        {
-            List<string> result = [];
-            List<Vector3> positions = OverworldFlow.GetQuestPositions();
-            foreach (KeyValuePair<string, QuestLogicBase> kvp in _questDict)
-            {
-                Vector3 dest = kvp.Value.GetHexLandDestination()?.GetPosition() ?? Vector3.positiveInfinity;
-                if (dest == _cow.GetHexLand().GetPosition()) continue;
-                if (positions.Contains(dest))
-                {
-                    if ((dest - _cow.GetHexLand().GetPosition()).magnitude < 2.8866f * 15f)
-                    {
-                        result.Add(kvp.Key);
-                    }
-                }
-            }
-            if (result.Count == 0)
-            {
-                Plugin.Logger.LogError("there were no valid quests for the action");
-                result.Add("none");
-            }
-            return result;
-        }
     }
 
     public class InteractWithCurrentHex(CharacterOverworld cow) : NeuroAction
@@ -222,89 +188,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            HexLand hex = cow.GetHexLand();
-            if (!hex.HasPOI())
-            {
-                Context.Send("this character is not on a tile with something to interact with" + NeuroSdkStrings.ModFaultSuffix, true);
-                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
-                return;
-            }
-            MiniHexInfo poi = hex.GetPOI();
-            if (!IsInteractable(poi))
-            {
-                Plugin.Logger.LogError($"{poi} was not interactable");
-                return;
-            }
-            cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, hex, false, true));
+            OverworldFlow.NeuroTryInteractWithHex(cow);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)
         {
             return ExecutionResult.Success();
-        }
-
-        bool IsInteractable(MiniHexInfo poi)
-        {
-            Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
-            if (poi.m_Deactivated)
-            {
-                Context.Send("this tile has been deactivated");
-                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
-                return false;
-            }
-            bool interactable = true;
-            if (poi is MiniHexAlluringPool)
-            {
-                if ((poi as MiniHexAlluringPool).GetAlluringPoolOptions().Count == 0)
-                {
-                    Context.Send("you need to find other alluring pools to activate the teleport system");
-                    interactable = false;
-                }
-            }
-            if (poi is MiniEncounter)
-            {
-                MiniEncounter encounter = poi as MiniEncounter;
-                Plugin.Logger.LogMessage("poi encounter type = " + (poi as MiniEncounter).m_Type);
-                if (encounter.m_HasBeenConsumed || encounter.m_CantUseThisTurn) interactable = false;
-                if (encounter.m_Type == FTK_miniEncounter.ID.kvHome)
-                {
-                    Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex");
-                    interactable = false;
-                }
-            }
-            if (poi is MiniHexDungeon)
-            {
-                //VERIFY failed remake actions after interact with dungeon while party not ready
-                MiniHexDungeon dungeon = poi as MiniHexDungeon;
-                if (!dungeon.IsDungeonCleared())
-                {
-                    List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
-                    int num = 0;
-                    foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
-                    {
-                        if (!readyPlayers.Contains(_cow.m_FTKPlayerID))
-                        {
-                            if (!GameFlow.Instance.IsPermaDeath || !_cow.m_WaitForRespawn)
-                            {
-                                num++;
-                            }
-                        }
-                    }
-                    if (num != 0)
-                    {
-                        if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
-                        {
-                            Context.Send("your entire party needs to be alive and within range to enter the dungeon");
-                            interactable = false;
-                        }
-                    }
-                }
-            }
-            if (!interactable)
-            {
-                QuickTimerCallback timer = new(() => OverworldFlow.CreateActionWindow(cow), cow.gameObject, 0.5f);
-            }
-            return interactable;
         }
     }
 

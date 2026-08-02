@@ -188,7 +188,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 _enemies = $"[enemies involved] {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
             }
-            return $"{encounter}{sbPlayers}{_enemies}";
+            string cost = "";
+            if (encounterMenuInstance.m_CostRoot.gameObject.activeSelf)
+            {
+                if (encounterMenuInstance.m_Cost.text != string.Empty)
+                {
+                    cost = $"\n[encounter cost] {encounterMenuInstance.m_Cost.text} gold";
+                }
+            }
+            return $"{encounter}{sbPlayers}{_enemies}{cost}";
         }
 
         /// <summary>
