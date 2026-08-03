@@ -411,59 +411,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return questPositions;
         }
 
-        #endregion
-
-
-        static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
-        {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
-            if (cow.m_WaitForRespawn || !cow.IsStillAlive())
-            {
-                Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
-                return;
-            }
-            if (!Multiplayer.IsYourCow(cow))
-            {
-                Multiplayer.SendOtherPlayerTurnCtx();
-                return;
-            }
-            isFirstAction = true;
-            isSearching = false;
-            DisposeActions();
-            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), cow.gameObject);
-            ToggleDisposableActions.ToggleOverworldActions(true);
-        }
-
-        public static void CreateActionWindow(CharacterOverworld _cow)
-        {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            HexLand hex = _cow.GetHexLand();
-            Vector2 pos = HexData.GetVec2Pos(hex);
-            string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
-            if (lastDestinations.ContainsKey(_cow))
-            {
-                if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
-                {
-                    pos = HexData.GetVec2Pos(lastDestinations[_cow]);
-                    ctx += $" the last hex you tried to move to with this character was {pos}.";
-                }
-            }
-            foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
-            {
-                if (player == _cow) continue;
-                string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
-                pos = HexData.GetVec2Pos(player.GetHexLand());
-                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {pos},";
-            }
-            Context.Send(ctx);
-            string _quests = GetQuestData();
-            if (_quests != "") Context.Send(_quests);
-            string tileCtx = GetTileContext(tiles);
-            List<string> validQuests = GetInRangeQuests(_cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, IsHexInteractable(hex.GetPOI(), _cow));
-            isSearching = false;
-        }
-
         static List<string> GetInRangeQuests(CharacterOverworld cow)
         {
             List<string> result = [];
@@ -496,6 +443,59 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
         }
 
+        #endregion
+
+
+        static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
+        {
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            if (cow.m_WaitForRespawn || !cow.IsStillAlive())
+            {
+                Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
+                return;
+            }
+            if (!Multiplayer.IsYourCow(cow))
+            {
+                Multiplayer.SendOtherPlayerTurnCtx();
+                return;
+            }
+            isFirstAction = true;
+            isSearching = false;
+            DisposeActions();
+            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), cow.gameObject);
+            ToggleDisposableActions.ToggleOverworldActions(true, false);
+        }
+
+        public static void CreateActionWindow(CharacterOverworld _cow)
+        {
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            HexLand hex = _cow.GetHexLand();
+            Vector2 pos = HexData.GetVec2Pos(hex);
+            string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
+            if (lastDestinations.ContainsKey(_cow))
+            {
+                if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
+                {
+                    pos = HexData.GetVec2Pos(lastDestinations[_cow]);
+                    ctx += $" the last hex you tried to move to with this character was {pos}.";
+                }
+            }
+            foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (player == _cow) continue;
+                string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
+                pos = HexData.GetVec2Pos(player.GetHexLand());
+                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {pos},";
+            }
+            Context.Send(ctx);
+            string _quests = GetQuestData();
+            if (_quests != "") Context.Send(_quests);
+            string tileCtx = GetTileContext(tiles);
+            List<string> validQuests = GetInRangeQuests(_cow);
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, IsHexInteractable(hex.GetPOI(), _cow));
+            isSearching = false;
+        }
+
         public static void NeuroTryInteractWithHex(CharacterOverworld cow)
         {
             HexLand hex = cow.GetHexLand();
@@ -504,82 +504,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static bool IsHexInteractable(MiniHexInfo poi, CharacterOverworld cow)
         {
-            if (HexData.IsPoiComplete(poi)) return false;
-            Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
-            bool interactable = true;
-            switch (poi.m_MiniHexType)
-            {
-                case MiniHexInfo.MiniHexType.Town:
-                    return true;
-                case MiniHexInfo.MiniHexType.Sanctum:
-                    return !(poi as MiniHexSanctum).m_SanctumClaimed;
-                case MiniHexInfo.MiniHexType.AlluringPool:
-                    interactable = IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
-                    break;
-                case MiniHexInfo.MiniHexType.MiniEncounter:
-                    interactable = IsEncounterInteractable(poi as MiniEncounter, cow);
-                    break;
-                case MiniHexInfo.MiniHexType.Dungeon:
-                    interactable = IsDungeonInteractable(poi as MiniHexDungeon, cow);
-                    break;
-                default:
-                    break;
-            }
-            if (!interactable)
-            {
-                Plugin.Logger.LogMessage("this hex is not interactable");
-                // QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 0.5f);
-            }
-            return interactable;
-        }
-
-        static bool IsAlluringPoolInteractable(MiniHexAlluringPool poi)
-        {
-            if (poi.GetAlluringPoolOptions().Count == 0)
-            {
-                Context.Send("you need to find other alluring pools to activate the teleport system", true);
-                return false;
-            }
-            return true;
-        }
-
-        static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
-        {
-            Plugin.Logger.LogMessage("poi encounter type = " + encounter.m_Type);
-            if (encounter.m_HasBeenConsumed || encounter.m_CantUseThisTurn) return false;
-            if (encounter.m_Type == FTK_miniEncounter.ID.kvHome)
-            {
-                Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex", true);
-                return false;
-            }
-            return true;
-        }
-
-        static bool IsDungeonInteractable(MiniHexDungeon dungeon, CharacterOverworld cow)
-        {
-            //VERIFY failed remake actions after interact with dungeon while party not ready
-            if (dungeon.IsDungeonCleared()) return false;
-            List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
-            int num = 0;
-            foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
-            {
-                if (!readyPlayers.Contains(_cow.m_FTKPlayerID))
-                {
-                    if (!GameFlow.Instance.IsPermaDeath || !_cow.m_WaitForRespawn)
-                    {
-                        num++;
-                    }
-                }
-            }
-            if (num != 0)
-            {
-                if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
-                {
-                    Context.Send("your entire party needs to be alive and within range to enter the dungeon", true);
-                    return false;
-                }
-            }
-            return true;
+            return HexData.IsPoiComplete(poi, cow);
         }
 
     }

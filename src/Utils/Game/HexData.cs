@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using GridEditor;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
 
@@ -11,11 +14,84 @@ namespace Pyran.NeuroFTK.Utils
             return new Vector2(pos.x, pos.z);
         }
 
-        public static bool IsPoiComplete(MiniHexInfo poi)
+        public static bool IsPoiComplete(MiniHexInfo poi, CharacterOverworld cow)
         {
             if (poi == null) return true;
             if (poi.m_Deactivated) return true;
-            return false;
+            Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
+            bool interactable = true;
+            switch (poi.m_MiniHexType)
+            {
+                case MiniHexInfo.MiniHexType.Town:
+                    return true;
+                case MiniHexInfo.MiniHexType.Sanctum:
+                    return !(poi as MiniHexSanctum).m_SanctumClaimed;
+                case MiniHexInfo.MiniHexType.AlluringPool:
+                    interactable = IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
+                    break;
+                case MiniHexInfo.MiniHexType.MiniEncounter:
+                    interactable = IsEncounterInteractable(poi as MiniEncounter, cow);
+                    break;
+                case MiniHexInfo.MiniHexType.Dungeon:
+                    interactable = IsDungeonInteractable(poi as MiniHexDungeon, cow);
+                    break;
+                default:
+                    break;
+            }
+            if (!interactable)
+            {
+                Plugin.Logger.LogMessage("this hex is not interactable");
+            }
+            return interactable;
+        }
+
+        static bool IsAlluringPoolInteractable(MiniHexAlluringPool poi)
+        {
+            if (poi.GetAlluringPoolOptions().Count == 0)
+            {
+                Context.Send("you need to find other alluring pools to activate the teleport system", true);
+                return false;
+            }
+            return true;
+        }
+
+        static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
+        {
+            Plugin.Logger.LogMessage("poi encounter type = " + encounter.m_Type);
+            if (encounter.m_HasBeenConsumed || encounter.m_CantUseThisTurn) return false;
+            if (encounter.m_Type == FTK_miniEncounter.ID.kvHome)
+            {
+                Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex", true);
+                return false;
+            }
+            return true;
+        }
+
+        static bool IsDungeonInteractable(MiniHexDungeon dungeon, CharacterOverworld cow)
+        {
+            //VERIFY failed remake actions after interact with dungeon while party not ready
+            if (dungeon.IsDungeonCleared()) return false;
+            List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
+            int num = 0;
+            foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (!readyPlayers.Contains(_cow.m_FTKPlayerID))
+                {
+                    if (!GameFlow.Instance.IsPermaDeath || !_cow.m_WaitForRespawn)
+                    {
+                        num++;
+                    }
+                }
+            }
+            if (num != 0)
+            {
+                if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
+                {
+                    Context.Send("your entire party needs to be alive and within range to enter the dungeon", true);
+                    return false;
+                }
+            }
+            return true;
         }
 
         public static bool IsUsedDeactivateCtx(MiniHexInfo.MiniHexType type)
@@ -88,14 +164,28 @@ namespace Pyran.NeuroFTK.Utils
             MiniHexInfo hexInfo = hex.GetPOI();
             if (hexInfo != null)
             {
-                poi = hexInfo.GetPOIDisplayValue() + ": " + hexInfo.m_MiniHexType;
-                if (IsPoiComplete(hexInfo))
+                MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
+                string type = poiType.ToString();
+                type += GetHexTypeContext(poiType);
+                poi = hexInfo.GetPOIDisplayValue() + $"({type}) ";
+                if (IsPoiComplete(hexInfo, cow))
                 {
                     poi += " (completed)";
                 }
             }
             if (addToList) OverworldFlow.hexPositions.Add(pos.ToString(), hex);
             return $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]";
+        }
+
+        public static string GetHexTypeContext(MiniHexInfo.MiniHexType type)
+        {
+            return type switch
+            {
+                MiniHexInfo.MiniHexType.Haunt => "(important to defeat)",
+                MiniHexInfo.MiniHexType.Poison or MiniHexInfo.MiniHexType.Chaos or MiniHexInfo.MiniHexType.Fire or MiniHexInfo.MiniHexType.Curse => "(dangerous)",
+                MiniHexInfo.MiniHexType.Portal => "(teleport)",
+                _ => "",
+            };
         }
     }
 }

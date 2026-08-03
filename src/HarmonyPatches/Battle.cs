@@ -339,13 +339,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GetDefenseAttackDetails(_instance, _proficiencies);
             actions.Clear();
             string ctx = GetAttackContextAndRegisterAction(_instance, _proficiencies);
-            ctx += GetBeltDetails(cow);
-            // RegisterDisposableActions(cow);
+            List<FTK_itembase.ID> usableItems = ItemData.GetUsableBeltItems(cow);
+            ctx += GetBeltDetails(cow, usableItems);
             if (!beltActionUsed) // unsure where to put belt use
             {
                 beltActionUsed = true;
                 Dictionary<string, FTK_itembase.ID> items = [];
-                foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow)) items.Add(ItemData.GetItemName(item), item);
+                foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
                 if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow, false));
             }
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
@@ -353,33 +353,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             defense.Clear();
         }
 
-        // static void RegisterDisposableActions(CharacterOverworld cow)
-        // {
-        //     Dictionary<string, FTK_itembase.ID> items = [];
-        //     foreach (FTK_itembase.ID item in ItemData.GetUsableBeltItems(cow))
-        //     {
-        //         items.Add(ItemData.GetItemName(item), item);
-        //     }
-        //     disposableActions.Clear();
-        //     disposableActions.Add(new SillyAction());
-        //     if (items.Count > 0)
-        //     {
-        //         disposableActions.Add(new UseBeltItemAction(items, cow));
-        //     }
-        //     NeuroActionHandler.RegisterActions(disposableActions);
-        // }
-
-        // static void UnregisterDisposableActions()
-        // {
-        //     if (disposableActions.Count == 0) return;
-        //     NeuroActionHandler.UnregisterActions(disposableActions);
-        //     disposableActions.Clear();
-        // }
-
-        public static string GetBeltDetails(CharacterOverworld cow)
+        public static string GetBeltDetails(CharacterOverworld cow, List<FTK_itembase.ID> items)
         {
             StringBuilder sb = new();
-            List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(cow);
             if (items.Count == 0) return "";
             sb.Append("\n[usable belt items] ");
             foreach (FTK_itembase.ID item in items)

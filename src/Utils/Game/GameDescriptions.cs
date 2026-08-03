@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.Utils
             {"View Wares", "purchase items."},
             {"Journal", "view this adventurers journal."},
             {"Devote", "become a champion for this sanctums god."},
-            {"Tribute", "activate this statue."},
+            {"Tribute", "pay tribute to this statue."},
             {"Enter Party", "begin this dungeon with all party members"},
         };
 
@@ -60,7 +60,7 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Identify, "identify if the chest is a mimic"},
             {VoteButton.VoteOption.Shop, "view the shop"},
             {VoteButton.VoteOption.Destroy, "destroy NYI"},
-            {VoteButton.VoteOption.PartyHeal, "partyheal NYI"},
+            {VoteButton.VoteOption.PartyHeal, "heal all party members in this battle"},
             {VoteButton.VoteOption.DungeonRest, "setup a tinder pouch camp to heal all party members (dont use all of them)"}, // party rest
             {VoteButton.VoteOption.Share, "split the rewards between all involved party members"},
             {VoteButton.VoteOption.AttemptNoRoll, "attemptnoroll NYI"},
@@ -77,7 +77,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Attempt => "attempt to complete this encounter", // cult device, devious enchanter (play)
                 SubPanelBaseBase.ButtonID.BuyIn => "buy in NYI",
                 SubPanelBaseBase.ButtonID.Collect => "collect NYI",
-                SubPanelBaseBase.ButtonID.Devote => "devote NYI",
+                SubPanelBaseBase.ButtonID.Devote => "devote your life to this god",
                 SubPanelBaseBase.ButtonID.Drink => "drink from the well, you can throw gold in to increase your chance of success",
                 SubPanelBaseBase.ButtonID.EndTurn => "leave this encounter and end turn",
                 SubPanelBaseBase.ButtonID.Leave => "leave this encounter",
