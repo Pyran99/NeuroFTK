@@ -27,16 +27,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     window.AddAction(new GoToQuestAction(questDict, validQuests));
                 }
                 if (isInteractable) window.AddAction(new InteractWithCurrentHex(_cow));
-
-                HexLand hex = _cow.GetHexLand();
-                if (hex?.HasPOI() ?? false)
-                {
-                    MiniHexInfo poi = hex.GetPOI();
-                    Plugin.Logger.LogWarning("poi = " + poi.GetIDString());
-                    if (!HexData.IsPoiComplete(poi) || poi.m_MiniHexType == MiniHexInfo.MiniHexType.Town) window.AddAction(new InteractWithCurrentHex(_cow));
-                    else if (poi.m_MiniHexType == MiniHexInfo.MiniHexType.Sanctum && !(poi as MiniHexSanctum).m_SanctumClaimed) window.AddAction(new InteractWithCurrentHex(_cow));
-                }
-                
             }
             window.SetContext(ctx);
             window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "you are moving your characters around the overworld", true);
