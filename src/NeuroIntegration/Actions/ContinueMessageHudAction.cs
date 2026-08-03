@@ -1,6 +1,7 @@
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -22,7 +23,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            FTKClickAnywhere.Instance.OnClick();
+            QuickTimerCallback timer = new(FTKClickAnywhere.Instance.OnClick, FTKClickAnywhere.Instance.gameObject, 0.5f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

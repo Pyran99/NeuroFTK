@@ -11,12 +11,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static void ToggleOverworldActions(bool enable, bool overwrite = true)
         {
-            // belt, location, status, 
             if (enable)
             {
                 if (overworldActions.Count > 0)
                 {
                     if (overwrite)
+                    {
+                        NeuroActionHandler.UnregisterActions(overworldActions);
+                    }
+                    else if (overworldActions.Count < 5) // same as list below
                     {
                         NeuroActionHandler.UnregisterActions(overworldActions);
                     }
@@ -73,6 +76,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 combatActions.Add(queryBeltItems);
                 INeuroAction queryStatus = new QueryStatusEffects();
                 combatActions.Add(queryStatus);
+                INeuroAction sendMsg = new SillyAction();
+                combatActions.Add(sendMsg);
                 NeuroActionHandler.RegisterActions(combatActions);
             }
             else
