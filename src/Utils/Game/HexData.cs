@@ -167,7 +167,7 @@ namespace Pyran.NeuroFTK.Utils
                 MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
                 string type = GetHexTypeContext(poiType);
                 poi = hexInfo.GetPOIDisplayValue() + $"({type}) ";
-                if (IsPoiInteractable(hexInfo, cow))
+                if (!IsPoiInteractable(hexInfo, cow))
                 {
                     poi += " (completed)";
                 }

@@ -28,18 +28,21 @@ Name | Default | Description
 > [!CAUTION]
 > Multiplayer has NOT been tested & will likely break things
 
-## Current State
+## Current State  
+
+v0.6: Tony was let loose for a long time with no game breaking issues
 
 - [x] Main menu
   - [x] Lore store
   - [x] Adventure setup
+  - [x] Resume last save
 - [ ] Overworld flow
   - [ ] movement
     - [x] Land
     - [ ] Sea
     - [ ] Air
   - [ ] change equipment
-  - [x] use items
+  - [x] use items (most)
 - [ ] Encounters
   - [x] towns
     - [x] services
@@ -47,9 +50,10 @@ Name | Default | Description
       - [x] buying
       - [ ] selling
     - [x] quests
-  - [ ] other
+  - [ ] others
 - [x] Combat
   - [x] enter combat encounter
   - [x] choose attack & target
   - [x] use items
   - [ ] change weapon
+- [ ] using focus

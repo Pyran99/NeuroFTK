@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GridEditor;
 using HarmonyLib;
 using NeuroSdk;
 using NeuroSdk.Actions;
@@ -250,12 +249,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
             ReverseCheckHoverPath(Movement.Instance, dest); // make sure hex list is up to date
             ReverseCheckClickPath(Movement.Instance, dest, true, false, false);
-            //FIXME trying to find broken interact with hex
-            Plugin.Logger.LogWarning("travel = " + dest.CanTravel());
-            Plugin.Logger.LogWarning("poi = " + dest.m_POI);
-            Plugin.Logger.LogWarning("decaying = " + dest.m_POI?.m_Decaying);
-            Plugin.Logger.LogWarning("show menu = " + dest.m_POI?.ShowLocationMenu());
-            Plugin.Logger.LogWarning("encounterable = " + dest.m_POI?.IsEncounterable());
         }
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -436,19 +429,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return result;
         }
 
-        public static void NeuroTryGoToQuest(CharacterOverworld cow, QuestLogicBase quest)
-        {
-            if (quest == null)
-            {
-                Plugin.Logger.LogError("chosen quest was null");
-                Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 2.0f);
-                return;
-            }
-            HexLand dest = quest.GetHexLandDestination();
-            cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
-        }
-
         #endregion
 
 
@@ -498,7 +478,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (_quests != "") Context.Send(_quests);
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = GetInRangeQuests(_cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, IsHexInteractable(hex.GetPOI(), _cow));
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, HexData.IsPoiInteractable(hex.GetPOI(), _cow));
             isSearching = false;
         }
 
@@ -508,11 +488,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
         }
 
-        static bool IsHexInteractable(MiniHexInfo poi, CharacterOverworld cow)
+        public static void NeuroTryGoToQuest(CharacterOverworld cow, QuestLogicBase quest)
         {
-            return HexData.IsPoiInteractable(poi, cow);
+            if (quest == null)
+            {
+                Plugin.Logger.LogError("chosen quest was null");
+                Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
+                QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 2.0f);
+                return;
+            }
+            HexLand dest = quest.GetHexLandDestination();
+            cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
         }
-
     }
 }
 
