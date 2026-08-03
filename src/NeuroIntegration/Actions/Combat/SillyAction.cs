@@ -1,5 +1,6 @@
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -8,7 +9,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class SillyAction : NeuroAction<string>
     {
         public override string Name => "send_msg";
-        protected override string Description => "TBD";
+        protected override string Description => "send a random message to appear on the active character. this action is for chat engagement";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -37,6 +38,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (uiChatBox.Instance)
             {
                 uiChatBox.Instance.AddMessage(UnityEngine.Color.white, GameLogic.Instance.GetCurrentCombatCOW()?.m_CharacterStats.m_CharacterName, parsedData);
+                Context.Send($"sent msg {parsedData}", true);
             }
         }
 

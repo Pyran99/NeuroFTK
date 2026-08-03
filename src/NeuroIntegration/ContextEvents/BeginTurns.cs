@@ -31,10 +31,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (cow.Value.m_CharacterOverworld == _cow) continue;
                 CharacterStats stats = cow.Value.m_CharacterOverworld.m_CharacterStats;
                 string name = $"{stats.m_CharacterName}";
+                string _class = $"{stats.m_CharacterClass}";
                 string lvl = $"{stats.m_PlayerLevel}";
                 string health = $"{stats.GetHealthDisplayString()}";
                 string coherent = cow.Value.IsCoherent() ? "" : "stunned";
-                sb.AppendLine($"{name}, lvl {lvl}, health {health}, {coherent}");
+                sb.AppendLine($"({name}) class {_class}, lvl {lvl}, health {health}, {coherent}.");
             }
             Context.Send(sb.ToString());
         }
@@ -75,6 +76,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (immunes.Length == 0) immunes = "none";
                 sb.AppendLine($"{name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes})");
             }
+            sb.Append($"(armor reduces physical dmg, resist reduces magic dmg)");
             Context.Send(sb.ToString());
         }
 

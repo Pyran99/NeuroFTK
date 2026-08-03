@@ -17,6 +17,11 @@ namespace Pyran.NeuroFTK.Utils
             return cow.m_CharacterStats.GetHealthDisplayString();
         }
 
+        public static string GetCharacterClass(CharacterOverworld cow)
+        {
+            return cow.m_CharacterStats.m_CharacterClass.ToString();
+        }
+
         public static CharacterOverworld GetNeuroCow()
         {
             CharacterOverworld cow;
@@ -69,6 +74,7 @@ namespace Pyran.NeuroFTK.Utils
     public sealed class SerializedCharacterData
     {
         public readonly string Name;
+        public readonly string Class;
         public readonly int Level;
         public readonly int Xp;
         public readonly int Gold;
@@ -85,6 +91,7 @@ namespace Pyran.NeuroFTK.Utils
         private SerializedCharacterData(CharacterOverworld cow)
         {
             Name = CharacterData.GetCharacterName(cow);
+            Class = CharacterData.GetCharacterClass(cow);
             Level = cow.m_CharacterStats.m_PlayerLevel;
             Xp = cow.m_CharacterStats.m_PlayerXP;
             Health = CharacterData.GetCharacterHealth(cow);

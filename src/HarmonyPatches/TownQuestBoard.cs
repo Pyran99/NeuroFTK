@@ -31,7 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield return new WaitForEndOfFrame();
                 if (uiGetQuestMenu.Instance.m_NoQuestDisplay.text != string.Empty)
                 {
-                    Context.Send("no quests available at this location", true);
+                    Context.Send("no quests available at this location");
                     SelectButton.StartCoroutine(uiGetQuestMenu.Instance.m_BackButton.GetComponent<uiFTKButton>(), 2.5f);
                     yield break;
                 }
