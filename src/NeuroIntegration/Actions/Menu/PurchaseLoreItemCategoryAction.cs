@@ -45,7 +45,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             Plugin.Logger.LogMessage($"{Name} desired item to purchase: {actionData.Data}");
             parsedData = (string)actionData.Data;
-            NeuroActionHandler.UnregisterActions(this);
             return ExecutionResult.Success();
         }
 

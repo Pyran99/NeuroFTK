@@ -45,7 +45,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = actionData.Data.Value<string>("action") ?? "null";
-            NeuroActionHandler.UnregisterActions(this);
             return ExecutionResult.Success();
         }
     }
