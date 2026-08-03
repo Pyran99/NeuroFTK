@@ -16,6 +16,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
             string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
             ScourgeEvents.SendScourgeContext();
+            BoatHelper.HandleBoatHelp(_cow);
             return json;
         }
 

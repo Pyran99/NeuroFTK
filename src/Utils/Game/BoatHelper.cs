@@ -1,13 +1,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
+using NeuroSdk.Messages.Outgoing;
 
 namespace Pyran.NeuroFTK.Utils
 {
     public class BoatHelper
     {
-        public static readonly List<HexLand> desiredPickupLocations = [];
+        public static readonly Dictionary<CharacterOverworld, HexLand> desiredPickupLocations = [];
 
+        public static void HandleBoatHelp(CharacterOverworld cow)
+        {
+            SendClosestPickupLocation(cow);
+        }
 
         public static bool HasActiveBoat()
         {
@@ -63,6 +68,29 @@ namespace Pyran.NeuroFTK.Utils
         {
             IEnumerable<MiniHexUtility> docks = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Utility).Cast<MiniHexUtility>();
             return docks.Select(dock => dock.m_ID == FTK_utility.ID.Port).Cast<MiniHexUtility>();
+        }
+
+        public static void SendClosestPickupLocation(CharacterOverworld cow)
+        {
+            // if not in boat, do nothing, else remove from list
+            if (!cow.IsInBoat()) return;
+            else desiredPickupLocations.Remove(cow);
+            if (desiredPickupLocations.Count == 0) return;
+            float closest = float.PositiveInfinity;
+            HexLand target = null;
+            CharacterOverworld _cow = null;
+            foreach (KeyValuePair<CharacterOverworld, HexLand> hex in desiredPickupLocations)
+            {
+                float dist = HexLand.Distance(cow.GetHexLand(), hex.Value);
+                if (dist < closest)
+                {
+                    closest = dist;
+                    target = hex.Value;
+                    _cow = hex.Key;
+                }
+            }
+            if (target == null) return;
+            Context.Send($"{CharacterData.GetCharacterName(cow)} is in a boat, {CharacterData.GetCharacterName(_cow)} wants to be picked up at {HexData.GetVec2Pos(target)}", true);
         }
     }
 }

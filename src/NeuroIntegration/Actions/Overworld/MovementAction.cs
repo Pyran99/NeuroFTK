@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict, List<string> validQuests, bool isInteractable = false)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
@@ -25,6 +26,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (validQuests.Count > 0)
                 {
                     window.AddAction(new GoToQuestAction(questDict, validQuests));
+                }
+                if (validCows.Count() > 0)
+                {
+                    window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x)));
                 }
                 if (isInteractable) window.AddAction(new InteractWithCurrentHex(_cow));
             }
@@ -165,6 +170,44 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
             if (data == "none") return ExecutionResult.Success();
             if (!_questDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
+            parsedData = data;
+            return ExecutionResult.Success();
+        }
+    }
+
+    public class GoToCharacterAction(Dictionary<string, CharacterOverworld> _characterDict) : NeuroAction<string>
+    {
+        public override string Name => "go_to_character";
+        protected override string Description => "choose a character to travel to. if the location is out of range you will move to the furthest tile along the path. this action is useful for keeping your team together";
+        protected override JsonSchema Schema => GetSchema();
+        readonly string prop = "character";
+
+        private JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = [prop],
+                Properties = new()
+                {
+                    [prop] = QJS.Enum(_characterDict.Select(x => x.Key).ToList()),
+                }
+            };
+            return schema;
+        }
+
+        protected override void Execute(string parsedData)
+        {
+            _characterDict.TryGetValue(parsedData, out CharacterOverworld character);
+            OverworldFlow.NeuroTryGoToCharacter(character);
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
+        {
+            parsedData = "";
+            string data = actionData.Data.Value<string>(prop);
+            if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(prop));
+            if (!_characterDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format(prop));
             parsedData = data;
             return ExecutionResult.Success();
         }

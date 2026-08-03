@@ -245,6 +245,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string ctx = $"moving to {HexData.GetContextForHex(cow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
             if (isSameHex) ctx = "interacting with this hexes point of interest";
+            else if (dest == cow.GetHexLand())
+            {
+                Plugin.Logger.LogError("target destination was same hex");
+                Context.Send($"your final path destination is the hex you are currently on, choose a different action, option or end turn to stay here", true);
+                CreateActionWindow(cow);
+                yield break;
+            }
             Context.Send(ctx, true);
             ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
             ReverseCheckHoverPath(Movement.Instance, dest); // make sure hex list is up to date
@@ -478,7 +485,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (_quests != "") Context.Send(_quests);
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = GetInRangeQuests(_cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, HexData.IsPoiInteractable(hex.GetPOI(), _cow));
+            IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, validCows, HexData.IsPoiInteractable(hex.GetPOI(), _cow));
             isSearching = false;
         }
 
@@ -499,6 +507,25 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             HexLand dest = quest.GetHexLandDestination();
             cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
+        }
+
+        internal static void NeuroTryGoToCharacter(CharacterOverworld character)
+        {
+            if (character == null)
+            {
+                Plugin.Logger.LogError("invalid cow");
+                Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_character"]) + NeuroSdkStrings.ModFaultSuffix}", true);
+                QuickTimerCallback timer = new(() => CreateActionWindow(character), character.gameObject, 2.0f);
+                return;
+            }
+            HexLand dest = character.GetHexLand();
+            character.StartCoroutine(MoveToHexCoroutine(character, dest, true));
+        }
+
+        static bool IsQuestAcrossWater(HexLand lastTarget)
+        {
+            if (lastTarget.IsShoreLand()) return true;
+            return false;
         }
     }
 }

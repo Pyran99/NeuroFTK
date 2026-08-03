@@ -69,6 +69,12 @@ namespace Pyran.NeuroFTK.Utils
             }
             return result;
         }
+
+        public static IEnumerable<CharacterOverworld> GetCowsNotOnThisHex(CharacterOverworld currentCow)
+        {
+            IEnumerable<CharacterOverworld> cows = FTKHub.Instance.m_CharacterOverworlds;
+            return cows.Where(cow => cow.GetHexLand() != currentCow.GetHexLand());
+        }
     }
 
     public sealed class SerializedCharacterData
