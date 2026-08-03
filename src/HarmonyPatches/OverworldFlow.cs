@@ -228,8 +228,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     isSameTarget = false;
                     if (i == 0)
                     {
-                        Plugin.Logger.LogError("could not find any valid tiles");
-                        Context.Send("could not find any valid tiles for the movement action", true);
+                        Plugin.Logger.LogError("could not find any valid hexes");
+                        Context.Send("could not find any valid hexes for the movement action", true);
                         CreateActionWindow(cow);
                         yield break;
                     }
@@ -243,13 +243,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
             }
             yield return new WaitForSeconds(0.1f);
-            ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
-            ReverseCheckHoverPath(Movement.Instance, dest); // make sure hex list is up to date
             string ctx = $"moving to {HexData.GetContextForHex(cow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
-            if (isSameHex) ctx = "interacting with this tiles point of interest";
+            if (isSameHex) ctx = "interacting with this hexes point of interest";
             Context.Send(ctx, true);
+            ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
+            ReverseCheckHoverPath(Movement.Instance, dest); // make sure hex list is up to date
             ReverseCheckClickPath(Movement.Instance, dest, true, false, false);
+            //FIXME trying to find broken interact with hex
+            Plugin.Logger.LogWarning("travel = " + dest.CanTravel());
+            Plugin.Logger.LogWarning("poi = " + dest.m_POI);
+            Plugin.Logger.LogWarning("decaying = " + dest.m_POI?.m_Decaying);
+            Plugin.Logger.LogWarning("show menu = " + dest.m_POI?.ShowLocationMenu());
+            Plugin.Logger.LogWarning("encounterable = " + dest.m_POI?.IsEncounterable());
         }
 
         public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -504,7 +510,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static bool IsHexInteractable(MiniHexInfo poi, CharacterOverworld cow)
         {
-            return HexData.IsPoiComplete(poi, cow);
+            return HexData.IsPoiInteractable(poi, cow);
         }
 
     }

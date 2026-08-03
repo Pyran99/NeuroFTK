@@ -14,12 +14,12 @@ namespace Pyran.NeuroFTK.Utils
             return new Vector2(pos.x, pos.z);
         }
 
-        public static bool IsPoiComplete(MiniHexInfo poi, CharacterOverworld cow)
+        public static bool IsPoiInteractable(MiniHexInfo poi, CharacterOverworld cow)
         {
-            if (poi == null) return true;
-            if (poi.m_Deactivated) return true;
+            if (poi == null) return false;
+            if (poi.m_Deactivated) return false;
             Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
-            bool interactable = true;
+            bool interactable = false;
             switch (poi.m_MiniHexType)
             {
                 case MiniHexInfo.MiniHexType.Town:
@@ -165,10 +165,9 @@ namespace Pyran.NeuroFTK.Utils
             if (hexInfo != null)
             {
                 MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
-                string type = poiType.ToString();
-                type += GetHexTypeContext(poiType);
+                string type = GetHexTypeContext(poiType);
                 poi = hexInfo.GetPOIDisplayValue() + $"({type}) ";
-                if (IsPoiComplete(hexInfo, cow))
+                if (IsPoiInteractable(hexInfo, cow))
                 {
                     poi += " (completed)";
                 }

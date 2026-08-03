@@ -29,7 +29,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string hexData = "nothing";
             if (hexInfo != null)
             {
-                if (HexData.IsPoiComplete(hexInfo, current)) complete = " (completed)";
+                if (HexData.IsPoiInteractable(hexInfo, current)) complete = " (completed)";
                 hexData = $"{hexInfo.GetPOIDisplayValue()}: {hexInfo.m_MiniHexType}{complete}";
             }
             Context.Send($"{name} is at {hex.GetPosition()} {hex}. This hex contains ({hexData})");

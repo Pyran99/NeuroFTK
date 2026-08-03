@@ -15,6 +15,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
             SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
             string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
+            ScourgeEvents.SendScourgeContext();
             return json;
         }
 
@@ -38,6 +39,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine($"({name}) class {_class}, lvl {lvl}, health {health}, {coherent}.");
             }
             Context.Send(sb.ToString());
+            ScourgeEvents.SendScourgeContext();
         }
 
         public static string GetSimplifiedTeamState()
