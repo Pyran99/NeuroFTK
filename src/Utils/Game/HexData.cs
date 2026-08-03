@@ -18,6 +18,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             if (poi == null) return false;
             if (poi.m_Deactivated) return false;
+            if (IsPoiIgnored(poi.m_MiniHexType)) return false;
             Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
             bool interactable = false;
             switch (poi.m_MiniHexType)
@@ -35,14 +36,38 @@ namespace Pyran.NeuroFTK.Utils
                 case MiniHexInfo.MiniHexType.Dungeon:
                     interactable = IsDungeonInteractable(poi as MiniHexDungeon, cow);
                     break;
+                case MiniHexInfo.MiniHexType.Enemy:
+                case MiniHexInfo.MiniHexType.EnemyCamp:
+                case MiniHexInfo.MiniHexType.AirShip:
+                case MiniHexInfo.MiniHexType.Boat:
+                    interactable = true;
+                    break;
+                case MiniHexInfo.MiniHexType.Utility:
+                    interactable = true;
+                    break;
                 default:
+                    interactable = true;
                     break;
             }
-            if (!interactable)
-            {
-                Plugin.Logger.LogMessage("this hex is not interactable");
-            }
             return interactable;
+        }
+
+        static bool IsPoiIgnored(MiniHexInfo.MiniHexType type)
+        {
+            switch (type)
+            {
+                case MiniHexInfo.MiniHexType.Chaos:
+                case MiniHexInfo.MiniHexType.Curse:
+                case MiniHexInfo.MiniHexType.Haunt:
+                case MiniHexInfo.MiniHexType.Fire:
+                case MiniHexInfo.MiniHexType.Poison:
+                case MiniHexInfo.MiniHexType.Volcano:
+                case MiniHexInfo.MiniHexType.None:
+                case MiniHexInfo.MiniHexType.COUNT:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         static bool IsAlluringPoolInteractable(MiniHexAlluringPool poi)
@@ -167,7 +192,7 @@ namespace Pyran.NeuroFTK.Utils
                 MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
                 string type = GetHexTypeContext(poiType);
                 poi = hexInfo.GetPOIDisplayValue() + $"({type}) ";
-                if (!IsPoiInteractable(hexInfo, cow))
+                if (!IsPoiIgnored(poiType) && !IsPoiInteractable(hexInfo, cow))
                 {
                     poi += " (completed)";
                 }
