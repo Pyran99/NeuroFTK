@@ -291,6 +291,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             yield return task.IsCompleted;
 
             Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
+            bool removed = false;
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                if (tiles[i].IsWater())
+                {
+                    tiles.Remove(tiles[i]); // VERIFY removed empty water hex
+                    removed = true;
+                }
+            }
+            if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
             QuickTimerCallback timer = new(() => CreateActionWindow(currentCOW), currentCOW.gameObject, 0.5f);
         }
 
