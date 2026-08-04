@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ClickTarget(HexLand _hexland)
         {
             currentHover = _hexland;
-            float dist = (_hexland.GetPosition() - GameLogic.Instance.GetCurrentCOW().GetHexLand().GetPosition()).magnitude;
+            float dist = (_hexland.GetPosition() - CharacterData.GetNeuroCow().GetHexLand().GetPosition()).magnitude;
             Plugin.Logger.LogMessage($"check click path: ({_hexland.GetPosition()}) ({dist} ({dist < 2.8866f * 15f}))");
         }
 
@@ -56,14 +56,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         //     HexLand target = hexes[Random.Range(0, hexes.Count)];
         //     if (target == null) return;
         //     Plugin.Logger.LogWarning("max dist = " + 2.8866f * 15f);
-        //     Plugin.Logger.LogWarning("dist = " + (target.GetPosition() - GameLogic.Instance.GetCurrentCOW().GetHexLand().GetPosition()).magnitude);
+        //     Plugin.Logger.LogWarning("dist = " + (target.GetPosition() - CharacterData.GetNeuroCow().GetHexLand().GetPosition()).magnitude);
         //     // OverworldFlow.ReverseUpdateHexMove(Movement.Instance);
         //     OverworldFlow.ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
         //     Plugin.Logger.LogWarning("target1 = " + target?.GetPosition());
         //     Plugin.Logger.LogWarning("last partial1 = " + Movement.Instance.m_HexListPartial.Last()?.GetPosition());
         //     OverworldFlow.ReverseCheckHoverPath(Movement.Instance, target);
         //     List<HexLand> temp = [];
-        //     HexLand.FindPath(GameLogic.Instance.GetCurrentCOW().GetHexLand(), target, HexLand.PathFindingStartState.OnLand, ref temp);
+        //     HexLand.FindPath(CharacterData.GetNeuroCow().GetHexLand(), target, HexLand.PathFindingStartState.OnLand, ref temp);
         //     Plugin.Logger.LogWarning("target2 = " + target?.GetPosition());
         //     Plugin.Logger.LogWarning("last partial2 = " + Movement.Instance.m_HexListPartial.Last()?.GetPosition());
         //     OverworldFlow.ReverseUpdateHexMove(Movement.Instance);

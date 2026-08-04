@@ -251,11 +251,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 FTK_slotOutput.ID id = FTK_slotOutput.ID.None;
                 if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Ambush)
                 {
-                    id = RollSlotOutcomes._getAmbushType((MiniHexEnemy)encounterMenuInstance.m_ThisMiniHex, GameLogic.Instance.GetCurrentCOW());
+                    id = RollSlotOutcomes._getAmbushType((MiniHexEnemy)encounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
                 }
                 else if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Sneak)
                 {
-                    id = RollSlotOutcomes._getSneakType((MiniHexEnemy)encounterMenuInstance.m_ThisMiniHex, GameLogic.Instance.GetCurrentCOW());
+                    id = RollSlotOutcomes._getSneakType((MiniHexEnemy)encounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
                 }
                 if (id == FTK_slotOutput.ID.None)
                 {
@@ -273,7 +273,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 else
                 {
-                    outcome = RollSlotOutcomes.GetOutcomes(GameLogic.Instance.GetCurrentCOW(), id);
+                    outcome = RollSlotOutcomes.GetOutcomes(CharacterData.GetNeuroCow(), id);
                 }
                 // { "ambush": { 0: {5%: failure} }, { 1: {5%: success} }
                 rollData.Add(btn.m_ButtonText.text, outcome);

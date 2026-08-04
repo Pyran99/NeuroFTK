@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (isCreating) yield break;
             isCreating = true;
-            CharacterOverworld _cow = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld _cow = CharacterData.GetNeuroCow();
             if (_itemContainer == _cow.m_PlayerInventory.m_ContainerBackpack)
             {
                 Plugin.Logger.LogWarning("sell list. unsure when called");

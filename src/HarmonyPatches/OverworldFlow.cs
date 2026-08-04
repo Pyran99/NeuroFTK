@@ -226,7 +226,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ResumeTurnMovement()
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld cow = CharacterData.GetNeuroCow();
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
             if (isFirstAction) return;
@@ -322,7 +322,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isSearching = true;
             tiles.Clear();
             Object.Destroy(window);
-            CharacterOverworld currentCOW = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld currentCOW = CharacterData.GetNeuroCow();
             if (!Multiplayer.IsYourCow(currentCOW))
             {
                 Plugin.Logger.LogError("tried to generate move action from another players cow");
@@ -394,7 +394,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             hexPositions.Clear();
             StringBuilder sb = new();
             sb.Append(StringMessages.HexContext);
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld cow = CharacterData.GetNeuroCow();
             foreach (HexLand hex in _tiles)
             {
                 sb.AppendLine(HexData.GetContextForHex(cow, hex, true));
@@ -410,7 +410,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             questDict.Clear();
             questPositions.Clear();
             sbQuest = new();
-            Vector3 cowHex = GameLogic.Instance.GetCurrentCOW().GetHexLand().GetPosition();
+            Vector3 cowHex = CharacterData.GetNeuroCow().GetHexLand().GetPosition();
             foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>())
             {
                 AddValidQuests(q, cowHex);
@@ -551,7 +551,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         internal static void NeuroTryGoToCharacter(CharacterOverworld target)
         {
-            CharacterOverworld curCow = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld curCow = CharacterData.GetNeuroCow();
             if (target == null)
             {
                 Plugin.Logger.LogError("invalid cow");

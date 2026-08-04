@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.Utils
             return cow.m_CharacterStats.m_CharacterClass.ToString();
         }
 
-        public static CharacterOverworld GetNeuroCow()
+        public static CharacterOverworld GetNeuroCow(bool inCombat = false)
         {
             CharacterOverworld cow;
             if (Multiplayer.IsMultiplayer())

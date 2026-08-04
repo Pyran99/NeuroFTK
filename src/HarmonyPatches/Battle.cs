@@ -334,7 +334,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCombatCOW();
+            CharacterOverworld cow = CharacterData.GetNeuroCow(true);
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
             actions.Clear();
@@ -434,7 +434,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.isActiveAndEnabled;
             if (useDefault)
             {
-                FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(GameLogic.Instance.GetCurrentCombatCOW().m_WeaponID);
+                FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(CharacterData.GetNeuroCow(true).m_WeaponID);
                 btns.Add(entry1.GetAttackDisplay(), _instance.m_AttackButton);
             }
             if (canReload)
@@ -496,7 +496,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             // from => public void DisplayBattleActionInfo(uiBattleButton _button, bool _on)
             Dictionary<string, Dictionary<string, string>> data = [];
-            CharacterOverworld current = GameLogic.Instance.GetCurrentCombatCOW();
+            CharacterOverworld current = CharacterData.GetNeuroCow(true);
             global::CharacterStats stats = current.m_CharacterStats;
 			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
 			FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
@@ -616,7 +616,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static float GetAccuracy(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
-            CharacterOverworld current = GameLogic.Instance.GetCurrentCombatCOW();
+            CharacterOverworld current = CharacterData.GetNeuroCow(true);
             global::CharacterStats stats = current.m_CharacterStats;
 			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
 			FTK_weaponStats2.SkillType skillType;
@@ -659,7 +659,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static int GetAttackDamage(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
-            int dmg = GameLogic.Instance.GetCurrentCombatCOW().m_CharacterStats.GetWeaponMaxDamage();
+            int dmg = CharacterData.GetNeuroCow(true).m_CharacterStats.GetWeaponMaxDamage();
             FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
 
             if (btn.m_ButtonType == uiBattleButton.BattleButtonType.proficiency)

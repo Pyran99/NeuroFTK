@@ -14,7 +14,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void DungeonStairs()
         {
             Context.Send("entered a dungeon room with stairs to the next floor. ", true);
-            BeginTurns.CtxCombatTurnBeginPlayer(GameLogic.Instance.GetCurrentCombatCOW());
+            BeginTurns.CtxCombatTurnBeginPlayer(CharacterData.GetNeuroCow(true));
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceEmptyRoom))]

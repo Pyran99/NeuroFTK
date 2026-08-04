@@ -112,7 +112,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             HexLandID id = destination.GetHexLandID();
             if (id == null) return;
             Plugin.Logger.LogMessage(destination + $" = {id.m_BigIndex} - {id.m_SmallIndex}");
-            // CharacterOverworld character = GameLogic.Instance.GetCurrentCOW();
+            // CharacterOverworld character = CharacterData.GetNeuroCow();
             // FTKPlayerID id2 = character.m_FTKPlayerID;
             // GameFlow.Instance.ToggleHexPingRPC(id2, id);
             // string name = character.m_CharacterStats.m_CharacterName;

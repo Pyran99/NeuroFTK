@@ -103,12 +103,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogWarning("item reward");
                 FTKItem _item = FTKItem.Get(id);
-                result += $" {_item.GetDescription(GameLogic.Instance.GetCurrentCOW())}";
+                result += $" {_item.GetDescription(CharacterData.GetNeuroCow())}";
             }
             else if (itemBase is FTK_weaponStats2 stats)
             {
                 Plugin.Logger.LogWarning("weapon reward");
-                result += ItemData.GetItemDescription(id, true, GameLogic.Instance.GetCurrentCOW());
+                result += ItemData.GetItemDescription(id, true, CharacterData.GetNeuroCow());
             }
             return result;
         }

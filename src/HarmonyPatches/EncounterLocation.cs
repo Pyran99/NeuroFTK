@@ -151,8 +151,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 sb.AppendLine($"{desc}: {btnInfo}");
             }
-            int cost = miniHexInfo.GetCost(GameLogic.Instance.GetCurrentCOW());
-            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {GameLogic.Instance.GetCurrentCOW().m_CharacterStats.m_Gold} gold");
+            int cost = miniHexInfo.GetCost(CharacterData.GetNeuroCow());
+            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {CharacterData.GetNeuroCow().m_CharacterStats.m_Gold} gold");
             window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString());
             UnregisterDisabledObject.QuickCreate(uiLocationMenuDisplay.Instance.transform.Find("mainMenu").gameObject, window);
         }

@@ -41,7 +41,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static ActionWindow CreateTurnBeginWindow(bool registerBelt = true)
         {
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld cow = CharacterData.GetNeuroCow();
             ActionWindow window = ActionWindow.Create(cow.gameObject);
             List<INeuroAction> registerActions = [];
             registerActions.Add(new BeginMovementAction());
@@ -127,7 +127,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             else
             {
                 Context.Send("cannot end turn right now");
-                OverworldFlow.CreateActionWindow(GameLogic.Instance.GetCurrentCOW());
+                OverworldFlow.CreateActionWindow(CharacterData.GetNeuroCow());
             }
         }
 
@@ -159,7 +159,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld cow = CharacterData.GetNeuroCow();
             OverworldFlow.NeuroTryGoToQuest(cow, _questDict.TryGetValue(parsedData, out QuestLogicBase quest) ? quest : null);
         }
 

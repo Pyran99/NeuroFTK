@@ -2,6 +2,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -34,10 +35,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            GameLogic.Instance.GetCurrentCombatCOW().GetCurrentDummy()?.SpawnHudTextRPC(parsedData);
+            CharacterData.GetNeuroCow(true).GetCurrentDummy()?.SpawnHudTextRPC(parsedData);
             if (uiChatBox.Instance)
             {
-                uiChatBox.Instance.AddMessage(UnityEngine.Color.white, GameLogic.Instance.GetCurrentCombatCOW()?.m_CharacterStats.m_CharacterName, parsedData);
+                uiChatBox.Instance.AddMessage(UnityEngine.Color.white, CharacterData.GetNeuroCow(true)?.m_CharacterStats.m_CharacterName, parsedData);
                 Context.Send($"sent msg {parsedData}", true);
             }
         }
