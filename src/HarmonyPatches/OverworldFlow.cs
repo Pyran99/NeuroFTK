@@ -196,7 +196,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
-            if (cow.m_FirstStopAtHex)
+            if (cow.m_FirstStopAtHex) // is this useful
             {
                 Plugin.Logger.LogWarning("first stop");
             }
