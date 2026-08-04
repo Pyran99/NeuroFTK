@@ -235,12 +235,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject, 0.5f);
         }
 
-        public static IEnumerator MoveToHexCoroutine(CharacterOverworld cow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
+        public static IEnumerator MoveToHexCoroutine(CharacterOverworld curCow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
         {
             HexLand dest = hex;
             if (!isSameHex)
             {
-                lastDestinations[cow] = dest;
+                lastDestinations[curCow] = dest;
             }
             // hover destination to generate path list
             ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
@@ -250,7 +250,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
                 Context.Send(StringMessages.ActionIssueOccured.Format(["movement"]) + NeuroSdkStrings.ModFaultSuffix, true);
-                CreateActionWindow(cow);
+                CreateActionWindow(curCow);
                 yield break;
             }
             bool isSameTarget = hexes.Contains(hex);
@@ -261,7 +261,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 bool failed = true;
                 for (int i = hexes.Count-1; i >= 0; i--)
                 {
-                    if (HexData.CanTravel(dest, cow))
+                    if (HexData.CanTravel(dest, curCow))
                     {
                         dest = hexes[i];
                         failed = false;
@@ -273,7 +273,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     {
                         Plugin.Logger.LogError("could not find any valid hexes");
                         Context.Send("could not find any valid hexes for the movement action", true);
-                        CreateActionWindow(cow);
+                        CreateActionWindow(curCow);
                         yield break;
                     }
                 }
@@ -281,19 +281,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     Plugin.Logger.LogError("failed to auto travel to last hex");
                     Context.Send(StringMessages.ActionIssueOccured.Format(["go_to_quest"]), true);
-                    CreateActionWindow(cow);
+                    CreateActionWindow(curCow);
                     yield break;
                 }
             }
             yield return new WaitForSeconds(0.1f);
-            string ctx = $"moving to {HexData.GetContextForHex(cow, dest)}";
+            string ctx = $"moving to {HexData.GetContextForHex(curCow, dest)}";
             if (!isSameTarget) ctx += " (could not reach your chosen destination)";
             if (isSameHex) ctx = "interacting with this hexes point of interest";
-            else if (dest == cow.GetHexLand())
+            else if (dest == curCow.GetHexLand())
             {
-                Plugin.Logger.LogError($"target destination was same hex: {dest.GetPosition()} = {cow.GetHexLand().GetPosition()}");
+                Plugin.Logger.LogError($"target destination was same hex: {dest.GetPosition()} = {curCow.GetHexLand().GetPosition()}");
                 Context.Send($"your final path destination is the hex you are currently on, choose a different action, option or end turn to stay here", true);
-                CreateActionWindow(cow);
+                CreateActionWindow(curCow);
                 yield break;
             }
             Context.Send(ctx, true);
@@ -504,7 +504,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             HexLand hex = _cow.GetHexLand();
             Vector2 pos = HexData.GetVec2Pos(hex);
-            string ctx = $"it is your turn, you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
+            string ctx = $"you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
             if (lastDestinations.ContainsKey(_cow))
             {
                 if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
@@ -549,17 +549,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
         }
 
-        internal static void NeuroTryGoToCharacter(CharacterOverworld character)
+        internal static void NeuroTryGoToCharacter(CharacterOverworld target)
         {
-            if (character == null)
+            CharacterOverworld curCow = GameLogic.Instance.GetCurrentCOW();
+            if (target == null)
             {
                 Plugin.Logger.LogError("invalid cow");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_character"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateActionWindow(character), character.gameObject, 2.0f);
+                QuickTimerCallback timer = new(() => CreateActionWindow(curCow), curCow.gameObject, 2.0f);
                 return;
             }
-            HexLand dest = character.GetHexLand();
-            character.StartCoroutine(MoveToHexCoroutine(character, dest, true));
+            HexLand dest = target.GetHexLand();
+            curCow.StartCoroutine(MoveToHexCoroutine(curCow, dest, true));
         }
 
         static bool IsQuestAcrossWater(HexLand lastTarget)
