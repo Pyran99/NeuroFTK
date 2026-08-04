@@ -4,6 +4,7 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 
@@ -59,7 +60,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return ["For the King"];
             }
             List<string> names = [];
-            if ((bool)Plugin.config["force_first_adventure"] == true) names.Add("For the King");
+            if (GlobalConfig.ForcedFirstAdventure()) names.Add("For the King");
             else
             {
                 foreach (GameDefButton btn in instance.m_GameDefButtons)

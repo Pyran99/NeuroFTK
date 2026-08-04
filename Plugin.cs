@@ -91,6 +91,15 @@ public class Plugin : BaseUnityPlugin
                 config.Add(entry.Key, entry.Value);
                 keyAdded = true;
             }
+            List<string> toRemove = [];
+            foreach (KeyValuePair<string, object> entry in config)
+            {
+                if (!GlobalConfig.defaultConfig.ContainsKey(entry.Key))
+                {
+                    toRemove.Add(entry.Key);
+                }
+            }
+            foreach (string key in toRemove) config.Remove(key);
             if (keyAdded)
             {
                 string json = Jason.Serialize(config);

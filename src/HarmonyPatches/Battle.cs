@@ -62,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
             Plugin.Logger.LogMessage("battle btns initialized");
-            GlobalConfig.gameInitialized = true;
+            GlobalConfig.GameLoaded();
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError("wrong mode for battle");

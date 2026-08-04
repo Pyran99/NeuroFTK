@@ -53,7 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
-            GlobalConfig.gameInitialized = true;
+            GlobalConfig.GameLoaded();
             isFirstAction = true;
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;

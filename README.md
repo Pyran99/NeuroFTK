@@ -21,9 +21,9 @@ Name | Default | Description
 `environment_web_socket` | ws://localhost:8000 | Websocket url
 `debug_mode` | false | some actions will be handled differently when `true`. Enables god mode toggle with KeyCode.LeftBracket
 `use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
-`force_first_adventure` | false | only let neuro choose the first adventure map For the King (other maps not tested yet)
+`force_first_adventure` | false | only let neuro choose the first adventure map For the King *(other maps not tested yet)*
 `is_multiplayer` | false | disables normal main menu actions
-`always_resume` | true | disables new game if there is a previous save to load
+`launch_resume` | true | disables new game if there is a previous save to load. Only used for the initial game startup
 
 > [!CAUTION]
 > Multiplayer has NOT been tested & will likely break things
