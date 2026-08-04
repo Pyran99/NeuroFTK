@@ -27,10 +27,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static readonly Dictionary<string, HexLand> hexPositions = [];
 
         static readonly bool removeEmptyWater = false;
+        static bool isRemake = false;
         static readonly List<Vector3> questPositions = [];
         static StringBuilder sbQuest = new();
-        static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = []; 
-
+        static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = [];
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -38,10 +38,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void TurnSkipped(CharacterOverworld _cow)
         {
             Context.Send($"{CharacterData.GetCharacterName(_cow)} had their turn skipped");
-            DisposeActions();
+            // DisposeActions();
         }
 
-        [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")] // not called when loading game
+        [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.OnStartTurn))] // before begin turn enumerate finished
+        [HarmonyPostfix]
+        static void StartTurn(CharacterOverworld __instance)
+        {
+            // Plugin.Logger.LogWarning("CharacterOverworld.OnStartTurn");
+            // BeginTurn2(__instance);
+        }
+
+        [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")]
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
@@ -59,14 +67,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         public static void StartTracking()
         {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
-            if (!Multiplayer.IsYourCow(cow)) return;
-            isTracking = true;
-            if (isFirstAction) return;
-            RollSystem.currentCOW = cow;
-            Plugin.Logger.LogMessage("start tracking create window");
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject, 0.5f);
+            Plugin.Logger.LogMessage("start tracking");
+            ResumeTurnMovement();
         }
 
         // when movement begins
@@ -87,10 +89,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EndTurn()
         {
-            tiles.Clear();
-            isTracking = false;
-            isSearching = false;
-            DisposeActions();
+            StopTracking();
         }
 
         // when the character stops moving
@@ -100,8 +99,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             
         }
-
-        static bool isRemake = false;
 
         // spending focus for more actions
         [HarmonyPatch(typeof(Movement), "ConvertFocusToAction")]
@@ -116,6 +113,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             tiles.Clear();
             QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), RollSystem.currentCOW.gameObject, 0.5f);
         }
+
+#region Reverse Patches
 
         // manual movement call
         [HarmonyPatch(typeof(Movement), "TrackCheckClickPath")]
@@ -143,6 +142,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
         }
 
+#endregion
+
         [HarmonyPatch(typeof(MiniHexInfo), nameof(MiniHexInfo.DeactivateHex))]
         [HarmonyPostfix]
         static void HexDeactivated(MiniHexInfo __instance)
@@ -169,7 +170,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
 
-        #region end turn procs
+#region end turn procs
 
         [HarmonyPatch(typeof(CharacterSkills), nameof(CharacterSkills.Refocus))]
         [HarmonyPrefix]
@@ -178,7 +179,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (__result) Context.Send("gained focus points from end of turn skill", true);
         }
 
-        #endregion
+#endregion
 
 
         public static void BeginMovementTurn()
@@ -190,6 +191,48 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void DisposeActions()
         {
             Object.Destroy(window);
+        }
+
+        static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
+        {
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            if (cow.m_FirstStopAtHex)
+            {
+                Plugin.Logger.LogWarning("first stop");
+            }
+            if (cow.IsInBoat() && GameLogic.Instance.GetActivePlayersInAreaOnLand(cow.GetHexLand(), GameFlow.Instance.m_PartyEnterRadius).Count > 0)
+            {
+                Plugin.Logger.LogWarning("boat players in range should gen location menu");
+                isFirstAction = false;
+                return;
+            }
+            if (cow.m_WaitForRespawn || !cow.IsStillAlive())
+            {
+                Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
+                return;
+            }
+            if (!Multiplayer.IsYourCow(cow))
+            {
+                Multiplayer.SendOtherPlayerTurnCtx();
+                return;
+            }
+            isFirstAction = true;
+            isSearching = false;
+            DisposeActions();
+            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), cow.gameObject);
+            ToggleDisposableActions.ToggleOverworldActions(true, false);
+        }
+
+        static void ResumeTurnMovement()
+        {
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            if (!Multiplayer.IsYourCow(cow)) return;
+            isTracking = true;
+            if (isFirstAction) return;
+            RollSystem.currentCOW = cow;
+            Plugin.Logger.LogMessage("start tracking create window");
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject, 0.5f);
         }
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld cow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
@@ -455,26 +498,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         #endregion
 
 
-        static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
-        {
-            // boats begin turn with encounter action
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat || cow.IsInBoat()) return;
-            if (cow.m_WaitForRespawn || !cow.IsStillAlive())
-            {
-                Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
-                return;
-            }
-            if (!Multiplayer.IsYourCow(cow))
-            {
-                Multiplayer.SendOtherPlayerTurnCtx();
-                return;
-            }
-            isFirstAction = true;
-            isSearching = false;
-            DisposeActions();
-            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), cow.gameObject);
-            ToggleDisposableActions.ToggleOverworldActions(true, false);
-        }
 
         public static void CreateActionWindow(CharacterOverworld _cow)
         {

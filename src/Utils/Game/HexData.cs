@@ -44,7 +44,7 @@ namespace Pyran.NeuroFTK.Utils
             return interactable;
         }
 
-        public static bool IsPoiCompleted(MiniHexInfo poi, CharacterOverworld cow)
+        public static bool IsPoiCompleted(MiniHexInfo poi, CharacterOverworld cow) // FIXME forgotten cellar was true when not complete
         {
             if (poi == null) return false;
             if (poi.m_Deactivated) return true;
@@ -83,6 +83,14 @@ namespace Pyran.NeuroFTK.Utils
             {
                 Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex", true);
                 return false;
+            }
+            else if (encounter.m_Type == FTK_miniEncounter.ID.Cellar)
+            {
+                if (encounter.HasEncounterQuest())
+                {
+                    QuestLogicBase quest = encounter.GetEncounterQuest();
+                    if (quest.IsConsiderComplete()) return true;
+                }
             }
             return true;
         }
