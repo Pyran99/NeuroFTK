@@ -14,6 +14,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             UnregisterDisabledObject comp = owner.GetComponent<UnregisterDisabledObject>() ?? owner.AddComponent<UnregisterDisabledObject>();
             comp.window = window;
+            comp.destroySelf = destroySelf;
             return comp;
         }
 

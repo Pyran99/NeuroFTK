@@ -20,16 +20,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static ActionWindow window;
         public static bool isSearching = false;
         public static bool isTracking = false;
-        public static List<HexLand> tiles = [];
-
-        public static readonly Dictionary<string, QuestLogicBase> questDict = [];
-        static readonly List<Vector3> questPositions = [];
-        static StringBuilder sbQuest = new();
-        public static readonly Dictionary<string, HexLand> hexPositions = [];
-        static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = []; 
-
         public static bool isFirstAction = false;
         public static bool isSneakMovement = false;
+        public static List<HexLand> tiles = [];
+        public static readonly Dictionary<string, QuestLogicBase> questDict = [];
+        public static readonly Dictionary<string, HexLand> hexPositions = [];
+
+        static readonly bool removeEmptyWater = false;
+        static readonly List<Vector3> questPositions = [];
+        static StringBuilder sbQuest = new();
+        static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = []; 
+
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -162,9 +163,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.PortalMoveTo))]
         [HarmonyPostfix]
-        static void OnTeleported(HexLand _newLand)
+        static void OnTeleported(HexLand _newLand, CharacterOverworld __instance)
         {
-            Context.Send($"{CharacterData.GetCharacterName(GameLogic.Instance.GetCurrentCOW())} teleported to {HexData.GetVec2Pos(_newLand)}");
+            Context.Send($"{CharacterData.GetCharacterName(__instance)} teleported to {HexData.GetVec2Pos(_newLand)}");
         }
 
 
@@ -291,16 +292,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             yield return task.IsCompleted;
 
             Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
-            bool removed = false;
-            for (int i = 0; i < tiles.Count; i++)
+            if (removeEmptyWater)
             {
-                if (tiles[i].IsWater())
+                bool removed = false;
+                List<HexLand> toRemove = [];
+                for (int i = 0; i < tiles.Count; i++)
                 {
-                    tiles.Remove(tiles[i]); // VERIFY removed empty water hex
-                    removed = true;
+                    if (tiles[i].IsWater())
+                    {
+                        toRemove.Add(tiles[i]);
+                        removed = true;
+                    }
                 }
+                foreach (HexLand hex in toRemove) tiles.Remove(hex); // VERIFY removed empty water hex
+                if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
             }
-            if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
             QuickTimerCallback timer = new(() => CreateActionWindow(currentCOW), currentCOW.gameObject, 0.5f);
         }
 
@@ -451,7 +457,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
         {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            // boats begin turn with encounter action
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat || cow.IsInBoat()) return;
             if (cow.m_WaitForRespawn || !cow.IsStillAlive())
             {
                 Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
@@ -496,7 +503,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, validCows, HexData.IsPoiInteractable(hex.GetPOI(), _cow));
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, validCows, HexData.IsPoiCompleted(hex.GetPOI(), _cow));
             isSearching = false;
         }
 

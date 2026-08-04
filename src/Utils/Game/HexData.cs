@@ -18,12 +18,14 @@ namespace Pyran.NeuroFTK.Utils
         {
             if (poi == null) return false;
             if (poi.m_Deactivated) return false;
-            if (IsPoiIgnored(poi.m_MiniHexType)) return false;
-            Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
             bool interactable = false;
             switch (poi.m_MiniHexType)
             {
                 case MiniHexInfo.MiniHexType.Town:
+                case MiniHexInfo.MiniHexType.Utility:
+                case MiniHexInfo.MiniHexType.Portal:
+                case MiniHexInfo.MiniHexType.SafeCamp:
+                case MiniHexInfo.MiniHexType.FortuneTeller:
                     return true;
                 case MiniHexInfo.MiniHexType.Sanctum:
                     return !(poi as MiniHexSanctum).m_SanctumClaimed;
@@ -36,35 +38,28 @@ namespace Pyran.NeuroFTK.Utils
                 case MiniHexInfo.MiniHexType.Dungeon:
                     interactable = IsDungeonInteractable(poi as MiniHexDungeon, cow);
                     break;
-                case MiniHexInfo.MiniHexType.Enemy:
-                case MiniHexInfo.MiniHexType.EnemyCamp:
-                case MiniHexInfo.MiniHexType.AirShip:
-                case MiniHexInfo.MiniHexType.Boat:
-                    interactable = true;
-                    break;
-                case MiniHexInfo.MiniHexType.Utility:
-                    interactable = true;
-                    break;
                 default:
-                    interactable = true;
                     break;
             }
             return interactable;
         }
 
-        static bool IsPoiIgnored(MiniHexInfo.MiniHexType type)
+        public static bool IsPoiCompleted(MiniHexInfo poi, CharacterOverworld cow)
         {
-            switch (type)
+            if (poi == null) return false;
+            if (poi.m_Deactivated) return true;
+            switch (poi.m_MiniHexType)
             {
-                case MiniHexInfo.MiniHexType.Chaos:
-                case MiniHexInfo.MiniHexType.Curse:
                 case MiniHexInfo.MiniHexType.Haunt:
-                case MiniHexInfo.MiniHexType.Fire:
-                case MiniHexInfo.MiniHexType.Poison:
-                case MiniHexInfo.MiniHexType.Volcano:
-                case MiniHexInfo.MiniHexType.None:
-                case MiniHexInfo.MiniHexType.COUNT:
-                    return true;
+                    return (poi as MiniHexHaunt).m_HauntSealed;
+                case MiniHexInfo.MiniHexType.Dungeon:
+                    return IsDungeonInteractable(poi as MiniHexDungeon, cow);
+                case MiniHexInfo.MiniHexType.MiniEncounter:
+                    return IsEncounterInteractable(poi as MiniEncounter, cow);
+                case MiniHexInfo.MiniHexType.Sanctum:
+                    return (poi as MiniHexSanctum).m_SanctumClaimed || (poi as MiniHexSanctum).m_SanctumBroken;
+                case MiniHexInfo.MiniHexType.Utility:
+                    return (poi as MiniHexUtility).m_UtilityActivated;
                 default:
                     return false;
             }
@@ -84,7 +79,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             Plugin.Logger.LogMessage("poi encounter type = " + encounter.m_Type);
             if (encounter.m_HasBeenConsumed || encounter.m_CantUseThisTurn) return false;
-            if (encounter.m_Type == FTK_miniEncounter.ID.kvHome)
+            if (encounter.m_Type == FTK_miniEncounter.ID.kvHome && cow.GetHexLand() == encounter.m_HexLand)
             {
                 Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex", true);
                 return false;
@@ -108,7 +103,7 @@ namespace Pyran.NeuroFTK.Utils
                     }
                 }
             }
-            if (num != 0)
+            if (num != 0 && cow.GetHexLand() == dungeon.m_HexLand)
             {
                 if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
                 {
@@ -184,21 +179,21 @@ namespace Pyran.NeuroFTK.Utils
             }
             if (hex.GetDeadPlayerCount() > 0)
             {
-                hasDeadPlayers = "has dead character to revive";
+                hasDeadPlayers = "has dead character to revive.";
             }
             MiniHexInfo hexInfo = hex.GetPOI();
             if (hexInfo != null)
             {
                 MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
                 string type = GetHexTypeContext(poiType);
-                poi = hexInfo.GetPOIDisplayValue() + $"({type}) ";
-                if (!IsPoiIgnored(poiType) && !IsPoiInteractable(hexInfo, cow))
+                poi = hexInfo.GetPOIDisplayValue() + $"{type} ";
+                if (IsPoiCompleted(hexInfo, cow))
                 {
                     poi += " (completed)";
                 }
             }
             if (addToList) OverworldFlow.hexPositions.Add(pos.ToString(), hex);
-            return $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]";
+            return $"[{pos} ({name})({questName}){hasDeadPlayers}{poi}]";
         }
 
         public static string GetHexTypeContext(MiniHexInfo.MiniHexType type)
@@ -206,7 +201,7 @@ namespace Pyran.NeuroFTK.Utils
             return type switch
             {
                 MiniHexInfo.MiniHexType.Haunt => "(important to defeat)",
-                MiniHexInfo.MiniHexType.Poison or MiniHexInfo.MiniHexType.Chaos or MiniHexInfo.MiniHexType.Fire or MiniHexInfo.MiniHexType.Curse => "(dangerous)",
+                MiniHexInfo.MiniHexType.Poison or MiniHexInfo.MiniHexType.Chaos or MiniHexInfo.MiniHexType.Fire or MiniHexInfo.MiniHexType.Curse => "(dangerous, avoid)",
                 MiniHexInfo.MiniHexType.Portal => "(teleport)",
                 _ => "",
             };

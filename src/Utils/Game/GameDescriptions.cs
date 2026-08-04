@@ -49,7 +49,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             {VoteButton.VoteOption.Unlocked, "use lockpicks to open the object"},
             {VoteButton.VoteOption.Open, "open container, may receive loot"},
-            {VoteButton.VoteOption.Collect, "gather the loot"},
+            {VoteButton.VoteOption.Collect, "loot the object"},
             {VoteButton.VoteOption.Equip, "equip the loot"},
             {VoteButton.VoteOption.Use, "use the item right away"},
             {VoteButton.VoteOption.Pass, "throw away the loot or pass on the encounter"}, // discard
@@ -77,7 +77,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Sneak => FTKHub.Localized<TextInfo>("STR_CombatSneakSelect") + "(based on speed stat)",
                 SubPanelBaseBase.ButtonID.Attempt => "attempt to complete this encounter", // cult device, devious enchanter (play)
                 SubPanelBaseBase.ButtonID.BuyIn => "buy in NYI",
-                SubPanelBaseBase.ButtonID.Collect => "collect NYI",
+                SubPanelBaseBase.ButtonID.Collect => "loot the object",
                 SubPanelBaseBase.ButtonID.Devote => "devote your life to this god",
                 SubPanelBaseBase.ButtonID.Drink => "drink from the well, you can throw gold in to increase your chance of success",
                 SubPanelBaseBase.ButtonID.EndTurn => "leave this encounter and end turn",

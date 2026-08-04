@@ -154,6 +154,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             int cost = miniHexInfo.GetCost(GameLogic.Instance.GetCurrentCOW());
             if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {GameLogic.Instance.GetCurrentCOW().m_CharacterStats.m_Gold} gold");
             window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString());
+            UnregisterDisabledObject.QuickCreate(uiLocationMenuDisplay.Instance.transform.Find("mainMenu").gameObject, window);
         }
 
         public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()

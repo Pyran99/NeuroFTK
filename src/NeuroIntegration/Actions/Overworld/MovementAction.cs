@@ -31,7 +31,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 {
                     window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x)));
                 }
-                if (isInteractable) window.AddAction(new InteractWithCurrentHex(_cow));
+                if (isInteractable && !_cow.IsInBoat()) window.AddAction(new InteractWithCurrentHex(_cow));
             }
             window.SetContext(ctx);
             window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "you are moving your characters around the overworld", true);

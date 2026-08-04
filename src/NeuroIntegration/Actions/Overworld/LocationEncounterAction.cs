@@ -26,16 +26,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         public override string Name => "location_encounter";
         protected override string Description => "choose what to do at this encounter";
         protected override JsonSchema Schema => GetSchema();
+        readonly string prop = "action";
 
         private JsonSchema GetSchema()
         {
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,
-                Required = ["action"],
+                Required = [prop],
                 Properties = new()
                 {
-                    ["action"] = QJS.Enum(_buttons.Keys.ToList())
+                    [prop] = QJS.Enum(_buttons.Keys.ToList())
                 }
             };
             return schema;
@@ -60,9 +61,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            string data = actionData.Data.Value<string>("action") ?? "";
-            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("action"));
-            if (!_buttons.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
+            string data = actionData.Data.Value<string>(prop) ?? "";
+            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(prop));
+            if (!_buttons.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format(prop));
             parsedData = data;
             return ExecutionResult.Success();
         }
