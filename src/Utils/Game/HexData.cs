@@ -124,6 +124,7 @@ namespace Pyran.NeuroFTK.Utils
             bool isLand = hex.m_Type == HexLand.Type.Land;
             bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
             bool onBoat = cow.IsInBoat();
+            if (cowOnLand && hex.IsShoreWater() && hex.IsBoat()) return true;
             //if hex is land & cow on land => land=>land
             if (isLand && cowOnLand) return true;
             //if hex is land & cow on boat => boat=>land
