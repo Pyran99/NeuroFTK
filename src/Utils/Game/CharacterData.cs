@@ -70,7 +70,7 @@ namespace Pyran.NeuroFTK.Utils
             return result;
         }
 
-        public static IEnumerable<CharacterOverworld> GetCowsNotOnThisHex(CharacterOverworld currentCow)
+        public static IEnumerable<CharacterOverworld> GetCowsNotOnThisHex(CharacterOverworld currentCow) //FIXME id35
         {
             IEnumerable<CharacterOverworld> cows = FTKHub.Instance.m_CharacterOverworlds;
             return cows.Where(cow => cow.GetHexLand() != currentCow.GetHexLand());

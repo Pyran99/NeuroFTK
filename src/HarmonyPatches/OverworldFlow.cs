@@ -291,7 +291,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (isSameHex) ctx = "interacting with this hexes point of interest";
             else if (dest == cow.GetHexLand())
             {
-                Plugin.Logger.LogError("target destination was same hex");
+                Plugin.Logger.LogError($"target destination was same hex: {dest.GetPosition()} = {cow.GetHexLand().GetPosition()}");
                 Context.Send($"your final path destination is the hex you are currently on, choose a different action, option or end turn to stay here", true);
                 CreateActionWindow(cow);
                 yield break;
