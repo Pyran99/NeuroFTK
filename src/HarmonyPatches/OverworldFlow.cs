@@ -526,13 +526,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, validCows, HexData.IsPoiCompleted(hex.GetPOI(), _cow));
+            MiniHexInfo poi = hex.GetPOI();
+            bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, validCows, isInteractable);
             isSearching = false;
         }
 
         public static void NeuroTryInteractWithHex(CharacterOverworld cow)
         {
             HexLand hex = cow.GetHexLand();
+            if (!HexData.IsPoiInteractable(hex.GetPOI(), cow))
+            {
+                Context.Send($"there was nothing to interact with on this hex, the action should not have appeared {NeuroSdkStrings.ModFaultSuffix}", true);
+                Plugin.Logger.LogError("there was nothing to interact with on this hex");
+                QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 1.0f);
+                return;
+            }
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
         }
 

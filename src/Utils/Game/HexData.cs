@@ -22,13 +22,16 @@ namespace Pyran.NeuroFTK.Utils
             switch (poi.m_MiniHexType)
             {
                 case MiniHexInfo.MiniHexType.Town:
-                case MiniHexInfo.MiniHexType.Utility:
                 case MiniHexInfo.MiniHexType.Portal:
                 case MiniHexInfo.MiniHexType.SafeCamp:
                 case MiniHexInfo.MiniHexType.FortuneTeller:
                     return true;
                 case MiniHexInfo.MiniHexType.Sanctum:
                     return !(poi as MiniHexSanctum).m_SanctumClaimed;
+                case MiniHexInfo.MiniHexType.Haunt:
+                    return !(poi as MiniHexHaunt).m_HauntSealed;
+                case MiniHexInfo.MiniHexType.Utility:
+                    return !(poi as MiniHexUtility).m_UtilityActivated;
                 case MiniHexInfo.MiniHexType.AlluringPool:
                     interactable = IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
                     break;
@@ -46,7 +49,7 @@ namespace Pyran.NeuroFTK.Utils
 
         public static bool IsPoiCompleted(MiniHexInfo poi, CharacterOverworld cow)
         {
-            if (poi == null) return false;
+            if (poi == null) return true;
             if (poi.m_Deactivated) return true;
             switch (poi.m_MiniHexType)
             {
@@ -56,6 +59,8 @@ namespace Pyran.NeuroFTK.Utils
                     return !IsDungeonInteractable(poi as MiniHexDungeon, cow);
                 case MiniHexInfo.MiniHexType.MiniEncounter:
                     return !IsEncounterInteractable(poi as MiniEncounter, cow);
+                case MiniHexInfo.MiniHexType.AlluringPool:
+                    return !IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
                 case MiniHexInfo.MiniHexType.Sanctum:
                     return (poi as MiniHexSanctum).m_SanctumClaimed || (poi as MiniHexSanctum).m_SanctumBroken;
                 case MiniHexInfo.MiniHexType.Utility:
@@ -78,7 +83,7 @@ namespace Pyran.NeuroFTK.Utils
         static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
         {
             Plugin.Logger.LogWarning("poi encounter type = " + encounter.m_Type);
-            if (!encounter.m_HasBeenConsumed) return true;
+            if (encounter.m_HasBeenConsumed) return false;
             if (encounter.m_CantUseThisTurn) return false;
             if (encounter.m_Type == FTK_miniEncounter.ID.kvHome && cow.GetHexLand() == encounter.m_HexLand)
             {
