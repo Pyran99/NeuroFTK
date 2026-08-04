@@ -402,7 +402,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append(HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
                 actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
-            if (CanUseBtn(_instance.m_EquipWeaponButton) && !GlobalConfig.IsDebugMode())
+            if (CanUseBtn(_instance.m_EquipWeaponButton) && (!GlobalConfig.IsDebugMode() || _instance.CombatCow.m_WeaponID == FTK_itembase.ID.None))
             {
                 sb.Append(HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
                 actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));
