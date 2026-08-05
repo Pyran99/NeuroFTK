@@ -176,7 +176,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// info about encounter, characters involved
         /// </summary>
         /// <returns>"{encounter}\n{_players}\n{_enemies}"</returns>
-        public static string GetEncounterContext(string name, string description, string flavor)
+        public static string GetEncounterContext(string name, string description, string flavor) // FIXME null ref?
         {
             string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
             StringBuilder sbPlayers = new("[character involved]");

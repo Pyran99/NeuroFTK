@@ -112,13 +112,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isCombatEncounter = false;
         }
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerDie))]
+        [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DieRPC))]
         [HarmonyPostfix]
-        static void PlayerDied(FTKPlayerID _victim, FTKPlayerID _attacker)
+        static void PlayerDied2(CharacterOverworld __instance)
         {
-            FTKPlayerID ph = _victim;
-            string victim = CharacterData.GetCharacterName(ph.GetCow());
-            Context.Send(StringMessages.UnitDied.Format(victim));
+            string name = CharacterData.GetCharacterName(__instance);
+            Context.Send(StringMessages.UnitDied.Format(name));
+            int count = 0;
+            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (cow.m_WaitForRespawn || cow.m_CharacterStats.m_HealthCurrent == 0) count++;
+            }
+            if (count == FTKHub.Instance.m_CharacterOverworlds.Count) Context.Send(StringMessages.GameOver);
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerFlee))]
