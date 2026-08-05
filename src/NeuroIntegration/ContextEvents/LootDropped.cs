@@ -15,9 +15,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static void CtxDisplayedLootItem(string _item, int ___m_LootItemCount, string ___m_LootItem)
         {
             FTK_itembase.ID id = FTK_itembase.GetEnum(_item);
-            if (id == FTK_itembase.ID.None)
+            if (id == FTK_itembase.ID.None && _item.Contains("_life_"))
             {
-                Plugin.Logger.LogWarning($"invalid loot {_item}");
+                Context.Send($"[Loot] Increase life pool");
                 return;
             }
             FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
