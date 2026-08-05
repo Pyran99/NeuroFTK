@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
+using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -43,7 +45,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 overworldActions.Add(zoomCamera);
                 INeuroAction spinCamera = new CameraSpinAction();
                 overworldActions.Add(spinCamera);
-                NeuroActionHandler.RegisterActions(overworldActions);
+                Plugin.Instance.StartCoroutine(RegisterWait(overworldActions));
             }
             else
             {
@@ -79,7 +81,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 combatActions.Add(queryStatus);
                 INeuroAction sendMsg = new SillyAction();
                 combatActions.Add(sendMsg);
-                NeuroActionHandler.RegisterActions(combatActions);
+                Plugin.Instance.StartCoroutine(RegisterWait(combatActions));
             }
             else
             {
@@ -87,6 +89,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 NeuroActionHandler.UnregisterActions(combatActions);
                 combatActions.Clear();
             }
+        }
+
+        static IEnumerator RegisterWait(List<INeuroAction> actions)
+        {
+            yield return null;
+            NeuroActionHandler.RegisterActions(actions);
         }
 
         public static void AppendOverworldAction(INeuroAction action, bool overwrite = false)
@@ -103,7 +111,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (existing == null)
             {
                 overworldActions.Add(action);
-                NeuroActionHandler.RegisterActions(overworldActions);
+                NeuroActionHandler.RegisterActions(action);
                 return;
             }
             if (overwrite)
@@ -129,7 +137,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (existing == null)
             {
                 combatActions.Add(action);
-                NeuroActionHandler.RegisterActions(combatActions);
+                NeuroActionHandler.RegisterActions(action);
                 return;
             }
             if (overwrite)

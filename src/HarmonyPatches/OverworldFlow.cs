@@ -250,7 +250,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
                 Context.Send(StringMessages.ActionIssueOccured.Format(["movement"]) + NeuroSdkStrings.ModFaultSuffix, true);
-                CreateActionWindow(curCow);
+                QuickTimerCallback timer = new(() => CreateActionWindow(curCow), curCow.gameObject);
                 yield break;
             }
             bool isSameTarget = hexes.Contains(hex);
@@ -293,7 +293,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError($"target destination was same hex: {dest.GetPosition()} = {curCow.GetHexLand().GetPosition()}");
                 Context.Send($"your final path destination is the hex you are currently on, choose a different action, option or end turn to stay here", true);
-                CreateActionWindow(curCow);
+                QuickTimerCallback timer = new(() => CreateActionWindow(curCow), curCow.gameObject);
                 yield break;
             }
             Context.Send(ctx, true);

@@ -176,7 +176,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// info about encounter, characters involved
         /// </summary>
         /// <returns>"{encounter}\n{_players}\n{_enemies}"</returns>
-        public static string GetEncounterContext(string name, string description, string flavor) // FIXME null ref?
+        public static string GetEncounterContext(string name, string description, string flavor)
         {
             string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
             StringBuilder sbPlayers = new("[character involved]");
@@ -190,14 +190,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 _enemies = $"[enemies involved] {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
             }
             string cost = "";
-            if (encounterMenuInstance?.m_CostRoot.gameObject.activeSelf ?? false)
+            if (encounterMenuInstance.m_CostRoot.gameObject.activeInHierarchy && encounterMenuInstance.m_Cost.text != string.Empty)
             {
-                if (encounterMenuInstance.m_Cost.text != string.Empty)
-                {
-                    cost = $"\n[encounter cost] {encounterMenuInstance.m_Cost.text} gold";
-                }
+                cost = $"\n[encounter cost] {encounterMenuInstance.m_Cost?.text} gold";
             }
-            return $"{encounter}{sbPlayers}{_enemies}{cost}";
+            string enemyLvl = "";
+            if (encounterMenuInstance.m_EnemyLevelRoot.gameObject.activeInHierarchy && encounterMenuInstance.m_EnemyLevel.text != string.Empty)
+            {
+                enemyLvl = $"\n[enemy level] {encounterMenuInstance.m_EnemyLevel.text}";
+            }
+            return $"{encounter}{sbPlayers}{_enemies}{cost}{enemyLvl}";
         }
 
         /// <summary>

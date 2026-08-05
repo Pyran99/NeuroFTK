@@ -127,8 +127,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateLocationAction()
         {
-            Plugin.Logger.LogWarning("create location encounter window");
-            string ctx = Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
+            Plugin.Logger.LogMessage("create location encounter window");
+            string ctx = GetLocationContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
             if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy)
             {
                 ctx += $"\nthis encounters enemies are lvl {locationMenuInstance.m_Difficulty.text}";
@@ -173,6 +173,32 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             Plugin.Logger.LogMessage("btns: " + string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
+        }
+
+        static string GetLocationContext(string name, string description, string flavor)
+        {
+            string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
+            StringBuilder sbPlayers = new("[character involved]");
+            foreach (CharacterOverworld player in Encounters.involvedPlayers)
+            {
+                sbPlayers.AppendLine($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
+            }
+            string _enemies = "";
+            if (Encounters.involvedEnemies.Count > 0)
+            {
+                _enemies = $"[enemies involved] {string.Join(", ", [.. Encounters.involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+            }
+            string cost = "";
+            if (locationMenuInstance.m_CostRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Cost.text != string.Empty)
+            {
+                cost = $"\n[encounter cost] {locationMenuInstance.m_Cost.text} gold";
+            }
+            string difficulty = "";
+            if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Difficulty.text != string.Empty)
+            {
+                difficulty = $"\n[encounter difficulty] {locationMenuInstance.m_Difficulty.text}";
+            }
+            return $"{encounter}{sbPlayers}{_enemies}{cost}{difficulty}";
         }
     }
 }

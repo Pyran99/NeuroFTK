@@ -15,6 +15,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static void CtxDisplayedLootItem(string _item, int ___m_LootItemCount, string ___m_LootItem)
         {
             FTK_itembase.ID id = FTK_itembase.GetEnum(_item);
+            if (id == FTK_itembase.ID.None)
+            {
+                Plugin.Logger.LogWarning($"invalid loot {_item}");
+                return;
+            }
             FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
             string name = itemBase.GetLocalizedName();
             string rarity = FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display);
