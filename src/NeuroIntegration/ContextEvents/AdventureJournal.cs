@@ -13,14 +13,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ShowMessage(string _messageHeader, string _message, float _delay, uiMoreInfoMenu __instance)
         {
-            Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
-            QuickTimerCallback timer = new(() => uiMoreInfoMenu.Instance.StartCoroutine(Wait()), uiLocationMenuDisplay.Instance.gameObject, 2.5f);
+            uiMoreInfoMenu.Instance.StartCoroutine(Delay());
+
+            IEnumerator Delay()
+            {
+                yield return null;
+                Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
+                QuickTimerCallback timer = new(() => uiMoreInfoMenu.Instance.StartCoroutine(Wait()), uiLocationMenuDisplay.Instance.gameObject, 2.5f);
+            }
         }
 
         static IEnumerator Wait()
         {
             uiMoreInfoMenu.Instance.UseOkayButton();
-            yield return new WaitForSeconds(uiMoreInfoMenu.Instance.m_DeactivateDelay + 0.1f);
+            yield return new WaitForSeconds(uiMoreInfoMenu.Instance.m_DeactivateDelay + 0.25f);
             Encounters.CreateEncounterAction();
         }
     }

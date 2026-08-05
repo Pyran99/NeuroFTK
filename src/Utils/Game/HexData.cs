@@ -18,6 +18,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             if (poi == null) return false;
             if (poi.m_Deactivated) return false;
+            if (poi.m_Locked) return false;
             bool interactable = false;
             switch (poi.m_MiniHexType)
             {
@@ -51,6 +52,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             if (poi == null) return true;
             if (poi.m_Deactivated) return true;
+            if (poi.m_Locked) return true;
             switch (poi.m_MiniHexType)
             {
                 case MiniHexInfo.MiniHexType.Haunt:
@@ -214,7 +216,9 @@ namespace Pyran.NeuroFTK.Utils
                 poi = hexInfo.GetPOIDisplayValue() + $"{type} ";
                 if (IsPoiCompleted(hexInfo, cow))
                 {
-                    poi += " (completed)";
+                    if (hexInfo.m_Deactivated) poi += " (deactivated)";
+                    else if (hexInfo.m_Locked) poi += " (locked)";
+                    else poi += " (completed)";
                 }
             }
             if (addToList) OverworldFlow.hexPositions.Add(pos.ToString(), hex);
