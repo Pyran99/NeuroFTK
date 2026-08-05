@@ -10,6 +10,7 @@ namespace Pyran.NeuroFTK.GameConfigs
         public static bool ForcedDefaultAdventure = false;
         public static bool IsMultiplayer { get; private set; } = false;
         public static bool FirstLoadResume { get; private set; } = true;
+        public static float maxDistance = 2.8866f * 15f;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
         {

@@ -448,7 +448,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     return;
                 }
                 string outOfRange = "";
-                if ((dest.GetPosition() - cowHex).magnitude > 2.8866f * 15f)
+                if ((dest.GetPosition() - cowHex).magnitude > GlobalConfig.maxDistance)
                 {
                     outOfRange = " (out of pathfinding range)";
                 }
@@ -486,7 +486,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (dest == cow.GetHexLand().GetPosition()) continue;
                 if (positions.Contains(dest))
                 {
-                    if ((dest - cow.GetHexLand().GetPosition()).magnitude < 2.8866f * 15f)
+                    if ((dest - cow.GetHexLand().GetPosition()).magnitude < GlobalConfig.maxDistance)
                     {
                         result.Add(kvp.Key);
                     }

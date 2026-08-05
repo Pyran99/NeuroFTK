@@ -31,14 +31,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send("entered a shop room", true);
         }
 
-        [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))]
+        [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))] // is called from normal battle
         [HarmonyPostfix]
         static void DungeonExit()
         {
-            Plugin.Logger.LogMessage("dungeon exit");
-            Context.Send("battle finished, returning to overworld", true); // is called from normal battle
+            Context.Send("battle finished, returning to overworld", true);
             OverworldFlow.isFirstAction = false;
-            ToggleDisposableActions.ToggleOverworldActions(true);
             ToggleDisposableActions.ToggleCombatActions(false);
             CameraUtils.Zoom(100f);
         }

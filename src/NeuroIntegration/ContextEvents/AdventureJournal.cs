@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 yield return null;
                 Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
-                QuickTimerCallback timer = new(() => uiMoreInfoMenu.Instance.StartCoroutine(Wait()), uiLocationMenuDisplay.Instance.gameObject, 2.5f);
+                QuickTimerCallback timer = new(() => uiMoreInfoMenu.Instance.StartCoroutine(Wait()), uiLocationMenuDisplay.Instance.gameObject, 4.0f);
             }
         }
 

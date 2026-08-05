@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Google2u;
 using GridEditor;
+using Pyran.NeuroFTK.GameConfigs;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -74,7 +75,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             IEnumerable<CharacterOverworld> allCows = FTKHub.Instance.m_CharacterOverworlds;
             HexLand curHex = currentCow.GetHexLand();
-            return allCows.Where(cow => cow.GetHexLand() != curHex);
+            return allCows.Where(cow => cow.GetHexLand() != curHex && HexLand.Distance(cow.GetHexLand(), curHex) < GlobalConfig.maxDistance);
         }
     }
 
