@@ -10,7 +10,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class QueryCurrentCOWLocation : NeuroAction
     {
         public override string Name => "query_current_location";
-        protected override string Description => "returns the location of the current active overworld character";
+        protected override string Description => "returns the location of the current controlled overworld character";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()
@@ -43,23 +43,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData)
         {
             return ExecutionResult.Success();
-        }
-
-        string GetHexData(HexLand hex)
-        {
-            string data = "";
-            MiniHexInfo poi = hex.GetPOI();
-            if (poi != null)
-            {
-                data += $"POI: {poi.GetIDString()}\n";
-                if (poi.HasEncounterQuest())
-                {
-                    QuestLogicBase quest = poi.GetEncounterQuest();
-                    data += $"Encounter Quest: {quest.GetLocalizedOneLineDesc()}\n";
-                }
-                
-            }
-            return data;
         }
     }
 }

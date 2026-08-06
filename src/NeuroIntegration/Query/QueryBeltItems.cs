@@ -11,13 +11,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class QueryBeltItems() : NeuroAction
     {
         public override string Name => "query_belt_items";
-        protected override string Description => "see what items are on your belt";
+        protected override string Description => "see what quick use items are on the belt of the current controlled character";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()
         {
             CharacterOverworld cow = CharacterData.GetNeuroCow();
-            string title = "[usable belt items] ";
+            string title = $"[{CharacterData.GetCharacterName(cow)} usable belt items] ";
             StringBuilder sb = new(title);
             string blacklist;
             foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())

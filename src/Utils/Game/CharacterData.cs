@@ -4,6 +4,7 @@ using System.Text;
 using Google2u;
 using GridEditor;
 using Pyran.NeuroFTK.GameConfigs;
+using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -101,6 +102,56 @@ namespace Pyran.NeuroFTK.Utils
             IEnumerable<CharacterOverworld> allCows = FTKHub.Instance.m_CharacterOverworlds;
             HexLand curHex = currentCow.GetHexLand();
             return allCows.Where(cow => cow.GetHexLand() != curHex && HexLand.Distance(cow.GetHexLand(), curHex) < GlobalConfig.maxDistance);
+        }
+
+        public static string GetAllStatusEffects(CharacterOverworld cow)
+        {
+            StringBuilder sb = new($"(status effects on {GetCharacterName(cow)})\n[Effects]");
+            string statusName;
+            string statusDesc;
+            List<ProficiencyBase> effects = GetStatusEffects(cow);
+            bool added = false;
+            foreach (ProficiencyBase prof in effects)
+            {
+                statusName = prof.m_ProficiencyData.GetLocalizedDisplayName();
+                statusDesc = StatusEffects.GetCategoryDescription(prof);
+                sb.Append($"{statusName} ({statusDesc}), ");
+                added = true;
+            }
+            if (!added) sb.Append("none");
+            sb.Append("\n[Curses] ");
+            List<CharacterStats.CurseType> curses = GetCurses(cow);
+            added = false;
+            foreach (CharacterStats.CurseType curse in curses)
+            {
+                statusName = curse.ToString();
+                statusDesc = FTKHub.Localized<TextInfo>("STR_status" + curse.ToString() + "Info");
+                sb.Append($"{statusName} ({statusDesc}), ");
+                added = true;
+            }
+            if (!added) sb.Append("none");
+            sb.Append("\n[Immunities] ");
+            List<ProficiencyBase.Category> immunities = GetImmunities(cow);
+            added = false;
+            foreach (ProficiencyBase.Category immunity in immunities)
+            {
+                statusName = immunity.ToString();
+                if (GameDescriptions.AlternateLocLookUp.ContainsKey(statusName))
+                {
+                    statusName = GameDescriptions.AlternateLocLookUp[statusName];
+                }
+                sb.Append($"{statusName}, ");
+                added = true;
+            }
+            sb.Append("\n[Disease] ");
+            added = false;
+            if (cow.m_CharacterStats.IsDiseased)
+            {
+                sb.Append($"{GetDiseaseData(cow)}");
+                added = true;
+            }
+            if (!added) sb.Append("none");
+            return sb.ToString();
         }
     }
 

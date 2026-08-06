@@ -23,13 +23,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isFirstAction = false;
         public static bool isSneakMovement = false;
         public static List<HexLand> tiles = [];
-        public static readonly Dictionary<string, QuestLogicBase> questDict = [];
         public static readonly Dictionary<string, HexLand> hexPositions = [];
 
         static readonly bool removeEmptyWater = false;
         static bool isRemake = false;
-        static readonly List<Vector3> questPositions = [];
-        static StringBuilder sbQuest = new();
         static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = [];
 
 
@@ -396,106 +393,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return sb.ToString();
         }
 
-
-        #region quests
-
-        public static string GetQuestData()
-        {
-            questDict.Clear();
-            questPositions.Clear();
-            sbQuest = new();
-            Vector3 cowHex = CharacterData.GetNeuroCow().GetHexLand().GetPosition();
-            foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>())
-            {
-                AddValidQuests(q, cowHex);
-            }
-            foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>())
-            {
-                AddValidQuests(q, cowHex);
-            }
-            return sbQuest.ToString();
-        }
-
-        static void AddValidQuests(uiQuestItem questItem, Vector3 cowHex)
-        {
-            if (StringReplace.RemoveStyling(questItem.m_Display.text) == "??????") return;
-            QuestLogicBase quest = questItem.m_Quest;
-            if (quest == null) return;
-            if (quest.IsConsiderComplete()) return;
-            string type = "side";
-            if (quest.HasQuestDefID()) // considered Bounty Story Quest
-            {
-                type = "story";
-            }
-            string description = StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc());
-            HexLand dest;
-            dest = quest.GetHexLandDestination();
-            if (dest != null)
-            {
-                Vector2 pos = HexData.GetVec2Pos(dest);
-                if (questDict.ContainsKey(pos.ToString())) return;
-                if (dest.GetPosition() == cowHex)
-                {
-                    questDict.Add(pos.ToString(), quest);
-                    questPositions.Add(dest.GetPosition());
-                    sbQuest.AppendLine($"[{type} quest at {pos}]: {description} (you are currently at this hex)");
-                    return;
-                }
-                string outOfRange = "";
-                if ((dest.GetPosition() - cowHex).magnitude > GlobalConfig.maxDistance)
-                {
-                    outOfRange = " (out of pathfinding range)";
-                }
-                questDict.Add(pos.ToString(), quest);
-                questPositions.Add(dest.GetPosition());
-                string boat = "";
-                if (HexData.IsBoatRequired(description)) boat = " (may require boat, can be bought at port)";
-                sbQuest.AppendLine($"[{type} quest at {pos}]: {description}{outOfRange}{boat}");
-                // quest desc: Kill the Chaos Leader in The Guardian Forest
-                // quest pos: (85.1, 117.5)
-            }
-        }
-
-        public static QuestLogicBase TileHasQuestObjective(HexLand hex)
-        {
-            QuestLogicBase quest = HexData.TileHasQuestObjective(hex);
-            if (quest != null) return quest;
-            if (questPositions.Contains(hex?.GetPosition() ?? Vector3.positiveInfinity))
-            {
-                return GameLogic.Instance.GetQuestByID(questPositions.IndexOf(hex.GetPosition()));
-            }
-            return null;
-        }
-
-        public static List<Vector3> GetQuestPositions()
-        {
-            return questPositions;
-        }
-
-        static List<string> GetInRangeQuests(CharacterOverworld cow)
-        {
-            List<string> result = [];
-            List<Vector3> positions = GetQuestPositions();
-            foreach (KeyValuePair<string, QuestLogicBase> kvp in questDict)
-            {
-                Vector3 dest = kvp.Value.GetHexLandDestination()?.GetPosition() ?? Vector3.positiveInfinity;
-                Vector3 cowPos = cow.GetHexLand().GetPosition();
-                if (dest == cowPos) continue;
-                if (positions.Contains(dest))
-                {
-                    if ((dest - cowPos).magnitude < GlobalConfig.maxDistance)
-                    {
-                        result.Add(kvp.Key);
-                    }
-                }
-            }
-            return result;
-        }
-
-        #endregion
-
-
-
         public static void CreateMovementActions(CharacterOverworld _cow)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
@@ -518,14 +415,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {pos},";
             }
             Context.Send(ctx);
-            ctx = GetQuestData();
+            ctx = QuestHelper.GetQuestData();
             if (ctx != "") Context.Send(ctx);
             string tileCtx = GetTileContext(tiles);
-            List<string> validQuests = GetInRangeQuests(_cow);
+            List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
             MiniHexInfo poi = hex.GetPOI();
             bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, questDict, validQuests, validCows, isInteractable);
+            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
             isSearching = false;
         }
 

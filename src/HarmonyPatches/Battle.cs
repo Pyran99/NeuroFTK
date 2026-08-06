@@ -52,7 +52,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void VoteEncounter()
         {
             isCombatEncounter = false;
-            Plugin.Logger.LogMessage("CommenceVoteEncounter");
         }
 
         #region Player
@@ -61,7 +60,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
-            Plugin.Logger.LogMessage("battle btns initialized");
+            Plugin.Logger.LogMessage("player combat actions");
             GlobalConfig.GameLoaded();
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
@@ -93,7 +92,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void BtnsOff()
         {
             Object.Destroy(window);
-            // UnregisterDisposableActions();
             m_Proficiencies = [];
         }
 
@@ -101,13 +99,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void CombatPlayerVictory()
         {
-            // UnregisterDisposableActions();
             ToggleDisposableActions.ToggleCombatActions(false);
-            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) // changed before post-call
-            {
-                Plugin.Logger.LogMessage("combat victory overworld skip");
-                return;
-            }
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;  // changed before post-call
             if (isCombatEncounter) Context.Send(StringMessages.BattleWon);
             isCombatEncounter = false;
         }
@@ -149,7 +142,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             int old = playerHealths[__instance.m_CharacterName];
             int dif = old - __instance.m_HealthCurrent;
             PlayerHealthChange(__instance.m_CharacterOverworld, dif);
-
             // DummyDamageInfo dmg = __instance.m_CharacterOverworld.m_CurrentDummy.m_DamageInfo;
             // int dif = dmg.m_Damage;
         }
@@ -332,7 +324,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
 
 
-        #region action window
+        #region action
 
         static readonly List<INeuroAction> actions = [];
         static readonly List<INeuroAction> disposableActions = [];
@@ -346,7 +338,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string ctx = GetAttackContextAndRegisterAction(_instance, _proficiencies);
             List<FTK_itembase.ID> usableItems = ItemData.GetUsableBeltItems(cow);
             ctx += GetBeltDetails(cow, usableItems);
-            if (!beltActionUsed) // unsure where to put belt use
+            if (!beltActionUsed)
             {
                 beltActionUsed = true;
                 Dictionary<string, FTK_itembase.ID> items = [];

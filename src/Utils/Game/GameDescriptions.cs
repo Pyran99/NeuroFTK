@@ -21,6 +21,7 @@ namespace Pyran.NeuroFTK.Utils
             {"Tribute", "pay tribute to this statue."},
             {"Enter Party", "begin this dungeon with all party members"},
             {"Pickup Party", "bring all nearby party members onto the boat"},
+            {"Fight Scourge", "fight scourge to disable its negative effect if active"},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()
@@ -92,7 +93,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Loot => "loot the body",
                 SubPanelBaseBase.ButtonID.Give => "give gold to the stranger",
                 SubPanelBaseBase.ButtonID.Journal => "read the journal",
-                _ => ""
+                _ => $"missing flavor text {id} "
             };
         }
     }
