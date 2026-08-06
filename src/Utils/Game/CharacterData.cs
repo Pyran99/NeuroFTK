@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Google2u;
 using GridEditor;
 using Pyran.NeuroFTK.GameConfigs;
@@ -71,6 +72,30 @@ namespace Pyran.NeuroFTK.Utils
             return result;
         }
 
+        // only 1 disease at a time
+        public static string GetDiseaseData(CharacterOverworld cow)
+        {
+            StringBuilder sb = new();
+            CharacterStats stats = cow.m_CharacterStats;
+            if (stats.IsDiseased)
+            {
+                DiseaseStatBase disease = stats.MyDisease;
+                sb.AppendLine($"{GetDiseaseName(cow)}: ");
+                sb.Append(disease.GetToolTipMoreInfo(stats));
+            }
+            return sb.ToString();
+        }
+
+        public static string GetDiseaseName(CharacterOverworld cow)
+        {
+            string result = "";
+            if (cow.m_CharacterStats.IsDiseased)
+            {
+                result = $"({cow.m_CharacterStats.m_DiseaseLvl}){cow.m_CharacterStats.MyDisease.GetDiseaseTitle()}";
+            }
+            return result;
+        }
+
         public static IEnumerable<CharacterOverworld> GetCowsNotOnThisHex(CharacterOverworld currentCow)
         {
             IEnumerable<CharacterOverworld> allCows = FTKHub.Instance.m_CharacterOverworlds;
@@ -93,6 +118,7 @@ namespace Pyran.NeuroFTK.Utils
         public readonly List<string> StatusEffects = [];
         public readonly List<string> Immunities = [];
         public readonly List<string> Curses = [];
+        public readonly string Disease;
 
         public static SerializedCharacterData Calculate(CharacterOverworld cow) => new(cow);
 
@@ -110,6 +136,7 @@ namespace Pyran.NeuroFTK.Utils
             StatusEffects = [.. CharacterData.GetStatusEffects(cow).Select(x => x.m_ProficiencyData.GetLocalizedDisplayName())];
             Immunities = [.. CharacterData.GetImmunities(cow).Select(x => x.ToString())];
             Curses = [.. CharacterData.GetCurses(cow).Select(x => x.ToString())];
+            Disease = CharacterData.GetDiseaseName(cow);
             Armor = cow.m_CharacterStats.TotalArmor;
             Resistance = cow.m_CharacterStats.TotalResist;
         }

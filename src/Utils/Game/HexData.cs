@@ -53,23 +53,16 @@ namespace Pyran.NeuroFTK.Utils
             if (poi == null) return true;
             if (poi.m_Deactivated) return true;
             if (poi.m_Locked) return true;
-            switch (poi.m_MiniHexType)
+            return poi.m_MiniHexType switch
             {
-                case MiniHexInfo.MiniHexType.Haunt:
-                    return (poi as MiniHexHaunt).m_HauntSealed;
-                case MiniHexInfo.MiniHexType.Dungeon:
-                    return !IsDungeonInteractable(poi as MiniHexDungeon, cow);
-                case MiniHexInfo.MiniHexType.MiniEncounter:
-                    return !IsEncounterInteractable(poi as MiniEncounter, cow);
-                case MiniHexInfo.MiniHexType.AlluringPool:
-                    return !IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
-                case MiniHexInfo.MiniHexType.Sanctum:
-                    return (poi as MiniHexSanctum).m_SanctumClaimed || (poi as MiniHexSanctum).m_SanctumBroken;
-                case MiniHexInfo.MiniHexType.Utility:
-                    return (poi as MiniHexUtility).m_UtilityActivated;
-                default:
-                    return false;
-            }
+                MiniHexInfo.MiniHexType.Haunt => (poi as MiniHexHaunt).m_HauntSealed,
+                MiniHexInfo.MiniHexType.Dungeon => !IsDungeonInteractable(poi as MiniHexDungeon, cow),
+                MiniHexInfo.MiniHexType.MiniEncounter => !IsEncounterInteractable(poi as MiniEncounter, cow),
+                MiniHexInfo.MiniHexType.AlluringPool => !IsAlluringPoolInteractable(poi as MiniHexAlluringPool),
+                MiniHexInfo.MiniHexType.Sanctum => (poi as MiniHexSanctum).m_SanctumClaimed || (poi as MiniHexSanctum).m_SanctumBroken,
+                MiniHexInfo.MiniHexType.Utility => (poi as MiniHexUtility).m_UtilityActivated,
+                _ => false,
+            };
         }
 
         static bool IsAlluringPoolInteractable(MiniHexAlluringPool poi)
@@ -159,8 +152,6 @@ namespace Pyran.NeuroFTK.Utils
             if (!isLand && cowOnLand) return false;
             //if hex is water & cow on boat => boat=>water
             if (!isLand && onBoat) return true;
-            //if hex has boat & cow on land => land=>boat
-            if (hex.IsBoat() && cowOnLand) return true;
             // what would 2 boats do
             // what about air
             return false;
@@ -236,5 +227,15 @@ namespace Pyran.NeuroFTK.Utils
                 _ => "",
             };
         }
+
+        /// <param name="questDesc">use localized description to match realms</param>
+        public static bool IsBoatRequired(string questDesc)
+        {
+            if (questDesc.Contains("The Rogue Isles")) return true;
+            else if (questDesc.Contains("The Parched Waste")) return true;
+            else if (questDesc.Contains("The Rogue Isles")) return true;
+            return false;
+        }
+        
     }
 }

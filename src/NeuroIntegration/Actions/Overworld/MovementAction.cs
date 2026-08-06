@@ -96,7 +96,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 Plugin.Logger.LogError($"did not find {parsedData} in tiles");
                 Context.Send($"an issue occurred with the {Name} action", true);
-                OverworldFlow.CreateActionWindow(cow);
+                OverworldFlow.CreateMovementActions(cow);
                 return;
             }
             cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, parsedData));
@@ -127,7 +127,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             else
             {
                 Context.Send("cannot end turn right now");
-                OverworldFlow.CreateActionWindow(CharacterData.GetNeuroCow());
+                OverworldFlow.CreateMovementActions(CharacterData.GetNeuroCow());
             }
         }
 

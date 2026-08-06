@@ -38,15 +38,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void TurnSkipped(CharacterOverworld _cow)
         {
             Context.Send($"{CharacterData.GetCharacterName(_cow)} had their turn skipped");
-            // DisposeActions();
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.OnStartTurn))] // before begin turn enumerate finished
         [HarmonyPostfix]
         static void StartTurn(CharacterOverworld __instance)
         {
-            // Plugin.Logger.LogWarning("CharacterOverworld.OnStartTurn");
-            // BeginTurn2(__instance);
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), "BeginTurnTransition")]
@@ -59,7 +56,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             while (__result.MoveNext()) yield return __result.Current;
             BeginTurn2(__instance);
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
-            // Context.Send($"game round: {GameFlow.Instance.m_RoundCount}. stage percent: {FTKUtil.RoundToInt(gameDef.GetGameStage().GetStagePassedPercent() * 100f)}. stage progression: {gameDef.GetGameStage().GetCurrentProgressionTier()}. player progression: {FTK_progressionTierDB.GetDB().GetNaturalProgressionTierOfParty()}", true);
         }
 
         // when movement choice starts
@@ -97,7 +93,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PlayerStopped(CharacterOverworld __instance)
         {
-            
         }
 
         // spending focus for more actions
@@ -202,7 +197,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (cow.IsInBoat() && GameLogic.Instance.GetActivePlayersInAreaOnLand(cow.GetHexLand(), GameFlow.Instance.m_PartyEnterRadius).Count > 0)
             {
-                Plugin.Logger.LogWarning("boat players in range should gen location menu");
+                Plugin.Logger.LogMessage("boat players in range should gen location menu");
                 isFirstAction = false;
                 return;
             }
@@ -231,7 +226,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isTracking = true;
             if (isFirstAction) return;
             RollSystem.currentCOW = cow;
-            Plugin.Logger.LogMessage("start tracking create window");
             QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject, 0.5f);
         }
 
@@ -250,7 +244,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
                 Context.Send(StringMessages.ActionIssueOccured.Format(["movement"]) + NeuroSdkStrings.ModFaultSuffix, true);
-                QuickTimerCallback timer = new(() => CreateActionWindow(curCow), curCow.gameObject);
+                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), curCow.gameObject);
                 yield break;
             }
             bool isSameTarget = hexes.Contains(hex);
@@ -273,7 +267,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     {
                         Plugin.Logger.LogError("could not find any valid hexes");
                         Context.Send("could not find any valid hexes for the movement action", true);
-                        CreateActionWindow(curCow);
+                        CreateMovementActions(curCow);
                         yield break;
                     }
                 }
@@ -281,7 +275,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     Plugin.Logger.LogError("failed to auto travel to last hex");
                     Context.Send(StringMessages.ActionIssueOccured.Format(["go_to_quest"]), true);
-                    CreateActionWindow(curCow);
+                    CreateMovementActions(curCow);
                     yield break;
                 }
             }
@@ -293,7 +287,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError($"target destination was same hex: {dest.GetPosition()} = {curCow.GetHexLand().GetPosition()}");
                 Context.Send($"your final path destination is the hex you are currently on, choose a different action, option or end turn to stay here", true);
-                QuickTimerCallback timer = new(() => CreateActionWindow(curCow), curCow.gameObject);
+                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), curCow.gameObject);
                 yield break;
             }
             Context.Send(ctx, true);
@@ -347,10 +341,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         removed = true;
                     }
                 }
-                foreach (HexLand hex in toRemove) tiles.Remove(hex); // VERIFY removed empty water hex
+                foreach (HexLand hex in toRemove) tiles.Remove(hex);
                 if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
             }
-            QuickTimerCallback timer = new(() => CreateActionWindow(currentCOW), currentCOW.gameObject, 0.5f);
+            QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), currentCOW.gameObject, 0.5f);
         }
 
         static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -391,10 +385,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// </summary>
         public static string GetTileContext(List<HexLand> _tiles)
         {
-            hexPositions.Clear();
             StringBuilder sb = new();
             sb.Append(StringMessages.HexContext);
             CharacterOverworld cow = CharacterData.GetNeuroCow();
+            hexPositions.Clear();
             foreach (HexLand hex in _tiles)
             {
                 sb.AppendLine(HexData.GetContextForHex(cow, hex, true));
@@ -454,9 +448,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 questDict.Add(pos.ToString(), quest);
                 questPositions.Add(dest.GetPosition());
-                sbQuest.AppendLine($"[{type} quest at {pos}]: {description}{outOfRange}");
-                // [Warning:Neuro For the King] quest desc: Kill the Chaos Leader in The Guardian Forest
-                // [Warning:Neuro For the King] quest pos: (85.1, 117.5)
+                string boat = "";
+                if (HexData.IsBoatRequired(description)) boat = " (may require boat, can be bought at port)";
+                sbQuest.AppendLine($"[{type} quest at {pos}]: {description}{outOfRange}{boat}");
+                // quest desc: Kill the Chaos Leader in The Guardian Forest
+                // quest pos: (85.1, 117.5)
             }
         }
 
@@ -483,10 +479,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<string, QuestLogicBase> kvp in questDict)
             {
                 Vector3 dest = kvp.Value.GetHexLandDestination()?.GetPosition() ?? Vector3.positiveInfinity;
-                if (dest == cow.GetHexLand().GetPosition()) continue;
+                Vector3 cowPos = cow.GetHexLand().GetPosition();
+                if (dest == cowPos) continue;
                 if (positions.Contains(dest))
                 {
-                    if ((dest - cow.GetHexLand().GetPosition()).magnitude < GlobalConfig.maxDistance)
+                    if ((dest - cowPos).magnitude < GlobalConfig.maxDistance)
                     {
                         result.Add(kvp.Key);
                     }
@@ -499,7 +496,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
 
 
-        public static void CreateActionWindow(CharacterOverworld _cow)
+        public static void CreateMovementActions(CharacterOverworld _cow)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             HexLand hex = _cow.GetHexLand();
@@ -521,8 +518,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {pos},";
             }
             Context.Send(ctx);
-            string _quests = GetQuestData();
-            if (_quests != "") Context.Send(_quests);
+            ctx = GetQuestData();
+            if (ctx != "") Context.Send(ctx);
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
@@ -539,7 +536,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Context.Send($"there was nothing to interact with on this hex, the action should not have appeared {NeuroSdkStrings.ModFaultSuffix}", true);
                 Plugin.Logger.LogError("there was nothing to interact with on this hex");
-                QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 1.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), cow.gameObject, 1.0f);
                 return;
             }
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
@@ -551,7 +548,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("chosen quest was null");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateActionWindow(cow), cow.gameObject, 2.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), cow.gameObject, 2.0f);
                 return;
             }
             HexLand dest = quest.GetHexLandDestination();
@@ -565,17 +562,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("invalid cow");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_character"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateActionWindow(curCow), curCow.gameObject, 2.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), curCow.gameObject, 2.0f);
                 return;
             }
             HexLand dest = target.GetHexLand();
             curCow.StartCoroutine(MoveToHexCoroutine(curCow, dest, true));
-        }
-
-        static bool IsQuestAcrossWater(HexLand lastTarget)
-        {
-            if (lastTarget.IsShoreLand()) return true;
-            return false;
         }
     }
 }

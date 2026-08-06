@@ -56,6 +56,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 sb.Append($"{statusName}, ");
                 added = true;
             }
+            if (cow.m_CharacterStats.IsDiseased)
+            {
+                sb.Append("\n[Disease] ");
+                sb.Append($"{CharacterData.GetDiseaseData(cow)}");
+            }
             if (!added) sb.Append("none");
             Context.Send(sb.ToString());
         }
