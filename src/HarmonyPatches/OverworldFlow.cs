@@ -101,7 +101,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isRemake = true;
             DisposeActions();
             isFirstAction = false;
-            QuickTimerCallback timer = new(ResumeTurnMovement, RollSystem.currentCOW.gameObject, 0.5f);
+            QuickTimerCallback timer = new(ResumeTurnMovement, FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.5f);
         }
 
 #region Reverse Patches
@@ -210,7 +210,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isFirstAction = true;
             isSearching = false;
             DisposeActions();
-            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), cow.gameObject);
+            QuickTimerCallback timer = new(() => window = MovementAction.CreateTurnBeginWindow(registerBelt), FTKUI.Instance.m_HexStatusOverworld.gameObject);
             ToggleDisposableActions.ToggleOverworldActions(true, false);
         }
 
@@ -222,7 +222,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
             if (isFirstAction) return;
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.gameObject, 0.5f); // look for better object to attach
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.5f);
         }
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld curCow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
@@ -238,9 +238,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             List<HexLand> hexes = [.. Movement.Instance.m_HexListPartial];
             if (!isTracking || GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
-                Plugin.Logger.LogError("tried to execute move action while character is not in tracking state");
+                Plugin.Logger.LogError($"tried to execute move action while character is not in tracking state: tracking = {isTracking}, mode = {GameStates.mode}");
                 Context.Send(StringMessages.ActionIssueOccured.Format(["movement"]) + NeuroSdkStrings.ModFaultSuffix, true);
-                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), curCow.gameObject);
+                // QuickTimerCallback timer = new(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject);
                 yield break;
             }
             bool isSameTarget = hexes.Contains(hex);
@@ -283,7 +283,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError($"target destination was same hex: {dest.GetPosition()} = {curCow.GetHexLand().GetPosition()}");
                 Context.Send($"your final path destination is the hex you are currently on, choose a different action, option or end turn to stay here", true);
-                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), curCow.gameObject);
+                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject);
                 yield break;
             }
             Context.Send(ctx, true);
@@ -339,7 +339,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (HexLand hex in toRemove) tiles.Remove(hex);
                 if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
             }
-            QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), currentCOW.gameObject, 0.5f);
+            QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.5f);
         }
 
         static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -391,9 +391,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return sb.ToString();
         }
 
+        public static void AddHexPosition(string pos, HexLand hex)
+        {
+            hexPositions.Add(pos, hex);
+        }
+
         public static void CreateMovementActions(CharacterOverworld _cow)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            if (Movement.Instance.m_Mode != Movement.TrackingMode.Movement) return;
             HexLand hex = _cow.GetHexLand();
             Vector2 pos = HexData.GetVec2Pos(hex);
             string ctx = $"you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
@@ -420,6 +426,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (ctx != "") Context.Send(ctx);
             string tileCtx = GetTileContext(tiles);
+            if (hexPositions.Count == 0)
+            {
+                Plugin.Logger.LogError("no hex positions found");
+                Context.Send(StringMessages.CriticalError.Format(["hex_positions"]));
+                // QuickTimerCallback timer = new(ResumeTurnMovement, FTKUI.Instance.m_HexStatusOverworld.gameObject, 2.5f);
+                isSearching = false;
+                DisposeActions();
+                return;
+            }
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
             MiniHexInfo poi = hex.GetPOI();
@@ -435,7 +450,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Context.Send($"there was nothing to interact with on this hex, the action should not have appeared {NeuroSdkStrings.ModFaultSuffix}", true);
                 Plugin.Logger.LogError("there was nothing to interact with on this hex");
-                QuickTimerCallback timer = new(() => CreateMovementActions(cow), cow.gameObject, 1.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 1.0f);
                 return;
             }
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
@@ -447,7 +462,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("chosen quest was null");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateMovementActions(cow), cow.gameObject, 2.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2.0f);
                 return;
             }
             HexLand dest = quest.GetHexLandDestination();
@@ -461,7 +476,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("invalid cow");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_character"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), curCow.gameObject, 2.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2.0f);
                 return;
             }
             HexLand dest = target.GetHexLand();

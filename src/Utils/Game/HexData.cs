@@ -212,7 +212,7 @@ namespace Pyran.NeuroFTK.Utils
                     else poi += " (completed)";
                 }
             }
-            if (addToList) OverworldFlow.hexPositions.Add(pos.ToString(), hex);
+            if (addToList) OverworldFlow.AddHexPosition(pos.ToString(), hex);
             return $"[{pos} ({name})({questName}){hasDeadPlayers}{poi}]";
         }
 
