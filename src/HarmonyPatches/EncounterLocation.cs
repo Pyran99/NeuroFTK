@@ -33,7 +33,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void MenuDisplayPostShow()
         {
-            Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2");
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
             {
                 Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2 skipped in dungeon mode");
@@ -46,7 +45,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void MenuDisplayUnhide()
         {
-            Plugin.Logger.LogWarning("uiLocationMenuDisplay.Unhide");
             CreateLocationAction();
         }
 
@@ -60,7 +58,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void StartShutdown()
         {
-            Plugin.Logger.LogMessage("uiLocationMenuDisplay.StartShutdown");
             Encounters.ResetContextData();
             Object.Destroy(window);
             menuDisplayValues = null;
@@ -87,7 +84,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void GenerateEntries(uiLocationMenu __instance)
         {
-            Plugin.Logger.LogWarning("loc_menu_generate");
+            // Plugin.Logger.LogWarning("loc_menu_generate");
             List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
             // m_Text0 // btn name
             // m_Text1 // maybe mouseover description
@@ -119,9 +116,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(MiniHexDungeon), nameof(MiniHexDungeon.GenerateDungeonEncounters))]
         [HarmonyPrefix]
-        static void GeneratingDungeon() // VERIFY attempt fix move actions register on dungeon entering
+        static void GeneratingDungeon()
         {
-            Plugin.Logger.LogWarning("GeneratingDungeon");
+            Plugin.Logger.LogMessage("GeneratingDungeon: VERIFY attempt fix move actions register on dungeon entering");
             GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;
         }
 

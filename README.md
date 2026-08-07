@@ -27,7 +27,7 @@ Name | Default | Description
 `launch_resume` | true | disables new game if there is a previous save to load. Only used for the initial game startup
 
 > [!CAUTION]
-> Multiplayer has NOT been tested & will likely break things
+> Multiplayer has NOT been tested & *will* break things
 
 ## Current State  
 
@@ -36,11 +36,11 @@ v0.7: Tony was let loose for a long time with no game breaking issues. praise be
 ### Todo  
 
 - [ ] Overworld flow
-  - [ ] Airship movement
+  - [ ] Airship movement (could be fine)
   - [ ] change equipment
   - [ ] use hex targetting items
 - [ ] Encounters
   - [ ] market selling
 - [ ] Combat
-  - [ ] change weapon
+  - [ ] change weapon (currently only when unarmed)
 - [ ] using focus

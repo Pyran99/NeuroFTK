@@ -222,7 +222,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
             if (isFirstAction) return;
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.5f);
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject);
         }
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld curCow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
@@ -339,7 +339,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (HexLand hex in toRemove) tiles.Remove(hex);
                 if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
             }
-            QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.5f);
+            QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.25f);
         }
 
         static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
@@ -398,8 +398,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateMovementActions(CharacterOverworld _cow)
         {
-            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
-            if (Movement.Instance.m_Mode != Movement.TrackingMode.Movement) return;
+            if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
+            {
+                Plugin.Logger.LogError($"wrong track mode: {GameStates.mode}");
+                return;
+            }
+            if (Movement.Instance.m_Mode != Movement.TrackingMode.Movement)
+            {
+                Plugin.Logger.LogError($"wrong move mode: {Movement.Instance.m_Mode}");
+                return;
+            }
             HexLand hex = _cow.GetHexLand();
             Vector2 pos = HexData.GetVec2Pos(hex);
             string ctx = $"you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";

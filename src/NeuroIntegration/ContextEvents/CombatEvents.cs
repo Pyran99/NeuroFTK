@@ -1,3 +1,4 @@
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
@@ -8,6 +9,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class CombatEvents
     {
+        static bool isAcidDestroy = false;
         
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceStair))]
         [HarmonyPostfix]
@@ -56,6 +58,46 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Test3()
         {
             Context.Send("moving to next room", true);
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealBase), "DestroyRandomEquippedItem")]
+        [HarmonyPrefix]
+        static void ItemDestroyed(CharacterDummy _dummy, ref FTK_itembase.ID __result)
+        {
+            if (_dummy is EnemyDummy) return;
+            isAcidDestroy = true;
+            Context.Send($"acid destroyed {ItemData.GetItemName(__result)} from {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.StealEquippedItem))] // acid also calls this
+        [HarmonyPostfix]
+        static void ItemStolenEquipped(FTK_itembase.ID _equippedItem, CharacterStats __instance)
+        {
+            if (isAcidDestroy)
+            {
+                isAcidDestroy = false;
+                return;
+            }
+            ItemStolenCtx(_equippedItem, __instance.m_CharacterOverworld);
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.StealBeltItem))]
+        [HarmonyPostfix]
+        static void ItemStolenBelt(FTK_itembase.ID _beltItem, CharacterStats __instance)
+        {
+            ItemStolenCtx(_beltItem, __instance.m_CharacterOverworld);
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.StealPackItem))]
+        [HarmonyPostfix]
+        static void ItemStolenPack(FTK_itembase.ID _packItem, CharacterStats __instance)
+        {
+            ItemStolenCtx(_packItem, __instance.m_CharacterOverworld);
+        }
+
+        static void ItemStolenCtx(FTK_itembase.ID _item, CharacterOverworld cow)
+        {
+            Context.Send($"{ItemData.GetItemName(_item)} stolen from {CharacterData.GetCharacterName(cow)}");
         }
 
     }

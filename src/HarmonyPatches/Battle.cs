@@ -147,14 +147,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // int dif = dmg.m_Damage;
         }
 
-        [HarmonyPatch(typeof(ProficiencyStealBase), "DestroyRandomEquippedItem")]
-        [HarmonyPostfix]
-        static void ItemDestroyed(CharacterDummy _dummy, ref FTK_itembase.ID __result)
-        {
-            if (_dummy is EnemyDummy) return;
-            Context.Send($"acid destroyed {ItemData.GetItemName(__result)} from {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
-        }
-
         static Dictionary<string, string> levelUps = [];
         static bool isLevelUpWait = false;
 
@@ -408,7 +400,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append(HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
                 actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
-            if (CanUseBtn(_instance.m_EquipWeaponButton) && (!GlobalConfig.IsDebugMode() || _instance.CombatCow.m_WeaponID == FTK_itembase.ID.None))
+            if (CanUseBtn(_instance.m_EquipWeaponButton) && (_instance.CombatCow.m_WeaponID == FTK_itembase.ID.unarmed || _instance.CombatCow.m_WeaponID == FTK_itembase.ID.None || !GlobalConfig.IsDebugMode()))
             {
                 sb.Append(HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
                 actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));

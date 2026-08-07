@@ -20,7 +20,6 @@ namespace Pyran.NeuroFTK.ModDebug
         [HarmonyPrefix]
         static void OnPlayerBeforeReceiveDamage(ref int _dmg)
         {
-            Plugin.Logger.LogMessage("second dmg combat");
             if(ToggleGodModeEffects.Instance.godModeType == ToggleGodModeEffects.GodModeType.NO_DMG)
             {
                 _dmg = 0;
@@ -31,7 +30,6 @@ namespace Pyran.NeuroFTK.ModDebug
         [HarmonyPrefix]
         static void OnPlayerBeforeReceiveDamageNonCombat(ref int _dmg)
         {
-            Plugin.Logger.LogMessage("second dmg non combat");
             if(ToggleGodModeEffects.Instance.godModeType == ToggleGodModeEffects.GodModeType.NO_DMG)
             {
                 _dmg = 0;
@@ -43,7 +41,6 @@ namespace Pyran.NeuroFTK.ModDebug
         [HarmonyPrefix]
         static void OnPlayerBeforeReceiveDamageNonCombatRPC(ref int _dmg)
         {
-            Plugin.Logger.LogMessage("second dmg non combat rpc");
             if(ToggleGodModeEffects.Instance.godModeType == ToggleGodModeEffects.GodModeType.NO_DMG)
             {
                 _dmg = 0;

@@ -234,6 +234,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 activeButtons.Add(text, kvp.Value);
             }
             if (HandleAutoJournal(activeButtons.ToDictionary(k => k.Value.m_ButtonInfo.m_ButtonType, v => v.Value))) return false;
+            activeButtons.Remove("Journal"); // may not be getting removed?
+            if (activeButtons.ContainsKey("Journal"))
+            {
+                Plugin.Logger.LogWarning("journal not removed?");
+                Plugin.Logger.LogWarning(string.Join(", ", [.. activeButtons.Select(k => k.Key)]));
+            }
             Dictionary<string, string> flavorData = [];
             Dictionary<string, object> rollData = [];
             foreach (KeyValuePair<string, uiPoiButton> btn in activeButtons)
@@ -330,7 +336,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return true;
             }
             isJournal = false;
-            _activeButtons.Remove(SubPanelBaseBase.ButtonID.Journal);
             return false;
         }
 
@@ -352,42 +357,42 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EnemyWindow()
         {
-            Plugin.Logger.LogWarning("enemy encounter");
+            // Plugin.Logger.LogWarning("enemy encounter");
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), "SetDeadAdventurerMode")]
         [HarmonyPostfix]
         static void AdventureWindow()
         {
-            Plugin.Logger.LogWarning("adventurer encounter");
+            // Plugin.Logger.LogWarning("adventurer encounter");
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), "SetWishingWellMode")]
         [HarmonyPostfix]
         static void WellWindow()
         {
-            Plugin.Logger.LogWarning("well encounter");
+            // Plugin.Logger.LogWarning("well encounter");
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), "SetRevivalMode")]
         [HarmonyPostfix]
         static void ReviveWindow()
         {
-            Plugin.Logger.LogWarning("revive encounter");
+            // Plugin.Logger.LogWarning("revive encounter");
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), "SetSkillTestMode")]
         [HarmonyPostfix]
         static void SkillWindow()
         {
-            Plugin.Logger.LogWarning("skill encounter");
+            // Plugin.Logger.LogWarning("skill encounter");
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), "SetServiceMode")]
         [HarmonyPostfix]
-        static void ServiceWindow()
+        static void ServiceWindow(uiEncounterMenu __instance)
         {
-            Plugin.Logger.LogWarning("service encounter");
+            Plugin.Logger.LogWarning($"service encounter = {__instance.m_ActiveSubPanel.GetType()}");
         }
 
         #endregion

@@ -27,9 +27,9 @@ namespace Pyran.NeuroFTK.Utils
 
         public static HexLand GetClosestBoat(HexLand current)
         {
+            HexLand target = null;
             IEnumerable<MiniHexBoat> boats = GetAllBoats();
             float closest = float.PositiveInfinity;
-            HexLand target = null;
             foreach (HexLand hex in boats.Select(boat => boat.m_HexLand))
             {
                 float dist = HexLand.Distance(current, hex);
@@ -50,9 +50,9 @@ namespace Pyran.NeuroFTK.Utils
 
         public static HexLand GetClosestPort(HexLand current)
         {
+            HexLand target = null;
             IEnumerable<MiniHexUtility> docks = GetAllDocks();
             float closest = float.PositiveInfinity;
-            HexLand target = null;
             foreach (HexLand hex in docks.Select(dock => dock.m_HexLand))
             {
                 float dist = HexLand.Distance(current, hex);
@@ -67,8 +67,9 @@ namespace Pyran.NeuroFTK.Utils
 
         public static IEnumerable<MiniHexUtility> GetAllDocks()
         {
-            IEnumerable<MiniHexUtility> docks = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Utility).Cast<MiniHexUtility>();
-            return docks.Select(dock => dock.m_ID == FTK_utility.ID.Port).Cast<MiniHexUtility>();
+            IEnumerable<MiniHexUtility> utilities = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Utility).Cast<MiniHexUtility>();
+            IEnumerable<MiniHexUtility> ports = utilities.Where(dock => dock.m_ID == FTK_utility.ID.Port && !dock.m_Hidden);
+            return ports;
         }
 
         public static void SendClosestPickupLocation(CharacterOverworld cow)

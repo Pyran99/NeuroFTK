@@ -77,7 +77,7 @@ namespace Pyran.NeuroFTK.Utils
 
         static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
         {
-            Plugin.Logger.LogWarning("poi encounter type = " + encounter.m_Type);
+            // Plugin.Logger.LogWarning("poi encounter type = " + encounter.m_Type);
             if (encounter.m_HasBeenConsumed) return false;
             if (encounter.m_CantUseThisTurn) return false;
             if (encounter.m_Type == FTK_miniEncounter.ID.kvHome && cow.GetHexLand() == encounter.m_HexLand)
@@ -96,16 +96,8 @@ namespace Pyran.NeuroFTK.Utils
         static bool IsDungeonInteractable(MiniHexDungeon dungeon, CharacterOverworld cow)
         {
             //VERIFY failed remake actions after interact with dungeon while party not ready
-            if (dungeon.IsDungeonCleared())
-            {
-                Plugin.Logger.LogWarning("dungeon cleared");
-                return false;
-            }
-            if (dungeon.m_Deactivated)
-            {
-                Plugin.Logger.LogWarning("dungeon deactivated");
-                return false;
-            }
+            if (dungeon.IsDungeonCleared()) return false;
+            if (dungeon.m_Deactivated) return false;
             if (cow.GetHexLand() == dungeon.m_HexLand)
             {
                 List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
