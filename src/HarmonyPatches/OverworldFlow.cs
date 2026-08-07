@@ -74,7 +74,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isFirstAction = false;
             isSneakMovement = false;
             isRemake = false;
-            tiles.Clear();
             DisposeActions();
         }
 
@@ -100,10 +99,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (RollSystem.rollCount == RollSystem.currentCOW.m_CharacterStats.m_ActionPoints) return; // no change
             if (isRemake) return;
             isRemake = true;
-            Plugin.Logger.LogMessage("movement focus added");
             DisposeActions();
-            tiles.Clear();
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(RollSystem.currentCOW), RollSystem.currentCOW.gameObject, 0.5f);
+            isFirstAction = false;
+            QuickTimerCallback timer = new(ResumeTurnMovement, RollSystem.currentCOW.gameObject, 0.5f);
         }
 
 #region Reverse Patches
@@ -183,6 +181,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void DisposeActions()
         {
             Object.Destroy(window);
+            tiles.Clear();
         }
 
         static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
@@ -219,11 +218,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             CharacterOverworld cow = CharacterData.GetNeuroCow();
+            RollSystem.currentCOW = cow;
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
             if (isFirstAction) return;
-            RollSystem.currentCOW = cow;
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.m_CursorHexRenderer.gameObject, 0.5f);
+            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), Movement.Instance.gameObject, 0.5f); // look for better object to attach
         }
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld curCow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
@@ -302,7 +301,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogError("routine owner is disabled");
                 return;
             }
-            if (tiles.Count > 0) return;
             routineOwner.StartCoroutine(GetValidTiles(type));
         }
 
@@ -311,12 +309,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (isFirstAction) yield break;
             if (isSearching) yield break;
             isSearching = true;
-            tiles.Clear();
-            Object.Destroy(window);
+            DisposeActions();
             CharacterOverworld currentCOW = CharacterData.GetNeuroCow();
             if (!Multiplayer.IsYourCow(currentCOW))
             {
                 Plugin.Logger.LogError("tried to generate move action from another players cow");
+                isSearching = false;
                 yield break;
             }
             int points = currentCOW.m_CharacterStats.m_ActionPoints;
@@ -416,6 +414,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             Context.Send(ctx);
             ctx = QuestHelper.GetQuestData();
+            if (ctx.Contains("may require boat"))
+            {
+                ctx += BoatHelper.AddBoatTravelContext(hex);
+            }
             if (ctx != "") Context.Send(ctx);
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);

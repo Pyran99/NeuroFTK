@@ -30,7 +30,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             currentHover = _hexland;
             if (!Plugin.doSpam || !GlobalConfig.IsDebugMode()) return;
             Vector2 pos = HexData.GetVec2Pos(_hexland);
-            if (OverworldFlow.questDict.ContainsKey(pos.ToString()))
+            if (QuestHelper.questDict.ContainsKey(pos.ToString()))
             {
                 Plugin.Logger.LogMessage($"valid id {_hexland.GetPosition()}");
             }

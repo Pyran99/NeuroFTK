@@ -30,7 +30,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
             description = ItemData.GetItemDescription(id, true, CharacterData.GetNeuroCow());
 
-            Context.Send($"[Loot] {name}{amount} (Rarity) {StringReplace.RemoveStyling(rarity)} (Description) {description}");
+            Context.Send($"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}) (Description) {description}");
             // [loot]Gold Coins [Rarity]Common [Description]Currency of Fahrul. Each coin worth its weight in gold.
         }
 

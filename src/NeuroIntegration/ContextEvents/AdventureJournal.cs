@@ -27,7 +27,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             uiMoreInfoMenu.Instance.UseOkayButton();
             yield return new WaitForSeconds(uiMoreInfoMenu.Instance.m_DeactivateDelay + 0.25f);
-            Encounters.CreateEncounterAction();
+            Encounters.CreateEncounterAction(Encounters.encounterMenuInstance.m_ActiveSubPanel);
         }
     }
 }

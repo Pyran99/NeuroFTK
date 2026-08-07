@@ -79,7 +79,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Attempt => "attempt to complete this encounter", // cult device, devious enchanter (play)
                 SubPanelBaseBase.ButtonID.BuyIn => "buy in NYI",
                 SubPanelBaseBase.ButtonID.Collect => "loot the object",
-                SubPanelBaseBase.ButtonID.Devote => "devote your life to this god",
+                SubPanelBaseBase.ButtonID.Devote => "become a champion for this sanctums god.",
                 SubPanelBaseBase.ButtonID.Drink => "drink from the well, you can throw gold in to increase your chance of success",
                 SubPanelBaseBase.ButtonID.EndTurn => "leave this encounter and end turn",
                 SubPanelBaseBase.ButtonID.Leave => "leave this encounter",
@@ -93,7 +93,17 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Loot => "loot the body",
                 SubPanelBaseBase.ButtonID.Give => "give gold to the stranger",
                 SubPanelBaseBase.ButtonID.Journal => "read the journal",
-                _ => $"missing flavor text {id} "
+
+                SubPanelBaseBase.ButtonID.GetHealed => "heal",
+                SubPanelBaseBase.ButtonID.Meditate => "recover focus points",
+                SubPanelBaseBase.ButtonID.Rest => "take a quick break and recover some health",
+                SubPanelBaseBase.ButtonID.SealHaunt => "seal the haunt",
+                SubPanelBaseBase.ButtonID.Secure => "secure desc NYI",
+                SubPanelBaseBase.ButtonID.Train => "train desc NYI",
+                SubPanelBaseBase.ButtonID.Tribute => "pay tribute to this statue",
+                SubPanelBaseBase.ButtonID.UpgradePipe => "upgrade your pipe",
+                SubPanelBaseBase.ButtonID.ViewWares => "view the shop",
+                _ => $"gamble for rewards"
             };
         }
     }

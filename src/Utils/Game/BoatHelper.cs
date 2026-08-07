@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using GridEditor;
 using NeuroSdk.Messages.Outgoing;
 
@@ -91,6 +92,22 @@ namespace Pyran.NeuroFTK.Utils
             }
             if (target == null) return;
             Context.Send($"{CharacterData.GetCharacterName(cow)} is in a boat, {CharacterData.GetCharacterName(_cow)} wants to be picked up at {HexData.GetVec2Pos(target)}", true);
+        }
+
+        public static string AddBoatTravelContext(HexLand currentHex)
+        {
+            StringBuilder sb = new();
+            HexLand closestBoat = GetClosestBoat(currentHex);
+            if (closestBoat != null)
+            {
+                sb.Append($"the closest boat is at {HexData.GetVec2Pos(closestBoat)}. ");
+            }
+            HexLand closestPort = GetClosestPort(currentHex);
+            if (closestPort != null)
+            {
+                sb.Append($"the closest port is at {HexData.GetVec2Pos(closestPort)}.");
+            }
+            return sb.ToString();
         }
     }
 }

@@ -233,7 +233,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             if (questDesc.Contains("The Rogue Isles")) return true;
             else if (questDesc.Contains("The Parched Waste")) return true;
-            else if (questDesc.Contains("The Rogue Isles")) return true;
+            else if (questDesc.Contains("The Dropstone Badlands")) return true;
             return false;
         }
         

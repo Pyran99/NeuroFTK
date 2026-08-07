@@ -20,13 +20,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static uiBattleStanceButtons StanceBtnInstance;
         public static List<uiBattleStanceButtons.ProfValues> m_Proficiencies = [];
+        public static bool beltActionUsed = false;
         static ActionWindow window;
         static Dictionary<string, uiBattleButton> offense = [];
         static Dictionary<string, uiBattleButton> defense = [];
         static readonly Dictionary<string, int> playerHealths = [];
         static StringBuilder dmgTakenString = new();
         static bool isHealthChangeWait = false;
-        public static bool beltActionUsed = false;
         static bool isCombatEncounter = false;
 
 
@@ -61,6 +61,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
             Plugin.Logger.LogMessage("player combat actions");
+            Object.Destroy(window);
             GlobalConfig.GameLoaded();
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
@@ -76,7 +77,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             beltActionUsed = false;
             BeginTurns.CtxCombatTurnBeginEnemy();
             BeginTurns.CtxCombatTurnBeginPlayer(__instance.CombatCow);
-            CreateActionWindow(StanceBtnInstance, m_Proficiencies);
+            QuickTimerCallback timer = new(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies), __instance.gameObject, 0.5f);
             ToggleDisposableActions.ToggleCombatActions(true, false);
         }
 
@@ -144,6 +145,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             PlayerHealthChange(__instance.m_CharacterOverworld, dif);
             // DummyDamageInfo dmg = __instance.m_CharacterOverworld.m_CurrentDummy.m_DamageInfo;
             // int dif = dmg.m_Damage;
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealBase), "DestroyRandomEquippedItem")]
+        [HarmonyPostfix]
+        static void ItemDestroyed(CharacterDummy _dummy, ref FTK_itembase.ID __result)
+        {
+            if (_dummy is EnemyDummy) return;
+            Context.Send($"acid destroyed {ItemData.GetItemName(__result)} from {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
         }
 
         static Dictionary<string, string> levelUps = [];
