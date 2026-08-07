@@ -19,7 +19,8 @@ Config files are automatically generated in the same folder as the dll
 Name | Default | Description
 --- | --- | ---
 `environment_web_socket` | ws://localhost:8000 | Websocket url
-`debug_mode` | false | some actions will be handled differently when `true`. Enables god mode toggle with KeyCode.LeftBracket
+`allow_cheats` | false | ok cheater
+`debug_mode` | false | some actions may be handled differently when `true`
 `use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
 `force_first_adventure` | false | only let neuro choose the first adventure map For the King *(other maps not tested yet)*
 `is_multiplayer` | false | disables normal main menu actions
@@ -30,30 +31,16 @@ Name | Default | Description
 
 ## Current State  
 
-v0.6: Tony was let loose for a long time with no game breaking issues
+v0.7: Tony was let loose for a long time with no game breaking issues. praise be the rng gods  
 
-- [x] Main menu
-  - [x] Lore store
-  - [x] Adventure setup
-  - [x] Resume last save
+### Todo  
+
 - [ ] Overworld flow
-  - [ ] movement
-    - [x] Land
-    - [ ] Sea
-    - [ ] Air
+  - [ ] Airship movement
   - [ ] change equipment
-  - [x] use items (most)
+  - [ ] use hex targetting items
 - [ ] Encounters
-  - [x] towns
-    - [x] services
-    - [x] market
-      - [x] buying
-      - [ ] selling
-    - [x] quests
-  - [ ] others
-- [x] Combat
-  - [x] enter combat encounter
-  - [x] choose attack & target
-  - [x] use items
+  - [ ] market selling
+- [ ] Combat
   - [ ] change weapon
 - [ ] using focus

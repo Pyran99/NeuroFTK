@@ -120,7 +120,7 @@ namespace Pyran.NeuroFTK.ModDebug
         private void Update() {
             if (Input.GetKeyDown(KeyCode.LeftBracket))
             {
-                if (!GlobalConfig.IsDebugMode()) return;
+                if (!GlobalConfig.AllowCheats) return;
                 godModeType += 1;
                 if (godModeType > GodModeType.FULL_HEALTH) godModeType = GodModeType.NONE;
                 GameCheat.Instance.m_IsGodMode = godModeType != GodModeType.NONE;

@@ -68,14 +68,6 @@ public class SetCustomHouseRules
                 }
             }
             Plugin.Logger.LogMessage("Applied custom rules");
-            // if (GlobalConfig.IsDebugMode())
-            // {
-            //     Plugin.Logger.LogWarning("Awaiting key input 'RightBracket' to close. from debugMode");
-            //     while (!Input.GetKeyDown(KeyCode.RightBracket))
-            //     {
-            //         yield return null;
-            //     }
-            // }
             instance.OnBack();
             ConfigureAdventure.CreateGame();
         }
