@@ -2,6 +2,7 @@ using Google2u;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
@@ -13,8 +14,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         [HarmonyPostfix]
         static void CtxDisplayedLootItem(string _item, int ___m_LootItemCount, string ___m_LootItem)
         {
-            Plugin.Logger.LogWarning("DisplayLootItem: " + _item);
             FTK_itembase.ID id = FTK_itembase.GetEnum(_item);
+            if (id == FTK_itembase.ID.None && _item.Contains("_life_"))
+            {
+                Context.Send($"[Loot] Increase life pool");
+                return;
+            }
             FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
             string name = itemBase.GetLocalizedName();
             string rarity = FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display);
@@ -23,16 +28,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             bool hasAmount = false;
             if (___m_LootItem.Contains("_gold_") || ___m_LootItem.Contains("_lore_")) hasAmount = true;
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
-            description = ItemData.GetItemDescription(id, true, GameLogic.Instance.GetCurrentCOW());
+            description = ItemData.GetItemDescription(id, true, CharacterData.GetNeuroCow());
 
-            Context.Send($"[Loot] {name}{amount} (Rarity) {StringReplace.RemoveStyling(rarity)} (Description) {description}");
-            // [the loot item to decide on]Gold Coins [Rarity]Common [Description]Currency of Fahrul. Each coin worth its weight in gold.
+            Context.Send($"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}) (Description) {description}");
+            // [loot]Gold Coins [Rarity]Common [Description]Currency of Fahrul. Each coin worth its weight in gold.
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.AddItemToBackpackRPC))]
         [HarmonyPostfix]
         static void ItemLooted(CharacterOverworld __instance, FTK_itembase.ID _item)
         {
+            if (!GlobalConfig.gameInitialized) return;
             Context.Send($"{CharacterData.GetCharacterName(__instance)} looted {ItemData.GetItemName(_item)}");
         }
     }

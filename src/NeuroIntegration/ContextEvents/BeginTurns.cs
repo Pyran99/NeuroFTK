@@ -16,6 +16,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
             string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
             ScourgeEvents.SendScourgeContext();
+            BoatHelper.HandleBoatHelp(_cow);
             return json;
         }
 
@@ -76,10 +77,25 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 List<string> immunities = EnemyImmunities(_dummy);
                 string immunes = string.Join(", ", [.. immunities.Select(x => x)]);
                 if (immunes.Length == 0) immunes = "none";
-                sb.AppendLine($"{name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes})");
+                string suicidal = IsPriorityTarget(_dummy);
+                sb.AppendLine($"{name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes}){suicidal}");
             }
             sb.Append($"(armor reduces physical dmg, resist reduces magic dmg)");
             Context.Send(sb.ToString());
+        }
+
+        static string IsPriorityTarget(EnemyDummy dummy)
+        {
+            string result = "";
+            foreach (FTK_proficiencyTable.ID id in dummy.m_EventListener.m_Weapon.GetProficiencyIDs())
+            {
+                if (FTK_proficiencyTableDB.Get(id).m_Suicide)
+                {
+                    result = "(priority target!)";
+                    break;
+                }
+            }
+            return result;
         }
 
         static List<string> EnemyImmunities(EnemyDummy _enemy)

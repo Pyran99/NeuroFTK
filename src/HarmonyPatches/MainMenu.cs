@@ -8,6 +8,7 @@ using Pyran.NeuroFTK.NeuroIntegration;
 using GridEditor;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.GameConfigs;
+using System.Collections.Generic;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
 
@@ -39,9 +40,21 @@ public class MainMenu
     {
         yield return new WaitForSeconds(0.5f);
         FindButtons(instance);
-        bool purchase = HasPurchasableLore();
-        activeWindow = MainMenuAction.RegisterAction(instance, resumeBtn?.isActiveAndEnabled ?? false, purchase);
+        IEnumerable<string> choices = GetAvailableChoices();
+        activeWindow = MainMenuAction.RegisterAction(instance, choices);
         UnregisterDisabledObject.QuickCreate(instance.gameObject, activeWindow);
+    }
+
+    static IEnumerable<string> GetAvailableChoices()
+    {
+        List<string> availableActions = ["new game"];
+        if (resumeBtn?.isActiveAndEnabled ?? false) availableActions.Add("resume game");
+        if (HasPurchasableLore()) availableActions.Add("spend lore");
+        if (GlobalConfig.ResumeOnFirstLoad() && availableActions.Contains("resume game"))
+        {
+            availableActions.Remove("new game");
+        }
+        return availableActions;
     }
 
     static void FindButtons(MainScreen instance)

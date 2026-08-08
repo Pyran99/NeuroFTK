@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using NeuroSdk;
 using UnityEngine;
 using NeuroSdk.Internal;
-using GridEditor;
 
 namespace Pyran.NeuroFTK;
 
@@ -51,20 +50,21 @@ public class Plugin : BaseUnityPlugin
             doSpam = !doSpam;
             Logger.LogWarning("CHANGED DEBUG SPAM TO " + doSpam);
         }
-        if (Input.GetKeyDown(KeyCode.Minus))
+        else if (Input.GetKeyDown(KeyCode.Minus))
         {
+            if (!GlobalConfig.AllowCheats) return;
             GlobalConfig.debugMode = !GlobalConfig.debugMode;
             Logger.LogWarning("CHANGED DEBUG MODE TO " + GlobalConfig.IsDebugMode());
         }
-        if (Input.GetKeyDown(KeyCode.BackQuote))
+        else if (Input.GetKeyDown(KeyCode.BackQuote))
         {
             Logger.LogWarning("backquote");
             // LoggerTest.Instance?.ToggleConsole();
             // devConsole.gameObject.SetActive(!devConsole.gameObject.activeSelf);
         }
-        if (Input.GetKeyDown(KeyCode.P))
+        else if (Input.GetKeyDown(KeyCode.P))
         {
-            if (GlobalConfig.debugMode == false) return;
+            if (!GlobalConfig.AllowCheats) return;
             Logger.LogWarning("kill all");
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             if (FTKUI.Instance.m_BattleStanceButtons.m_DisplayRoot.gameObject.activeSelf) FTKUI.Instance.m_BattleStanceButtons.CheatKillAll();
@@ -91,6 +91,15 @@ public class Plugin : BaseUnityPlugin
                 config.Add(entry.Key, entry.Value);
                 keyAdded = true;
             }
+            List<string> toRemove = [];
+            foreach (KeyValuePair<string, object> entry in config)
+            {
+                if (!GlobalConfig.defaultConfig.ContainsKey(entry.Key))
+                {
+                    toRemove.Add(entry.Key);
+                }
+            }
+            foreach (string key in toRemove) config.Remove(key);
             if (keyAdded)
             {
                 string json = Jason.Serialize(config);

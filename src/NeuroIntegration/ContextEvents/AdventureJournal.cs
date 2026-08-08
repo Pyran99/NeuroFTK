@@ -1,7 +1,6 @@
 using System.Collections;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -13,15 +12,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ShowMessage(string _messageHeader, string _message, float _delay, uiMoreInfoMenu __instance)
         {
-            Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
-            QuickTimerCallback timer = new(() => uiMoreInfoMenu.Instance.StartCoroutine(Wait()), uiLocationMenuDisplay.Instance.gameObject, 2.5f);
+            uiMoreInfoMenu.Instance.StartCoroutine(ReadJournal(_messageHeader, _message, _delay));
         }
 
-        static IEnumerator Wait()
+        static IEnumerator ReadJournal(string _messageHeader, string _message, float _activateDelay)
         {
+            yield return new WaitForSeconds(_activateDelay + 0.1f);
+            Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
+            yield return new WaitForSeconds(4.0f);
             uiMoreInfoMenu.Instance.UseOkayButton();
-            yield return new WaitForSeconds(uiMoreInfoMenu.Instance.m_DeactivateDelay + 0.1f);
-            Encounters.CreateEncounterAction();
+            yield return new WaitForSeconds(uiMoreInfoMenu.Instance.m_DeactivateDelay + 0.25f);
+            Encounters.CreateEncounterAction(Encounters.encounterMenuInstance.m_ActiveSubPanel);
         }
     }
 }

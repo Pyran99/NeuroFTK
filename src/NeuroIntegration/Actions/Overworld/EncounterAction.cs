@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
@@ -9,9 +8,9 @@ using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class EncounterAction(List<uiPoiButton> btns) : NeuroAction<string>
+    public class EncounterAction(Dictionary<string, uiPoiButton> btns) : NeuroAction<string>
     {
-        public static ActionWindow CreateWindow(MonoBehaviour _instance, List<uiPoiButton> _btns, string _context = "")
+        public static ActionWindow CreateWindow(MonoBehaviour _instance, Dictionary<string, uiPoiButton> _btns, string _context = "")
         {
             ActionWindow window = ActionWindow.Create(_instance.gameObject);
             window.AddAction(new EncounterAction(_btns));
@@ -33,7 +32,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = ["action"],
                 Properties = new()
                 {
-                    ["action"] = QJS.Enum(btns.Select(b => b.m_ButtonText.text).ToList())
+                    ["action"] = QJS.Enum(btns.Keys)
                 }
             };
             return schema;
@@ -41,11 +40,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            foreach (uiPoiButton btn in btns)
+            foreach (KeyValuePair<string, uiPoiButton> btn in btns)
             {
-                if (btn.m_ButtonText.text == parsedData)
+                if (btn.Key == parsedData)
                 {
-                    SelectButton.StartCoroutine(btn, 1.0f);
+                    SelectButton.StartCoroutine(btn.Value, 1.0f);
                     return;
                 }
             }
@@ -58,7 +57,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string result = actionData.Data.Value<string>("action");
             if (btns.Count == 0) return ExecutionResult.Success();
             if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("action"));
-            if (!btns.Any(b => b.m_ButtonText.text == result)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
+            if (!btns.ContainsKey(result)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
+            // if (!btns.Any(b => b.m_ButtonText.text == result)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
             parsedData = result;
             return ExecutionResult.Success();
         }

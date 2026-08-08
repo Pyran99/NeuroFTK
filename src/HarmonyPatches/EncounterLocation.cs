@@ -33,7 +33,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void MenuDisplayPostShow()
         {
-            Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2");
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
             {
                 Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2 skipped in dungeon mode");
@@ -46,7 +45,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void MenuDisplayUnhide()
         {
-            Plugin.Logger.LogWarning("uiLocationMenuDisplay.Unhide");
             CreateLocationAction();
         }
 
@@ -60,7 +58,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void StartShutdown()
         {
-            Plugin.Logger.LogMessage("uiLocationMenuDisplay.StartShutdown");
             Encounters.ResetContextData();
             Object.Destroy(window);
             menuDisplayValues = null;
@@ -87,7 +84,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void GenerateEntries(uiLocationMenu __instance)
         {
-            Plugin.Logger.LogWarning("loc_menu_generate");
+            // Plugin.Logger.LogWarning("loc_menu_generate");
             List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
             // m_Text0 // btn name
             // m_Text1 // maybe mouseover description
@@ -119,16 +116,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(MiniHexDungeon), nameof(MiniHexDungeon.GenerateDungeonEncounters))]
         [HarmonyPrefix]
-        static void GeneratingDungeon() // VERIFY attempt fix move actions register on dungeon entering
+        static void GeneratingDungeon()
         {
-            Plugin.Logger.LogWarning("GeneratingDungeon");
+            Plugin.Logger.LogMessage("GeneratingDungeon: VERIFY attempt fix move actions register on dungeon entering");
             GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;
         }
 
         static void CreateLocationAction()
         {
-            Plugin.Logger.LogWarning("create location encounter window");
-            string ctx = Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
+            Plugin.Logger.LogMessage("create location encounter window");
+            string ctx = GetLocationContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
             if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy)
             {
                 ctx += $"\nthis encounters enemies are lvl {locationMenuInstance.m_Difficulty.text}";
@@ -151,9 +148,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 sb.AppendLine($"{desc}: {btnInfo}");
             }
-            int cost = miniHexInfo.GetCost(GameLogic.Instance.GetCurrentCOW());
-            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {GameLogic.Instance.GetCurrentCOW().m_CharacterStats.m_Gold} gold");
+            int cost = miniHexInfo.GetCost(CharacterData.GetNeuroCow());
+            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {CharacterData.GetNeuroCow().m_CharacterStats.m_Gold} gold");
             window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString());
+            UnregisterDisabledObject.QuickCreate(uiLocationMenuDisplay.Instance.transform.Find("mainMenu").gameObject, window);
         }
 
         public static Dictionary<string, uiLocationMenuEntry> GetLocEncounterButtons()
@@ -172,6 +170,32 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             Plugin.Logger.LogMessage("btns: " + string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
+        }
+
+        static string GetLocationContext(string name, string description, string flavor)
+        {
+            string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
+            StringBuilder sbPlayers = new("[character involved]");
+            foreach (CharacterOverworld player in Encounters.involvedPlayers)
+            {
+                sbPlayers.AppendLine($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
+            }
+            string _enemies = "";
+            if (Encounters.involvedEnemies.Count > 0)
+            {
+                _enemies = $"[enemies involved] {string.Join(", ", [.. Encounters.involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+            }
+            string cost = "";
+            if (locationMenuInstance.m_CostRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Cost.text != string.Empty)
+            {
+                cost = $"\n[encounter cost] {locationMenuInstance.m_Cost.text} gold";
+            }
+            string difficulty = "";
+            if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Difficulty.text != string.Empty)
+            {
+                difficulty = $"\n[encounter difficulty] {locationMenuInstance.m_Difficulty.text}";
+            }
+            return $"{encounter}{sbPlayers}{_enemies}{cost}{difficulty}";
         }
     }
 }

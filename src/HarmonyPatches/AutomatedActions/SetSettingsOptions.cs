@@ -22,8 +22,8 @@ public class SetSettingsOptions
     [HarmonyPrefix]
     static void SetInitialAudio(AudioManager __instance)
     {
-        __instance.m_DefaultMusicVolume = 35f;
-        __instance.m_DefaultFXVolume = 35f;
+        __instance.m_DefaultMusicVolume = 50f;
+        __instance.m_DefaultFXVolume = 50f;
     }
 
 }

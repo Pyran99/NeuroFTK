@@ -5,26 +5,23 @@ using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
-using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class MainMenuAction(MainScreen mainMenu, bool _resumeGame, bool _canSpendLore) : NeuroAction<string>
+    public class MainMenuAction(MainScreen mainMenu, IEnumerable<string> _choices) : NeuroAction<string>
     {
-        public static ActionWindow RegisterAction(MainScreen instance, bool _resumeGame, bool _canSpendLore)
+        public static ActionWindow RegisterAction(MainScreen instance, IEnumerable<string> _choices)
         {
             ActionWindow window = ActionWindow.Create(instance.gameObject);
-            window.AddAction(new MainMenuAction(instance, _resumeGame, _canSpendLore));
+            window.AddAction(new MainMenuAction(instance, _choices));
             window.SetForce(0, "Begin the game or spend lore points if you can afford anything", "you are at the games main menu", true);
             window.Register();
             return window;
         }
 
         readonly MainScreen mainScreen = mainMenu;
-        readonly bool resumeGame = _resumeGame;
-        readonly bool spendLore = _canSpendLore;
         public Action<string> ButtonSelected { get; set; }
 
         public override string Name => "main_menu";
@@ -39,7 +36,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = ["action"],
                 Properties = new()
                 {
-                    ["action"] = QJS.Enum(GetAvailableChoices())
+                    ["action"] = QJS.Enum(_choices)
                 }
             };
             return schema;
@@ -52,9 +49,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            IEnumerable<string> choices = GetAvailableChoices();
             string result = actionData.Data.Value<string>("action");
-            bool present = choices.Contains(result);
+            bool present = _choices.Contains(result);
             if (!present)
             {
                 parsedData = null;
@@ -64,23 +60,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             return ExecutionResult.Success();
         }
 
-        IEnumerable<string> GetAvailableChoices()
-        {
-            List<string> availableActions = ["new game"];
-            if (resumeGame) availableActions.Add("resume game");
-            if (spendLore) availableActions.Add("spend lore");
-            if (GlobalConfig.AlwaysResume() && availableActions.Contains("resume game"))
-            {
-                availableActions.Remove("new game");
-            }
-            return availableActions;
-        }
-
         string GetValidDescription()
         {
             string availableActions = "Choose to start a new game. ";
-            if (resumeGame) availableActions += "Resume a saved game. ";
-            if (spendLore) availableActions += "Spend lore points on unlocking various upgrades. ";
+            if (_choices.Contains("resume game")) availableActions += "Resume a saved game. ";
+            if (_choices.Contains("spend lore")) availableActions += "Spend lore points on unlocking various upgrades. ";
             return availableActions;
         }
     }

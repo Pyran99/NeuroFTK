@@ -20,6 +20,8 @@ namespace Pyran.NeuroFTK.Utils
             {"Devote", "become a champion for this sanctums god."},
             {"Tribute", "pay tribute to this statue."},
             {"Enter Party", "begin this dungeon with all party members"},
+            {"Pickup Party", "bring all nearby party members onto the boat"},
+            {"Fight Scourge", "fight scourge to disable its negative effect if active"},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()
@@ -48,7 +50,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             {VoteButton.VoteOption.Unlocked, "use lockpicks to open the object"},
             {VoteButton.VoteOption.Open, "open container, may receive loot"},
-            {VoteButton.VoteOption.Collect, "gather the loot"},
+            {VoteButton.VoteOption.Collect, "loot the object"},
             {VoteButton.VoteOption.Equip, "equip the loot"},
             {VoteButton.VoteOption.Use, "use the item right away"},
             {VoteButton.VoteOption.Pass, "throw away the loot or pass on the encounter"}, // discard
@@ -76,8 +78,8 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Sneak => FTKHub.Localized<TextInfo>("STR_CombatSneakSelect") + "(based on speed stat)",
                 SubPanelBaseBase.ButtonID.Attempt => "attempt to complete this encounter", // cult device, devious enchanter (play)
                 SubPanelBaseBase.ButtonID.BuyIn => "buy in NYI",
-                SubPanelBaseBase.ButtonID.Collect => "collect NYI",
-                SubPanelBaseBase.ButtonID.Devote => "devote your life to this god",
+                SubPanelBaseBase.ButtonID.Collect => "loot the object",
+                SubPanelBaseBase.ButtonID.Devote => "become a champion for this sanctums god.",
                 SubPanelBaseBase.ButtonID.Drink => "drink from the well, you can throw gold in to increase your chance of success",
                 SubPanelBaseBase.ButtonID.EndTurn => "leave this encounter and end turn",
                 SubPanelBaseBase.ButtonID.Leave => "leave this encounter",
@@ -91,7 +93,17 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Loot => "loot the body",
                 SubPanelBaseBase.ButtonID.Give => "give gold to the stranger",
                 SubPanelBaseBase.ButtonID.Journal => "read the journal",
-                _ => ""
+
+                SubPanelBaseBase.ButtonID.GetHealed => "heal",
+                SubPanelBaseBase.ButtonID.Meditate => "recover focus points",
+                SubPanelBaseBase.ButtonID.Rest => "take a quick break and recover some health",
+                SubPanelBaseBase.ButtonID.SealHaunt => "seal the haunt",
+                SubPanelBaseBase.ButtonID.Secure => "secure desc NYI",
+                SubPanelBaseBase.ButtonID.Train => "train desc NYI",
+                SubPanelBaseBase.ButtonID.Tribute => "pay tribute to this statue",
+                SubPanelBaseBase.ButtonID.UpgradePipe => "upgrade your pipe",
+                SubPanelBaseBase.ButtonID.ViewWares => "view the shop",
+                _ => $"gamble for rewards"
             };
         }
     }

@@ -19,41 +19,28 @@ Config files are automatically generated in the same folder as the dll
 Name | Default | Description
 --- | --- | ---
 `environment_web_socket` | ws://localhost:8000 | Websocket url
-`debug_mode` | false | some actions will be handled differently when `true`. Enables god mode toggle with KeyCode.LeftBracket
+`allow_cheats` | false | ok cheater
+`debug_mode` | false | some actions may be handled differently when `true`
 `use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
-`force_first_adventure` | false | only let neuro choose the first adventure map For the King (other maps not tested yet)
+`force_first_adventure` | false | only let neuro choose the first adventure map For the King *(other maps not tested yet)*
 `is_multiplayer` | false | disables normal main menu actions
-`always_resume` | true | disables new game if there is a previous save to load
+`launch_resume` | true | disables new game if there is a previous save to load. Only used for the initial game startup
 
 > [!CAUTION]
-> Multiplayer has NOT been tested & will likely break things
+> Multiplayer has NOT been tested & *will* break things
 
 ## Current State  
 
-v0.6: Tony was let loose for a long time with no game breaking issues
+v0.7: Tony was let loose for a long time with no game breaking issues. praise be the rng gods  
 
-- [x] Main menu
-  - [x] Lore store
-  - [x] Adventure setup
-  - [x] Resume last save
+### Todo  
+
 - [ ] Overworld flow
-  - [ ] movement
-    - [x] Land
-    - [ ] Sea
-    - [ ] Air
+  - [ ] Airship movement (could be fine)
   - [ ] change equipment
-  - [x] use items (most)
+  - [ ] use hex targetting items
 - [ ] Encounters
-  - [x] towns
-    - [x] services
-    - [x] market
-      - [x] buying
-      - [ ] selling
-    - [x] quests
-  - [ ] others
-- [x] Combat
-  - [x] enter combat encounter
-  - [x] choose attack & target
-  - [x] use items
-  - [ ] change weapon
+  - [ ] market selling
+- [ ] Combat
+  - [ ] change weapon (currently only when unarmed)
 - [ ] using focus

@@ -11,7 +11,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class RollSystem
     {
         public static CharacterOverworld currentCOW;
-        public static int rollCount;
+        public static int rollCount = 0;
 
         [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))] // combat
         [HarmonyPrefix]

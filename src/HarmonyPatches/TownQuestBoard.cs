@@ -98,17 +98,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string result = "";
             FTK_itembase.ID id = items[count].m_Quest.m_RewardItem;
             FTK_itembase itemBase = FTK_itembase.GetItemBase(id);
-            result += $" (rarity) {FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display)},";
+            result += $" ({FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display)}),";
             if (itemBase is FTK_items)
             {
-                Plugin.Logger.LogWarning("item reward");
                 FTKItem _item = FTKItem.Get(id);
-                result += $" {_item.GetDescription(GameLogic.Instance.GetCurrentCOW())}";
+                result += $" {_item.GetDescription(CharacterData.GetNeuroCow())}";
             }
             else if (itemBase is FTK_weaponStats2 stats)
             {
-                Plugin.Logger.LogWarning("weapon reward");
-                result += ItemData.GetItemDescription(id, true, GameLogic.Instance.GetCurrentCOW());
+                result += ItemData.GetItemDescription(id, true, CharacterData.GetNeuroCow());
             }
             return result;
         }
@@ -130,7 +128,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator AcceptQuest(uiQuestDetail _detail)
         {
-            Plugin.Logger.LogWarning("wait for details");
             yield return new WaitForSeconds(0.3f);
             GameObject obj = uiGetQuestMenu.Instance.m_ListRoot.gameObject;
             while (!_detail.gameObject.activeInHierarchy)
@@ -143,10 +140,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 yield return null;
             }
-            yield return new WaitForSeconds(2f);
-            Plugin.Logger.LogWarning("details shown");
+            yield return new WaitForSeconds(2.5f);
             SelectButton.StartUnityBtnCoroutine(_detail.m_AcceptButton);
-
         }
         
     }

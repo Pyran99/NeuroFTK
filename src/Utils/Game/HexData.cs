@@ -18,14 +18,21 @@ namespace Pyran.NeuroFTK.Utils
         {
             if (poi == null) return false;
             if (poi.m_Deactivated) return false;
-            Plugin.Logger.LogMessage("poi type = " + poi.m_MiniHexType);
+            if (poi.m_Locked) return false;
             bool interactable = false;
             switch (poi.m_MiniHexType)
             {
                 case MiniHexInfo.MiniHexType.Town:
+                case MiniHexInfo.MiniHexType.Portal:
+                case MiniHexInfo.MiniHexType.SafeCamp:
+                case MiniHexInfo.MiniHexType.FortuneTeller:
                     return true;
                 case MiniHexInfo.MiniHexType.Sanctum:
                     return !(poi as MiniHexSanctum).m_SanctumClaimed;
+                case MiniHexInfo.MiniHexType.Haunt:
+                    return !(poi as MiniHexHaunt).m_HauntSealed;
+                case MiniHexInfo.MiniHexType.Utility:
+                    return !(poi as MiniHexUtility).m_UtilityActivated;
                 case MiniHexInfo.MiniHexType.AlluringPool:
                     interactable = IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
                     break;
@@ -38,11 +45,24 @@ namespace Pyran.NeuroFTK.Utils
                 default:
                     break;
             }
-            if (!interactable)
-            {
-                Plugin.Logger.LogMessage("this hex is not interactable");
-            }
             return interactable;
+        }
+
+        public static bool IsPoiCompleted(MiniHexInfo poi, CharacterOverworld cow)
+        {
+            if (poi == null) return true;
+            if (poi.m_Deactivated) return true;
+            if (poi.m_Locked) return true;
+            return poi.m_MiniHexType switch
+            {
+                MiniHexInfo.MiniHexType.Haunt => (poi as MiniHexHaunt).m_HauntSealed,
+                MiniHexInfo.MiniHexType.Dungeon => !IsDungeonInteractable(poi as MiniHexDungeon, cow),
+                MiniHexInfo.MiniHexType.MiniEncounter => !IsEncounterInteractable(poi as MiniEncounter, cow),
+                MiniHexInfo.MiniHexType.AlluringPool => !IsAlluringPoolInteractable(poi as MiniHexAlluringPool),
+                MiniHexInfo.MiniHexType.Sanctum => (poi as MiniHexSanctum).m_SanctumClaimed || (poi as MiniHexSanctum).m_SanctumBroken,
+                MiniHexInfo.MiniHexType.Utility => (poi as MiniHexUtility).m_UtilityActivated,
+                _ => false,
+            };
         }
 
         static bool IsAlluringPoolInteractable(MiniHexAlluringPool poi)
@@ -57,12 +77,18 @@ namespace Pyran.NeuroFTK.Utils
 
         static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
         {
-            Plugin.Logger.LogMessage("poi encounter type = " + encounter.m_Type);
-            if (encounter.m_HasBeenConsumed || encounter.m_CantUseThisTurn) return false;
-            if (encounter.m_Type == FTK_miniEncounter.ID.kvHome)
+            // Plugin.Logger.LogWarning("poi encounter type = " + encounter.m_Type);
+            if (encounter.m_HasBeenConsumed) return false;
+            if (encounter.m_CantUseThisTurn) return false;
+            if (encounter.m_Type == FTK_miniEncounter.ID.kvHome && cow.GetHexLand() == encounter.m_HexLand)
             {
                 Context.Send($"{CharacterData.GetCharacterName(cow)} does not have the required quest item for this hex", true);
                 return false;
+            }
+            if (encounter.HasEncounterQuest())
+            {
+                QuestLogicBase quest = encounter.GetEncounterQuest();
+                if (quest.IsConsiderComplete()) return true;
             }
             return true;
         }
@@ -71,26 +97,31 @@ namespace Pyran.NeuroFTK.Utils
         {
             //VERIFY failed remake actions after interact with dungeon while party not ready
             if (dungeon.IsDungeonCleared()) return false;
-            List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
-            int num = 0;
-            foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
+            if (dungeon.m_Deactivated) return false;
+            if (cow.GetHexLand() == dungeon.m_HexLand)
             {
-                if (!readyPlayers.Contains(_cow.m_FTKPlayerID))
+                List<FTKPlayerID> readyPlayers = dungeon.GetLoadPartyPlayers(cow, GameFlow.CombatType.Fight);
+                int num = 0;
+                foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
                 {
-                    if (!GameFlow.Instance.IsPermaDeath || !_cow.m_WaitForRespawn)
+                    if (!readyPlayers.Contains(_cow.m_FTKPlayerID))
                     {
-                        num++;
+                        if (!GameFlow.Instance.IsPermaDeath || !_cow.m_WaitForRespawn)
+                        {
+                            num++;
+                        }
+                    }
+                }
+                if (num != 0)
+                {
+                    if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
+                    {
+                        Context.Send("your entire party needs to be alive and within range to enter the dungeon", true);
+                        return false;
                     }
                 }
             }
-            if (num != 0)
-            {
-                if (dungeon.m_ID != FTK_dungeonEncounter.ID.Harazuel)
-                {
-                    Context.Send("your entire party needs to be alive and within range to enter the dungeon", true);
-                    return false;
-                }
-            }
+
             return true;
         }
 
@@ -104,6 +135,7 @@ namespace Pyran.NeuroFTK.Utils
             bool isLand = hex.m_Type == HexLand.Type.Land;
             bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
             bool onBoat = cow.IsInBoat();
+            if (cowOnLand && hex.IsShoreWater() && hex.IsBoat()) return true;
             //if hex is land & cow on land => land=>land
             if (isLand && cowOnLand) return true;
             //if hex is land & cow on boat => boat=>land
@@ -112,8 +144,6 @@ namespace Pyran.NeuroFTK.Utils
             if (!isLand && cowOnLand) return false;
             //if hex is water & cow on boat => boat=>water
             if (!isLand && onBoat) return true;
-            //if hex has boat & cow on land => land=>boat
-            if (hex.IsBoat() && cowOnLand) return true;
             // what would 2 boats do
             // what about air
             return false;
@@ -159,21 +189,23 @@ namespace Pyran.NeuroFTK.Utils
             }
             if (hex.GetDeadPlayerCount() > 0)
             {
-                hasDeadPlayers = "has dead character to revive";
+                hasDeadPlayers = "has dead character to revive.";
             }
             MiniHexInfo hexInfo = hex.GetPOI();
             if (hexInfo != null)
             {
                 MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
                 string type = GetHexTypeContext(poiType);
-                poi = hexInfo.GetPOIDisplayValue() + $"({type}) ";
-                if (!IsPoiInteractable(hexInfo, cow))
+                poi = hexInfo.GetPOIDisplayValue() + $"{type} ";
+                if (IsPoiCompleted(hexInfo, cow))
                 {
-                    poi += " (completed)";
+                    if (hexInfo.m_Deactivated) poi += " (deactivated)";
+                    else if (hexInfo.m_Locked) poi += " (locked)";
+                    else poi += " (completed)";
                 }
             }
-            if (addToList) OverworldFlow.hexPositions.Add(pos.ToString(), hex);
-            return $"[{pos} ({name})({questName}){hasDeadPlayers + ". "}{poi}]";
+            if (addToList) OverworldFlow.AddHexPosition(pos.ToString(), hex);
+            return $"[{pos} ({name})({questName}){hasDeadPlayers}{poi}]";
         }
 
         public static string GetHexTypeContext(MiniHexInfo.MiniHexType type)
@@ -181,10 +213,21 @@ namespace Pyran.NeuroFTK.Utils
             return type switch
             {
                 MiniHexInfo.MiniHexType.Haunt => "(important to defeat)",
-                MiniHexInfo.MiniHexType.Poison or MiniHexInfo.MiniHexType.Chaos or MiniHexInfo.MiniHexType.Fire or MiniHexInfo.MiniHexType.Curse => "(dangerous)",
+                MiniHexInfo.MiniHexType.Poison or MiniHexInfo.MiniHexType.Chaos or MiniHexInfo.MiniHexType.Fire or MiniHexInfo.MiniHexType.Curse => "(dangerous, avoid)",
                 MiniHexInfo.MiniHexType.Portal => "(teleport)",
+                MiniHexInfo.MiniHexType.Town => "(town)",
                 _ => "",
             };
         }
+
+        /// <param name="questDesc">use localized description to match realms</param>
+        public static bool IsBoatRequired(string questDesc)
+        {
+            if (questDesc.Contains("The Rogue Isles")) return true;
+            else if (questDesc.Contains("The Parched Waste")) return true;
+            else if (questDesc.Contains("The Dropstone Badlands")) return true;
+            return false;
+        }
+        
     }
 }
