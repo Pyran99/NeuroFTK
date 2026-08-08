@@ -8,7 +8,6 @@ using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
-using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -34,19 +33,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(FTK_itembase.ID parsedData)
         {
+            OverworldFlow.isFirstAction = false;
             if (cow.m_PlayerInventory.GetItemCount(PlayerInventory.ContainerID.Backpack, parsedData) > 0)
             {
                 FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Backpack);
+                // safe camp auto creates encounter menu
+                if (parsedData == FTK_itembase.ID.conTinderbox || parsedData == FTK_itembase.ID.scrollportal) return;
             }
             else
             {
                 Plugin.Logger.LogError("tried to use an item not on belt " + parsedData);
                 Context.Send("the item you tried to use was not in your inventory" + NeuroSdkStrings.ModFaultSuffix, true);
-            }
-            if (remakeOverworld)
-            {
-                QuickTimerCallback timer = new(OverworldFlow.BeginMovementTurn, cow.gameObject, 0.3f);
-                // NeuroActionHandler.UnregisterActions(["use_belt_item"]);
             }
             //=> using items does re initialize battle btns
         }

@@ -4,6 +4,13 @@ namespace Pyran.NeuroFTK.Utils
 {
     public class Multiplayer
     {
+        public static bool OtherPlayersAction(CharacterOverworld cow)
+        {
+            if (!IsMultiplayer()) return false;
+            if (!IsYourCow(cow)) return true;
+            return false;
+        }
+
         public static bool IsMultiplayer()
         {
             return GameLogic.Instance.IsMultiplayer() || GameLogic.Instance.IsLocalMultiplayer();
@@ -19,7 +26,7 @@ namespace Pyran.NeuroFTK.Utils
             {
                 return true;
             }
-            Plugin.Logger.LogWarning("not your cow");
+            Plugin.Logger.LogMessage("not your cow");
             return false;
         }
 

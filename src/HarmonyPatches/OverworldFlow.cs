@@ -67,7 +67,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         // when movement begins
         [HarmonyPatch(typeof(Movement), nameof(Movement.StopTracking))]
         [HarmonyPostfix]
-        static void StopTracking()
+        public static void StopTracking()
         {
             isTracking = false;
             isSearching = false;
@@ -200,6 +200,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (cow.m_WaitForRespawn || !cow.IsStillAlive())
             {
                 Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
+                isFirstAction = false;
                 return;
             }
             if (!Multiplayer.IsYourCow(cow))
@@ -214,6 +215,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ToggleDisposableActions.ToggleOverworldActions(true, false);
         }
 
+        // if move action unexpectedly doesnt work isFirstAction or isSearching may still be true
         static void ResumeTurnMovement()
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
@@ -398,6 +400,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateMovementActions(CharacterOverworld _cow)
         {
+            isSearching = false;
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError($"wrong track mode: {GameStates.mode}");
@@ -439,7 +442,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogError("no hex positions found");
                 Context.Send(StringMessages.CriticalError.Format(["hex_positions"]));
                 // QuickTimerCallback timer = new(ResumeTurnMovement, FTKUI.Instance.m_HexStatusOverworld.gameObject, 2.5f);
-                isSearching = false;
                 DisposeActions();
                 return;
             }
@@ -448,7 +450,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             MiniHexInfo poi = hex.GetPOI();
             bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
             window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
-            isSearching = false;
         }
 
         public static void NeuroTryInteractWithHex(CharacterOverworld cow)

@@ -43,14 +43,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void SubMenuGenerated(SubPanelBaseBase __instance)
         {
             if (generating) return; // called twice
+            if (Multiplayer.OtherPlayersAction(__instance.CurrentCow)) return;
             Plugin.Logger.LogMessage("encounter type = " + __instance.GetType());
-            if (Multiplayer.IsMultiplayer())
-            {
-                if (!Multiplayer.IsYourCow(__instance.CurrentCow)) return;
-            }
             generating = true;
             encounterMenuInstance = __instance.m_Owner;
-            __instance.StartCoroutine(Wait(__instance.m_Buttons));
+            encounterMenuInstance.m_ActiveSubPanel.StartCoroutine(Wait(__instance.m_Buttons));
 
             static IEnumerator Wait(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
             {
@@ -58,7 +55,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Object.Destroy(window);
                 yield return null;
                 if (!SetButtonData(_buttons)) yield break;
-                QuickTimerCallback timer = new (() => CreateEncounterAction(encounterMenuInstance.m_ActiveSubPanel), encounterMenuInstance.m_MainPanel.gameObject);
+                QuickTimerCallback timer = new (() => CreateEncounterAction(encounterMenuInstance.m_ActiveSubPanel), encounterMenuInstance.m_ActiveSubPanel.gameObject);
                 // Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
             }
         }
@@ -331,6 +328,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (_activeButtons.ContainsKey(SubPanelBaseBase.ButtonID.Journal) && !isJournal)
             {
+                Plugin.Logger.LogWarning("auto read journal");
                 isJournal = true;
                 uiLocationMenuDisplay.Instance.StartCoroutine(ReadJournal(_activeButtons[SubPanelBaseBase.ButtonID.Journal]));
                 return true;

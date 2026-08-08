@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             yield return new WaitForSeconds(_activateDelay + 0.1f);
             Context.Send($"[you read the journal of {_messageHeader}] {_message}"); // what other context calls this menu
-            yield return new WaitForSeconds(4.0f);
+            yield return new WaitForSeconds(8.0f);
             uiMoreInfoMenu.Instance.UseOkayButton();
             yield return new WaitForSeconds(uiMoreInfoMenu.Instance.m_DeactivateDelay + 0.25f);
             Encounters.CreateEncounterAction(Encounters.encounterMenuInstance.m_ActiveSubPanel);
