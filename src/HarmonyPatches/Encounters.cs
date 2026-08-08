@@ -152,6 +152,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send(ctx);
             generating = false;
             if (!instance.isActiveAndEnabled) return;
+            Plugin.Logger.LogMessage("create encounter window");
             window = EncounterAction.CreateWindow(instance, activeButtons.ToDictionary(k => k.Key, v => v.Value), buttonsContext);
             // window = EncounterAction.CreateWindow(encounterMenuInstance, [.. activeButtons.Values], buttonsContext);
         }
@@ -204,7 +205,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string cost = "";
             if (encounterMenuInstance.m_CostRoot.gameObject.activeInHierarchy && encounterMenuInstance.m_Cost.text != string.Empty)
             {
-                cost = $"\n[encounter cost] {encounterMenuInstance.m_Cost?.text} gold";
+                cost = $"\n{StringMessages.EncounterCost.Format([encounterMenuInstance.m_Cost?.text, CharacterData.GetNeuroCow().m_CharacterStats.m_Gold])}";
             }
             string enemyLvl = "";
             if (encounterMenuInstance.m_EnemyLevelRoot.gameObject.activeInHierarchy && encounterMenuInstance.m_EnemyLevel.text != string.Empty)
@@ -234,12 +235,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 activeButtons.Add(text, kvp.Value);
             }
             if (HandleAutoJournal(activeButtons.ToDictionary(k => k.Value.m_ButtonInfo.m_ButtonType, v => v.Value))) return false;
-            activeButtons.Remove("Journal"); // may not be getting removed?
             if (activeButtons.ContainsKey("Journal"))
             {
-                Plugin.Logger.LogWarning("journal not removed?");
                 Plugin.Logger.LogWarning(string.Join(", ", [.. activeButtons.Select(k => k.Key)]));
             }
+            activeButtons.Remove("Journal"); // may not be getting removed?
             Dictionary<string, string> flavorData = [];
             Dictionary<string, object> rollData = [];
             foreach (KeyValuePair<string, uiPoiButton> btn in activeButtons)

@@ -1,3 +1,4 @@
+using System.Text;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
@@ -66,6 +67,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (_dummy is EnemyDummy) return;
             isAcidDestroy = true;
+            Plugin.Logger.LogWarning($"acid destroy {__result}");
             Context.Send($"acid destroyed {ItemData.GetItemName(__result)} from {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
         }
 
@@ -73,8 +75,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ItemStolenEquipped(FTK_itembase.ID _equippedItem, CharacterStats __instance)
         {
+            Plugin.Logger.LogWarning($"item stolen {_equippedItem}");
             if (isAcidDestroy)
             {
+                Plugin.Logger.LogWarning($"acid steal item {_equippedItem}");
                 isAcidDestroy = false;
                 return;
             }
@@ -98,6 +102,27 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ItemStolenCtx(FTK_itembase.ID _item, CharacterOverworld cow)
         {
             Context.Send($"{ItemData.GetItemName(_item)} stolen from {CharacterData.GetCharacterName(cow)}");
+        }
+
+        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.AddStolen))]
+        [HarmonyPostfix]
+        static void StolenItem(FTK_itembase.ID _item, int _gold, EnemyDummy __instance)
+        {
+            string enemyName = CombatUtils.GetEnemyName(__instance);
+            string itemStolen = "";
+            if (_item != FTK_itembase.ID.None) itemStolen = ItemData.GetItemName(_item);
+            StringBuilder sb = new($"{enemyName} stole");
+            if (itemStolen != "") sb.Append($" {itemStolen},");
+            if (_gold > 0) sb.Append($" {_gold} gold");
+            Context.Send(sb.ToString());
+        }
+
+        [HarmonyPatch(typeof(CharacterEventListener), nameof(CharacterEventListener.WeaponBreak))]
+        [HarmonyPrefix]
+        static void WeaponBreak(CharacterEventListener __instance)
+        {
+            if (!__instance.m_IsWeapBreakOn) return;
+            Context.Send($"{CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}'s weapon broke");
         }
 
     }

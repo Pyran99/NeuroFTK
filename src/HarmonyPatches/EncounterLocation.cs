@@ -188,7 +188,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string cost = "";
             if (locationMenuInstance.m_CostRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Cost.text != string.Empty)
             {
-                cost = $"\n[encounter cost] {locationMenuInstance.m_Cost.text} gold";
+                cost = $"\n{StringMessages.EncounterCost.Format([locationMenuInstance.m_Cost.text, CharacterData.GetNeuroCow().m_CharacterStats.m_Gold])}";
             }
             string difficulty = "";
             if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Difficulty.text != string.Empty)

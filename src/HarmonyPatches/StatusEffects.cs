@@ -62,6 +62,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StatusRemoveCtx(__instance, _dummy);
         }
 
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.UpdatePoison))]
+        [HarmonyPostfix]
+        static void PoisonUpdated(CharacterStats __instance, int _poison)
+        {
+            Context.Send($"poison lvl {_poison} applied to {CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}");
+        }
+
         static void StatusAppliedCtx(ProficiencyBase prof, CharacterDummy _dummy)
         {
             string statusName = prof.m_ProficiencyData.GetLocalizedDisplayName(); // used for spawned text

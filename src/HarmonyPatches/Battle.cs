@@ -289,19 +289,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             EncounterSession.Instance.StartCoroutine(EnemyHealthWait());
         }
 
-        [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.AddStolen))]
-        [HarmonyPostfix]
-        static void StolenItem(FTK_itembase.ID _item, int _gold, EnemyDummy __instance)
-        {
-            string enemyName = CombatUtils.GetEnemyName(__instance);
-            string itemStolen = "";
-            if (_item != FTK_itembase.ID.None) itemStolen = ItemData.GetItemName(_item);
-            StringBuilder sb = new($"{enemyName} stole");
-            if (itemStolen != "") sb.Append($" {itemStolen},");
-            if (_gold > 0) sb.Append($" {_gold} gold");
-            Context.Send(sb.ToString());
-        }
-
         static IEnumerator EnemyDiedWait()
         {
             isEnemyDeathWait = true;

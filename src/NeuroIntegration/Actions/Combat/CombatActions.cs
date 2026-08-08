@@ -260,7 +260,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            parsedData = actionData.Data.Value<string>("weapon") ?? "null";
+            parsedData = actionData?.Data?.Value<string>("weapon") ?? "null";
             return ExecutionResult.Success();
         }
         
