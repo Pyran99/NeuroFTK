@@ -362,7 +362,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (neighbor == initialHex) continue;
                         if (hasChecked.Contains(neighbor)) continue;
                         hasChecked.Add(neighbor);
-                        if (neighbor.CanTravel() && HexData.CanTravel(neighbor, owner))
+                        if (owner.IsInAirShip() || (neighbor.CanTravel() && HexData.CanTravel(neighbor, owner)))
                         {
                             validNeighbors.Add(neighbor);
                             nextLoop.Add(neighbor);
@@ -412,23 +412,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             HexLand hex = _cow.GetHexLand();
-            Vector2 pos = HexData.GetVec2Pos(hex);
-            string ctx = $"you are controlling {CharacterData.GetCharacterName(_cow)} at hex {pos}.";
-            if (lastDestinations.ContainsKey(_cow))
-            {
-                if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
-                {
-                    pos = HexData.GetVec2Pos(lastDestinations[_cow]);
-                    ctx += $" the last hex you tried to move to with this character was {pos}.";
-                }
-            }
-            foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
-            {
-                if (player == _cow) continue;
-                string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
-                pos = HexData.GetVec2Pos(player.GetHexLand());
-                ctx += $" teammate {CharacterData.GetCharacterName(player)}{revive} is at hex {pos},";
-            }
+            string ctx = CharacterData.GetTeamPositionState(_cow, hex, lastDestinations);
+            
             Context.Send(ctx);
             ctx = QuestHelper.GetQuestData();
             if (ctx.Contains("may require boat"))
@@ -437,19 +422,35 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (ctx != "") Context.Send(ctx);
             string tileCtx = GetTileContext(tiles);
-            if (hexPositions.Count == 0)
-            {
-                Plugin.Logger.LogError("no hex positions found");
-                Context.Send(StringMessages.CriticalError.Format(["hex_positions"]));
-                // QuickTimerCallback timer = new(ResumeTurnMovement, FTKUI.Instance.m_HexStatusOverworld.gameObject, 2.5f);
-                DisposeActions();
-                return;
-            }
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
+            if (hexPositions.Count == 0)
+            {
+                HandleInvalidMovement(_cow, validQuests, validCows);
+                return;
+            }
             MiniHexInfo poi = hex.GetPOI();
             bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
             window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
+        }
+
+        static bool HandleInvalidMovement(CharacterOverworld _cow, List<string> validQuests, IEnumerable<CharacterOverworld> validCows)
+        {
+            if (_cow.IsInAirShip())
+            {
+                window = MovementAction.CreateWindow(_cow, "", [], QuestHelper.questDict, validQuests, validCows, true);
+                return true;
+            }
+            Plugin.Logger.LogError("no hex positions found, forcing end turn");
+            DisposeActions();
+            if (!uiEndTurnButton.Instance.IsInteractable())
+            {
+                Context.Send(StringMessages.CriticalError.Format(["movement"]));
+                return true;
+            }
+            Context.Send($"{StringMessages.ActionIssueOccured.Format(["movement"])}, your turn is ending automatically, sorry");
+            uiEndTurnButton.Instance.OnEndTurn();
+            return true;
         }
 
         public static void NeuroTryInteractWithHex(CharacterOverworld cow)

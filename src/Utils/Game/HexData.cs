@@ -26,6 +26,7 @@ namespace Pyran.NeuroFTK.Utils
                 case MiniHexInfo.MiniHexType.Portal:
                 case MiniHexInfo.MiniHexType.SafeCamp:
                 case MiniHexInfo.MiniHexType.FortuneTeller:
+                case MiniHexInfo.MiniHexType.AirShip:
                     return true;
                 case MiniHexInfo.MiniHexType.Sanctum:
                     return !(poi as MiniHexSanctum).m_SanctumClaimed;
@@ -135,17 +136,14 @@ namespace Pyran.NeuroFTK.Utils
             bool isLand = hex.m_Type == HexLand.Type.Land;
             bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
             bool onBoat = cow.IsInBoat();
-            if (cowOnLand && hex.IsShoreWater() && hex.IsBoat()) return true;
-            //if hex is land & cow on land => land=>land
-            if (isLand && cowOnLand) return true;
-            //if hex is land & cow on boat => boat=>land
-            if (isLand && onBoat) return true;
-            //if hex is water & cow on land => land=>water
-            if (!isLand && cowOnLand) return false;
-            //if hex is water & cow on boat => boat=>water
-            if (!isLand && onBoat) return true;
+            bool inAirship = cow.IsInAirShip();
+            if (inAirship) return true; // air can go anywhere
+            if (cowOnLand && hex.IsShoreWater() && hex.IsBoat()) return true; // land=>boat on shoreline
+            if (isLand && cowOnLand) return true; // land=>land
+            if (isLand && onBoat) return true; // boat=>land
+            if (!isLand && cowOnLand) return false; // land=>water
+            if (!isLand && onBoat) return true; // boat=>water
             // what would 2 boats do
-            // what about air
             return false;
         }
 
@@ -226,6 +224,7 @@ namespace Pyran.NeuroFTK.Utils
             if (questDesc.Contains("The Rogue Isles")) return true;
             else if (questDesc.Contains("The Parched Waste")) return true;
             else if (questDesc.Contains("The Dropstone Badlands")) return true;
+            else if (questDesc.Contains("Purge Harazuel")) return true;
             return false;
         }
         

@@ -210,8 +210,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case ProficiencyBase.Category.Rush:
                     result = "rush NYI";
                     break;
-                case ProficiencyBase.Category.StealItem:
-                    result = "stealItem NYI";
+                case ProficiencyBase.Category.StealItem: // incinerate
+                    result = "item steal";
                     break;
                 // case ProficiencyBase.Category.Cure:
                 //     result = "";

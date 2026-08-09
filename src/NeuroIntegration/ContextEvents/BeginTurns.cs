@@ -61,7 +61,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CtxCombatTurnBeginEnemy()
         {
             StringBuilder sb = new();
-            sb.Append("[enemy state]");
+            sb.Append("[enemy state] ");
             // Dictionary<EnemyDummy, uiEachEnemyHud> enemies = new(uiEnemyHUD.Instance.m_EnemyHudDictionary);
             foreach (KeyValuePair<FTKPlayerID, EnemyDummy> enemy in EncounterSession.Instance.m_EnemyDummies)
             {
@@ -71,14 +71,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string name = $"{CombatUtils.GetEnemyName(_dummy)}";
                 string lvl = $"{_enemy.GetEnemyLevelDisplay()}";
                 string health = $"{_dummy.GetEnemyInfo().GetCurrentHealth()}";
-                string coherent = _dummy.IsCoherent() ? "" : "stunned";
                 int armor = _dummy.GetArmor();
                 int resist = _dummy.GetResist();
+                string coherent = _dummy.IsCoherent() ? "" : "stunned";
                 List<string> immunities = EnemyImmunities(_dummy);
                 string immunes = string.Join(", ", [.. immunities.Select(x => x)]);
                 if (immunes.Length == 0) immunes = "none";
+                bool evasive = _dummy.IsEvasive();
+                int reflect = _dummy.m_EnemyCombat.m_ReflectDmg;
                 string suicidal = IsPriorityTarget(_dummy);
-                sb.AppendLine($"{name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes}){suicidal}");
+                sb.AppendLine($"{name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes}){(evasive ? ", dodges non perfect rolls" : "")}{(reflect > 0 ? $", reflects {reflect} dmg to melee attackers" : "")}, {suicidal}");
             }
             sb.Append($"(armor reduces physical dmg, resist reduces magic dmg)");
             Context.Send(sb.ToString());

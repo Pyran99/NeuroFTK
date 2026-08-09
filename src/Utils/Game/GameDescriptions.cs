@@ -20,8 +20,10 @@ namespace Pyran.NeuroFTK.Utils
             {"Devote", "become a champion for this sanctums god."},
             {"Tribute", "pay tribute to this statue."},
             {"Enter Party", "begin this dungeon with all party members"},
-            {"Pickup Party", "bring all nearby party members onto the boat"},
+            {"Pickup Party", "bring all nearby party members onto the transport"},
             {"Fight Scourge", "fight scourge to disable its negative effect if active"},
+            {"Launch", "launch the airship"},
+            {"Land", "land the airship"},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()

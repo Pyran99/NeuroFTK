@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -215,8 +214,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
     public class InteractWithCurrentHex(CharacterOverworld cow) : NeuroAction
     {
-        public override string Name => "interact_with_this_tile";
-        protected override string Description => "interact with the point of interest on the tile the current character is at";
+        public override string Name => "interact_with_this_hex";
+        protected override string Description => "interact with the point of interest on the hex the current character is at";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()
