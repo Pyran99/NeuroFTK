@@ -20,8 +20,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static uiEncounterMenu encounterMenuInstance { get; private set; }
         public static List<CharacterOverworld> involvedPlayers = [];
         public static Dictionary<string, Dictionary<string, string>> involvedEnemies = [];
-
-        static readonly Dictionary<string, uiPoiButton> activeButtons = [];
+        public static readonly Dictionary<string, uiPoiButton> activeButtons = [];
+        public static Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> allButtons = [];
         static string buttonsContext = "";
         static bool generating = false;
         static bool isJournal = false;
@@ -47,17 +47,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogMessage("encounter type = " + __instance.GetType());
             generating = true;
             encounterMenuInstance = __instance.m_Owner;
-            encounterMenuInstance.m_ActiveSubPanel.StartCoroutine(Wait(__instance.m_Buttons));
+            allButtons = new(__instance.m_Buttons);
+            encounterMenuInstance.m_ActiveSubPanel.StartCoroutine(DelayActions(allButtons));
 
-            static IEnumerator Wait(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
+        }
+
+        public static IEnumerator DelayActions(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
+        {
+            // wait for lower class to finish setup
+            Object.Destroy(window);
+            yield return null;
+            if (!SetButtonData(_buttons))
             {
-                // wait for lower class to finish setup
-                Object.Destroy(window);
-                yield return null;
-                if (!SetButtonData(_buttons)) yield break;
-                QuickTimerCallback timer = new (() => CreateEncounterAction(encounterMenuInstance.m_ActiveSubPanel), encounterMenuInstance.m_ActiveSubPanel.gameObject);
-                // Context.Send(EncounterContext(instance.m_PoiName.text, instance.m_LoreDescription.text, instance.m_ThisMiniHex?.GetMenuDisplayValues().m_Top));
+                Plugin.Logger.LogWarning("journal read window break");
+                yield break;
             }
+            QuickTimerCallback timer = new (() => CreateEncounterAction(encounterMenuInstance.m_ActiveSubPanel), encounterMenuInstance.m_ActiveSubPanel.gameObject);
         }
 
         [HarmonyPatch(typeof(uiCarnivalMenu), "CreateCarnivalOptions")]
@@ -144,6 +149,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateEncounterAction(SubPanelBaseBase instance)
         {
+            allButtons.Clear();
             MiniHexInfo.MenuPOIDisplayValues values = encounterMenuInstance.m_ThisMiniHex.GetMenuDisplayValues();
             string ctx = GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
             Context.Send(ctx);
@@ -151,7 +157,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!instance.isActiveAndEnabled) return;
             Plugin.Logger.LogMessage("create encounter window");
             window = EncounterAction.CreateWindow(instance, activeButtons.ToDictionary(k => k.Key, v => v.Value), buttonsContext);
-            // window = EncounterAction.CreateWindow(encounterMenuInstance, [.. activeButtons.Values], buttonsContext);
         }
 
         // entered combat hex
@@ -232,11 +237,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 activeButtons.Add(text, kvp.Value);
             }
             if (HandleAutoJournal(activeButtons.ToDictionary(k => k.Value.m_ButtonInfo.m_ButtonType, v => v.Value))) return false;
-            if (activeButtons.ContainsKey("Journal"))
-            {
-                Plugin.Logger.LogWarning(string.Join(", ", [.. activeButtons.Select(k => k.Key)]));
-            }
-            activeButtons.Remove("Journal"); // may not be getting removed?
+            activeButtons.Remove("Journal");
             Dictionary<string, string> flavorData = [];
             Dictionary<string, object> rollData = [];
             foreach (KeyValuePair<string, uiPoiButton> btn in activeButtons)
@@ -250,8 +251,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine($"[{data.Key} ({flavorData[data.Key]})]");
                 foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
                 {
-                    // string value = JsonConvert.SerializeObject(outcome.Value);
                     // 0(2%) = Failure
+                    // string value = JsonConvert.SerializeObject(outcome.Value);
                     sb.AppendLine($"{outcome.Key} ({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
                 }
             }
@@ -328,7 +329,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (_activeButtons.ContainsKey(SubPanelBaseBase.ButtonID.Journal) && !isJournal)
             {
-                Plugin.Logger.LogWarning("auto read journal");
                 isJournal = true;
                 uiLocationMenuDisplay.Instance.StartCoroutine(ReadJournal(_activeButtons[SubPanelBaseBase.ButtonID.Journal]));
                 return true;

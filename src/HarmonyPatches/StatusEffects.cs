@@ -156,9 +156,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case ProficiencyBase.Category.Ice:
                     result = "STR_statusFrozenInfo";
                     break;
-                // case ProficiencyBase.Category.LifeDrain:
-                //     result = "";
-                //     break;
+                case ProficiencyBase.Category.LifeDrain:
+                    result = "life steal";
+                    break;
                 case ProficiencyBase.Category.Lightning:
                     result = "STR_statusShockedInfo";
                     break;

@@ -61,7 +61,7 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Ready, "continue to the next room"},
             {VoteButton.VoteOption.Identify, "identify if the chest is a mimic"},
             {VoteButton.VoteOption.Shop, "view the shop"},
-            {VoteButton.VoteOption.Destroy, "destroy NYI"},
+            {VoteButton.VoteOption.Destroy, "destroy the trap"},
             {VoteButton.VoteOption.PartyHeal, "heal all party members in this battle"},
             {VoteButton.VoteOption.DungeonRest, "setup a tinder pouch camp to heal all party members (dont use all of them)"}, // party rest
             {VoteButton.VoteOption.Share, "split the rewards between all involved party members"},
