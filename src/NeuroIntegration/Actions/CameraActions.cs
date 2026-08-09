@@ -1,4 +1,3 @@
-using System;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
@@ -16,11 +15,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            Camera cam = FTKHub.Instance.m_OverworldCamera;
+            Camera cam = OverworldCamera.Instance.m_Camera; // overworld
+            Context.Send("you are spinning!");
             if (cam.enabled)
             {
                 Plugin.Instance.StartCoroutine(CameraUtils.RotateCamera());
-                Context.Send("you are spinning!");
+                return;
+            }
+            else
+            {
+                cam = OverworldCamera.Instance.m_OverlayCamera; // combat
+                // if (cam.enabled) Plugin.Instance.StartCoroutine(CameraUtils.CombatRotateCamera());
+                if (cam.enabled) Plugin.Instance.StartCoroutine(CameraUtils.CombatRotateCow());
             }
         }
 

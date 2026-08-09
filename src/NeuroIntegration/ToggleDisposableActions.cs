@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
-using UnityEngine;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -81,6 +80,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 combatActions.Add(queryStatus);
                 INeuroAction sendMsg = new SillyAction();
                 combatActions.Add(sendMsg);
+                INeuroAction spinCamera = new CameraSpinAction();
+                combatActions.Add(spinCamera);
+                INeuroAction jumpAction = new CowJumpAction();
+                combatActions.Add(jumpAction);
                 Plugin.Instance.StartCoroutine(RegisterWait(combatActions));
             }
             else
