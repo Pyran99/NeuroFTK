@@ -78,7 +78,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 combatActions.Add(queryBeltItems);
                 INeuroAction queryStatus = new QueryStatusEffects();
                 combatActions.Add(queryStatus);
-                INeuroAction sendMsg = new SillyAction();
+                INeuroAction sendMsg = new FloatingMsgAction();
                 combatActions.Add(sendMsg);
                 INeuroAction spinCamera = new CameraSpinAction();
                 combatActions.Add(spinCamera);

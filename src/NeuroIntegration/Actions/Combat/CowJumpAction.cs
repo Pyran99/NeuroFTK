@@ -16,6 +16,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
+            if (CameraUtils.IsOnCooldown(Name)) return;
             Plugin.Instance.StartCoroutine(CameraUtils.CombatJumpCow());
             Context.Send("you have jumped! to the moon!!");
         }

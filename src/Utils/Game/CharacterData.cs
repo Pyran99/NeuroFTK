@@ -107,7 +107,7 @@ namespace Pyran.NeuroFTK.Utils
 
         public static string GetAllStatusEffects(CharacterOverworld cow)
         {
-            StringBuilder sb = new($"(status effects on {GetCharacterName(cow)})\n[Effects]");
+            StringBuilder sb = new($"(status effects on {GetCharacterName(cow)})\n[Effects] ");
             string statusName;
             string statusDesc;
             List<ProficiencyBase> effects = GetStatusEffects(cow);
@@ -144,6 +144,7 @@ namespace Pyran.NeuroFTK.Utils
                 sb.Append($"{statusName}, ");
                 added = true;
             }
+            if (!added) sb.Append("none");
             sb.Append("\n[Disease] ");
             added = false;
             if (cow.m_CharacterStats.IsDiseased)

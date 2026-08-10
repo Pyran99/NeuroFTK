@@ -59,7 +59,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             if (items.Count > 0)
             {
-                registerActions.Add(new UseBeltItemAction(items, cow, true));
+                registerActions.Add(new UseBeltItemAction(items, cow));
                 Context.Send(beltCtx.ToString());
             }
             string query = $"your turn for {CharacterData.GetCharacterName(cow)} has started. use items or begin your movement choices";

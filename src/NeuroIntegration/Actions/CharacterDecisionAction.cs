@@ -39,7 +39,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out VoteButton parsedData)
         {
             parsedData = null;
-            string result = actionData.Data.Value<string>("button");
+            string result = actionData.Data?.Value<string>("button");
+            if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("button"));
             foreach (VoteButton btn in _values)
             {
                 if (btn.GetComponentInChildren<Text>().text == result)

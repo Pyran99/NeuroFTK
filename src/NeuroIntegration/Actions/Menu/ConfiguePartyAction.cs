@@ -63,7 +63,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                             Type = JsonSchemaType.String,
                             MinLength = min,
                             MaxLength = max,
-                            // Pattern = "^[a-zA-Z]+$"
+                            Pattern = "^[a-zA-Z]+( [a-zA-Z0-9_]+)*$"
                         }
                     }
                 }
@@ -79,8 +79,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out List<string> parsedData)
         {
             parsedData = [];
-            JToken token = actionData.Data.SelectToken("names");
-            Plugin.Logger.LogMessage(token);
+            JToken token = actionData.Data?.SelectToken("names");
             if (token == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("names"));
             List<string> test = [];
             foreach (JToken name in token)

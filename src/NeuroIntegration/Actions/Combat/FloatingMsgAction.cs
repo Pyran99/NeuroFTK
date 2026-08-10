@@ -6,8 +6,8 @@ using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    // just a test for neuro to send game message. there is also a chat window
-    public class SillyAction : NeuroAction<string>
+    // send a message from the combat floating text
+    public class FloatingMsgAction : NeuroAction<string>
     {
         public override string Name => "send_msg";
         protected override string Description => "send a random message to appear on the active character. this action is for chat engagement";
@@ -26,7 +26,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                         Type = JsonSchemaType.String,
                         MinLength = 3,
                         MaxLength = 30,
-                        Pattern = "^[a-zA-Z0-9_]+$"
+                        Pattern = "^[a-zA-Z0-9_ ]+$"
                     }
                 }
             };

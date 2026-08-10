@@ -10,7 +10,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class QueryCurrentCOWLocation : NeuroAction
     {
         public override string Name => "query_current_location";
-        protected override string Description => "returns the location of the current controlled overworld character";
+        protected override string Description => "returns the location of the current controlled overworld character, or your character if multiplayer";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()
@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CharacterOverworld current = CharacterData.GetNeuroCow();
             if (current == null)
             {
-                Plugin.Logger.LogError("query location failed: no active character");
+                Plugin.Logger.LogError("query location failed: no active character?");
                 Context.Send("query location failed" + NeuroSdkStrings.ModFaultSuffix);
                 return;
             }
@@ -37,7 +37,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 }
                 hexData = $"{hexInfo.GetPOIDisplayValue()}: {hexInfo.m_MiniHexType}{complete}";
             }
-            Context.Send($"{name} is at {hex.GetPosition()} {hex}. This hex contains ({hexData})");
+            Context.Send($"{name} is at {HexData.GetVec2Pos(hex)} {hex}. This hex contains ({hexData})");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

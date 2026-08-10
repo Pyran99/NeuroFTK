@@ -15,6 +15,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
+            if (CameraUtils.IsOnCooldown(Name)) return;
             Camera cam = OverworldCamera.Instance.m_Camera; // overworld
             Context.Send("you are spinning!");
             if (cam.enabled)
@@ -63,13 +64,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(float parsedData)
         {
+            if (CameraUtils.IsOnCooldown(Name)) return;
             CameraUtils.Zoom(parsedData);
             Context.Send("you have changed the camera zoom to " + parsedData);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out float parsedData)
         {
-            float data = actionData.Data.Value<float>("zoom");
+            float data = actionData.Data?.Value<float>("zoom") ?? cam.MaxDistance;
             parsedData = data;
             return ExecutionResult.Success();
         }

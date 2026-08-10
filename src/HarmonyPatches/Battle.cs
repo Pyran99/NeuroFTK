@@ -331,7 +331,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 beltActionUsed = true;
                 Dictionary<string, FTK_itembase.ID> items = [];
                 foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
-                if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow, false));
+                if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow));
             }
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
             offense.Clear();

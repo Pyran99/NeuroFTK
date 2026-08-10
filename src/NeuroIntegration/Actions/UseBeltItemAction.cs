@@ -11,7 +11,7 @@ using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class UseBeltItemAction(Dictionary<string, FTK_itembase.ID> items, CharacterOverworld cow, bool remakeOverworld = false) : NeuroAction<FTK_itembase.ID>
+    public class UseBeltItemAction(Dictionary<string, FTK_itembase.ID> items, CharacterOverworld cow) : NeuroAction<FTK_itembase.ID>
     {
         public override string Name => "use_belt_item";
         protected override string Description => "choose an item to use from your belt slots";
@@ -34,6 +34,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(FTK_itembase.ID parsedData)
         {
             OverworldFlow.isFirstAction = false;
+            if (!FTKItem.Get(parsedData).CanUse(cow))
+            {
+                Context.Send($"cannot use item {parsedData}: {FTKItem.Get(parsedData).GetCannotUseReason(cow)}");
+                return;
+            }
             if (cow.m_PlayerInventory.GetItemCount(PlayerInventory.ContainerID.Backpack, parsedData) > 0)
             {
                 FTKItem.Get(parsedData)?.OnUse(cow, PlayerInventory.ContainerID.Backpack);
@@ -55,10 +60,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (parsedData == FTK_itembase.ID.None)
             {
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));
-            }
-            if (!FTKItem.Get(parsedData).CanUse(cow))
-            {
-                return ExecutionResult.Failure($"cannot use item {parsedData}: {FTKItem.Get(parsedData).GetCannotUseReason(cow)}");
             }
             return ExecutionResult.Success();
         }
