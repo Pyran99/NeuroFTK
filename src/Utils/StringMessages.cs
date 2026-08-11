@@ -6,11 +6,15 @@ namespace Pyran.NeuroFTK.Utils
     {
         public const string CultDeviceDestroyed = "you destroyed the evil cult device";
         public const string CultDeviceDestroyedFail = "you failed to destroy the evil cult device";
-        public const string HexContext = "[all tiles in range (displayed as [(position x,z) (name/realm)(quest)other info])] ";
+        public const string HexContext = "[hexes to choose (displayed as [(position x,z) name/realm (quest name)(has dead) (POI: state) (distance)])] ";
         public const string DungeonRolls = "(roll chances displayed as: character [button (description)] total successful rolls(chance for this result) = outcome result. (buttons with no roll results will always succeed))";
         public const string BattleWon = "you have won the battle!";
         public const string GameOver = $"your team is all dead, you have lost this game. items can be purchased in the lore store to improve your combat capabilities.";
+
         
+        public static readonly NeuroSdkFormatString ItemUsed = "you used {0}";
+        public static readonly NeuroSdkFormatString ItemUsedTargetHex = "select a hex to use {0} on";
+        public static readonly NeuroSdkFormatString ItemUsedDestinationHex = "select a destination hex for {0}";
         public static readonly NeuroSdkFormatString ActionIssueOccured = "an issue occured with the {0} action";
         public static readonly NeuroSdkFormatString CriticalError = "an issue occured with {0}, tell vedal there is a problem";
         public static readonly NeuroSdkFormatString PortraitMsg = "{0} ({1}) says: {2}";

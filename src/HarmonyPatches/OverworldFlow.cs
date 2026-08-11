@@ -378,9 +378,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
         /// <summary>
-        /// display as [(position x,z) (name/realm)(quest name)other info]
+        /// display as [(position x,z) name/realm (quest name)(has dead) (POI: state) (distance)]
         /// </summary>
-        public static string GetTileContext(List<HexLand> _tiles)
+        public static string GetTileContext(List<HexLand> _tiles, bool includeDistance = false)
         {
             StringBuilder sb = new();
             sb.Append(StringMessages.HexContext);
@@ -388,7 +388,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             hexPositions.Clear();
             foreach (HexLand hex in _tiles)
             {
-                sb.AppendLine(HexData.GetContextForHex(cow, hex, true));
+                sb.AppendLine(HexData.GetContextForHex(cow, hex, true, includeDistance));
             }
             return sb.ToString();
         }
