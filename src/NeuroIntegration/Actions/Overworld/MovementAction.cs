@@ -71,7 +71,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
 
         public override string Name => "overworld_movement";
-        protected override string Description => "choose a tile position to move the current character to";
+        protected override string Description => "choose a hex position to move the current character to";
         protected override JsonSchema Schema => GetSchema();
 
         JsonSchema GetSchema()
@@ -79,10 +79,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,
-                Required = ["tile"],
+                Required = ["hex"],
                 Properties = new()
                 {
-                    ["tile"] = QJS.Enum(_hexPositions.Select(x => x.Key).ToList()),
+                    ["hex"] = QJS.Enum(_hexPositions.Select(x => x.Key).ToList()),
                 }
             };
             return schema;
@@ -105,9 +105,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out HexLand parsedData)
         {
             parsedData = null;
-            //"tile": "(168.8, 37.5)"
-            string data = actionData.Data.Value<string>("tile");
-            if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("tile"));
+            //"hex": "(168.8, 37.5)"
+            string data = actionData.Data?.Value<string>("hex");
+            if (data == null || data == string.Empty) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("tile"));
             if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("tile"));
             parsedData = _hexPositions[data];
             return ExecutionResult.Success();

@@ -159,15 +159,15 @@ namespace Pyran.NeuroFTK.Utils
         public static string GetTeamPositionState(CharacterOverworld _cow, HexLand hex, Dictionary<CharacterOverworld, HexLand> lastDestinations)
         {
             Vector2 pos = HexData.GetVec2Pos(hex);
-            string ctx = $"you are controlling {GetCharacterName(_cow)} at hex {pos}.";
-            if (_cow.IsInBoat()) ctx += " you are in a boat.";
-            else if (_cow.IsInAirShip()) ctx += " you are in an airship, you can leave it by moving onto a land tile then choosing the interact with hex action and 'Land' choice.";
+            StringBuilder sb = new($"you are controlling {GetCharacterName(_cow)} at hex {pos}.");
+            if (_cow.IsInBoat()) sb.Append(" you are in a boat.");
+            else if (_cow.IsInAirShip()) sb.Append(" you are in an airship, you can leave it by moving onto an empty land hex then choosing the interact with hex action and 'Land' choice. you must leave the airship to interact with any point of interest on a hex.");
             if (lastDestinations.ContainsKey(_cow))
             {
                 if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
                 {
                     pos = HexData.GetVec2Pos(lastDestinations[_cow]);
-                    ctx += $" the last hex you tried to move to with this character was {pos}.";
+                    sb.Append($" the last hex you tried to move to with this character was {pos}.");
                 }
             }
             foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
@@ -175,9 +175,9 @@ namespace Pyran.NeuroFTK.Utils
                 if (player == _cow) continue;
                 string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
                 pos = HexData.GetVec2Pos(player.GetHexLand());
-                ctx += $" teammate {GetCharacterName(player)}{revive} is at hex {pos},";
+                sb.Append($" teammate {GetCharacterName(player)}{revive} is at hex {pos},");
             }
-            return ctx;
+            return sb.ToString();
         }
     }
 
