@@ -16,10 +16,10 @@ namespace Pyran.NeuroFTK.Utils
         static readonly List<FTK_itembase.ID> blacklistItems =
         [
             // FTK_itembase.ID.scrollvision, // this allows picking any hex, does not create list
+            // FTK_itembase.ID.scrollpurify,
             // FTK_itembase.ID.scrollteleport,
             // FTK_itembase.ID.scrollgroupteleport,
             // FTK_itembase.ID.scrollidentify,
-            // FTK_itembase.ID.scrollpurify,
             // FTK_itembase.ID.scrollportal,
             // FTK_itembase.ID.townTeleport,
         ];

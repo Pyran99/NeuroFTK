@@ -229,7 +229,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
     /// <summary>
     /// change weapon
-    /// TODO get & send context of available weapons
     /// </summary>
     public class CombatChangeWeaponAction(uiBattleButton btn): NeuroAction<string>
     {
@@ -240,21 +239,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         private JsonSchema GetSchema()
         {
             return null;
-            // JsonSchema schema = new()
-            // {
-            //     Type = JsonSchemaType.Object,
-            //     Required = ["weapon"],
-            //     Properties = new()
-            //     {
-            //         ["weapon"] = new() { Type = JsonSchemaType.String, MinLength = 1, MaxLength = 16 }
-            //     }
-            // };
-            // return schema;
         }
 
         protected override void Execute(string parsedData)
         {
-            // Plugin.Logger.LogWarning("execute change weapon action: " + parsedData);
+            // TODO send context of available weapons
             SelectButton.StartCoroutine(btn, 1.0f);
         }
 

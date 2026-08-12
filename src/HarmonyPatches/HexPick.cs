@@ -69,10 +69,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"select a nearby boat to pickup and store in your backpack");
         }
 
-        public static void PickHex(HexLand hex)
+        public static void PickHex(HexLand hex, bool ok = true)
         {
             ReverseHexHover(Movement.Instance, hex);
-            ReverseHexPick(Movement.Instance, hex, true);
+            ReverseHexPick(Movement.Instance, hex, ok);
         }
 
         static void FinishedPicking()
@@ -83,20 +83,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateNeuroAction()
         {
             if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-            Dictionary<string, HexLand> tiles = InRangeDrawer.gPickRadiusHexList.ToDictionary(x => HexData.GetVec2Pos(x).ToString(), x => x);
-            Plugin.Logger.LogWarning($"found {tiles.Count} tiles");
-            if (tiles.Count > GlobalConfig.MaxHexSearch)
-            {
-                tiles = (Dictionary<string, HexLand>)tiles.Take(GlobalConfig.MaxHexSearch);
-                Plugin.Logger.LogWarning($"removed count = {tiles.Count}");
-            }
-            string ctx = OverworldFlow.GetTileContext(InRangeDrawer.gPickRadiusHexList, true);
+            Dictionary<string, HexLand> tiles = []; //InRangeDrawer.gPickRadiusHexList.ToDictionary(x => HexData.GetVec2Pos(x).ToString(), x => x);
+            FTKItem item = null;
             if (itemUsed != FTK_itembase.ID.None)
             {
                 List<string> toRemove = [];
+                // does not create list
+                item = FTKItem.Get(itemUsed);
                 if (itemUsed == FTK_itembase.ID.scrollvision)
                 {
-                    //does not create list
                     HexLand randHex = FTKHex.Instance.m_AllLandHexes[Random.Range(0, FTKHex.Instance.m_AllLandHexes.Count)];
                     if (randHex == null) Plugin.Logger.LogError("WTF");
                     Context.Send($"revealing hexes around {HexData.GetVec2Pos(randHex)}");
@@ -105,37 +100,42 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 else if (itemUsed == FTK_itembase.ID.scrollpurify)
                 {
-                    foreach (KeyValuePair<string, HexLand> kvp in tiles)
+                    foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
-                        if (!HexData.IsHexCorrupted(kvp.Value)) toRemove.Add(kvp.Key);
+                        if (HexData.IsHexCorrupted(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
                     }
-                    foreach (string key in toRemove) tiles.Remove(key);
-                    toRemove.Clear();
                 }
-                FTKItem item = FTKItem.Get(itemUsed);
-                if (item is Movement.IPickHexClient)
+                else if (item is Movement.IPickHexClient)
                 {
                     FTKPickHexItem pickItem = item as FTKPickHexItem;
-                    foreach (KeyValuePair<string, HexLand> kvp in tiles)
+                    foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
-                        if (!pickItem.PickHexValidCallback(kvp.Value))
-                        {
-                            toRemove.Add(kvp.Key);
-                        }
+                        if (pickItem.PickHexValidCallback(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
                     }
-                    foreach (string key in toRemove) tiles.Remove(key);
-                    toRemove.Clear();
                 }
+            }
+            Plugin.Logger.LogWarning($"found {tiles.Count} tiles");
+            if (tiles.Count > GlobalConfig.MaxHexSearch)
+            {
+                tiles = tiles.Take(GlobalConfig.MaxHexSearch).ToDictionary(x => x.Key, x => x.Value);
+                Plugin.Logger.LogWarning($"removed count = {tiles.Count}");
             }
             if (tiles.Count == 0)
             {
                 string msg = $"there were no hexes to pick for {ItemData.GetItemName(itemUsed)}";
                 Plugin.Logger.LogError(msg);
                 Context.Send(msg);
-                Movement.Instance.PickHexCancelled();
-                QuickTimerCallback timer2 = new(OverworldFlow.BeginMovementTurn, Movement.Instance.gameObject);
+                if (item is Movement.IPickHexClient)
+                {
+                    // Movement.Instance.PickHexCancelled();
+                    PickHex(Multiplayer.GetOwnCow().GetHexLand(), false);
+                }
+                // Movement.Instance.m_Mode = Movement.TrackingMode.Movement;
+                // OverworldFlow.isFirstAction = false;
+                // QuickTimerCallback timer2 = new(OverworldFlow.BeginMovementTurn, Movement.Instance.gameObject);
                 return;
             }
+            string ctx = OverworldFlow.GetTileContext([.. tiles.Select(x => x.Value)], true);
             QuickTimerCallback timer3 = new(() => Create(ctx, tiles), Movement.Instance.gameObject, 0.5f);
         }
 
