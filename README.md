@@ -25,6 +25,7 @@ Name | Default | Description
 `force_first_adventure` | false | only let neuro choose the first adventure map For the King *(other maps not tested yet)*
 `is_multiplayer` | false | disables normal main menu actions
 `launch_resume` | true | disables new game if there is a previous save to load. Only used for the initial game startup
+`max_hex_search` | 150 | the max amount of hexes to send for context & choice list of actions that require picking a hex (Airship movement can be 168+). For movement the removed hexes would be from the furthest, for items that pick a hex it is based on the order the map was created (aka nobody knows)
 
 > [!CAUTION]
 > Multiplayer has NOT been tested & *will* break things
@@ -36,11 +37,15 @@ v0.7: Tony was let loose for a long time with no game breaking issues. praise be
 ### Todo  
 
 - [ ] Overworld flow
-  - [ ] Airship movement (could be fine)
+  - [X] Airship movement (could be fine)
   - [ ] change equipment
-  - [ ] use hex targetting items
-- [ ] Encounters
-  - [ ] market selling
+  - [X] use hex targetting items
 - [ ] Combat
   - [ ] change weapon (currently only when unarmed)
 - [ ] using focus
+
+### Undecided actions
+
+- market selling: equipment can be destroyed in battle, leaving this out would likely be more helpful
+
+

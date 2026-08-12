@@ -11,6 +11,7 @@ namespace Pyran.NeuroFTK.GameConfigs
         public static bool IsMultiplayer { get; private set; } = false;
         public static bool FirstLoadResume { get; private set; } = true;
         public static bool AllowCheats { get; private set; } = false;
+        public static int MaxHexSearch { get; private set; } = 150;
         public static float maxDistance = 2.8866f * 15f;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
@@ -22,6 +23,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             { "force_first_adventure", false },
             { "is_multiplayer", false },
             { "launch_resume", true },
+            { "max_hex_search", 150 },
         };
 
         public static bool IsDebugMode() => debugMode;
@@ -43,6 +45,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             IsMultiplayer = (bool)_config["is_multiplayer"];
             FirstLoadResume = (bool)_config["launch_resume"];
             AllowCheats = (bool)_config["allow_cheats"];
+            MaxHexSearch = Convert.ToInt32(_config["max_hex_search"]);
         }
     }
 }

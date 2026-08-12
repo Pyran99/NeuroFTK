@@ -374,6 +374,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 loopCount++;
             }
             if (validNeighbors.Count == 0) Plugin.Logger.LogError("no valid neighbors found");
+            if (validNeighbors.Count > GlobalConfig.MaxHexSearch)
+            {
+                Plugin.Logger.LogWarning($"hex count exceeded {GlobalConfig.MaxHexSearch}");
+                int diff = validNeighbors.Count - GlobalConfig.MaxHexSearch;
+                validNeighbors.RemoveRange(GlobalConfig.MaxHexSearch, diff);
+            }
             return validNeighbors;
         }
 

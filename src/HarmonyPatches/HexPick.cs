@@ -5,6 +5,7 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -61,6 +62,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
         }
 
+        [HarmonyPatch(typeof(uiTownServiceMenu), "StartBoatReclaim")]
+        [HarmonyPrefix]
+        static void OnBoatReclain()
+        {
+            Context.Send($"select a nearby boat to pickup and store in your backpack");
+        }
+
         public static void PickHex(HexLand hex)
         {
             ReverseHexHover(Movement.Instance, hex);
@@ -76,6 +84,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
             Dictionary<string, HexLand> tiles = InRangeDrawer.gPickRadiusHexList.ToDictionary(x => HexData.GetVec2Pos(x).ToString(), x => x);
+            Plugin.Logger.LogWarning($"found {tiles.Count} tiles");
+            if (tiles.Count > GlobalConfig.MaxHexSearch)
+            {
+                tiles = (Dictionary<string, HexLand>)tiles.Take(GlobalConfig.MaxHexSearch);
+                Plugin.Logger.LogWarning($"removed count = {tiles.Count}");
+            }
             string ctx = OverworldFlow.GetTileContext(InRangeDrawer.gPickRadiusHexList, true);
             if (itemUsed != FTK_itembase.ID.None)
             {
@@ -137,40 +151,39 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
             Plugin.Logger.LogMessage($"item used {ItemData.GetItemName(___m_ItemID)}");
             itemUsed = ___m_ItemID;
-            SendCtx(___m_ItemID);
         }
 
-        static void SendCtx(FTK_itembase.ID id)
-        {
-            switch (id)
-            {
-                case FTK_itembase.ID.boat:
-                case FTK_itembase.ID.boatA:
-                case FTK_itembase.ID.boatB:
-                case FTK_itembase.ID.boatD:
-                case FTK_itembase.ID.boatE:
-                    Context.Send(StringMessages.ItemUsedTargetHex.Format(["boat"]));
-                    break;
-                case FTK_itembase.ID.scrollidentify:
-                    Context.Send(StringMessages.ItemUsedTargetHex.Format(["identify scroll"]));
-                    break;
-                case FTK_itembase.ID.scrollpurify:
-                    Context.Send(StringMessages.ItemUsedTargetHex.Format(["purify scroll"]));
-                    break;
-                case FTK_itembase.ID.scrollgroupteleport:
-                    Context.Send(StringMessages.ItemUsedDestinationHex.Format(["group teleport"]));
-                    break;
-                case FTK_itembase.ID.scrollportal:
-                    Context.Send(StringMessages.ItemUsedDestinationHex.Format(["portal"]));
-                    break;
-                case FTK_itembase.ID.scrollteleport:
-                    Context.Send(StringMessages.ItemUsedDestinationHex.Format(["teleport"]));
-                    break;
-                default:
-                    Context.Send(StringMessages.ItemUsed.Format([ItemData.GetItemName(id)]));
-                    break;
-            }
-        }
+        // static void SendCtx(FTK_itembase.ID id)
+        // {
+        //     switch (id)
+        //     {
+        //         case FTK_itembase.ID.boat:
+        //         case FTK_itembase.ID.boatA:
+        //         case FTK_itembase.ID.boatB:
+        //         case FTK_itembase.ID.boatD:
+        //         case FTK_itembase.ID.boatE:
+        //             Context.Send(StringMessages.ItemUsedTargetHex.Format(["boat"]));
+        //             break;
+        //         case FTK_itembase.ID.scrollidentify:
+        //             Context.Send(StringMessages.ItemUsedTargetHex.Format(["identify scroll"]));
+        //             break;
+        //         case FTK_itembase.ID.scrollpurify:
+        //             Context.Send(StringMessages.ItemUsedTargetHex.Format(["purify scroll"]));
+        //             break;
+        //         case FTK_itembase.ID.scrollgroupteleport:
+        //             Context.Send(StringMessages.ItemUsedDestinationHex.Format(["group teleport"]));
+        //             break;
+        //         case FTK_itembase.ID.scrollportal:
+        //             Context.Send(StringMessages.ItemUsedDestinationHex.Format(["portal"]));
+        //             break;
+        //         case FTK_itembase.ID.scrollteleport:
+        //             Context.Send(StringMessages.ItemUsedDestinationHex.Format(["teleport"]));
+        //             break;
+        //         default:
+        //             Context.Send(StringMessages.ItemUsed.Format([ItemData.GetItemName(id)]));
+        //             break;
+        //     }
+        // }
 
         // [HarmonyPatch(typeof(boat), nameof(boat.OnUse))]
         // [HarmonyPrefix]
@@ -227,12 +240,5 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
         //     Context.Send(StringMessages.ItemUsedTargetHex.Format(["vision scroll"]));
         // }
-
-        [HarmonyPatch(typeof(uiTownServiceMenu), "StartBoatReclaim")]
-        [HarmonyPrefix]
-        static void OnBoatReclain()
-        {
-            Context.Send($"select a nearby boat to pickup and store in your backpack");
-        }
     }
 }

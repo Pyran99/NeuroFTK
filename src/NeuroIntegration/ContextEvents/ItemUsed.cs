@@ -1,4 +1,3 @@
-using FTKItemName;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
@@ -12,17 +11,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.CharacterUseItemRPC))]
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         static void OnItemUsed(FTK_itembase.ID _item, CharacterOverworld __instance)
         {
             Context.Send($"{CharacterData.GetCharacterName(__instance)} used {ItemData.GetItemName(_item)}", true);
-        }
-        
-        [HarmonyPatch(typeof(scrollidentify), nameof(scrollidentify.OnUse))]
-        [HarmonyPostfix]
-        static void ScrollIdentify()
-        {
-            
         }
 
         [HarmonyPatch(typeof(GameFlow), nameof(GameFlow.SpawnTreasureMapChest))]
