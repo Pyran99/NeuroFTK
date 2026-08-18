@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
+using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
 
@@ -29,7 +30,7 @@ namespace Pyran.NeuroFTK
 
         protected override void Execute(string parsedData)
         {
-            Plugin.Logger.LogWarning("execute service: " + parsedData);
+            Context.Send($"you have selected the {parsedData} service", true);
             SelectButton.StartCoroutine(_data[parsedData], 1.0f);
         }
 

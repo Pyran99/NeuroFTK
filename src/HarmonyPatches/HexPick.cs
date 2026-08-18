@@ -17,6 +17,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static ActionWindow window;
         public static FTK_itembase.ID itemUsed = FTK_itembase.ID.None;
+        static bool boatReclaim = false;
 
         [HarmonyPatch(typeof(Movement), nameof(Movement.StartPickHex))]
         [HarmonyPostfix]
@@ -48,6 +49,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // CreateNeuroAction();
         }
 
+        [HarmonyPatch(typeof(FTKItem), nameof(FTKItem.OnUse))]
+        [HarmonyPrefix]
+        static void ItemUsed(FTK_itembase.ID ___m_ItemID)
+        {
+            if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
+            Plugin.Logger.LogMessage($"item used {ItemData.GetItemName(___m_ItemID)}");
+            itemUsed = ___m_ItemID;
+        }
+
+        [HarmonyPatch(typeof(uiTownServiceMenu), "StartBoatReclaim")]
+        [HarmonyPrefix]
+        static void OnBoatReclain()
+        {
+            Context.Send($"select a nearby boat to pickup and store in your backpack");
+            boatReclaim = true;
+        }
+
         // manual pick call
         [HarmonyPatch(typeof(Movement), "TrackHexPickClick")]
         [HarmonyReversePatch]
@@ -60,13 +78,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyReversePatch]
         public static void ReverseHexHover(object instance, HexLand hexLand)
         {
-        }
-
-        [HarmonyPatch(typeof(uiTownServiceMenu), "StartBoatReclaim")]
-        [HarmonyPrefix]
-        static void OnBoatReclain()
-        {
-            Context.Send($"select a nearby boat to pickup and store in your backpack");
         }
 
         public static void PickHex(HexLand hex, bool ok = true)
@@ -82,9 +93,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateNeuroAction()
         {
-            if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-            Dictionary<string, HexLand> tiles = []; //InRangeDrawer.gPickRadiusHexList.ToDictionary(x => HexData.GetVec2Pos(x).ToString(), x => x);
+            if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld))
+            {
+                Reset();
+                return;
+            }
+            Dictionary<string, HexLand> tiles = [];
             FTKItem item = null;
+            string errMsg = "";
             if (itemUsed != FTK_itembase.ID.None)
             {
                 List<string> toRemove = [];
@@ -96,6 +112,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     if (randHex == null) Plugin.Logger.LogError("WTF");
                     Context.Send($"revealing hexes around {HexData.GetVec2Pos(randHex)}");
                     QuickTimerCallback timer = new(() => PickHex(randHex), Movement.Instance.gameObject, 0.5f);
+                    Reset();
                     return;
                 }
                 else if (itemUsed == FTK_itembase.ID.scrollpurify)
@@ -113,44 +130,63 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (pickItem.PickHexValidCallback(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
                     }
                 }
+                if (tiles.Count == 0) errMsg += $"there were no hexes to pick for {ItemData.GetItemName(itemUsed)}";
+            }
+            else if (boatReclaim)
+            {
+                MiniHexInfo port = Movement.Instance.m_CharacterOverworld.GetHexLand().GetPOI();
+                if (port is MiniHexUtility)
+                {
+                    List<HexLand> neighbors = [.. port.m_HexLand.m_Neighbors];
+                    foreach (HexLand tile in neighbors)
+                    {
+                        if (tile.HasPOI())
+                        {
+                            MiniHexInfo poi = tile.GetPOI();
+                            if (poi is not MiniHexBoat) continue;
+                            if ((poi as MiniHexBoat).IsBoatDamaged())
+                            {
+                                errMsg += "nearby boat must be repaired first.";
+                                continue;
+                            }
+                            tiles.Add(HexData.GetVec2Pos(tile).ToString(), tile);
+                        }
+                    }
+                    if (tiles.Count == 0) errMsg += " there were no boats to pick up";
+                }
             }
             Plugin.Logger.LogWarning($"found {tiles.Count} tiles");
             if (tiles.Count > GlobalConfig.MaxHexSearch)
             {
                 tiles = tiles.Take(GlobalConfig.MaxHexSearch).ToDictionary(x => x.Key, x => x.Value);
-                Plugin.Logger.LogWarning($"removed count = {tiles.Count}");
+                Plugin.Logger.LogWarning($"removed above limit of {GlobalConfig.MaxHexSearch} tiles");
             }
             if (tiles.Count == 0)
             {
-                string msg = $"there were no hexes to pick for {ItemData.GetItemName(itemUsed)}";
-                Plugin.Logger.LogError(msg);
-                Context.Send(msg);
-                if (item is Movement.IPickHexClient)
-                {
-                    // Movement.Instance.PickHexCancelled();
-                    PickHex(Multiplayer.GetOwnCow().GetHexLand(), false);
-                }
-                // Movement.Instance.m_Mode = Movement.TrackingMode.Movement;
-                // OverworldFlow.isFirstAction = false;
-                // QuickTimerCallback timer2 = new(OverworldFlow.BeginMovementTurn, Movement.Instance.gameObject);
+                Plugin.Logger.LogError(errMsg);
+                Context.Send(errMsg);
+                // if (item is Movement.IPickHexClient)
+                // {
+                // // Movement.Instance.PickHexCancelled();
+                PickHex(Multiplayer.GetOwnCow().GetHexLand(), false);
+                // }
+                Reset();
                 return;
             }
             string ctx = OverworldFlow.GetTileContext([.. tiles.Select(x => x.Value)], true);
             QuickTimerCallback timer3 = new(() => Create(ctx, tiles), Movement.Instance.gameObject, 0.5f);
+            Reset();
+        }
+
+        static void Reset()
+        {
+            itemUsed = FTK_itembase.ID.None;
+            boatReclaim = false;
         }
 
         static void Create(string ctx, Dictionary<string, HexLand> tiles)
         {
             window = PickHexAction.CreateWindow(Movement.Instance.m_CharacterOverworld, ctx, tiles);
-        }
-
-        [HarmonyPatch(typeof(FTKItem), nameof(FTKItem.OnUse))]
-        [HarmonyPrefix]
-        static void ItemUsed(FTK_itembase.ID ___m_ItemID)
-        {
-            if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-            Plugin.Logger.LogMessage($"item used {ItemData.GetItemName(___m_ItemID)}");
-            itemUsed = ___m_ItemID;
         }
 
         // static void SendCtx(FTK_itembase.ID id)

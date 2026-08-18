@@ -44,13 +44,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (!btn.m_RectTransform.gameObject.activeInHierarchy) continue;
                 int cost = int.Parse(btn.m_CostText.text);
-                if (!cow.m_CharacterStats.CanAfford(cost)) continue;
+                if ((bool)(btn.m_CostText?.gameObject.activeInHierarchy))
+                {
+                    if (!cow.m_CharacterStats.CanAfford(cost)) continue;
+                }
                 if (btn.m_ServiceType == MiniHexServiceType.BoatRepair)
                 {
                     List<MiniHexBoat> boats = cow.m_HexLand.GetPOI()?.GetNearbyRepairBoats();
                     if (boats.Count == 0)
                     {
-                        ctx += "[no boats to repair] ";
+                        ctx += "(no boats to repair)\n";
                         continue;
                     }
                 }
@@ -59,23 +62,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     List<MiniHexBoat> boats = cow.m_HexLand.GetPOI()?.GetNearbyBoats();
                     if (boats.Count == 0)
                     {
-                        ctx += "[no boats to reclaim] ";
+                        ctx += "(no boats to reclaim)\n";
                         continue;
                     }
                 }
                 string _name = btn.m_RectTransform.Find("Text").GetComponent<Text>().text;
                 string _desc = GameDescriptions.TownServices[btn.m_ServiceType];
-                string _cost = btn.m_CostText.text;
+                string _cost = btn.m_CostText.gameObject.activeInHierarchy ? btn.m_CostText.text : "0";
                 ctx += $"[{_name}] cost {_cost}. {_desc}\n";
                 neuroData.Add(_name, btn.m_RectTransform.GetComponent<uiFTKButton>());
             }
             window = ActionWindow.Create(uiTownServiceMenu.Instance.gameObject);
-            if (neuroData.Count == 0) Context.Send("there are no services you can afford", true);
+            if (neuroData.Count == 0) Context.Send("there are no services you can afford");
             else window.AddAction(new TownServiceAction(neuroData));
             CancelAction cancel = new(window, "close the service window");
             cancel.OnCancelled += CloseServiceWindow;
             window.AddAction(cancel);
-            window.SetContext(ctx);
+            window.SetContext(ctx); //TODO add player gold amount
             window.SetForce(0, "choose a service to purchase or close the window", "you are at a town and a service menu has opened", true);
             window.Register();
         }
