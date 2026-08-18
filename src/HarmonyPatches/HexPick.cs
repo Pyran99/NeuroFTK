@@ -62,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void OnBoatReclain()
         {
-            Context.Send($"select a nearby boat to pickup and store in your backpack");
+            Context.Send($"select a nearby boat to pickup and store in your backpack", true);
             boatReclaim = true;
         }
 

@@ -1,3 +1,4 @@
+using System.Text;
 using Google2u;
 using GridEditor;
 using HarmonyLib;
@@ -29,9 +30,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             if (___m_LootItem.Contains("_gold_") || ___m_LootItem.Contains("_lore_")) hasAmount = true;
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
             description = ItemData.GetItemDescription(id, true, CharacterData.GetNeuroCow());
-
-            Context.Send($"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}) (Description) {description}");
-            // [loot]Gold Coins [Rarity]Common [Description]Currency of Fahrul. Each coin worth its weight in gold.
+            string lootMsg = $"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}): {description}";
+            if (itemBase.m_Equippable)
+            {
+                lootMsg += "\n";
+                foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
+                {
+                    if (!dummy.m_CharacterOverworld) continue;
+                    CharacterOverworld cow = dummy.m_CharacterOverworld;
+                    lootMsg += GetEquipmentCtx(id, cow);
+                }
+            }
+            Context.Send(lootMsg);
+            // [loot] Gold Coins (Common): Currency of Fahrul. Each coin worth its weight in gold.
+            // neuro has helmet helm1: helm1 data
+            // evil has helmet helm2: helm2 data
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.AddItemToBackpackRPC))]
@@ -40,6 +53,109 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         {
             if (!GlobalConfig.gameInitialized) return;
             Context.Send($"{CharacterData.GetCharacterName(__instance)} looted {ItemData.GetItemName(_item)}");
+        }
+
+        static string GetEquipmentCtx(FTK_itembase.ID id, CharacterOverworld cow)
+        {
+            StringBuilder sb = new();
+            PlayerInventory.ContainerID container = PlayerInventory.ContainerID.Belt;
+            FTK_itembase _item = FTK_itembase.GetItemBase(id);
+            switch (_item.m_ObjectType)
+            {
+                case FTK_itembase.ObjectType.helmet:
+                    container = PlayerInventory.ContainerID.Head;
+                    break;
+                case FTK_itembase.ObjectType.armor:
+                    container = PlayerInventory.ContainerID.Body;
+                    break;
+                case FTK_itembase.ObjectType.boots:
+                    container = PlayerInventory.ContainerID.Foot;
+                    break;
+                case FTK_itembase.ObjectType.necklace:
+                    container = PlayerInventory.ContainerID.Neck;
+                    break;
+                case FTK_itembase.ObjectType.shield:
+                    container = PlayerInventory.ContainerID.LeftHand;
+                    break;
+                case FTK_itembase.ObjectType.trinket:
+                    container = PlayerInventory.ContainerID.Trinket;
+                    break;
+                case FTK_itembase.ObjectType.weapon:
+                    container = PlayerInventory.ContainerID.RightHand;
+                    break;
+            }
+            if (container != PlayerInventory.ContainerID.Belt) sb.AppendLine(GetEquippedItemData(id, cow, container));
+            return sb.ToString();
+        }
+
+        static string GetEquippedItemData(FTK_itembase.ID id, CharacterOverworld cow, PlayerInventory.ContainerID container)
+        {
+            StringBuilder sb = new();
+            bool isWeapon = false;
+            FTK_itembase lootItemBase = FTK_itembase.GetItemBase(id);
+            FTK_itembase.ObjectType lootType = lootItemBase.m_ObjectType;
+            FTK_itembase.ID equipped = FTK_itembase.ID.None;
+            switch (lootType)
+            {
+                case FTK_itembase.ObjectType.weapon:
+                case FTK_itembase.ObjectType.shield:
+                    isWeapon = true;
+                    break;
+                default:
+                    equipped = cow.m_PlayerInventory.Get(container).GetOne();
+                    break;
+            }
+            if (isWeapon)
+            {
+                FTK_itembase.ID equippedWeapon = cow.m_PlayerInventory.Get(PlayerInventory.ContainerID.RightHand).GetOne();
+                FTK_itembase.ID equippedShield = cow.m_PlayerInventory.Get(PlayerInventory.ContainerID.LeftHand).GetOne();
+                if (lootType == FTK_itembase.ObjectType.shield)
+                {
+                    if (equippedShield != FTK_itembase.ID.None) // replace shield
+                    {
+                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedShield)}: {ItemData.GetItemDescription(equippedShield, true, cow)}.");
+                    }
+                    else if (equippedWeapon != FTK_itembase.ID.None)
+                    {
+                        int equippedHands = FTK_itembase.GetItemBase(equippedWeapon).m_WeaponHands;
+                        if (equippedHands == 2) // shield replace 2hand
+                        {
+                            sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, true, cow)} (equipping the loot will unequip this weapon)");
+                        }
+                        else // shield with 1hand only
+                        {
+                            sb.Append($"({CharacterData.GetCharacterName(cow)}) has no item in {container}.");
+                        }
+                    }
+                    else
+                    {
+                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has no weapon equipped.");
+                    }
+                }
+                else if (lootType == FTK_itembase.ObjectType.weapon)
+                {
+                    if (equippedWeapon != FTK_itembase.ID.None)
+                    {
+                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, true, cow)}");
+                    }
+                    else
+                    {
+                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has no item in {container}.");
+                    }
+                }
+            }
+            else
+            {
+                if (equipped == FTK_itembase.ID.None)
+                {
+                    sb.Append($"({CharacterData.GetCharacterName(cow)}) has no {lootType} equipped");
+                }
+                else
+                {
+                    sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equipped)}: {ItemData.GetItemDescription(equipped, true, cow)}");
+                }
+            }
+            return sb.ToString();
         }
     }
 }
