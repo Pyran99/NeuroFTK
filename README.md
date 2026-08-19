@@ -32,17 +32,18 @@ Name | Default | Description
 
 ## Current State  
 
-v0.8: Tony was let loose for a long time with no game breaking issues. praise be the rng gods  
+v0.8.2: Tony was let loose for a long time with no game breaking issues. praise be the rng gods  
 
 ### Todo  
 
 - [ ] Overworld flow
   - [X] Airship movement (could be fine)
-  - [ ] change equipment
+  - [ ] change equipment (empty slots only)
   - [X] use hex targetting items
 - [ ] Combat
   - [ ] change weapon (currently only when unarmed)
-- [ ] using focus
+  - [ ] use focus
+- [ ] encounters use focus
 
 ### Undecided actions
 

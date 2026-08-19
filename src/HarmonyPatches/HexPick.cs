@@ -106,7 +106,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 List<string> toRemove = [];
                 // does not create list
                 item = FTKItem.Get(itemUsed);
-                if (itemUsed == FTK_itembase.ID.scrollvision)
+                if (itemUsed == FTK_itembase.ID.scrollvision) // auto selecting random hex
                 {
                     HexLand randHex = FTKHex.Instance.m_AllLandHexes[Random.Range(0, FTKHex.Instance.m_AllLandHexes.Count)];
                     if (randHex == null) Plugin.Logger.LogError("WTF");
@@ -120,6 +120,24 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
                         if (HexData.IsHexCorrupted(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+                    }
+                }
+                else if (itemUsed == FTK_itembase.ID.scrollportal)
+                {
+                    FTKPickHexItem pickItem = item as FTKPickHexItem;
+                    foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
+                    {
+                        if (hex.HasPOI()) continue;
+                        if (pickItem.PickHexValidCallback(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+                    }
+                }
+                else if (itemUsed == FTK_itembase.ID.scrollteleport || itemUsed == FTK_itembase.ID.scrollgroupteleport)
+                {
+                    FTKPickHexItem pickItem = item as FTKPickHexItem;
+                    foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
+                    {
+                        if (hex.HasPOI() && !hex.GetPOI().m_Hidden) continue;
+                        if (pickItem.PickHexValidCallback(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
                     }
                 }
                 else if (item is Movement.IPickHexClient)
