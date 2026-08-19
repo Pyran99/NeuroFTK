@@ -43,6 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Refresh2()
         {
             Object.Destroy(activeWindow);
+            if (Multiplayer.OtherPlayersAction(GameLogic.Instance.GetCurrentCOW())) return;
             uiBuyMenuHud.Instance.StartCoroutine(AddData(null));
         }
 
@@ -57,8 +58,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield break;
             }
             // make sure old objects removed & texts updated
-            yield return new WaitForEndOfFrame();
-            yield return new WaitForEndOfFrame();
+            yield return null;
+            yield return null;
             Transform list = uiBuyMenuHud.Instance.GetListRootTransform();
             buyList.Clear();
             foreach (Transform child in list)
@@ -74,9 +75,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // this.m_NameText.text = this.m_ItemInfo.GetLocalizedName() + "(" + this.GetItemCount().ToString() + ")";
                 buyList.Add(_item.m_NameText.text, _item);
             }
-            Context.Send($"{CharacterData.GetCharacterName(_cow)} has {_cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
+            StringBuilder sb1 = new();
+            string name = CharacterData.GetCharacterName(_cow);
+            sb1.AppendLine($"{name} has {_cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
+            sb1.Append($"[{name} equipment] ");
+            foreach (KeyValuePair<PlayerInventory.ContainerID, FTK_itembase.ID> item in CharacterData.GetAllEquipment(_cow))
+            {
+                if (item.Value == FTK_itembase.ID.None)
+                {
+                    sb1.Append($"({item.Key}) None. ");
+                    continue;
+                }
+                sb1.Append($"({item.Key}) {ItemData.GetItemName(item.Value)} {StringReplace.ReplaceNewLine(ItemData.GetItemDescription(item.Value, true, _cow))}. ");
+            }
+            Context.Send(sb1.ToString());
             StringBuilder sb = new();
-            sb.Append("[market items ([name](cost) description)] \n");
+            sb.AppendLine("[market items ([name](cost) description)] ");
             foreach (uiItemIcon _item in buyList.Values)
             {
                 sb.AppendLine($"[{ItemData.GetItemName(_item.m_ItemName)}]({_item.m_CostText?.text} gold) {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)}");
@@ -98,7 +112,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 activeWindow.SetContext("you cannot afford anything at this market (vedal should give you a raise)");
             }
-            // TODO sell action
             CancelAction cancel = new(activeWindow, "close the market");
             cancel.OnCancelled += CloseMenu;
             activeWindow.AddAction(cancel);

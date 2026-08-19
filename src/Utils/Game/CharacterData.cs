@@ -179,6 +179,29 @@ namespace Pyran.NeuroFTK.Utils
             }
             return sb.ToString();
         }
+
+        /// <returns>item id with each slot</returns>
+        public static Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> GetAllEquipment(CharacterOverworld cow)
+        {
+            PlayerInventory.ContainerID[] containers =
+            [
+                PlayerInventory.ContainerID.LeftHand,
+                PlayerInventory.ContainerID.RightHand,
+                PlayerInventory.ContainerID.Head,
+                PlayerInventory.ContainerID.Body,
+                PlayerInventory.ContainerID.Foot,
+                PlayerInventory.ContainerID.Neck,
+                PlayerInventory.ContainerID.Trinket,
+            ];
+            PlayerInventory inv = cow.m_PlayerInventory;
+            Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> items = [];
+            foreach (PlayerInventory.ContainerID container in containers)
+            {
+                if (inv.Get(container).IsEmpty()) continue;
+                items.Add(container, inv.Get(container).GetOne());
+            }
+            return items;
+        }
     }
 
     public sealed class SerializedCharacterData
