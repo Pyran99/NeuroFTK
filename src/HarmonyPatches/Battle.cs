@@ -28,6 +28,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static StringBuilder dmgTakenString = new();
         static bool isHealthChangeWait = false;
         static bool isCombatEncounter = false;
+        static bool initialized = false;
 
 
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.StartEncounterSession))]
@@ -60,25 +61,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ButtonsInitialized(uiBattleStanceButtons __instance)
         {
+            if (initialized) return;
             Plugin.Logger.LogMessage("player combat actions");
             Object.Destroy(window);
             GlobalConfig.GameLoaded();
-            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
-            {
-                Plugin.Logger.LogError("wrong mode for battle");
-                return;
-            }
-            if (!Multiplayer.IsYourCow(__instance.CombatCow))
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            initialized = true;
+            if (Multiplayer.OtherPlayersAction(__instance.CombatCow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
                 return;
             }
             StanceBtnInstance = __instance;
             beltActionUsed = false;
-            BeginTurns.CtxCombatTurnBeginEnemy();
-            BeginTurns.CtxCombatTurnBeginPlayer(__instance.CombatCow);
-            QuickTimerCallback timer = new(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies), __instance.gameObject, 0.5f);
             ToggleDisposableActions.ToggleCombatActions(true, false);
+            QuickTimerCallback timer = new(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject);
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]
@@ -94,6 +91,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Object.Destroy(window);
             m_Proficiencies = [];
+            initialized = false;
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerVictory))]
@@ -317,9 +315,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly List<INeuroAction> actions = [];
         static readonly List<INeuroAction> disposableActions = [];
 
-        public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
+        public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
         {
-            CharacterOverworld cow = CharacterData.GetNeuroCow(true);
+            // CharacterOverworld cow = CharacterData.GetNeuroCow(true);
+            BeginTurns.CtxCombatTurnBeginEnemy();
+            BeginTurns.CtxCombatTurnBeginPlayer(cow);
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
             actions.Clear();
@@ -336,6 +336,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
             offense.Clear();
             defense.Clear();
+            initialized = false;
         }
 
         public static string GetBeltDetails(CharacterOverworld cow, List<FTK_itembase.ID> items)

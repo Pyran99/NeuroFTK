@@ -35,10 +35,14 @@ namespace Pyran.NeuroFTK.Utils
             }
             else
             {
-                cow = GameLogic.Instance.GetCurrentCOW();
-                if (cow.m_CharacterStats.m_IsInCombat || cow.IsInDungeon())
+                if (EncounterSession.Instance.m_IsInCombat) cow = GameLogic.Instance.GetCurrentCombatCOW();
+                else
                 {
-                    cow = GameLogic.Instance.GetCurrentCombatCOW();
+                    cow = GameLogic.Instance.GetCurrentCOW();
+                    if (cow.m_CharacterStats.m_IsInCombat || cow.IsInDungeon())
+                    {
+                        cow = GameLogic.Instance.GetCurrentCombatCOW();
+                    }
                 }
             }
             return cow;
