@@ -17,10 +17,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             SendScourgeContext();
         }
 
-        [HarmonyPatch(typeof(uiScourgeStatusHUD), nameof(uiScourgeStatusHUD.AlertScourge))]
-        [HarmonyPostfix]
-        static void ScourgeAlert(MiniHexHaunt _mhh)
+        [HarmonyPatch(typeof(MiniHexHaunt), nameof(MiniHexHaunt.DisableHaunt))]
+        [HarmonyPrefix]
+        static void ScourgeDisabled(MiniHexHaunt __instance)
         {
+            Context.Send($"{__instance.GetHauntDBEntry().m_Scourge} scourge has been disabled");
         }
 
         public static void SendScourgeContext()

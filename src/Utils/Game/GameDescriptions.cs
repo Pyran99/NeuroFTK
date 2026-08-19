@@ -79,7 +79,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Defend => FTKHub.Localized<TextInfo>("STR_CombatDefendSelect"),
                 SubPanelBaseBase.ButtonID.Sneak => FTKHub.Localized<TextInfo>("STR_CombatSneakSelect") + "(based on speed stat)",
                 SubPanelBaseBase.ButtonID.Attempt => "attempt to complete this encounter", // cult device, devious enchanter (play)
-                SubPanelBaseBase.ButtonID.BuyIn => "buy in NYI",
+                SubPanelBaseBase.ButtonID.BuyIn => "try your luck to gamble for rewards",
                 SubPanelBaseBase.ButtonID.Collect => "loot the object",
                 SubPanelBaseBase.ButtonID.Devote => "become a champion for this sanctums god.",
                 SubPanelBaseBase.ButtonID.Drink => "drink from the well, you can throw gold in to increase your chance of success",
@@ -101,7 +101,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Rest => "take a quick break and recover some health",
                 SubPanelBaseBase.ButtonID.SealHaunt => "seal the haunt",
                 SubPanelBaseBase.ButtonID.Secure => "secure desc NYI",
-                SubPanelBaseBase.ButtonID.Train => "train desc NYI",
+                SubPanelBaseBase.ButtonID.Train => "purchase a permanent stat increase",
                 SubPanelBaseBase.ButtonID.Tribute => "pay tribute to this statue",
                 SubPanelBaseBase.ButtonID.UpgradePipe => "upgrade your pipe",
                 SubPanelBaseBase.ButtonID.ViewWares => "view the shop",

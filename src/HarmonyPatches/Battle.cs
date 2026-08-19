@@ -53,6 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void VoteEncounter()
         {
             isCombatEncounter = false;
+            Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
         }
 
         #region Player

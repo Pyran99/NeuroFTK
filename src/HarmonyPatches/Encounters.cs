@@ -17,7 +17,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class Encounters
     {
         static ActionWindow window;
-        public static uiEncounterMenu encounterMenuInstance { get; private set; }
+        public static uiEncounterMenu EncounterMenuInstance { get; private set; }
         public static List<CharacterOverworld> involvedPlayers = [];
         public static Dictionary<string, Dictionary<string, string>> involvedEnemies = [];
         public static readonly Dictionary<string, uiPoiButton> activeButtons = [];
@@ -46,9 +46,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (Multiplayer.OtherPlayersAction(__instance.CurrentCow)) return;
             Plugin.Logger.LogMessage("encounter type = " + __instance.GetType());
             generating = true;
-            encounterMenuInstance = __instance.m_Owner;
+            EncounterMenuInstance = __instance.m_Owner;
             allButtons = new(__instance.m_Buttons);
-            encounterMenuInstance.m_ActiveSubPanel.StartCoroutine(DelayActions(allButtons));
+            EncounterMenuInstance.m_ActiveSubPanel.StartCoroutine(DelayActions(allButtons));
 
         }
 
@@ -62,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogWarning("journal read window break");
                 yield break;
             }
-            QuickTimerCallback timer = new (() => CreateEncounterAction(encounterMenuInstance.m_ActiveSubPanel), encounterMenuInstance.m_ActiveSubPanel.gameObject);
+            QuickTimerCallback timer = new (() => CreateEncounterAction(EncounterMenuInstance.m_ActiveSubPanel), EncounterMenuInstance.m_ActiveSubPanel.gameObject);
         }
 
         [HarmonyPatch(typeof(uiCarnivalMenu), "CreateCarnivalOptions")]
@@ -86,7 +86,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void MenuRefreshed()
         {
-            SubMenuGenerated(encounterMenuInstance.m_ActiveSubPanel);
+            SubMenuGenerated(EncounterMenuInstance.m_ActiveSubPanel);
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.LeaveOrEndTurn))]
@@ -150,7 +150,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateEncounterAction(SubPanelBaseBase instance)
         {
             allButtons.Clear();
-            MiniHexInfo.MenuPOIDisplayValues values = encounterMenuInstance.m_ThisMiniHex.GetMenuDisplayValues();
+            MiniHexInfo.MenuPOIDisplayValues values = EncounterMenuInstance.m_ThisMiniHex.GetMenuDisplayValues();
             string ctx = GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
             Context.Send(ctx);
             generating = false;
@@ -205,14 +205,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 _enemies = $"[enemies involved] {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
             }
             string cost = "";
-            if (encounterMenuInstance.m_CostRoot.gameObject.activeInHierarchy && encounterMenuInstance.m_Cost.text != string.Empty)
+            if (EncounterMenuInstance.m_CostRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_Cost.text != string.Empty)
             {
-                cost = $"\n{StringMessages.EncounterCost.Format([encounterMenuInstance.m_Cost?.text, CharacterData.GetNeuroCow().m_CharacterStats.m_Gold])}";
+                cost = $"\n{StringMessages.EncounterCost.Format([EncounterMenuInstance.m_Cost?.text, CharacterData.GetNeuroCow().m_CharacterStats.m_Gold])}";
             }
             string enemyLvl = "";
-            if (encounterMenuInstance.m_EnemyLevelRoot.gameObject.activeInHierarchy && encounterMenuInstance.m_EnemyLevel.text != string.Empty)
+            if (EncounterMenuInstance.m_EnemyLevelRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_EnemyLevel.text != string.Empty)
             {
-                enemyLvl = $"\n[enemy level] {encounterMenuInstance.m_EnemyLevel.text}";
+                enemyLvl = $"\n[enemy level] {EncounterMenuInstance.m_EnemyLevel.text}";
             }
             return $"{encounter}{sbPlayers}{_enemies}{cost}{enemyLvl}";
         }
@@ -256,7 +256,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     sb.AppendLine($"{outcome.Key} ({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
                 }
             }
-            MiniHexInfo.PoiProfile profile = encounterMenuInstance.m_ThisMiniHex.GetPOIProfile();
+            MiniHexInfo.PoiProfile profile = EncounterMenuInstance.m_ThisMiniHex.GetPOIProfile();
             if (profile != null && profile.m_SkillRequired != FTK_weaponStats2.SkillType.none)
             {
                 sb.Append($"these roll chances are based on your {profile.m_SkillRequired} stat");
@@ -283,16 +283,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             FTK_slotOutput.ID slotId = FTK_slotOutput.ID.None;
             if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Ambush)
             {
-                slotId = RollSlotOutcomes._getAmbushType((MiniHexEnemy)encounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
+                slotId = RollSlotOutcomes._getAmbushType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
             }
             else if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Sneak)
             {
-                slotId = RollSlotOutcomes._getSneakType((MiniHexEnemy)encounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
+                slotId = RollSlotOutcomes._getSneakType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
             }
             if (slotId == FTK_slotOutput.ID.None)
             {
-                MiniEncounter hex = encounterMenuInstance.m_ThisMiniHex as MiniEncounter;
-                if (encounterMenuInstance.m_ActiveSubPanel is uiCarnivalMenu)
+                MiniEncounter hex = EncounterMenuInstance.m_ThisMiniHex as MiniEncounter;
+                if (EncounterMenuInstance.m_ActiveSubPanel is uiCarnivalMenu)
                 {
                     switch (btn.m_ButtonInfo.m_ButtonType)
                     {
@@ -343,9 +343,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (btn == null)
             {
                 Plugin.Logger.LogError("journal btn is null");
-                CreateEncounterAction(encounterMenuInstance.m_ActiveSubPanel);
+                CreateEncounterAction(EncounterMenuInstance.m_ActiveSubPanel);
                 yield break;
             }
+            generating = false;
             SelectButton.StartCoroutine(btn, 0.5f);
         }
 

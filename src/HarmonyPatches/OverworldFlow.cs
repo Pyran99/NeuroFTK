@@ -22,6 +22,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isTracking = false;
         public static bool isFirstAction = false;
         public static bool isSneakMovement = false;
+        public static bool isTurnSkipped = false;
         public static List<HexLand> tiles = [];
         public static readonly Dictionary<string, HexLand> hexPositions = [];
 
@@ -31,10 +32,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         static void TurnSkipped(CharacterOverworld _cow)
         {
             Context.Send($"{CharacterData.GetCharacterName(_cow)} had their turn skipped");
+            isTurnSkipped = true;
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.OnStartTurn))] // before begin turn enumerate finished
@@ -51,6 +53,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isFirstAction = true;
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
+            if (isTurnSkipped)
+            {
+                isTurnSkipped = false;
+                yield break;
+            }
             BeginTurn2(__instance);
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
         }
@@ -74,6 +81,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isFirstAction = false;
             isSneakMovement = false;
             isRemake = false;
+            isTurnSkipped = false;
             DisposeActions();
         }
 

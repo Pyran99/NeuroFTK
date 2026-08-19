@@ -186,7 +186,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // if (item is Movement.IPickHexClient)
                 // {
                 // // Movement.Instance.PickHexCancelled();
-                PickHex(Multiplayer.GetOwnCow().GetHexLand(), false);
+                PickHex(GameLogic.Instance.GetCurrentCOW().GetHexLand(), false);
                 // }
                 Reset();
                 return;

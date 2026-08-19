@@ -40,6 +40,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static ActionWindow CreateTurnBeginWindow(bool registerBelt = true)
         {
+            if (OverworldFlow.isTurnSkipped)
+            {
+                OverworldFlow.isTurnSkipped = false;
+                Plugin.Logger.LogMessage("turn skipped");
+                return null;
+            }
             CharacterOverworld cow = CharacterData.GetNeuroCow();
             ActionWindow window = ActionWindow.Create(cow.gameObject);
             List<INeuroAction> registerActions = [];

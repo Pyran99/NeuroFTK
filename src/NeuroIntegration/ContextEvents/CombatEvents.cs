@@ -125,5 +125,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"{CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}'s weapon broke");
         }
 
+        [HarmonyPatch(typeof(EncounterChest), nameof(EncounterChest.DisplayStaticMessage))]
+        [HarmonyPrefix]
+        static void ChestIdentified(MiniHexDungeon.EncounterType _displayAsType, bool _identified)
+        {
+            if (_identified)
+            {
+                switch (_displayAsType)
+                {
+                    case MiniHexDungeon.EncounterType.UnlockedChestMimic:
+                    case MiniHexDungeon.EncounterType.LockedChestMimic:
+                        Context.Send($"this is a mimic chest and will start combat if opened");
+                        break;
+                }
+            }
+        }
+
     }
 }

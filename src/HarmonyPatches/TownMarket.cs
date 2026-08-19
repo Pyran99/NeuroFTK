@@ -71,6 +71,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     Plugin.Logger.LogError("duplicate keys in buy list");
                     continue;
                 }
+                if (_item.m_CountText.text == "0") continue;
                 if (!_cow.m_CharacterStats.CanAfford(int.Parse(_item.m_CostText.text))) continue;
                 // this.m_NameText.text = this.m_ItemInfo.GetLocalizedName() + "(" + this.GetItemCount().ToString() + ")";
                 buyList.Add(_item.m_NameText.text, _item);

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -104,7 +103,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void OnWellCoinsThrown()
         {
-            Context.Send($"you threw some gold into the well, your chance of a success drink increased");
+            Context.Send($"you threw some gold into the well, your chance of a successful drink increased");
         }
 
         [HarmonyPatch(typeof(uiWishingWellMenu), nameof(uiWishingWellMenu.UseDrinkWellButton))]
@@ -118,7 +117,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void GeneratingDungeon()
         {
-            Plugin.Logger.LogMessage("GeneratingDungeon: VERIFY attempt fix move actions register on dungeon entering");
             GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;
         }
 
