@@ -51,8 +51,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (isCreating) yield break;
             isCreating = true;
-            CharacterOverworld _cow = CharacterData.GetNeuroCow();
-            if (_itemContainer == _cow.m_PlayerInventory.m_ContainerBackpack)
+            CharacterOverworld _cow = CharacterData.GetNeuroCow(); // null in dungeon? or resume game in dungeon before market
+            if (_cow == null) _cow = uiBuyMenuHud.Instance.m_CurrentCow;
+            if (_itemContainer == _cow?.m_PlayerInventory.m_ContainerBackpack)
             {
                 Plugin.Logger.LogWarning("sell list. unsure when called");
                 yield break;

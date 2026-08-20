@@ -1,3 +1,4 @@
+using FTKItemName;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
@@ -15,6 +16,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void OnItemUsed(FTK_itembase.ID _item, CharacterOverworld __instance)
         {
             Context.Send($"{CharacterData.GetCharacterName(__instance)} used {ItemData.GetItemName(_item)}", true);
+        }
+
+        [HarmonyPatch(typeof(FTKItem), nameof(FTKItem.OnUse))]
+        [HarmonyPrefix]
+        static void FtkItemUsed(FTK_itembase.ID ___m_ItemID, CharacterOverworld _cow)
+        {
+            Plugin.Logger.LogMessage($"{CharacterData.GetCharacterName(_cow)} used {ItemData.GetItemName(___m_ItemID)}");
+            if (!Multiplayer.IsYourCow(_cow)) return;
+            HexPick.itemUsed = ___m_ItemID;
         }
 
         [HarmonyPatch(typeof(GameFlow), nameof(GameFlow.SpawnTreasureMapChest))]

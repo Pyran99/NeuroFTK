@@ -78,7 +78,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.Ambush => FTKHub.Localized<TextInfo>("STR_CombatAmbushSelect") + "(based on awareness stat)",
                 SubPanelBaseBase.ButtonID.Defend => FTKHub.Localized<TextInfo>("STR_CombatDefendSelect"),
                 SubPanelBaseBase.ButtonID.Sneak => FTKHub.Localized<TextInfo>("STR_CombatSneakSelect") + "(based on speed stat)",
-                SubPanelBaseBase.ButtonID.Attempt => "attempt to complete this encounter", // cult device, devious enchanter (play)
+                SubPanelBaseBase.ButtonID.Attempt => "attempt to complete this encounter", // cult device, devious enchanter (play), gamble den
                 SubPanelBaseBase.ButtonID.BuyIn => "try your luck to gamble for rewards",
                 SubPanelBaseBase.ButtonID.Collect => "loot the object",
                 SubPanelBaseBase.ButtonID.Devote => "become a champion for this sanctums god.",

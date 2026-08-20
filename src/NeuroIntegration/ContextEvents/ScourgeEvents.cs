@@ -21,7 +21,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void ScourgeDisabled(MiniHexHaunt __instance)
         {
-            Context.Send($"{__instance.GetHauntDBEntry().m_Scourge} scourge has been disabled");
+            Context.Send($"{FTKHub.Localized<TextEnemy>("STR_" + __instance.GetHauntDBEntry().m_Scourge)} scourge has been disabled");
         }
 
         public static void SendScourgeContext()

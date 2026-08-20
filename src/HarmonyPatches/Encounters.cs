@@ -49,7 +49,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             EncounterMenuInstance = __instance.m_Owner;
             allButtons = new(__instance.m_Buttons);
             EncounterMenuInstance.m_ActiveSubPanel.StartCoroutine(DelayActions(allButtons));
-
         }
 
         public static IEnumerator DelayActions(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _buttons)
@@ -59,7 +58,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             yield return null;
             if (!SetButtonData(_buttons))
             {
-                Plugin.Logger.LogWarning("journal read window break");
+                Plugin.Logger.LogMessage("reading journal");
                 yield break;
             }
             QuickTimerCallback timer = new (() => CreateEncounterAction(EncounterMenuInstance.m_ActiveSubPanel), EncounterMenuInstance.m_ActiveSubPanel.gameObject);
@@ -71,6 +70,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Plugin.Logger.LogMessage("set carnival options");
             _CarnivalOptions = [.. ___m_CarnivalOptions];
+        }
+
+        [HarmonyPatch(typeof(uiGambleDenMenu), nameof(uiGambleDenMenu.UseBuyInButton))]
+        [HarmonyPostfix]
+        static void EnterGambleDen(SubPanelBaseBase __instance)
+        {
+            Plugin.Logger.LogMessage("enter gamble den");
+            ResetData();
+            SubMenuGenerated(__instance);
         }
 
         [HarmonyPatch(typeof(uiEncounterMenu), nameof(uiEncounterMenu.DisableMenu))]

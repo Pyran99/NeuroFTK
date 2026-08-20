@@ -49,15 +49,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // CreateNeuroAction();
         }
 
-        [HarmonyPatch(typeof(FTKItem), nameof(FTKItem.OnUse))]
-        [HarmonyPrefix]
-        static void ItemUsed(FTK_itembase.ID ___m_ItemID)
-        {
-            if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-            Plugin.Logger.LogMessage($"item used {ItemData.GetItemName(___m_ItemID)}");
-            itemUsed = ___m_ItemID;
-        }
-
         [HarmonyPatch(typeof(uiTownServiceMenu), "StartBoatReclaim")]
         [HarmonyPrefix]
         static void OnBoatReclain()

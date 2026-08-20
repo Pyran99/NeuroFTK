@@ -24,7 +24,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EmptyRoom()
         {
-            Context.Send("entered an empty room", true);
+            Context.Send($"entered an empty room", true);
         }
 
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.ShowDungeonShopRPC))]

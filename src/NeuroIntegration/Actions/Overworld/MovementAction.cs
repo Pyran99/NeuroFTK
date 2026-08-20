@@ -40,7 +40,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static ActionWindow CreateTurnBeginWindow(bool registerBelt = true)
         {
-            if (OverworldFlow.isTurnSkipped)
+            if (OverworldFlow.isTurnSkipped) //TODO VERIFY
             {
                 OverworldFlow.isTurnSkipped = false;
                 Plugin.Logger.LogMessage("turn skipped");

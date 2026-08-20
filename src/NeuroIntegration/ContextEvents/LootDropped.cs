@@ -117,15 +117,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                     }
                     else if (equippedWeapon != FTK_itembase.ID.None)
                     {
-                        int equippedHands = FTK_itembase.GetItemBase(equippedWeapon).m_WeaponHands;
-                        if (equippedHands == 2) // shield replace 2hand
-                        {
-                            sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, true, cow)} (equipping the loot will unequip this weapon)");
-                        }
-                        else // shield with 1hand only
-                        {
+                        // int equippedHands = FTK_itembase.GetItemBase(equippedWeapon).m_WeaponHands;
+                        // if (equippedHands == 2) // shield replace 2hand
+                        // {
+                        //     sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, true, cow)} (equipping the loot will unequip this weapon)");
+                        // }
+                        // else // shield with 1hand only
+                        // {
                             sb.Append($"({CharacterData.GetCharacterName(cow)}) has no item in {container}.");
-                        }
+                        // }
                     }
                     else
                     {

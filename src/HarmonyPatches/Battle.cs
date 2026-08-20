@@ -31,13 +31,27 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static bool initialized = false;
 
 
-        [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.StartEncounterSession))]
-        [HarmonyPrefix]
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))]
+        [HarmonyPostfix]
+        // static void EnteredBattle(MiniHexDungeon.EncounterType _encounterType)
         static void EnteredBattle()
         {
+            Plugin.Logger.LogMessage("StartEncounterSession");
             isCombatEncounter = false;
             ToggleDisposableActions.ToggleOverworldActions(false);
-            Plugin.Logger.LogMessage("StartEncounterSession");
+            MiniHexDungeon.EncounterType _encounterType = EncounterSessionMC.Instance.GetCurrentEncounter().EncounterType;
+            switch (_encounterType)
+            {
+                case MiniHexDungeon.EncounterType.Next:
+                case MiniHexDungeon.EncounterType.Ready:
+                case MiniHexDungeon.EncounterType.Stair:
+                case MiniHexDungeon.EncounterType.EmptyRoom:
+                case MiniHexDungeon.EncounterType.Door:
+                    Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
+                    Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
+                    //TODO add use item to decision window
+                    break;
+            }
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
