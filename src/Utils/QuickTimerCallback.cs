@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Pyran.NeuroFTK.Utils
 {
     /// <summary>
-    /// call a method after a certain amount of time<br/>
+    /// call a method after a certain amount of time (in ms)<br/>
     /// <code>QuickTimerCallback timerCallback = new(Method, owner, 2000f);</code>
     /// </summary>
     public class QuickTimerCallback

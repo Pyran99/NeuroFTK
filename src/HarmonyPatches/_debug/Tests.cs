@@ -1,8 +1,5 @@
 using System;
 using HarmonyLib;
-using NeuroSdk.Messages.Outgoing;
-using Pyran.NeuroFTK.NeuroIntegration;
-using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -11,7 +8,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     /// </summary>
     [HarmonyPatch]
     public class Tests
-    {
+    { //TODO find entrance for all combat
+
+        static void EnteredCombat()
+        {
+            
+        }
 
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))] // click item in inventory 
         [HarmonyPostfix]

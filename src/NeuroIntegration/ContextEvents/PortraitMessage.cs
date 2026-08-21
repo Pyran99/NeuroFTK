@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -23,7 +24,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             Plugin.Logger.LogMessage("npc talking");
             string msg = StringReplace.RemoveStyling(_message);
             Context.Send(StringMessages.PortraitMsg.Format([__instance.m_Speaker.text, __instance.m_SpeakerTitle.text, msg]));
-            ContinueAfterMessageSent(__instance);
         }
 
         // user character talking
@@ -35,24 +35,30 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             Plugin.Logger.LogMessage("user talking");
             string msg = StringReplace.RemoveStyling(_message);
             Context.Send(StringMessages.PortraitMsg.Format([__instance.m_Speaker.text, __instance.m_SpeakerTitle.text, msg]));
-            ContinueAfterMessageSent(__instance);
+        }
+
+        [HarmonyPatch(typeof(uiPortraitMessageHud), "ActivateMessagePanel")]
+        [HarmonyPostfix]
+        static IEnumerator PanelShown(IEnumerator __result, uiPortraitMessageHud __instance, float _delay)
+        {
+            while (__result.MoveNext()) yield return __result.Current;
+            QuickTimerCallback timer = new(() => ContinueAfterMessageSent(__instance), __instance.m_MessagePanel.gameObject, _delay*1000f);
         }
 
         [HarmonyPatch(typeof(FTKClickAnywhere), nameof(FTKClickAnywhere.OnClose))]
-        [HarmonyPrefix]
+        [HarmonyPostfix]
         static void MessageClosed()
         {
             UnityEngine.Object.Destroy(activeWindow);
         }
 
-        // this may not always be called
-        [HarmonyPatch(typeof(uiPortraitMessageHud), nameof(uiPortraitMessageHud.ZoomInFinished))]
-        [HarmonyPostfix]
-        static void AfterZoom(uiPortraitMessageHud __instance)
-        {
-            Plugin.Logger.LogMessage("portrait after zoom in");
-            QuickTimerCallback timer = new(() => ContinueAfterMessageSent(__instance), __instance.m_MessagePanel.gameObject, 2000f);
-        }
+        // // this may not always be called
+        // [HarmonyPatch(typeof(uiPortraitMessageHud), nameof(uiPortraitMessageHud.ZoomInFinished))]
+        // [HarmonyPostfix]
+        // static void AfterZoom(uiPortraitMessageHud __instance)
+        // {
+        //     QuickTimerCallback timer = new(() => ContinueAfterMessageSent(__instance), __instance.m_MessagePanel.gameObject, 2000f);
+        // }
 
         // this could be used to grab quest data => is set to m_Quest
         [HarmonyPatch(typeof(MessageCoordinator), nameof(MessageCoordinator.ShowQuestMessage))]
@@ -75,10 +81,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static void ContinueAfterMessageSent(uiPortraitMessageHud instance)
         {
             if (activeWindow != null) return;
-            QuickTimerCallback timer = new(() => activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject), instance.m_MessagePanel.gameObject);
-            // instance.StartCoroutine(Continue(instance));
+            activeWindow = ContinueMessageHudAction.RegisterAction(instance.gameObject);
         }
-
     }
 }
 

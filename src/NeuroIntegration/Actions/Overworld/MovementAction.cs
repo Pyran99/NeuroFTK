@@ -43,7 +43,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (OverworldFlow.isTurnSkipped) //TODO VERIFY
             {
                 OverworldFlow.isTurnSkipped = false;
-                Plugin.Logger.LogMessage("turn skipped");
+                Plugin.Logger.LogMessage("turn skipped: VERIFY WORKS");
                 return null;
             }
             CharacterOverworld cow = CharacterData.GetNeuroCow();
@@ -243,7 +243,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            QuickTimerCallback timer = new(OverworldFlow.BeginMovementTurn, Movement.Instance.gameObject);
+            // QuickTimerCallback timer = new(OverworldFlow.BeginMovementTurn, Movement.Instance.gameObject, 200f);
+            OverworldFlow.BeginMovementTurn();
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

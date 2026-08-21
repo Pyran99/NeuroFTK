@@ -23,8 +23,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void FtkItemUsed(FTK_itembase.ID ___m_ItemID, CharacterOverworld _cow)
         {
             Plugin.Logger.LogMessage($"{CharacterData.GetCharacterName(_cow)} used {ItemData.GetItemName(___m_ItemID)}");
+            HexPick.itemUsed = FTK_itembase.ID.None;
             if (!Multiplayer.IsYourCow(_cow)) return;
-            HexPick.itemUsed = ___m_ItemID;
+            if (FTKItem.Get(___m_ItemID) is Movement.IPickHexClient) HexPick.itemUsed = ___m_ItemID;
         }
 
         [HarmonyPatch(typeof(GameFlow), nameof(GameFlow.SpawnTreasureMapChest))]

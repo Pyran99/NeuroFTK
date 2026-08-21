@@ -12,7 +12,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new ContinueMessageHudAction());
-            window.SetForce(0, "continue to the next message", "a message has appeared on screen", true);
+            window.SetForce(1, "continue to the next message", "a message has appeared on screen", true);
             window.Register();
             return window;
         }
@@ -23,7 +23,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            QuickTimerCallback timer = new(FTKClickAnywhere.Instance.OnClick, FTKClickAnywhere.Instance.gameObject, 0.5f);
+            QuickTimerCallback timer = new(FTKClickAnywhere.Instance.OnClick, FTKClickAnywhere.Instance.gameObject, 500f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

@@ -23,6 +23,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool isFirstAction = false;
         public static bool isSneakMovement = false;
         public static bool isTurnSkipped = false;
+        public static bool cancelBoatReclaim = false;
         public static List<HexLand> tiles = [];
         public static readonly Dictionary<string, HexLand> hexPositions = [];
 
@@ -109,7 +110,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isRemake = true;
             DisposeActions();
             isFirstAction = false;
-            QuickTimerCallback timer = new(ResumeTurnMovement, FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.5f);
+            QuickTimerCallback timer = new(ResumeTurnMovement, FTKUI.Instance.m_HexStatusOverworld.gameObject, 500f);
         }
 
 #region Reverse Patches
@@ -182,6 +183,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void BeginMovementTurn()
         {
+            Plugin.Logger.LogWarning("BeginMovementTurn");
             isFirstAction = false;
             StartTracking();
         }
@@ -227,12 +229,129 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ResumeTurnMovement()
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            if (Movement.Instance.m_Mode == Movement.TrackingMode.PickHex) return;
             CharacterOverworld cow = CharacterData.GetNeuroCow();
             RollSystem.currentCOW = cow;
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
             if (isFirstAction) return;
-            QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject);
+            // QuickTimerCallback timer = new(() => GetValidMoveTiles(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 250f);
+            GetValidMoveTiles(cow);
+        }
+
+        public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
+        {
+            isRemake = false;
+            if (cancelBoatReclaim)
+            {
+                cancelBoatReclaim = false;
+                return;
+            }
+            if (!isTracking) return;
+            if (!routineOwner.isActiveAndEnabled)
+            {
+                Plugin.Logger.LogError("routine owner is disabled");
+                return;
+            }
+            routineOwner.StartCoroutine(GetValidTiles(type));
+        }
+
+        static IEnumerator GetValidTiles(HexLand.SelectType type = HexLand.SelectType.Same)
+        {
+            if (isFirstAction) yield break;
+            if (isSearching) yield break;
+            isSearching = true;
+            DisposeActions();
+            CharacterOverworld currentCOW = CharacterData.GetNeuroCow();
+            if (!Multiplayer.IsYourCow(currentCOW))
+            {
+                Plugin.Logger.LogError("tried to generate move action from another players cow");
+                isSearching = false;
+                yield break;
+            }
+            int points = currentCOW.m_CharacterStats.m_ActionPoints;
+            RollSystem.rollCount = points;
+            double startTime = Time.time;
+            Task task = Task.Factory.StartNew(() => tiles = [.. LoopNeighbors(currentCOW, points)]);
+            yield return task.IsCompleted;
+
+            Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
+            if (removeEmptyWater)
+            {
+                bool removed = false;
+                List<HexLand> toRemove = [];
+                for (int i = 0; i < tiles.Count; i++)
+                {
+                    if (tiles[i].IsWater())
+                    {
+                        toRemove.Add(tiles[i]);
+                        removed = true;
+                    }
+                }
+                foreach (HexLand hex in toRemove) tiles.Remove(hex);
+                if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
+            }
+            QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject);
+        }
+
+        static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
+        {
+            HexLand initialHex = owner.GetHexLand();
+            List<HexLand> validNeighbors = [];
+            List<HexLand> hasChecked = [];
+            List<HexLand> currentLoop = [initialHex];
+            List<HexLand> nextLoop = [];
+            int loopCount = 0;
+            while (loopCount < points)
+            {
+                foreach (HexLand item in currentLoop)
+                {
+                    List<HexLand> neighbors = [.. item.m_Neighbors];
+                    foreach (HexLand neighbor in neighbors)
+                    {
+                        if (neighbor == initialHex) continue;
+                        if (hasChecked.Contains(neighbor)) continue;
+                        hasChecked.Add(neighbor);
+                        if (owner.IsInAirShip() || (neighbor.CanTravel() && HexData.CanTravel(neighbor, owner)))
+                        {
+                            validNeighbors.Add(neighbor);
+                            nextLoop.Add(neighbor);
+                        }
+                    }
+                }
+                currentLoop = nextLoop;
+                nextLoop = [];
+                loopCount++;
+            }
+            if (validNeighbors.Count == 0) Plugin.Logger.LogError("no valid neighbors found");
+            if (validNeighbors.Count > GlobalConfig.MaxHexSearch)
+            {
+                Plugin.Logger.LogWarning($"hex count exceeded {GlobalConfig.MaxHexSearch}");
+                int diff = validNeighbors.Count - GlobalConfig.MaxHexSearch;
+                validNeighbors.RemoveRange(GlobalConfig.MaxHexSearch, diff);
+            }
+            return validNeighbors;
+        }
+
+        /// <summary>
+        /// display as [(position x,z) name/realm (quest name)(has dead) (POI: state) (distance)]
+        /// </summary>
+        public static string GetTileContext(List<HexLand> _tiles, bool includeDistance = false)
+        {
+            StringBuilder sb = new();
+            sb.Append(StringMessages.HexContext);
+            CharacterOverworld cow = CharacterData.GetNeuroCow();
+            hexPositions.Clear();
+            foreach (HexLand hex in _tiles)
+            {
+                sb.AppendLine(HexData.GetContextForHex(cow, hex, true, includeDistance));
+            }
+            return sb.ToString();
+        }
+
+        public static void AddHexPosition(string pos, HexLand hex)
+        {
+            hexPositions.Add(pos, hex);
         }
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld curCow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
@@ -302,116 +421,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ReverseCheckClickPath(Movement.Instance, dest, true, false, false);
         }
 
-        public static void GetValidMoveTiles(MonoBehaviour routineOwner, HexLand.SelectType type = HexLand.SelectType.Same)
-        {
-            isRemake = false;
-            if (!isTracking) return;
-            if (!routineOwner.isActiveAndEnabled)
-            {
-                Plugin.Logger.LogError("routine owner is disabled");
-                return;
-            }
-            routineOwner.StartCoroutine(GetValidTiles(type));
-        }
-
-        static IEnumerator GetValidTiles(HexLand.SelectType type = HexLand.SelectType.Same)
-        {
-            if (isFirstAction) yield break;
-            if (isSearching) yield break;
-            isSearching = true;
-            DisposeActions();
-            CharacterOverworld currentCOW = CharacterData.GetNeuroCow();
-            if (!Multiplayer.IsYourCow(currentCOW))
-            {
-                Plugin.Logger.LogError("tried to generate move action from another players cow");
-                isSearching = false;
-                yield break;
-            }
-            int points = currentCOW.m_CharacterStats.m_ActionPoints;
-            RollSystem.rollCount = points;
-            double startTime = Time.time;
-            Task task = Task.Factory.StartNew(() => tiles = [.. LoopNeighbors(currentCOW, points)]);
-            yield return task.IsCompleted;
-
-            Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
-            if (removeEmptyWater)
-            {
-                bool removed = false;
-                List<HexLand> toRemove = [];
-                for (int i = 0; i < tiles.Count; i++)
-                {
-                    if (tiles[i].IsWater())
-                    {
-                        toRemove.Add(tiles[i]);
-                        removed = true;
-                    }
-                }
-                foreach (HexLand hex in toRemove) tiles.Remove(hex);
-                if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
-            }
-            QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject, 0.25f);
-        }
-
-        static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
-        {
-            HexLand initialHex = owner.GetHexLand();
-            List<HexLand> validNeighbors = [];
-            List<HexLand> hasChecked = [];
-            List<HexLand> currentLoop = [initialHex];
-            List<HexLand> nextLoop = [];
-            int loopCount = 0;
-            while (loopCount < points)
-            {
-                foreach (HexLand item in currentLoop)
-                {
-                    List<HexLand> neighbors = [.. item.m_Neighbors];
-                    foreach (HexLand neighbor in neighbors)
-                    {
-                        if (neighbor == initialHex) continue;
-                        if (hasChecked.Contains(neighbor)) continue;
-                        hasChecked.Add(neighbor);
-                        if (owner.IsInAirShip() || (neighbor.CanTravel() && HexData.CanTravel(neighbor, owner)))
-                        {
-                            validNeighbors.Add(neighbor);
-                            nextLoop.Add(neighbor);
-                        }
-                    }
-                }
-                currentLoop = nextLoop;
-                nextLoop = [];
-                loopCount++;
-            }
-            if (validNeighbors.Count == 0) Plugin.Logger.LogError("no valid neighbors found");
-            if (validNeighbors.Count > GlobalConfig.MaxHexSearch)
-            {
-                Plugin.Logger.LogWarning($"hex count exceeded {GlobalConfig.MaxHexSearch}");
-                int diff = validNeighbors.Count - GlobalConfig.MaxHexSearch;
-                validNeighbors.RemoveRange(GlobalConfig.MaxHexSearch, diff);
-            }
-            return validNeighbors;
-        }
-
-        /// <summary>
-        /// display as [(position x,z) name/realm (quest name)(has dead) (POI: state) (distance)]
-        /// </summary>
-        public static string GetTileContext(List<HexLand> _tiles, bool includeDistance = false)
-        {
-            StringBuilder sb = new();
-            sb.Append(StringMessages.HexContext);
-            CharacterOverworld cow = CharacterData.GetNeuroCow();
-            hexPositions.Clear();
-            foreach (HexLand hex in _tiles)
-            {
-                sb.AppendLine(HexData.GetContextForHex(cow, hex, true, includeDistance));
-            }
-            return sb.ToString();
-        }
-
-        public static void AddHexPosition(string pos, HexLand hex)
-        {
-            hexPositions.Add(pos, hex);
-        }
-
         public static void CreateMovementActions(CharacterOverworld _cow)
         {
             isSearching = false;
@@ -474,7 +483,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Context.Send($"there was nothing to interact with on this hex, the action should not have appeared {NeuroSdkStrings.ModFaultSuffix}", true);
                 Plugin.Logger.LogError("there was nothing to interact with on this hex");
-                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 1.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject);
                 return;
             }
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
@@ -486,7 +495,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("chosen quest was null");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2000f);
                 return;
             }
             HexLand dest = quest.GetHexLandDestination();
@@ -500,7 +509,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("invalid cow");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_character"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2.0f);
+                QuickTimerCallback timer = new(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2000f);
                 return;
             }
             HexLand dest = target.GetHexLand();

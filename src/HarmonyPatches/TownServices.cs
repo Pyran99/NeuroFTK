@@ -39,7 +39,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateAction()
         {
             string ctx = "";
-            CharacterOverworld cow = CharacterData.GetNeuroCow();
+            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
             foreach (uiTownServiceMenu.ServiceButton btn in uiTownServiceMenu.Instance.m_ServiceButtons)
             {
                 if (!btn.m_RectTransform.gameObject.activeInHierarchy) continue;
@@ -72,7 +72,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 ctx += $"[{_name}] cost {_cost}. {_desc}\n";
                 neuroData.Add(_name, btn.m_RectTransform.GetComponent<uiFTKButton>());
             }
-            window = ActionWindow.Create(uiTownServiceMenu.Instance.gameObject);
+            window = ActionWindow.Create(uiTownServiceMenu.Instance.m_DisplayRoot.gameObject);
             if (neuroData.Count == 0) Context.Send("there are no services you can afford");
             else window.AddAction(new TownServiceAction(neuroData));
             CancelAction cancel = new(window, "close the service window");
@@ -81,6 +81,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             window.SetContext(ctx); //TODO add player gold amount
             window.SetForce(0, "choose a service to purchase or close the window", "you are at a town and a service menu has opened", true);
             window.Register();
+            UnregisterDisabledObject.QuickCreate(uiTownServiceMenu.Instance.m_DisplayRoot.gameObject, window);
         }
 
         public static void CloseServiceWindow(ActionWindow _window)

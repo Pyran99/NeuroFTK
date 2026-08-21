@@ -37,6 +37,13 @@ namespace Pyran.NeuroFTK.Utils
 
         public static CharacterOverworld GetOwnCow()
         {
+            Plugin.Logger.LogWarning($"testing:\ncow={GameLogic.Instance.GetCurrentCOW()}\ncombatCow={GameLogic.Instance.GetCurrentCombatCOW()}");
+            if (!IsMultiplayer())
+            {
+                CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW(); // does not change in combat
+                if (cow.m_CharacterStats.m_IsInCombat) return GameLogic.Instance.GetCurrentCombatCOW(); // only exists in combat
+                return cow;
+            }
             foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
             {
                 if (cow.IsOwner) return cow;
