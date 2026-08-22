@@ -18,15 +18,8 @@ namespace Pyran.NeuroFTK.Utils
 
         public static bool IsYourCow(CharacterOverworld cow)
         {
-            if (cow.IsOwner)
-            {
-                return true;
-            }
-            if (cow.m_FTKPlayerID.IsLocal())
-            {
-                return true;
-            }
-            Plugin.Logger.LogMessage("not your cow");
+            if (cow.IsOwner) return true;
+            if (cow.m_FTKPlayerID.IsLocal()) return true;
             return false;
         }
 
@@ -35,18 +28,16 @@ namespace Pyran.NeuroFTK.Utils
             Context.Send($"another player is taking their turn", true);
         }
 
+        /// <returns>IsOwner Cow or active if not multiplayer</returns>
         public static CharacterOverworld GetOwnCow()
         {
-            Plugin.Logger.LogWarning($"testing:\ncow={GameLogic.Instance.GetCurrentCOW()}\ncombatCow={GameLogic.Instance.GetCurrentCombatCOW()}");
             if (!IsMultiplayer())
             {
-                CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW(); // does not change in combat
-                if (cow.m_CharacterStats.m_IsInCombat) return GameLogic.Instance.GetCurrentCombatCOW(); // only exists in combat
-                return cow;
+                return CharacterData.GetActiveCow();
             }
-            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
+            foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
             {
-                if (cow.IsOwner) return cow;
+                if (IsYourCow(_cow)) return _cow;
             }
             Plugin.Logger.LogError("could not find own cow");
             return null;

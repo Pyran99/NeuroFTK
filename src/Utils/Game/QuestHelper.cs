@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.Utils
             questDict.Clear();
             questPositions.Clear();
             sbQuest = new();
-            Vector3 cowHex = CharacterData.GetNeuroCow().GetHexLand().GetPosition();
+            Vector3 cowHex = CharacterData.GetActiveCow().GetHexLand().GetPosition();
             foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>())
             {
                 AddValidQuests(q, cowHex);

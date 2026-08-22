@@ -11,13 +11,45 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class CombatEvents
     {
         static bool isAcidDestroy = false;
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // main battle enter for normal & dungeon, also called for each dungeon encounter, including ready actions
+        [HarmonyPostfix]
+        // static void EnteredBattle(MiniHexDungeon.EncounterType _encounterType)
+        static void EnteredBattle()
+        {
+            Plugin.Logger.LogMessage("StartEncounterSession");
+            Battle.isCombatEncounter = false;
+            ToggleDisposableActions.ToggleOverworldActions(false);
+            MiniHexDungeon.EncounterType _encounterType = EncounterSessionMC.Instance.GetCurrentEncounter().EncounterType;
+            switch (_encounterType)
+            {
+                case MiniHexDungeon.EncounterType.Next:
+                case MiniHexDungeon.EncounterType.Ready:
+                case MiniHexDungeon.EncounterType.Stair:
+                case MiniHexDungeon.EncounterType.EmptyRoom:
+                case MiniHexDungeon.EncounterType.Door:
+                    Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
+                    Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
+                    //TODO add use item to decision window
+                    break;
+            }
+        }
+
+        // [HarmonyPatch(typeof(GameFlow), nameof(GameFlow.LocalInitCombatSession))] // for overworld battles only
+        // [HarmonyPostfix]
+        // static void EnteredCombat()
+        // {
+        //     // StartEncounterSession
+        //     // EncounterSessionMC.InitiateEncounterSessionRPC
+        //     Plugin.Logger.LogWarning("GameFlow initiate combat"); // calls EncounterSessionMC enter
+        // }
         
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceStair))]
         [HarmonyPostfix]
         static void DungeonStairs()
         {
             Context.Send("entered a dungeon room with stairs to the next floor. ", true);
-            BeginTurns.CtxCombatTurnBeginPlayer(CharacterData.GetNeuroCow(true));
+            BeginTurns.CtxCombatTurnBeginPlayer(CharacterData.GetActiveCow());
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceEmptyRoom))]
@@ -34,7 +66,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send("entered a shop room", true);
         }
 
-        [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))] // is called from normal battle
+        [HarmonyPatch(typeof(DungeonScroller), nameof(DungeonScroller.DungeonExit))]
         [HarmonyPostfix]
         static void DungeonExit()
         {
@@ -44,11 +76,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CameraUtils.Zoom(100f);
         }
 
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.EncounterFinished))] // after normal battle & dungeon complete
+        [HarmonyPostfix]
+        static void EncounterFinished()
+        {
+            Plugin.Logger.LogMessage("CombatEvents encounter finished");
+        }
+
         [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]
         [HarmonyPatch]
         static void ReturnToOverworld()
         {
-            Plugin.Logger.LogMessage("NYI ReturnToOverworld (no idea when called)");
+            Plugin.Logger.LogWarning("NYI ReturnToOverworld (no idea when called, not from normal battles)");
             // Context.Send("battle finished, returning to overworld", true);
             // CameraUtils.Zoom(100f);
         }

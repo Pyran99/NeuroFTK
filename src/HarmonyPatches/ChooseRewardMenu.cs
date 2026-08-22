@@ -115,7 +115,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string GetRespawnData(Dictionary<string, uiChooseRewardButton> validChoices)
         {
             StringBuilder sb = new();
-            HexLand ownHex = CharacterData.GetNeuroCow().GetHexLand();
+            HexLand ownHex = CharacterData.GetActiveCow().GetHexLand();
             // FTK_realm.ID currentRealm = ownHex.GetRealm();
             List<FTK_realm.ID> cowRealms = [];
             List<MiniHexInfo> towns = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Town);

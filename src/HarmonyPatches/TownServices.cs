@@ -39,7 +39,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateAction()
         {
             string ctx = "";
-            CharacterOverworld cow = GameLogic.Instance.GetCurrentCOW();
+            CharacterOverworld cow = CharacterData.GetActiveCow();
             foreach (uiTownServiceMenu.ServiceButton btn in uiTownServiceMenu.Instance.m_ServiceButtons)
             {
                 if (!btn.m_RectTransform.gameObject.activeInHierarchy) continue;

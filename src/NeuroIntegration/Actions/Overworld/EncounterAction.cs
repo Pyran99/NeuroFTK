@@ -5,6 +5,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -54,9 +55,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            string result = actionData.Data.Value<string>("action");
+            string result = actionData.Data?.Value<string>("action");
             if (btns.Count == 0) return ExecutionResult.Success();
-            if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("action"));
+            if (result.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("action"));
             if (!btns.ContainsKey(result)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
             // if (!btns.Any(b => b.m_ButtonText.text == result)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
             parsedData = result;

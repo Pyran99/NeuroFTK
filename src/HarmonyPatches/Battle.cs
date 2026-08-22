@@ -21,38 +21,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static uiBattleStanceButtons StanceBtnInstance;
         public static List<uiBattleStanceButtons.ProfValues> m_Proficiencies = [];
         public static bool beltActionUsed = false;
+        public static bool isCombatEncounter = false;
         static ActionWindow window;
         static Dictionary<string, uiBattleButton> offense = [];
         static Dictionary<string, uiBattleButton> defense = [];
         static readonly Dictionary<string, int> playerHealths = [];
         static StringBuilder dmgTakenString = new();
         static bool isHealthChangeWait = false;
-        static bool isCombatEncounter = false;
         static bool initialized = false;
-
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))]
-        [HarmonyPostfix]
-        // static void EnteredBattle(MiniHexDungeon.EncounterType _encounterType)
-        static void EnteredBattle()
-        {
-            Plugin.Logger.LogMessage("StartEncounterSession");
-            isCombatEncounter = false;
-            ToggleDisposableActions.ToggleOverworldActions(false);
-            MiniHexDungeon.EncounterType _encounterType = EncounterSessionMC.Instance.GetCurrentEncounter().EncounterType;
-            switch (_encounterType)
-            {
-                case MiniHexDungeon.EncounterType.Next:
-                case MiniHexDungeon.EncounterType.Ready:
-                case MiniHexDungeon.EncounterType.Stair:
-                case MiniHexDungeon.EncounterType.EmptyRoom:
-                case MiniHexDungeon.EncounterType.Door:
-                    Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
-                    Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
-                    //TODO add use item to decision window
-                    break;
-            }
-        }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
         [HarmonyPostfix]
@@ -332,7 +308,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
         {
-            // CharacterOverworld cow = CharacterData.GetNeuroCow(true);
+            // CharacterOverworld cow = CharacterData.GetActiveCow();
             BeginTurns.CtxCombatTurnBeginEnemy();
             BeginTurns.CtxCombatTurnBeginPlayer(cow);
             GetOffenseAttackDetails(_instance, _proficiencies);
@@ -435,7 +411,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.isActiveAndEnabled;
             if (useDefault)
             {
-                FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(CharacterData.GetNeuroCow(true).m_WeaponID);
+                FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(CharacterData.GetActiveCow().m_WeaponID);
                 btns.Add(entry1.GetAttackDisplay(), _instance.m_AttackButton);
             }
             if (canReload)
@@ -497,7 +473,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             // from => public void DisplayBattleActionInfo(uiBattleButton _button, bool _on)
             Dictionary<string, Dictionary<string, string>> data = [];
-            CharacterOverworld current = CharacterData.GetNeuroCow(true);
+            CharacterOverworld current = CharacterData.GetActiveCow();
             global::CharacterStats stats = current.m_CharacterStats;
 			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
 			FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
@@ -617,7 +593,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static float GetAccuracy(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
-            CharacterOverworld current = CharacterData.GetNeuroCow(true);
+            CharacterOverworld current = CharacterData.GetActiveCow();
             global::CharacterStats stats = current.m_CharacterStats;
 			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
 			FTK_weaponStats2.SkillType skillType;
@@ -660,7 +636,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static int GetAttackDamage(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
-            int dmg = CharacterData.GetNeuroCow(true).m_CharacterStats.GetWeaponMaxDamage();
+            int dmg = CharacterData.GetActiveCow().m_CharacterStats.GetWeaponMaxDamage();
             FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
 
             if (btn.m_ButtonType == uiBattleButton.BattleButtonType.proficiency)

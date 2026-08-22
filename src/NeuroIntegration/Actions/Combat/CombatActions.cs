@@ -8,6 +8,7 @@ using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -86,7 +87,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            string ability = actionData.Data.Value<string>("ability");
+            string ability = actionData.Data?.Value<string>("ability");
             if (!defense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
             parsedData = ability;
             return ExecutionResult.Success();
@@ -138,10 +139,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
         {
             parsedData = new string[2];
-            string target = actionData.Data.Value<string>("target");
-            if (!names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
-            string ability = actionData.Data.Value<string>("ability");
-            if (!offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+            string target = actionData.Data?.Value<string>("target");
+            if (target.IsNullOrEmpty() || !names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
+            string ability = actionData.Data?.Value<string>("ability");
+            if (ability.IsNullOrEmpty() || !offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
             parsedData[0] = target;
             parsedData[1] = ability;
             return ExecutionResult.Success();
@@ -261,7 +262,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CombatPartyHealAction(uiBattleButton btn): NeuroAction
     {
         public override string Name => "party_heal";
-        protected override string Description => "heal all party members";
+        protected override string Description => "uses godsbeard to heal all party members";
         protected override JsonSchema Schema => null;
 
         protected override void Execute()

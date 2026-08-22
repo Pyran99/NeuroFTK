@@ -7,6 +7,7 @@ using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine.UI;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -40,7 +41,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             parsedData = null;
             string result = actionData.Data?.Value<string>("button");
-            if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("button"));
+            if (result.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("button"));
             foreach (VoteButton btn in _values)
             {
                 if (btn.GetComponentInChildren<Text>().text == result)

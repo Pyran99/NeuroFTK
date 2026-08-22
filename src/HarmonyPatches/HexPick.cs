@@ -187,7 +187,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void DelayCancel()
         {
             OverworldFlow.cancelBoatReclaim = false;
-            PickHex(GameLogic.Instance.GetCurrentCOW().GetHexLand(), false);
+            PickHex(CharacterData.GetActiveCow().GetHexLand(), false);
         }
 
         static void Reset()
@@ -231,62 +231,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         //             Context.Send(StringMessages.ItemUsed.Format([ItemData.GetItemName(id)]));
         //             break;
         //     }
-        // }
-
-        // [HarmonyPatch(typeof(boat), nameof(boat.OnUse))]
-        // [HarmonyPrefix]
-        // static void OnUseBoat()
-        // {
-        //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-        //     Context.Send(StringMessages.ItemUsedTargetHex.Format(["boat"]));
-        // }
-
-        // [HarmonyPatch(typeof(scrollgroupteleport), nameof(scrollgroupteleport.OnUse))]
-        // [HarmonyPrefix]
-        // static void OnUseGroupTeleport()
-        // {
-        //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-        //     Context.Send(StringMessages.ItemUsedDestinationHex.Format(["group teleport"]));
-        // }
-
-        // [HarmonyPatch(typeof(scrollidentify), nameof(scrollidentify.OnUse))]
-        // [HarmonyPrefix]
-        // static void OnUseIdentify()
-        // {
-        //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-        //     Context.Send(StringMessages.ItemUsedTargetHex.Format(["identify scroll"]));
-        // }
-
-        // [HarmonyPatch(typeof(scrollportal), nameof(scrollportal.OnUse))]
-        // [HarmonyPrefix]
-        // static void OnUsePortal()
-        // {
-        //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-        //     Context.Send(StringMessages.ItemUsedDestinationHex.Format(["portal"]));
-        // }
-
-        // [HarmonyPatch(typeof(scrollpurify), nameof(scrollpurify.OnUse))]
-        // [HarmonyPrefix]
-        // static void OnUsePurify()
-        // {
-        //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-        //     Context.Send(StringMessages.ItemUsedTargetHex.Format(["purify scroll"]));
-        // }
-
-        // [HarmonyPatch(typeof(scrollteleport), nameof(scrollteleport.OnUse))]
-        // [HarmonyPrefix]
-        // static void OnUseTeleport()
-        // {
-        //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-        //     Context.Send(StringMessages.ItemUsedDestinationHex.Format(["teleport"]));
-        // }
-
-        // [HarmonyPatch(typeof(scrollvision), nameof(scrollvision.OnUse))]
-        // [HarmonyPrefix]
-        // static void OnUseVision()
-        // {
-        //     if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld)) return;
-        //     Context.Send(StringMessages.ItemUsedTargetHex.Format(["vision scroll"]));
         // }
     }
 }

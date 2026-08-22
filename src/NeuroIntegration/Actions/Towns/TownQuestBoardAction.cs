@@ -46,7 +46,7 @@ namespace Pyran.NeuroFTK
         {
             parsedData = "";
             if (actionData.Data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("quest"));
-            parsedData = actionData.Data.Value<string>("quest") ?? "null";
+            parsedData = actionData.Data?.Value<string>("quest") ?? "null";
             if (!_items.ContainsKey(parsedData)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("quest"));
             return ExecutionResult.Success();
         }

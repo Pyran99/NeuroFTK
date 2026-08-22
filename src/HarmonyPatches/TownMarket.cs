@@ -43,7 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Refresh2()
         {
             Object.Destroy(activeWindow);
-            if (Multiplayer.OtherPlayersAction(GameLogic.Instance.GetCurrentCOW())) return;
+            if (Multiplayer.OtherPlayersAction(CharacterData.GetActiveCow())) return;
             uiBuyMenuHud.Instance.StartCoroutine(AddData(null));
         }
 
@@ -51,7 +51,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (isCreating) yield break;
             isCreating = true;
-            CharacterOverworld _cow = CharacterData.GetNeuroCow(); // null in dungeon? or resume game in dungeon before market
+            CharacterOverworld _cow = CharacterData.GetActiveCow(); // null in dungeon? or resume game in dungeon before market
             if (_cow == null) _cow = uiBuyMenuHud.Instance.m_CurrentCow;
             if (_itemContainer == _cow?.m_PlayerInventory.m_ContainerBackpack)
             {

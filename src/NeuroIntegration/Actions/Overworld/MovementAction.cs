@@ -10,6 +10,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -40,13 +41,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         public static ActionWindow CreateTurnBeginWindow(bool registerBelt = true)
         {
-            if (OverworldFlow.isTurnSkipped) //TODO VERIFY
+            if (OverworldFlow.isTurnSkipped)
             {
                 OverworldFlow.isTurnSkipped = false;
-                Plugin.Logger.LogMessage("turn skipped: VERIFY WORKS");
                 return null;
             }
-            CharacterOverworld cow = CharacterData.GetNeuroCow();
+            CharacterOverworld cow = CharacterData.GetActiveCow();
             ActionWindow window = ActionWindow.Create(cow.gameObject);
             List<INeuroAction> registerActions = [];
             registerActions.Add(new BeginMovementAction());
@@ -113,8 +113,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             parsedData = null;
             //"hex": "(168.8, 37.5)"
             string data = actionData.Data?.Value<string>("hex");
-            if (data == null || data == string.Empty) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("tile"));
-            if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("tile"));
+            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("hex"));
+            if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("hex"));
             parsedData = _hexPositions[data];
             return ExecutionResult.Success();
         }
@@ -131,8 +131,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (uiEndTurnButton.Instance.interactable) uiEndTurnButton.Instance.onClick.Invoke();
             else
             {
-                Context.Send("cannot end turn right now");
-                OverworldFlow.CreateMovementActions(CharacterData.GetNeuroCow());
+                Context.Send("cannot end turn right now, something may have gone wrong with the integration");
+                OverworldFlow.CreateMovementActions(CharacterData.GetActiveCow());
             }
         }
 
@@ -164,15 +164,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            CharacterOverworld cow = CharacterData.GetNeuroCow();
+            CharacterOverworld cow = CharacterData.GetActiveCow();
             OverworldFlow.NeuroTryGoToQuest(cow, _questDict.TryGetValue(parsedData, out QuestLogicBase quest) ? quest : null);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            string data = actionData.Data.Value<string>("destination");
-            if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
+            string data = actionData.Data?.Value<string>("destination");
+            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
             if (data == "none") return ExecutionResult.Success();
             if (!_questDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
             parsedData = data;
@@ -210,8 +210,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            string data = actionData.Data.Value<string>(prop);
-            if (data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(prop));
+            string data = actionData.Data?.Value<string>(prop);
+            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(prop));
             if (!_characterDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format(prop));
             parsedData = data;
             return ExecutionResult.Success();

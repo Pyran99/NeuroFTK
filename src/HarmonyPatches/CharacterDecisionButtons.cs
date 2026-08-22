@@ -24,8 +24,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void VoteContainerShow(VoteButtonContainer __instance)
         {
             CharacterOverworld cow = __instance.m_PlayerHud.m_Cow;
-            activeContainers.Add(__instance);
             if (!Multiplayer.IsYourCow(cow)) return;
+            activeContainers.Add(__instance);
             string name = CharacterData.GetCharacterName(cow);
             voteButtons[cow] = [];
             VoteButton[] btns = __instance.GetComponentsInChildren<VoteButton>();
@@ -49,7 +49,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (activeContainers.Contains(__instance)) activeContainers.Remove(__instance);
             if (activeContainers.Count > 0) return;
-            // if (!Multiplayer.IsYourCow(__instance.m_PlayerHud.m_Cow)) return;
             voteButtons.Clear();
             isShowing = false;
             instance = null;

@@ -28,7 +28,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     else return;
                 }
                 overworldActions.Clear();
-                CharacterOverworld cow = CharacterData.GetNeuroCow();
+                CharacterOverworld cow = CharacterData.GetActiveCow();
                 if (cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat)
                 {
                     Plugin.Logger.LogWarning("tried to register overworld actions in combat");
@@ -68,7 +68,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     else return;
                 }
                 combatActions.Clear();
-                CharacterOverworld cow = CharacterData.GetNeuroCow();
+                CharacterOverworld cow = CharacterData.GetActiveCow();
                 if ((!cow.IsInDungeon() && !cow.m_CharacterStats.m_IsInCombat) || GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
                 {
                     Plugin.Logger.LogWarning("tried to register combat actions in overworld");

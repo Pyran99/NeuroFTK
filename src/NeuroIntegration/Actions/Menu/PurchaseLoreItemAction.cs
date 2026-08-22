@@ -9,6 +9,7 @@ using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
 using System.Text;
 using Pyran.NeuroFTK.GameConfigs;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -71,8 +72,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            string result = actionData.Data.Value<string>("item");
-            if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("item"));
+            string result = actionData.Data?.Value<string>("item");
+            if (result.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("item"));
             if (!schemaData.ContainsKey(result))
             {
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));

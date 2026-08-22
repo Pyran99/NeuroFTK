@@ -15,14 +15,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             mode = _mode;
             Plugin.Logger.LogMessage($"game track mode changed to {_mode}");
         }
-
-
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.EncounterFinished))] // after dungeon battle
-        [HarmonyPostfix]
-        static void EncounterFinished()
-        {
-            Plugin.Logger.LogMessage("GameState encounter finished");
-        }
         
     }
 }

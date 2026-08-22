@@ -102,11 +102,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (itemBase is FTK_items)
             {
                 FTKItem _item = FTKItem.Get(id);
-                result += $" {_item.GetDescription(CharacterData.GetNeuroCow())}";
+                result += $" {_item.GetDescription(CharacterData.GetActiveCow())}";
             }
             else if (itemBase is FTK_weaponStats2 stats)
             {
-                result += ItemData.GetItemDescription(id, true, CharacterData.GetNeuroCow());
+                result += ItemData.GetItemDescription(id, true, CharacterData.GetActiveCow());
             }
             return result;
         }

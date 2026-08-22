@@ -5,6 +5,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -52,7 +53,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             parsedData = null;
             string data = actionData.Data?.Value<string>("hex");
-            if (data == null || data == string.Empty) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("hex"));
+            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("hex"));
             if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("hex"));
             parsedData = _hexPositions[data];
             return ExecutionResult.Success();

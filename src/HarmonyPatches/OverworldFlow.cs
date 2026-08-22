@@ -197,6 +197,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
+            if (!Multiplayer.IsYourCow(cow))
+            {
+                Multiplayer.SendOtherPlayerTurnCtx();
+                return;
+            }
             if (cow.m_FirstStopAtHex) // is this useful
             {
                 Plugin.Logger.LogWarning("first stop");
@@ -213,11 +218,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 isFirstAction = false;
                 return;
             }
-            if (!Multiplayer.IsYourCow(cow))
-            {
-                Multiplayer.SendOtherPlayerTurnCtx();
-                return;
-            }
             isFirstAction = true;
             isSearching = false;
             DisposeActions();
@@ -230,7 +230,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             if (Movement.Instance.m_Mode == Movement.TrackingMode.PickHex) return;
-            CharacterOverworld cow = CharacterData.GetNeuroCow();
+            CharacterOverworld cow = CharacterData.GetActiveCow();
             RollSystem.currentCOW = cow;
             if (!Multiplayer.IsYourCow(cow)) return;
             isTracking = true;
@@ -262,7 +262,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (isSearching) yield break;
             isSearching = true;
             DisposeActions();
-            CharacterOverworld currentCOW = CharacterData.GetNeuroCow();
+            CharacterOverworld currentCOW = CharacterData.GetActiveCow();
             if (!Multiplayer.IsYourCow(currentCOW))
             {
                 Plugin.Logger.LogError("tried to generate move action from another players cow");
@@ -340,7 +340,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             StringBuilder sb = new();
             sb.Append(StringMessages.HexContext);
-            CharacterOverworld cow = CharacterData.GetNeuroCow();
+            CharacterOverworld cow = CharacterData.GetActiveCow();
             hexPositions.Clear();
             foreach (HexLand hex in _tiles)
             {
@@ -504,7 +504,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         internal static void NeuroTryGoToCharacter(CharacterOverworld target)
         {
-            CharacterOverworld curCow = CharacterData.GetNeuroCow();
+            CharacterOverworld curCow = CharacterData.GetActiveCow();
             if (target == null)
             {
                 Plugin.Logger.LogError("invalid cow");

@@ -7,6 +7,7 @@ using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -41,8 +42,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = "";
-            string result = actionData.Data.Value<string>("adventure");
-            if (result == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("adventure"));
+            string result = actionData.Data?.Value<string>("adventure");
+            if (result.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("adventure"));
             if (!validAdventures.Contains(result))
             {
                 Plugin.Logger.LogError($"could not find game def {result}");

@@ -7,6 +7,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using StartGameFE;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -49,11 +50,12 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            string result = actionData.Data.Value<string>("action");
+            parsedData = null;
+            string result = actionData.Data?.Value<string>("action");
+            if (result.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("action"));
             bool present = _choices.Contains(result);
             if (!present)
             {
-                parsedData = null;
                 return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("action"));
             }
             parsedData = result;

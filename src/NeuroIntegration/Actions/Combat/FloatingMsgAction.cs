@@ -35,17 +35,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            CharacterData.GetNeuroCow(true).GetCurrentDummy()?.SpawnHudTextRPC(parsedData);
+            CharacterData.GetActiveCow().GetCurrentDummy()?.SpawnHudTextRPC(parsedData);
             if (uiChatBox.Instance)
             {
-                uiChatBox.Instance.AddMessage(UnityEngine.Color.white, CharacterData.GetNeuroCow(true)?.m_CharacterStats.m_CharacterName, parsedData);
+                uiChatBox.Instance.AddMessage(UnityEngine.Color.white, CharacterData.GetActiveCow()?.m_CharacterStats.m_CharacterName, parsedData);
                 Context.Send($"sent msg {parsedData}", true);
             }
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            parsedData = actionData.Data.Value<string>("action") ?? "null";
+            parsedData = actionData.Data?.Value<string>("action") ?? "null";
             return ExecutionResult.Success();
         }
     }

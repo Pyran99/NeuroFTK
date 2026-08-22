@@ -77,7 +77,7 @@ namespace Pyran.NeuroFTK.Utils
             if (isRunning) yield break;
             isRunning = true;
             OnCooldown = true;
-            CharacterDummy dummy = CharacterData.GetNeuroCow().m_CurrentDummy;
+            CharacterDummy dummy = CharacterData.GetActiveCow().m_CurrentDummy;
             GameObject avatar = dummy.transform.Find("Avatar")?.gameObject;
             if (avatar == null)
             {
@@ -105,7 +105,7 @@ namespace Pyran.NeuroFTK.Utils
             // if (Battle.StanceBtnInstance == null || !Battle.StanceBtnInstance.m_Initialized) yield break;
             isRunning = true;
             OnCooldown = true;
-            CharacterDummy dummy = CharacterData.GetNeuroCow().m_CurrentDummy;
+            CharacterDummy dummy = CharacterData.GetActiveCow().m_CurrentDummy;
             if ((bool)!dummy.m_CharacterOverworld?.m_CharacterStats.m_IsInCombat)
             {
                 isRunning = false;

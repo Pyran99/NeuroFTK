@@ -43,8 +43,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             CharacterOverworld cow;
-            if (Multiplayer.IsMultiplayer()) cow = CharacterData.GetNeuroCow();
-            else if (parsedData == string.Empty || !names.Contains(parsedData)) cow = CharacterData.GetNeuroCow();
+            if (Multiplayer.IsMultiplayer()) cow = CharacterData.GetActiveCow();
+            else if (parsedData == string.Empty || !names.Contains(parsedData)) cow = CharacterData.GetActiveCow();
             else cow = FTKHub.Instance.m_CharacterOverworlds.Find(cow => CharacterData.GetCharacterName(cow) == parsedData);
             string title = $"[{CharacterData.GetCharacterName(cow)} usable belt items] ";
             StringBuilder sb = new(title);

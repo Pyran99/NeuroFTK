@@ -8,12 +8,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     /// </summary>
     [HarmonyPatch]
     public class Tests
-    { //TODO find entrance for all combat
-
-        static void EnteredCombat()
-        {
-            
-        }
+    {
 
         [HarmonyPatch(typeof(uiPopupMenu), nameof(uiPopupMenu.Show))] // click item in inventory 
         [HarmonyPostfix]
@@ -114,7 +109,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             HexLandID id = destination.GetHexLandID();
             if (id == null) return;
             Plugin.Logger.LogMessage(destination + $" = {id.m_BigIndex} - {id.m_SmallIndex}");
-            // CharacterOverworld character = CharacterData.GetNeuroCow();
+            // CharacterOverworld character = CharacterData.GetActiveCow();
             // FTKPlayerID id2 = character.m_FTKPlayerID;
             // GameFlow.Instance.ToggleHexPingRPC(id2, id);
             // string name = character.m_CharacterStats.m_CharacterName;

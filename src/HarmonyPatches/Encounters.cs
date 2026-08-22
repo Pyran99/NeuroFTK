@@ -215,7 +215,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string cost = "";
             if (EncounterMenuInstance.m_CostRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_Cost.text != string.Empty)
             {
-                cost = $"\n{StringMessages.EncounterCost.Format([EncounterMenuInstance.m_Cost?.text, CharacterData.GetNeuroCow().m_CharacterStats.m_Gold])}";
+                cost = $"\n{StringMessages.EncounterCost.Format([EncounterMenuInstance.m_Cost?.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
             }
             string enemyLvl = "";
             if (EncounterMenuInstance.m_EnemyLevelRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_EnemyLevel.text != string.Empty)
@@ -291,11 +291,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             FTK_slotOutput.ID slotId = FTK_slotOutput.ID.None;
             if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Ambush)
             {
-                slotId = RollSlotOutcomes._getAmbushType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
+                slotId = RollSlotOutcomes._getAmbushType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetActiveCow());
             }
             else if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Sneak)
             {
-                slotId = RollSlotOutcomes._getSneakType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetNeuroCow());
+                slotId = RollSlotOutcomes._getSneakType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetActiveCow());
             }
             if (slotId == FTK_slotOutput.ID.None)
             {
@@ -328,7 +328,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             else
             {
-                outcome = RollSlotOutcomes.GetOutcomes(CharacterData.GetNeuroCow(), slotId);
+                outcome = RollSlotOutcomes.GetOutcomes(CharacterData.GetActiveCow(), slotId);
             }
             rollData.Add(key, outcome);
         }

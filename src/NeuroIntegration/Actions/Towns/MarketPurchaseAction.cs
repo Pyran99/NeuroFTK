@@ -5,6 +5,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK
 {
@@ -46,13 +47,12 @@ namespace Pyran.NeuroFTK
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
         {
             parsedData = new object[2];
-            Plugin.Logger.LogWarning("data: " + actionData.Data.ToString());
+            Plugin.Logger.LogWarning("data: " + actionData.Data?.ToString());
             //   "item": "Panax",
             //   "equip": false
-            if (actionData.Data == null) return ExecutionResult.Failure("invalid data");
-            string item = actionData.Data.Value<string>("item") ?? "null";
-            bool equip = actionData.Data.Value<bool>("equip");
-            if (!_items.ContainsKey(item)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));
+            string item = actionData.Data?.Value<string>("item") ?? "null";
+            bool equip = actionData.Data?.Value<bool>("equip") ?? false;
+            if (item.IsNullOrEmpty() || !_items.ContainsKey(item)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("item"));
             if (equip.GetType() != typeof(bool)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("equip"));
             parsedData[0] = item;
             parsedData[1] = equip;

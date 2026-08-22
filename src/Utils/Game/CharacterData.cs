@@ -26,25 +26,11 @@ namespace Pyran.NeuroFTK.Utils
             return cow.m_CharacterStats.m_CharacterClass.ToString();
         }
 
-        public static CharacterOverworld GetNeuroCow(bool inCombat = false) //TODO needs work
+        public static CharacterOverworld GetActiveCow()
         {
             CharacterOverworld cow;
-            if (Multiplayer.IsMultiplayer())
-            {
-                cow = Multiplayer.GetOwnCow();
-            }
-            else
-            {
-                if (EncounterSession.Instance.m_IsInCombat) cow = GameLogic.Instance.GetCurrentCombatCOW();
-                else
-                {
-                    cow = GameLogic.Instance.GetCurrentCOW();
-                    if (cow.m_CharacterStats.m_IsInCombat)// || cow.IsInDungeon()) // dungeon may be irrelevant
-                    {
-                        cow = GameLogic.Instance.GetCurrentCombatCOW();
-                    }
-                }
-            }
+            if (EncounterSessionMC.Instance.m_IsInCombat) cow = GameLogic.Instance.GetCurrentCombatCOW() ?? GameLogic.Instance.GetCurrentCOW();
+            else cow = GameLogic.Instance.GetCurrentCOW();
             return cow;
         }
 

@@ -24,7 +24,7 @@ namespace Pyran.NeuroFTK.Utils
             }
             else
             {
-                distance = (float)Math.Round(HexLand.Distance(CharacterData.GetNeuroCow().m_HexLand, __instance), 1);
+                distance = (float)Math.Round(HexLand.Distance(CharacterData.GetActiveCow().m_HexLand, __instance), 1);
             }
             Context.Send($"{CharacterData.GetCharacterName(_cow)} pinged {pos}. you are {distance} hexes away");
             if (!GlobalConfig.IsDebugMode()) return;
@@ -34,9 +34,9 @@ namespace Pyran.NeuroFTK.Utils
             sb.AppendLine($"pos: {__instance.GetPosition()}");
             sb.AppendLine($"realm: {__instance.GetRealm()}"); // GuardianForest
             sb.AppendLine($"boat: {__instance.IsBoat()}");
-            sb.AppendLine($"loc display: {__instance.GetLocationDisplayValue(CharacterData.GetNeuroCow())}"); // The Guardian Forest, is realm display if not dungeon
+            sb.AppendLine($"loc display: {__instance.GetLocationDisplayValue(CharacterData.GetActiveCow())}"); // The Guardian Forest, is realm display if not dungeon
             sb.AppendLine($"distance: {distance}");
-            // _ = HexLand.FindPath(CharacterData.GetNeuroCow().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
+            // _ = HexLand.FindPath(CharacterData.GetActiveCow().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
             HexLand last = Movement.Instance.m_HexListPartial.Last();
             sb.AppendLine($"path end: {last?.GetPosition()}"); // is giving correct last valid move hex for hex's to far
             MiniHexInfo poi = __instance.GetPOI();

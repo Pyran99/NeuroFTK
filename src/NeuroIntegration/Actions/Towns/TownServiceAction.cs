@@ -5,6 +5,7 @@ using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK
 {
@@ -37,7 +38,7 @@ namespace Pyran.NeuroFTK
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
             parsedData = actionData.Data?.Value<string>("service");
-            if (parsedData == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("service"));
+            if (parsedData.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("service"));
             if (!_data.ContainsKey(parsedData)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("service"));
             return ExecutionResult.Success();
         }

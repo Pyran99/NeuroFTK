@@ -146,8 +146,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 sb.AppendLine($"{desc}: {btnInfo}");
             }
-            int cost = miniHexInfo.GetCost(CharacterData.GetNeuroCow());
-            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {CharacterData.GetNeuroCow().m_CharacterStats.m_Gold} gold");
+            int cost = miniHexInfo.GetCost(CharacterData.GetActiveCow());
+            if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {CharacterData.GetActiveCow().m_CharacterStats.m_Gold} gold");
             window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString());
             UnregisterDisabledObject.QuickCreate(uiLocationMenuDisplay.Instance.transform.Find("mainMenu").gameObject, window);
         }
@@ -186,7 +186,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string cost = "";
             if (locationMenuInstance.m_CostRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Cost.text != string.Empty)
             {
-                cost = $"\n{StringMessages.EncounterCost.Format([locationMenuInstance.m_Cost.text, CharacterData.GetNeuroCow().m_CharacterStats.m_Gold])}";
+                cost = $"\n{StringMessages.EncounterCost.Format([locationMenuInstance.m_Cost.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
             }
             string difficulty = "";
             if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Difficulty.text != string.Empty)

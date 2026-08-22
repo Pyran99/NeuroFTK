@@ -29,7 +29,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             bool hasAmount = false;
             if (___m_LootItem.Contains("_gold_") || ___m_LootItem.Contains("_lore_")) hasAmount = true;
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
-            description = ItemData.GetItemDescription(id, true, CharacterData.GetNeuroCow());
+            description = ItemData.GetItemDescription(id, true, CharacterData.GetActiveCow());
             string lootMsg = $"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}): {description}";
             if (itemBase.m_Equippable)
             {
