@@ -22,17 +22,17 @@ Name | Default | Description
 `allow_cheats` | false | ok cheater
 `debug_mode` | false | some actions may be handled differently when `true`
 `use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
-`force_first_adventure` | false | only let neuro choose the first adventure map For the King *(other maps not tested yet)*
-`is_multiplayer` | false | disables normal main menu actions
+`force_first_adventure` | true | only let neuro choose the first adventure map For the King *(other maps not tested yet)*
+`is_multiplayer` | false | disables normal main menu actions. *multiplayer NOT implemented as of v0.8.4*
 `launch_resume` | true | disables new game if there is a previous save to load. Only used for the initial game startup
-`max_hex_search` | 150 | the max amount of hexes to send for context & choice list of actions that require picking a hex (Airship movement can be 168+). For movement the removed hexes start from the furthest, for items that pick a hex it is based on the order the map was created (aka nobody knows)
+`max_hex_search` | 100 | the max amount of hexes to send for context & choice list of actions that require picking a hex (Airship movement can be 168+). For movement the removed hexes start from the furthest, for items that pick a hex it is based on the order the map was created (aka nobody knows)
 
 > [!CAUTION]
 > Multiplayer has NOT been tested & *will* break things
 
 ## Current State  
 
-v0.8.2: Tony was let loose for a long time with no game breaking issues. praise be the rng gods  
+v0.8.4: Tony was let loose for a long time with no game breaking issues. praise be the rng gods  
 
 ### Todo  
 

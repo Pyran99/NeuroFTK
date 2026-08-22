@@ -7,11 +7,11 @@ namespace Pyran.NeuroFTK.GameConfigs
     {
         public static bool debugMode = false;
         public static bool gameInitialized = false;
-        public static bool ForcedDefaultAdventure = false;
+        public static bool ForcedDefaultAdventure = true;
         public static bool IsMultiplayer { get; private set; } = false;
         public static bool FirstLoadResume { get; private set; } = true;
         public static bool AllowCheats { get; private set; } = false;
-        public static int MaxHexSearch { get; private set; } = 150;
+        public static int MaxHexSearch { get; private set; } = 100;
         public static float maxDistance = 2.8866f * 15f;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
@@ -20,10 +20,10 @@ namespace Pyran.NeuroFTK.GameConfigs
             { "allow_cheats", false },
             { "debug_mode", false },
             { "use_custom_rules", CustomHouseRules.SET_CUSTOM_RULES },
-            { "force_first_adventure", false },
+            { "force_first_adventure", true },
             { "is_multiplayer", false },
             { "launch_resume", true },
-            { "max_hex_search", 150 },
+            { "max_hex_search", 100 },
         };
 
         public static bool IsDebugMode() => debugMode;
