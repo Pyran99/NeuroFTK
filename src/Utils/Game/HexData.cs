@@ -158,18 +158,15 @@ namespace Pyran.NeuroFTK.Utils
             return null;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="addToList">adds to member OverworldFlow.hexPositions</param>
-        /// <returns>[(164.5, 20.0) The Guardian Forest (story quest)(has dead) (Cult Device: deactivated) (distance: 10.00)]</returns>
+        /// <returns>### The Guardian Forest - [(164.5, 20.0) (story quest) (has dead) (Cult Device: deactivated) (distance: 10.00)]</returns>
         public static string GetContextForHex(CharacterOverworld cow, HexLand hex, bool addToList = false, bool includeDistance = false)
         {
             // FTK_realm.ID realm = hex.GetRealm(); // GuardianForest | GoldenPlains;
             string poi = "";
             string hasDeadPlayers = "";
             string questName = "";
-            string name = hex.GetLocationDisplayValue(cow);
+            // string name = hex.GetLocationDisplayValue(cow);
             Vector2 pos = GetVec2Pos(hex);
             QuestLogicBase _quest = TileHasQuestObjective(hex);
             if (_quest != null && !_quest.IsConsiderComplete())
@@ -177,32 +174,33 @@ namespace Pyran.NeuroFTK.Utils
                 if (_quest.HasQuestDefID())
                 {
                     // _quest.m_StoryQuestID 
-                    questName = "(story quest)";
+                    questName = " (story quest)";
                 }
-                else questName = "(quest location)";
+                else questName = " (quest location)";
                 // quest.GetCurrentDestinationLocation();
             }
             if (hex.GetDeadPlayerCount() > 0)
             {
-                hasDeadPlayers = "(has dead character to revive)";
+                hasDeadPlayers = " (has dead character to revive)";
             }
             MiniHexInfo hexInfo = hex.GetPOI();
             if (hexInfo != null)
             {
                 MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
                 string type = GetHexTypeContext(poiType);
-                poi = hexInfo.GetPOIDisplayValue() + $"{type} ";
+                poi = hexInfo.GetPOIDisplayValue() + $" {type} ";
                 if (IsPoiCompleted(hexInfo, cow))
                 {
                     if (hexInfo.m_Deactivated) poi += ": deactivated";
                     else if (hexInfo.m_Locked) poi += ": locked";
                     else poi += ": completed";
                 }
+                if (poi != "") poi = $"({poi})";
             }
             if (addToList) OverworldFlow.AddHexPosition(pos.ToString(), hex);
             string dist = "";
             if (includeDistance) dist = $" (distance: {(float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2)})";
-            return $"[{pos} {name}{questName}{hasDeadPlayers} ({poi}){dist}]";
+            return $"[{pos}{questName}{hasDeadPlayers}{poi}{dist}]";
         }
 
         public static string GetHexTypeContext(MiniHexInfo.MiniHexType type)

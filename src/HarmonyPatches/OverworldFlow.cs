@@ -339,15 +339,36 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static string GetTileContext(List<HexLand> _tiles, bool includeDistance = false)
         {
             StringBuilder sb = new();
-            sb.Append(StringMessages.HexContext);
+            sb.AppendLine(StringMessages.HexContext);
             CharacterOverworld cow = CharacterData.GetActiveCow();
+            SortRealmThenDistance(_tiles, cow);
             hexPositions.Clear();
+            string realm = _tiles[0].GetRealmDisplayValue();
+            sb.AppendLine($"### {realm}");
             foreach (HexLand hex in _tiles)
             {
-                sb.AppendLine(HexData.GetContextForHex(cow, hex, true, includeDistance));
+                if (hex.GetRealmDisplayValue() != realm)
+                {
+                    realm = hex.GetRealmDisplayValue();
+                    sb.AppendLine($"### {realm}");
+                }
+                sb.AppendLine($"- {HexData.GetContextForHex(cow, hex, true, includeDistance)}");
             }
             return sb.ToString();
         }
+
+        static void SortRealmThenDistance(List<HexLand> _tiles, CharacterOverworld cow)
+        {
+            CustomHexSort sort = new(cow);
+            _tiles.Sort(sort);
+        }
+
+        // static void SortDistance(List<HexLand> _tiles, CharacterOverworld cow)
+        // {
+        //     HexLand hex = cow.GetHexLand();
+        //     _tiles.Sort((a, b) => HexLand.Distance(hex, a).CompareTo(HexLand.Distance(hex, b)));
+        //     // _tiles.OrderBy(x => HexLand.Distance(hex, x)).ThenBy(x => x.GetLocationDisplayValue(cow));
+        // }
 
         public static void AddHexPosition(string pos, HexLand hex)
         {

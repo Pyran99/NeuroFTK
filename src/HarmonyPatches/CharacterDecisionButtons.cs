@@ -89,7 +89,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     string btnName = btn.GetComponentInChildren<Text>().text;
                     // if btn text doesnt work
                     // if (GameDescriptions.AlternateLocLookUp.ContainsKey(btn.m_Option.ToString())) btnName = GameDescriptions.AlternateLocLookUp[btn.m_Option.ToString()];
-                    sb.AppendLine($"{CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]"); // alternate
+                    sb.AppendLine($"### {CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]"); // alternate
                     string slotResults = CombatUtils.GetDungeonSlotLegend(cow, btn);
                     if (slotResults.Length == 0)
                     {

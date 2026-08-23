@@ -95,7 +95,7 @@ namespace Pyran.NeuroFTK.Utils
             foreach (KeyValuePair<string, Dictionary<string, string>> outcome in data)
             {
                 // 0(2%) = Failure <= for each roll
-                sb.AppendLine($"{outcome.Key}({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
+                sb.AppendLine($"- {outcome.Key}({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
             }
             return sb.ToString();
         }
