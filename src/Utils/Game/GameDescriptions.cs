@@ -24,6 +24,7 @@ namespace Pyran.NeuroFTK.Utils
             {"Fight Scourge", "fight scourge to disable its negative effect if active"},
             {"Launch", "launch the airship"},
             {"Land", "land the airship"},
+            {"Sacrifice", "sacrifice some max health to gain a reward"},
         };
 
         public static Dictionary<MiniHexServiceType, string> TownServices = new()

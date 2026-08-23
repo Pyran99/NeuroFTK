@@ -34,6 +34,25 @@ namespace Pyran.NeuroFTK.Utils
             return cow;
         }
 
+        public static string GetDataFor(CharacterOverworld cow)
+        {
+            StringBuilder sb = new();
+            CharacterDummy dummy = cow.GetCurrentDummy();
+            CharacterStats stats = cow.m_CharacterStats;
+            string name = $"{stats.m_CharacterName}";
+            if (stats.m_IsInCombat && !dummy.m_IsAlive) return $"{name} is dead.";
+            string _class = $"{stats.m_CharacterClass}";
+            string lvl = $"{stats.m_PlayerLevel}";
+            string health = $"{stats.GetHealthDisplayString()}";
+            string coherent = "";
+            if (stats.m_IsInCombat)
+            {
+                coherent = dummy.IsCoherent() ? "" : "stunned";
+            }
+            sb.AppendLine($"({name}) {_class}, lvl {lvl}, health {health}, {coherent}.");
+            return sb.ToString();
+        }
+
         public static List<ProficiencyBase> GetStatusEffects(CharacterOverworld cow)
         {
             List<ProficiencyBase> result = [];

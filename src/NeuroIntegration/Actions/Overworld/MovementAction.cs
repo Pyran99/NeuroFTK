@@ -54,13 +54,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             List<FTK_itembase.ID> beltItems = ItemData.GetUsableBeltItems(cow);
             Dictionary<string, FTK_itembase.ID> items = [];
             StringBuilder beltCtx = new();
-            beltCtx.Append("[usable belt items] ");
             if (registerBelt)
             {
+                beltCtx.Append("### usable belt items \n");
                 foreach (FTK_itembase.ID item in beltItems)
                 {
                     items.Add(ItemData.GetItemName(item), item);
-                    beltCtx.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
+                    beltCtx.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
                 }
             }
             if (items.Count > 0)
@@ -77,7 +77,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
 
         public override string Name => "overworld_movement";
-        protected override string Description => "choose a hex position to move the current character to";
+        protected override string Description => "choose a hex position to move the current character to. you may encounter enemies along the way.";
         protected override JsonSchema Schema => GetSchema();
 
         JsonSchema GetSchema()

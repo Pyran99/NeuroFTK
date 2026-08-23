@@ -64,6 +64,7 @@ namespace Pyran.NeuroFTK.Utils
                 questPositions.Add(dest.GetPosition());
                 string boat = "";
                 if (HexData.IsBoatRequired(description)) boat = " (may require boat (can be bought at port), or an airship)";
+                else if (HexData.IsAirshipRequired(description)) boat = " (requires an airship to reach)";
                 sbQuest.AppendLine($"[{type} quest at {pos}]: {description}{outOfRange}{boat}");
                 // quest desc: Kill the Chaos Leader in The Guardian Forest
                 // quest pos: (85.1, 117.5)

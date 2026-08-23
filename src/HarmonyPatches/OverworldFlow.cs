@@ -291,6 +291,20 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (HexLand hex in toRemove) tiles.Remove(hex);
                 if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
             }
+            if (tiles.Count == 0)
+            {
+                // if (currentCOW.GetHexLand().HasPOI())
+                // {
+                    
+                // }
+                // else
+                // {
+                Plugin.Logger.LogError("auto end turn from no tiles");
+                Context.Send($"there were no locations you could move to right now, your turn is ending automatically", true);
+                uiEndTurnButton.Instance.OnEndTurn();
+                yield break;
+                // }
+            }
             QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject);
         }
 

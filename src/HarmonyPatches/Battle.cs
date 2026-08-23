@@ -334,10 +334,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             StringBuilder sb = new();
             if (items.Count == 0) return "";
-            sb.Append("\n[usable belt items] ");
+            sb.Append("\n### usable belt items \n");
             foreach (FTK_itembase.ID item in items)
             {
-                sb.AppendLine($"({ItemData.GetItemName(item)}){ItemData.GetItemDescription(item, true, cow)}");
+                sb.AppendLine($"- ({ItemData.GetItemName(item)}){ItemData.GetItemDescription(item, true, cow)}");
             }
             return sb.ToString();
         }
@@ -345,13 +345,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string GetAttackContextAndRegisterAction(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             StringBuilder sb = new();
-            sb.Append("[your attacks] ");
+            sb.Append("### your attacks \n");
             if (offense.Count > 0)
             {
                 foreach (string key in offense.Keys)
                 {
                     var data = GetActionDetails(offense[key], _proficiencies);
-                    sb.Append(AddAttackContext(data));
+                    sb.Append("- " + AddAttackContext(data));
                 }
                 actions.Add(new CombatAttackAction(offense));
             }
@@ -360,33 +360,33 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (string key in defense.Keys)
                 {
                     var data = GetActionDetails(defense[key], _proficiencies);
-                    sb.Append(AddAttackContext(data));
+                    sb.Append("- " + AddAttackContext(data));
                 }
                 actions.Add(new CombatFriendlyAction(defense));
             }
             if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.IsDebugMode())
             {
-                sb.Append(HandleBtnContext(_instance.m_FleeButton, _proficiencies));
+                sb.Append("- " + HandleBtnContext(_instance.m_FleeButton, _proficiencies));
                 actions.Add(new CombatFleeAction(_instance.m_FleeButton));
             } 
             if (CanUseBtn(_instance.m_ReviveButton))
             {
-                sb.Append(HandleBtnContext(_instance.m_ReviveButton, _proficiencies, false));
+                sb.Append("- " + HandleBtnContext(_instance.m_ReviveButton, _proficiencies, false));
                 actions.Add(new CombatReviveAction(_instance.m_ReviveButton));
             }
             if (CanUseBtn(_instance.m_ShieldTauntButton))
             {
-                sb.Append(HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
+                sb.Append("- " + HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
                 actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
             if (CanUseBtn(_instance.m_EquipWeaponButton) && (_instance.CombatCow.m_WeaponID == FTK_itembase.ID.unarmed || _instance.CombatCow.m_WeaponID == FTK_itembase.ID.None || !GlobalConfig.IsDebugMode()))
             {
-                sb.Append(HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
+                sb.Append("- " + HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
                 actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));
             }
             if (CanUseBtn(_instance.m_PartyHealButton))
             {
-                sb.Append(HandleBtnContext(_instance.m_PartyHealButton, _proficiencies, false));
+                sb.Append("- " + HandleBtnContext(_instance.m_PartyHealButton, _proficiencies, false));
                 actions.Add(new CombatPartyHealAction(_instance.m_PartyHealButton));
             }
             return sb.ToString();

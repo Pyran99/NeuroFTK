@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GridEditor;
-using NeuroSdk.Internal;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.Utils;
 
@@ -13,31 +12,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static string CtxOverworldTurnBeginStats(CharacterOverworld _cow)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
-            SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
-            string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
+            // SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
+            // string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
             ScourgeEvents.SendScourgeContext();
             BoatHelper.HandleBoatHelp(_cow);
-            return json;
+            return $"[{CharacterData.GetCharacterName(_cow)} turn] {CharacterData.GetDataFor(_cow)}";
+            // return json;
         }
 
         public static void CtxCombatTurnBeginPlayer(CharacterOverworld _cow)
         {
             StringBuilder sb = new();
             SerializedCharacterData data = SerializedCharacterData.Calculate(_cow);
-            string json = $"[{data.Name} turn] {Jason.Serialize(data)}";
+            string json = $"[{CharacterData.GetCharacterName(_cow)} turn]";
+            // string json = $"[{data.Name} turn] {Jason.Serialize(data)}";
             sb.AppendLine(json);
-            sb.Append("[teammates state]");
+            sb.Append("### team state \n");
             foreach (KeyValuePair<FTKPlayerID, CharacterDummy> cow in EncounterSession.Instance.m_PlayerDummies)
             {
-                if (!cow.Value.m_IsAlive) continue;
-                if (cow.Value.m_CharacterOverworld == _cow) continue;
-                CharacterStats stats = cow.Value.m_CharacterOverworld.m_CharacterStats;
-                string name = $"{stats.m_CharacterName}";
-                string _class = $"{stats.m_CharacterClass}";
-                string lvl = $"{stats.m_PlayerLevel}";
-                string health = $"{stats.GetHealthDisplayString()}";
-                string coherent = cow.Value.IsCoherent() ? "" : "stunned";
-                sb.AppendLine($"({name}) class {_class}, lvl {lvl}, health {health}, {coherent}.");
+                sb.AppendLine("- " + CharacterData.GetDataFor(cow.Value.m_CharacterOverworld));
+                // if (cow.Value.m_CharacterOverworld == _cow) continue;
             }
             Context.Send(sb.ToString());
             ScourgeEvents.SendScourgeContext();
@@ -61,7 +55,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CtxCombatTurnBeginEnemy()
         {
             StringBuilder sb = new();
-            sb.Append("[enemy state] ");
+            sb.Append("### enemy state \n");
             // Dictionary<EnemyDummy, uiEachEnemyHud> enemies = new(uiEnemyHUD.Instance.m_EnemyHudDictionary);
             foreach (KeyValuePair<FTKPlayerID, EnemyDummy> enemy in EncounterSession.Instance.m_EnemyDummies)
             {
@@ -80,7 +74,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 bool evasive = _dummy.IsEvasive();
                 int reflect = _dummy.m_EnemyCombat.m_ReflectDmg;
                 string suicidal = IsPriorityTarget(_dummy);
-                sb.AppendLine($"{name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes}){(evasive ? ", dodges non perfect rolls" : "")}{(reflect > 0 ? $", reflects {reflect} dmg to melee attackers" : "")}, {suicidal}");
+                sb.AppendLine($"- {name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes}){(evasive ? ", dodges non perfect rolls" : "")}{(reflect > 0 ? $", reflects {reflect} dmg to melee attackers" : "")}, {suicidal}");
             }
             sb.Append($"(armor reduces physical dmg, resist reduces magic dmg)");
             Context.Send(sb.ToString());

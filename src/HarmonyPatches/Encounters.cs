@@ -252,16 +252,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 GetButtonData(btn.Key, btn.Value, flavorData, rollData);
             }
-            StringBuilder sb = new("this encounters actions displayed as: [action ()] total successful rolls (chance for this result) = outcome result. (actions with no roll results will always succeed)\n");
+            StringBuilder sb = new("this encounters actions displayed as: [action] total successful rolls (chance for this result) = outcome result. (actions with no roll results will always succeed)\n");
             foreach (KeyValuePair<string, object> data in rollData)
             {
                 // [ambush (ambush flavor)]
-                sb.AppendLine($"[{data.Key} ({flavorData[data.Key]})]");
+                sb.AppendLine($"### [{data.Key} ({flavorData[data.Key]})]");
                 foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
                 {
                     // 0(2%) = Failure
                     // string value = JsonConvert.SerializeObject(outcome.Value);
-                    sb.AppendLine($"{outcome.Key} ({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
+                    sb.AppendLine($"- {outcome.Key} ({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
                 }
             }
             MiniHexInfo.PoiProfile profile = EncounterMenuInstance.m_ThisMiniHex.GetPOIProfile();

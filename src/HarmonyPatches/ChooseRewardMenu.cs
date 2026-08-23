@@ -52,7 +52,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             //     SelectButton.StartCoroutine(first, 1.0f);
             //     return;
             // }
-            if (buttons.Count > 1 && dict.ContainsKey("Cancel")) dict.Remove("Cancel"); // assume always choose valid
+            // if (buttons.Count > 1 && dict.ContainsKey("Cancel")) dict.Remove("Cancel"); // assume always choose valid
             if (dict.Count == 0)
             {
                 Plugin.Logger.LogError("no valid reward buttons");

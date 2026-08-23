@@ -221,8 +221,20 @@ namespace Pyran.NeuroFTK.Utils
             if (questDesc.Contains("The Rogue Isles")) return true;
             else if (questDesc.Contains("The Parched Waste")) return true;
             else if (questDesc.Contains("The Dropstone Badlands")) return true;
-            else if (questDesc.Contains("Purge Harazuel")) return true;
             return false;
+        }
+
+        /// <param name="questDesc">use localized description to match realms</param>
+        public static bool IsAirshipRequired(string questDesc)
+        {
+            if (questDesc.Contains("Purge Harazuel")) return true;
+            return false;
+        }
+
+
+        public static bool IsCowInSameRealm(HexLand cowHex, HexLand targetHex)
+        {
+            return cowHex.GetRealm() == targetHex.GetRealm();
         }
 
         public static bool IsHexCorrupted(HexLand hex)

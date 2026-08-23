@@ -80,22 +80,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StringBuilder sb1 = new();
             string name = CharacterData.GetCharacterName(_cow);
             sb1.AppendLine($"{name} has {_cow.m_CharacterStats.m_Gold.ToString() ?? "0"} gold.");
-            sb1.Append($"[{name} equipment] ");
+            sb1.AppendLine($"## {name} equipment");
             foreach (KeyValuePair<PlayerInventory.ContainerID, FTK_itembase.ID> item in CharacterData.GetAllEquipment(_cow))
             {
                 if (item.Value == FTK_itembase.ID.None)
                 {
-                    sb1.Append($"({item.Key}) None. ");
+                    sb1.Append($"- ({item.Key}) None. ");
                     continue;
                 }
-                sb1.Append($"({item.Key}) {ItemData.GetItemName(item.Value)} {StringReplace.ReplaceNewLine(ItemData.GetItemDescription(item.Value, true, _cow))}. ");
+                sb1.Append($"- ({item.Key}) {ItemData.GetItemName(item.Value)} {StringReplace.ReplaceNewLine(ItemData.GetItemDescription(item.Value, true, _cow))}. ");
             }
             Context.Send(sb1.ToString());
             StringBuilder sb = new();
-            sb.AppendLine("[market items ([name](cost) description)] ");
+            sb.AppendLine("## market items ([name](cost) description) ");
             foreach (uiItemIcon _item in buyList.Values)
             {
-                sb.AppendLine($"[{ItemData.GetItemName(_item.m_ItemName)}]({_item.m_CostText?.text} gold) {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)}");
+                sb.AppendLine($"- [{ItemData.GetItemName(_item.m_ItemName)}]({_item.m_CostText?.text} gold) {ItemData.GetItemDescription(_item.m_ItemName, true, _cow)}");
             }
             Object.Destroy(activeWindow);
             QuickTimerCallback timer = new(() => CreateAction(sb.ToString()), list.gameObject);
