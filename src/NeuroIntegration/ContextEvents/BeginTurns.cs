@@ -14,10 +14,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return "";
             // SerializedCharacterData test = SerializedCharacterData.Calculate(_cow);
             // string json = $"[{test.Name} turn] {Jason.Serialize(test)}";
-            ScourgeEvents.SendScourgeContext();
             BoatHelper.HandleBoatHelp(_cow);
             return $"[{CharacterData.GetCharacterName(_cow)} turn] {CharacterData.GetDataFor(_cow)}";
-            // return json;
         }
 
         public static void CtxCombatTurnBeginPlayer(CharacterOverworld _cow)
@@ -33,8 +31,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine("- " + CharacterData.GetDataFor(cow.Value.m_CharacterOverworld));
                 // if (cow.Value.m_CharacterOverworld == _cow) continue;
             }
+            sb.Append(ScourgeEvents.GetScourgeContext());
             Context.Send(sb.ToString());
-            ScourgeEvents.SendScourgeContext();
         }
 
         public static string GetSimplifiedTeamState()

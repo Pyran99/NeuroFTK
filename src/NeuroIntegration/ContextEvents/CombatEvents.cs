@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text;
 using GridEditor;
 using HarmonyLib;
@@ -138,9 +139,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ItemStolenCtx(_packItem, __instance.m_CharacterOverworld);
         }
 
+        static StringBuilder stolenSb = new();
+        static bool stealDelay = false;
+
         static void ItemStolenCtx(FTK_itembase.ID _item, CharacterOverworld cow)
         {
-            Context.Send($"{ItemData.GetItemName(_item)} stolen from {CharacterData.GetCharacterName(cow)}");
+            stolenSb.AppendLine($"{ItemData.GetItemName(_item)} stolen from {CharacterData.GetCharacterName(cow)}");
+            if (stealDelay) return;
+            stealDelay = true;
+            Plugin.Instance.StartCoroutine(StealDelay());
+        }
+
+        static IEnumerator StealDelay()
+        {
+            yield return null;
+            Context.Send(stolenSb.ToString());
+            stolenSb = new();
+            stealDelay = false;
         }
 
         [HarmonyPatch(typeof(EnemyDummy), nameof(EnemyDummy.AddStolen))]

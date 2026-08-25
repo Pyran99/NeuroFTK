@@ -479,6 +479,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 ctx += BoatHelper.AddBoatTravelContext(hex);
             }
             if (ctx != "") Context.Send(ctx);
+            string haunts = ScourgeEvents.GetScourgeContext();
+            if (haunts != "") Context.Send(haunts);
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);

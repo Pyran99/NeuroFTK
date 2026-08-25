@@ -200,7 +200,7 @@ namespace Pyran.NeuroFTK.Utils
             if (addToList) OverworldFlow.AddHexPosition(pos.ToString(), hex);
             string dist = "";
             if (includeDistance) dist = $" (distance: {(float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2)})";
-            return $"[{pos}{questName}{hasDeadPlayers}{poi}{dist}]";
+            return $"{pos}{questName}{hasDeadPlayers}{poi}{dist}";
         }
 
         public static string GetHexTypeContext(MiniHexInfo.MiniHexType type)

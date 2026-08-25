@@ -202,7 +202,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static string GetEncounterContext(string name, string description, string flavor)
         {
             string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
-            StringBuilder sbPlayers = new("[character involved]");
+            StringBuilder sbPlayers = new("[character involved]"); //TODO markdown
             foreach (CharacterOverworld player in involvedPlayers)
             {
                 sbPlayers.AppendLine($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");

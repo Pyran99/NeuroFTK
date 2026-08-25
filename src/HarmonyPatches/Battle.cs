@@ -27,7 +27,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static Dictionary<string, uiBattleButton> defense = [];
         static readonly Dictionary<string, int> playerHealths = [];
         static StringBuilder dmgTakenString = new();
-        static bool isHealthChangeWait = false;
         static bool initialized = false;
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
@@ -47,6 +46,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
         #region Player
+
+        static bool isHealthChangeWait = false;
+        static Dictionary<string, string> levelUps = [];
+        static bool isLevelUpWait = false;
+        static bool isPlayerDiedWait = false;
+        static StringBuilder playerDiedSB = new();
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), nameof(uiBattleStanceButtons.Initialize))]
         [HarmonyPostfix]
@@ -100,13 +105,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void PlayerDied2(CharacterOverworld __instance)
         {
             string name = CharacterData.GetCharacterName(__instance);
-            Context.Send(StringMessages.UnitDied.Format(name));
-            int count = 0;
-            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
-            {
-                if (cow.m_WaitForRespawn || cow.m_CharacterStats.m_HealthCurrent == 0) count++;
-            }
-            if (count == FTKHub.Instance.m_CharacterOverworlds.Count) Context.Send(StringMessages.GameOver);
+            playerDiedSB.AppendLine($"{StringMessages.UnitDied.Format(name)}");
+            if (isPlayerDiedWait) return;
+            EncounterSession.Instance.StartCoroutine(PlayerDiedWait());
+
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CombatPlayerFlee))]
@@ -136,9 +138,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // int dif = dmg.m_Damage;
         }
 
-        static Dictionary<string, string> levelUps = [];
-        static bool isLevelUpWait = false;
-
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
         [HarmonyPostfix]
         static void PlayerLeveled(CharacterStats __instance)
@@ -162,7 +161,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator LevelUpWait()
         {
             isLevelUpWait = true;
-            yield return new WaitForEndOfFrame();
+            yield return null;
             isLevelUpWait = false;
             StringBuilder sb = new();
             foreach (KeyValuePair<string, string> kvp in levelUps)
@@ -191,10 +190,25 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GameLogic.Instance.StartCoroutine(PlayerHealthWait());
         }
 
+        static IEnumerator PlayerDiedWait()
+        {
+            isPlayerDiedWait = true;
+            yield return null;
+            Context.Send(playerDiedSB.ToString());
+            playerDiedSB = new();
+            isPlayerDiedWait = false;
+            int count = 0;
+            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (cow.m_WaitForRespawn || cow.m_CharacterStats.m_HealthCurrent == 0) count++;
+            }
+            if (count == FTKHub.Instance.m_CharacterOverworlds.Count) Context.Send(StringMessages.GameOver);
+        }
+
         static IEnumerator PlayerHealthWait()
         {
             isHealthChangeWait = true;
-            yield return new WaitForEndOfFrame();
+            yield return null;
             Context.Send(dmgTakenString.ToString());
             dmgTakenString = new();
             isHealthChangeWait = false;
@@ -281,7 +295,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator EnemyDiedWait()
         {
             isEnemyDeathWait = true;
-            yield return new WaitForEndOfFrame();
+            yield return null;
             Context.Send(enemyDiedSB.ToString());
             enemyDiedSB = new();
             isEnemyDeathWait = false;
@@ -290,7 +304,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator EnemyHealthWait()
         {
             isWaitingEnemyHealth = true;
-            yield return new WaitForEndOfFrame();
+            yield return null;
             Context.Send(enemySb.ToString());
             enemySb = new();
             isWaitingEnemyHealth = false;

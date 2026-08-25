@@ -62,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator GetQuestItems()
         {
-            yield return new WaitForEndOfFrame();
+            yield return null; // TODO make sure not broken
             items.Clear();
             itemsById.Clear();
             Transform root = uiGetQuestMenu.Instance.m_ListRoot.transform;

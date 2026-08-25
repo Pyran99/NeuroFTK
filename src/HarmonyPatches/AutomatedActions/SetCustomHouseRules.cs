@@ -17,6 +17,7 @@ The values can be customized in NeuroFTKCustomHouseRules.json, located in the sa
 [HarmonyPatch]
 public class SetCustomHouseRules
 {
+    static bool skipRules = true;
     // // B:/Games/Epic Games/ForTheKing
     // var dir = Path.GetDirectoryName(Application.dataPath);
     readonly static string rulesConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "NeuroFTKCustomHouseRules.json");
@@ -48,14 +49,19 @@ public class SetCustomHouseRules
             }
             CustomRuleValues selectedRules = customRules[prev.m_SaveFileName];
             LogValues(selectedRules);
+            if (skipRules)
+            {
+                Plugin.Logger.LogWarning("skipping set rules !!set false before final build!!");
+                yield break;
+            }
 
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.5f);
             instance.UpdateChaos(GetScaledValue(selectedRules.chaosFrequency, FTK_gameParams.ID.chaos));
 
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.5f);
             instance.UpdateLife(GetScaledValue(selectedRules.lifePool, FTK_gameParams.ID.lifepool));
 
-            yield return new WaitForSeconds(0.3f);
+            yield return new WaitForSeconds(0.5f);
             instance.UpdateInflation(GetScaledValue(selectedRules.economyInflation, FTK_gameParams.ID.inflation));
 
             foreach (KeyValuePair<FTK_gameParams.ID, HouseRuleSlider> _slider in m_Sliders)

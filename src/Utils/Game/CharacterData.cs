@@ -49,7 +49,7 @@ namespace Pyran.NeuroFTK.Utils
             {
                 coherent = dummy.IsCoherent() ? "" : "stunned";
             }
-            sb.AppendLine($"({name}) {_class}, lvl {lvl}, health {health}, {coherent}.");
+            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, {coherent}.");
             return sb.ToString();
         }
 

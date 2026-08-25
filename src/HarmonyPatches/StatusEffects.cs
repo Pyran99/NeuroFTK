@@ -78,15 +78,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 // enemy dummy doesnt have overworld
                 statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format([statusName, desc, CombatUtils.GetEnemyName(_dummy as EnemyDummy)]));
-                return;
             }
-            statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format([statusName, desc, CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)]));
+            else
+            {
+                statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format([statusName, desc, CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)]));
+            }
             // AddToDummy is called here on prof base
         }
 
         static IEnumerator StatusAppliedWait()
         {
-            yield return new WaitForEndOfFrame();
+            yield return null;
             statusWaiting = false;
             Context.Send(statusCtx.ToString());
             statusCtx = new();
@@ -99,9 +101,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (_dummy.m_CharacterOverworld == null)
             {
                 statusEndCtx.AppendLine(StringMessages.StatusEffectRemoved.Format([statusName, desc, CombatUtils.GetEnemyName(_dummy as EnemyDummy)]));
-                return;
             }
-            statusEndCtx.AppendLine(StringMessages.StatusEffectRemoved.Format([statusName, desc, CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)]));
+            else
+            {
+                statusEndCtx.AppendLine(StringMessages.StatusEffectRemoved.Format([statusName, desc, CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)]));
+            }
             if (statusEndWaiting) return;
             statusEndWaiting = true;
             _dummy.StartCoroutine(StatusRemovedWait());
@@ -109,7 +113,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator StatusRemovedWait()
         {
-            yield return new WaitForEndOfFrame();
+            yield return null;
             statusEndWaiting = false;
             Context.Send(statusEndCtx.ToString());
             statusEndCtx = new();
