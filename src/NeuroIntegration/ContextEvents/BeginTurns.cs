@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             StringBuilder sb = new();
             SerializedCharacterData data = SerializedCharacterData.Calculate(_cow);
-            string json = $"[{CharacterData.GetCharacterName(_cow)} turn]";
+            string json = $"## {CharacterData.GetCharacterName(_cow)} turn";
             // string json = $"[{data.Name} turn] {Jason.Serialize(data)}";
             sb.AppendLine(json);
             sb.Append("### team state \n");

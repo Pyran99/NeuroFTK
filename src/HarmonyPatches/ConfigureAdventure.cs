@@ -61,7 +61,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static string AdventuresContext(GameConfig instance)
         {
-            string details = "[Adventure details] ";
+            string details = "## Adventure details ";
             bool forceFirst = GlobalConfig.ForcedFirstAdventure();
             string description;
             foreach (GameDefButton btn in instance.m_GameDefButtons)
@@ -72,7 +72,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     if (prev.GetDisplayName() == "For the King")
                     {
                         description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                        details += $"name: {prev.GetDisplayName()}. description: {description}\n";
+                        details += $"- {prev.GetDisplayName()}: {description}\n";
                         break;
                     }
                     continue;
@@ -81,7 +81,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // gold rush is multiplayer only
                 if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
                 description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                details += $"name: {prev.GetDisplayName()}. description: {description}\n";
+                details += $"- {prev.GetDisplayName()}: {description}\n";
             }
             return details;
         }

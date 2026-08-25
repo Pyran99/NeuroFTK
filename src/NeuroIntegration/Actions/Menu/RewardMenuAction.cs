@@ -21,13 +21,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             window.AddAction(new RewardMenuAction(menuName, _buttons));
             if (ChooseRewardMenu.teamState != string.Empty) window.SetContext(ChooseRewardMenu.teamState);
             ChooseRewardMenu.teamState = string.Empty;
-            window.SetForce(0, "choose a reward or select a character", "");
+            window.SetForce(0, "select an option from this menu", "");
             window.Register();
             return window;
         }
 
         public override string Name => _menuName;
-        protected override string Description => "choose an action from this menu";
+        protected override string Description => "choose a reward or select a character";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()

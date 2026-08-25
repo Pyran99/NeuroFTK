@@ -172,26 +172,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static string GetLocationContext(string name, string description, string flavor)
         {
-            string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
-            StringBuilder sbPlayers = new("[character involved]");
+            string encounter = $"## Encounter ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
+            StringBuilder sbPlayers = new("### character involved \n");
             foreach (CharacterOverworld player in Encounters.involvedPlayers)
             {
-                sbPlayers.AppendLine($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
+                sbPlayers.AppendLine($"- {CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
             }
             string _enemies = "";
             if (Encounters.involvedEnemies.Count > 0)
             {
-                _enemies = $"[enemies involved] {string.Join(", ", [.. Encounters.involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+                _enemies = $"### enemies involved - {string.Join(", ", [.. Encounters.involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
             }
             string cost = "";
             if (locationMenuInstance.m_CostRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Cost.text != string.Empty)
             {
-                cost = $"\n{StringMessages.EncounterCost.Format([locationMenuInstance.m_Cost.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
+                cost = $"\n### {StringMessages.EncounterCost.Format([locationMenuInstance.m_Cost.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
             }
             string difficulty = "";
             if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Difficulty.text != string.Empty)
             {
-                difficulty = $"\n[encounter difficulty] {locationMenuInstance.m_Difficulty.text}";
+                difficulty = $"\n### encounter difficulty - {locationMenuInstance.m_Difficulty.text}";
             }
             return $"{encounter}{sbPlayers}{_enemies}{cost}{difficulty}";
         }

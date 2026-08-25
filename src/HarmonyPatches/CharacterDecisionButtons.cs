@@ -96,14 +96,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         // sb.AppendLine();
                         continue;
                     }
-                    sb.AppendLine($"{slotResults}");
+                    sb.AppendLine($"- {slotResults}");
                     //expected => Cow [Disarm ()] 0(2%) = Failure
                 }
             }
             string encounterMsg = StaticMessage.Message;
             if (encounterMsg.Length != 0)
             {
-                sb.Insert(0, $"encountered {StaticMessage.Message}\n");
+                sb.Insert(0, $"## encountered {StaticMessage.Message}\n");
             }
             return sb.ToString();
         }

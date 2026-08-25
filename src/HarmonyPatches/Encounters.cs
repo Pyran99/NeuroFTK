@@ -201,26 +201,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// <returns>"{encounter}\n{_players}\n{_enemies}"</returns>
         public static string GetEncounterContext(string name, string description, string flavor)
         {
-            string encounter = $"[Encounter] ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
-            StringBuilder sbPlayers = new("[character involved]"); //TODO markdown
+            string encounter = $"## Encounter ({name}) {StringReplace.RemoveStyling(flavor)}: {StringReplace.RemoveStyling(description)}\n";
+            StringBuilder sbPlayers = new("### character involved \n");
             foreach (CharacterOverworld player in involvedPlayers)
             {
-                sbPlayers.AppendLine($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
+                sbPlayers.AppendLine($"- {CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
             }
             string _enemies = "";
             if (involvedEnemies.Count > 0)
             {
-                _enemies = $"[enemies involved] {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+                _enemies = $"### enemies involved: {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
             }
             string cost = "";
             if (EncounterMenuInstance.m_CostRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_Cost.text != string.Empty)
             {
-                cost = $"\n{StringMessages.EncounterCost.Format([EncounterMenuInstance.m_Cost?.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
+                cost = $"\n### {StringMessages.EncounterCost.Format([EncounterMenuInstance.m_Cost?.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
             }
             string enemyLvl = "";
             if (EncounterMenuInstance.m_EnemyLevelRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_EnemyLevel.text != string.Empty)
             {
-                enemyLvl = $"\n[enemy level] {EncounterMenuInstance.m_EnemyLevel.text}";
+                enemyLvl = $"\n### enemy level: {EncounterMenuInstance.m_EnemyLevel.text}";
             }
             return $"{encounter}{sbPlayers}{_enemies}{cost}{enemyLvl}";
         }
@@ -252,11 +252,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 GetButtonData(btn.Key, btn.Value, flavorData, rollData);
             }
-            StringBuilder sb = new("this encounters actions displayed as: [action] total successful rolls (chance for this result) = outcome result. (actions with no roll results will always succeed)\n");
+            StringBuilder sb = new("this encounters actions displayed as: action - total successful rolls (chance for this result) = outcome result. (actions with no roll results will always succeed)\n");
             foreach (KeyValuePair<string, object> data in rollData)
             {
                 // [ambush (ambush flavor)]
-                sb.AppendLine($"### [{data.Key} ({flavorData[data.Key]})]");
+                sb.AppendLine($"### {data.Key} ({flavorData[data.Key]})");
                 foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
                 {
                     // 0(2%) = Failure

@@ -105,8 +105,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Dictionary<string, uiChooseRewardButton> validChoices = new(_buttons);
             if (_title == "Respawn In")
             {
+                validChoices.Remove("Cancel");
                 string ctx = GetRespawnData(validChoices);
                 Context.Send(ctx);
+            }
+            else if (_title == "Revive Player")
+            {
+                validChoices.Remove("Cancel");
             }
             window = RewardMenuAction.RegisterActions(_instance, validChoices, _title);
             UnregisterDisabledObject.QuickCreate(_instance.gameObject, window, false);

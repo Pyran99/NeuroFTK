@@ -78,7 +78,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CancelAction cancel = new(window, "close the service window");
             cancel.OnCancelled += CloseServiceWindow;
             window.AddAction(cancel);
-            window.SetContext(ctx); //TODO add player gold amount
+            ctx += $"\n(You have {cow.m_CharacterStats.m_Gold} gold)";
+            window.SetContext(ctx);
             window.SetForce(0, "choose a service to purchase or close the window", "you are at a town and a service menu has opened", true);
             window.Register();
             UnregisterDisabledObject.QuickCreate(uiTownServiceMenu.Instance.m_DisplayRoot.gameObject, window);

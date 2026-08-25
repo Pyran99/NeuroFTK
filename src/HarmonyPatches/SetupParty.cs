@@ -76,16 +76,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (uiQuickPlayerCreate player in players)
                 {
                     string serialized = Jason.Serialize(CharacterType.SerializeGameClass(db.GetEntry((FTK_playerGameStart.ID)player.m_ClassID)));
-                    data += $"{serialized}.\n";
+                    data += $"- {serialized}\n";
                 }
                 Context.Send($"[current party classes] {data}");
             }
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
-            data = "[party setup is] ";
+            data = "### party setup is \n";
             foreach (string name in names)
             {
-                data += $"'{name}: {classes[names.IndexOf(name)]}' ";
+                data += $"- {name}: {classes[names.IndexOf(name)]} \n";
             }
             Context.Send(data);
         }

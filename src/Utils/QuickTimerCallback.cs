@@ -17,21 +17,29 @@ namespace Pyran.NeuroFTK.Utils
             Start(method, owner, ms);
         }
 
+        /// <param name="owner">`null` will always invoke method</param>
+        /// <param name="ignorePause">ignores timeScale</param>
+        public QuickTimerCallback(bool ignorePause, Action method, GameObject owner, float ms = 1000f)
+        {
+            Callback += method;
+            Start(method, owner, ms, ignorePause);
+        }
+
         public event Action Callback;
 
-        private void Start(Action method, GameObject owner, float ms = 1000f)
+        private void Start(Action method, GameObject owner, float ms = 1000f, bool ignorePause = false)
         {
             System.Timers.Timer timer = new(ms)
             {
                 AutoReset = false
             };
-            timer.Elapsed += (sender, e) => Finished(method, owner);
+            timer.Elapsed += (sender, e) => Finished(method, owner, ignorePause);
             timer.Start();
         }
 
-        private void Finished(Action method, GameObject owner)
+        private void Finished(Action method, GameObject owner, bool ignorePause = false)
         {
-            if (Mathf.Approximately(Time.timeScale, 0f)) Plugin.Instance.StartCoroutine(Wait(method, owner));
+            if (Mathf.Approximately(Time.timeScale, 0f)) Plugin.Instance.StartCoroutine(Wait(method, owner, ignorePause));
             else DoCall(method, owner);
         }
 
@@ -40,9 +48,9 @@ namespace Pyran.NeuroFTK.Utils
             Callback -= method;
         }
 
-        private IEnumerator Wait(Action method, GameObject owner)
+        private IEnumerator Wait(Action method, GameObject owner, bool ignorePause = false)
         {
-            while (Mathf.Approximately(Time.timeScale, 0f))
+            while (!ignorePause && Mathf.Approximately(Time.timeScale, 0f))
             {
                 yield return null;
             }

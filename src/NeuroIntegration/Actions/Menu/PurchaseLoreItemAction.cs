@@ -26,7 +26,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             StringBuilder sb = new();
             foreach (string key in _schemaData.Keys)
             {
-                sb.AppendLine($"[{key}] {StringReplace.ReplaceNewLine(_schemaData[key])}");
+                sb.AppendLine($"- [{key}] {StringReplace.ReplaceNewLine(_schemaData[key])}");
             }
             window.SetContext($"## Items and their descriptions you can afford \n{sb}");
             // LoggerTest.Instance?.LogMsg($"(Items and their descriptions you can afford) {sb}");

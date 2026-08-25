@@ -338,7 +338,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
                 if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow));
             }
-            window = CombatActions.RegisterCombatActions(_instance, ctx, actions);
+            window = CombatActions.RegisterCombatActions(_instance, ctx, actions); //TODO combat tips in state?
             offense.Clear();
             defense.Clear();
             initialized = false;

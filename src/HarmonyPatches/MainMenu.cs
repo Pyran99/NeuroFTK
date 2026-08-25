@@ -25,7 +25,6 @@ public class MainMenu
     [HarmonyPostfix]
     static void OnSetFocus(MainScreen __instance)
     {
-        GameEndScreen.isCreditsFinished = false;
         GlobalConfig.gameInitialized = false;
         ToggleDisposableActions.ToggleOverworldActions(false);
         ToggleDisposableActions.ToggleCombatActions(false);
