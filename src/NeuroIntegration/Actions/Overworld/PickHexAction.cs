@@ -55,6 +55,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string data = actionData.Data?.Value<string>("hex");
             if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("hex"));
             if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("hex"));
+            if (!Movement.Instance.m_PickHexClient.PickHexValidCallback(_hexPositions[data]))
+            {
+                return ExecutionResult.Failure($"your choice {data} was invalid, select a different option");
+            }
             parsedData = _hexPositions[data];
             return ExecutionResult.Success();
         }

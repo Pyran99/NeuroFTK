@@ -33,14 +33,12 @@ namespace Pyran.NeuroFTK.Utils
         static void AddValidQuests(uiQuestItem questItem, Vector3 cowHex)
         {
             if (StringReplace.RemoveStyling(questItem.m_Display.text) == "??????") return;
+            if (questItem.m_IsComplete) return;
             QuestLogicBase quest = questItem.m_Quest;
             if (quest == null) return;
-            if (quest.IsConsiderComplete()) return;
+            if (quest.IsRawComplete()) return;
             string type = "side";
-            if (quest.HasQuestDefID()) // considered Bounty Story Quest
-            {
-                type = "story";
-            }
+            if (quest.HasQuestDefID()) type = "main"; // only story quest ids
             string description = StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc());
             HexLand dest;
             dest = quest.GetHexLandDestination();

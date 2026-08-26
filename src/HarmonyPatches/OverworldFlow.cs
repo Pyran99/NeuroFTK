@@ -400,6 +400,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
             ReverseCheckHoverPath(Movement.Instance, dest);
             List<HexLand> hexes = [.. Movement.Instance.m_HexListPartial];
+            bool pathContainsBoat = hexes.Count(x => x.IsBoat()) > 0;
             if (!isTracking || GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError($"tried to execute move action while character is not in tracking state: tracking = {isTracking}, mode = {GameStates.mode}");
@@ -415,7 +416,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 bool failed = true;
                 for (int i = hexes.Count-1; i >= 0; i--)
                 {
-                    if (HexData.CanTravel(dest, curCow))
+                    if (HexData.CanTravel(dest, curCow, pathContainsBoat))
                     {
                         dest = hexes[i];
                         failed = false;

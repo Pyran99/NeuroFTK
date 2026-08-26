@@ -151,7 +151,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     FTKPickHexItem pickItem = item as FTKPickHexItem;
                     foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
-                        if (hex.HasPOI() && !hex.GetPOI().m_Hidden) continue;
+                        if (hex.HasPOI()) continue;
                         if (pickItem.PickHexValidCallback(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
                     }
                 }
