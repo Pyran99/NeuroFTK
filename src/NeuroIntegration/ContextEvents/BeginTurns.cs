@@ -32,7 +32,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // if (cow.Value.m_CharacterOverworld == _cow) continue;
             }
             sb.Append(ScourgeEvents.GetScourgeContext());
-            Context.Send(sb.ToString());
+            Context.Send(sb.ToString().TrimEnd(['\n']));
         }
 
         public static string GetSimplifiedTeamState()
@@ -47,7 +47,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string coherent = cow.Value.IsCoherent() ? "" : "stunned";
                 sb.AppendLine($"({name}) health {health}, {coherent}");
             }
-            return sb.ToString();
+            return sb.ToString().TrimEnd(['\n']);
         }
 
         public static void CtxCombatTurnBeginEnemy()
@@ -75,7 +75,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine($"- {name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes}){(evasive ? ", dodges non perfect rolls" : "")}{(reflect > 0 ? $", reflects {reflect} dmg to melee attackers" : "")}, {suicidal}");
             }
             sb.Append($"(armor reduces physical dmg, resist reduces magic dmg)");
-            Context.Send(sb.ToString());
+            Context.Send(sb.ToString().TrimEnd(['\n']));
         }
 
         static string IsPriorityTarget(EnemyDummy dummy)

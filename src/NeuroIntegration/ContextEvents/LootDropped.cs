@@ -29,7 +29,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             bool hasAmount = false;
             if (___m_LootItem.Contains("_gold_") || ___m_LootItem.Contains("_lore_")) hasAmount = true;
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
-            description = ItemData.GetItemDescription(id, true, CharacterData.GetActiveCow());
+            description = ItemData.GetItemDescription(id, CharacterData.GetActiveCow(), true, true);
             string lootMsg = $"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}): {description}";
             if (itemBase.m_Equippable)
             {
@@ -113,7 +113,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                 {
                     if (equippedShield != FTK_itembase.ID.None) // replace shield
                     {
-                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedShield)}: {ItemData.GetItemDescription(equippedShield, true, cow)}.");
+                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedShield)}: {ItemData.GetItemDescription(equippedShield, cow, true, true)}.");
                     }
                     else if (equippedWeapon != FTK_itembase.ID.None)
                     {
@@ -136,7 +136,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                 {
                     if (equippedWeapon != FTK_itembase.ID.None)
                     {
-                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, true, cow)}");
+                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, cow, true, true)}");
                     }
                     else
                     {
@@ -152,7 +152,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                 }
                 else
                 {
-                    sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equipped)}: {ItemData.GetItemDescription(equipped, true, cow)}");
+                    sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equipped)}: {ItemData.GetItemDescription(equipped, cow, true, true)}");
                 }
             }
             return sb.ToString();

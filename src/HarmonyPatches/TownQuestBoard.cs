@@ -28,7 +28,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             uiGetQuestMenu.Instance.StartCoroutine(Wait());
             static IEnumerator Wait()
             {
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 if (uiGetQuestMenu.Instance.m_NoQuestDisplay.text != string.Empty)
                 {
                     Context.Send("no quests available at this location");
@@ -62,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator GetQuestItems()
         {
-            yield return null; // TODO make sure not broken
+            yield return null;
             items.Clear();
             itemsById.Clear();
             Transform root = uiGetQuestMenu.Instance.m_ListRoot.transform;
@@ -101,12 +101,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             result += $" ({FTKHub.Localized<TextMisc>(FTK_itemRarityLevelDB.GetDB().GetEntry(itemBase.m_ItemRarity).m_Display)}),";
             if (itemBase is FTK_items)
             {
-                FTKItem _item = FTKItem.Get(id);
-                result += $" {_item.GetDescription(CharacterData.GetActiveCow())}";
+                result += $" {ItemData.GetItemDescription(id, CharacterData.GetActiveCow(), true, true)}";
+                // FTKItem _item = FTKItem.Get(id);
+                // result += $" {_item.GetDescription(CharacterData.GetActiveCow())}";
             }
             else if (itemBase is FTK_weaponStats2 stats)
             {
-                result += ItemData.GetItemDescription(id, true, CharacterData.GetActiveCow());
+                result += ItemData.GetItemDescription(id, CharacterData.GetActiveCow(), true, true);
             }
             return result;
         }

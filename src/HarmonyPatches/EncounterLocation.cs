@@ -135,7 +135,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateActionWindow()
         {
             Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
-            StringBuilder sb = new("[buttons]");
+            StringBuilder sb = new("## buttons ");
             foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
             {
                 string desc = button.Value.m_Text0.text;
@@ -144,11 +144,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     btnInfo = _value;
                 }
-                sb.AppendLine($"{desc}: {btnInfo}");
+                sb.AppendLine($"- {desc}: {btnInfo}");
             }
             int cost = miniHexInfo.GetCost(CharacterData.GetActiveCow());
             if (cost > 0) sb.AppendLine($"this encounter costs {cost} gold, the current character has {CharacterData.GetActiveCow().m_CharacterStats.m_Gold} gold");
-            window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString());
+            window = LocationEncounterAction.RegisterAction(uiLocationMenuDisplay.Instance.gameObject, _buttons, sb.ToString().TrimEnd(['\n']));
             UnregisterDisabledObject.QuickCreate(uiLocationMenuDisplay.Instance.transform.Find("mainMenu").gameObject, window);
         }
 

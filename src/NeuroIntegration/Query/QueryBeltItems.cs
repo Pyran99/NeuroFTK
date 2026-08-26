@@ -56,7 +56,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 {
                     blacklist = "(this item is not implemented for you yet)";
                 }
-                sb.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}{blacklist}");
+                sb.AppendLine($"({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}{blacklist}");
             }
             if (sb.Length == title.Length) sb.Append($"there are no items on {CharacterData.GetCharacterName(cow)}'s belt");
             Context.Send(sb.ToString());

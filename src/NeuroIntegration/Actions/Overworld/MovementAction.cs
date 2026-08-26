@@ -60,7 +60,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 foreach (FTK_itembase.ID item in beltItems)
                 {
                     items.Add(ItemData.GetItemName(item), item);
-                    beltCtx.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, true, cow)}");
+                    beltCtx.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}");
                 }
             }
             if (items.Count > 0)

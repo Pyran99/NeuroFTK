@@ -168,7 +168,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 sb.AppendLine(kvp.Value);
             }
-            Context.Send(sb.ToString());
+            Context.Send(sb.ToString().TrimEnd(['\n']));
             levelUps = [];
         }
 
@@ -194,7 +194,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isPlayerDiedWait = true;
             yield return null;
-            Context.Send(playerDiedSB.ToString());
+            Context.Send(playerDiedSB.ToString().TrimEnd(['\n']));
             playerDiedSB = new();
             isPlayerDiedWait = false;
             int count = 0;
@@ -209,7 +209,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isHealthChangeWait = true;
             yield return null;
-            Context.Send(dmgTakenString.ToString());
+            Context.Send(dmgTakenString.ToString().TrimEnd(['\n']));
             dmgTakenString = new();
             isHealthChangeWait = false;
         }
@@ -296,7 +296,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isEnemyDeathWait = true;
             yield return null;
-            Context.Send(enemyDiedSB.ToString());
+            Context.Send(enemyDiedSB.ToString().TrimEnd(['\n']));
             enemyDiedSB = new();
             isEnemyDeathWait = false;
         }
@@ -305,7 +305,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isWaitingEnemyHealth = true;
             yield return null;
-            Context.Send(enemySb.ToString());
+            Context.Send(enemySb.ToString().TrimEnd(['\n']));
             enemySb = new();
             isWaitingEnemyHealth = false;
         }
@@ -351,7 +351,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             sb.Append("\n### usable belt items \n");
             foreach (FTK_itembase.ID item in items)
             {
-                sb.AppendLine($"- ({ItemData.GetItemName(item)}){ItemData.GetItemDescription(item, true, cow)}");
+                sb.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}");
             }
             return sb.ToString();
         }

@@ -69,7 +69,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 string _name = btn.m_RectTransform.Find("Text").GetComponent<Text>().text;
                 string _desc = GameDescriptions.TownServices[btn.m_ServiceType];
                 string _cost = btn.m_CostText.gameObject.activeInHierarchy ? btn.m_CostText.text : "0";
-                ctx += $"[{_name}] cost {_cost}. {_desc}\n";
+                ctx += $"- [{_name}] cost {_cost}. {_desc}\n";
                 neuroData.Add(_name, btn.m_RectTransform.GetComponent<uiFTKButton>());
             }
             window = ActionWindow.Create(uiTownServiceMenu.Instance.m_DisplayRoot.gameObject);
@@ -78,7 +78,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CancelAction cancel = new(window, "close the service window");
             cancel.OnCancelled += CloseServiceWindow;
             window.AddAction(cancel);
-            ctx += $"\n(You have {cow.m_CharacterStats.m_Gold} gold)";
+            ctx += $"(You have {cow.m_CharacterStats.m_Gold} gold)";
             window.SetContext(ctx);
             window.SetForce(0, "choose a service to purchase or close the window", "you are at a town and a service menu has opened", true);
             window.Register();

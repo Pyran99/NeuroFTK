@@ -84,20 +84,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
                 CharacterOverworld cow = kvp.Key;
+                sb.AppendLine($"### {CharacterData.GetCharacterName(cow)}");
                 foreach (VoteButton btn in kvp.Value)
                 {
                     string btnName = btn.GetComponentInChildren<Text>().text;
                     // if btn text doesnt work
                     // if (GameDescriptions.AlternateLocLookUp.ContainsKey(btn.m_Option.ToString())) btnName = GameDescriptions.AlternateLocLookUp[btn.m_Option.ToString()];
-                    sb.AppendLine($"### {CharacterData.GetCharacterName(cow)} [{btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})]"); // alternate
+                    sb.AppendLine($"#### {btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})"); // alternate
                     string slotResults = CombatUtils.GetDungeonSlotLegend(cow, btn);
-                    if (slotResults.Length == 0)
-                    {
-                        // sb.AppendLine();
-                        continue;
-                    }
-                    sb.AppendLine($"- {slotResults}");
-                    //expected => Cow [Disarm ()] 0(2%) = Failure
+                    if (slotResults.Length == 0) continue;
+                    sb.AppendLine($"{slotResults}");
+                    //expected => ### Cow #### Disarm (desc) - 0(2%) = Failure
                 }
             }
             string encounterMsg = StaticMessage.Message;
@@ -105,7 +102,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 sb.Insert(0, $"## encountered {StaticMessage.Message}\n");
             }
-            return sb.ToString();
+            return sb.ToString().TrimEnd(['\n']);
         }
     }
 }

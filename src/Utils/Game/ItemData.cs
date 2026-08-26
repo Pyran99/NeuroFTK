@@ -29,8 +29,7 @@ namespace Pyran.NeuroFTK.Utils
         {
             Dictionary<string, string> data = [];
             string trName = GetItemName(itemId);
-            string trDescription = GetItemDescription(itemId);
-            trDescription.Replace(@"\\n", ", ");
+            string trDescription = GetItemDescription(itemId, null);
             data.Add(trName, trDescription);
             return data;
         }
@@ -40,7 +39,7 @@ namespace Pyran.NeuroFTK.Utils
             return FTKHub.Instance.GetItemDisplayName(_id);
         }
 
-        public static string GetItemDescription(FTK_itembase.ID _id, bool removeStyling = true, CharacterOverworld _cow = null)
+        public static string GetItemDescription(FTK_itembase.ID _id, CharacterOverworld _cow, bool removeStyling = true, bool replaceNewLine = false)
         {
             FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
             string result;
@@ -50,6 +49,7 @@ namespace Pyran.NeuroFTK.Utils
             else result = GetOtherData(_id, _cow);
 
             if (removeStyling) result = StringReplace.RemoveStyling(result);
+            if (replaceNewLine) return StringReplace.ReplaceNewLine(result);
             return result;
         }
 

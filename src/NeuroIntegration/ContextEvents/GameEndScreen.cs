@@ -1,7 +1,9 @@
 using System.Collections;
 using FTKHelp;
 using HarmonyLib;
+using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine.UI;
 
@@ -20,9 +22,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CreditScreen), nameof(CreditScreen.OnCloseButton))]
         [HarmonyPrefix]
-        static void Test2()
+        static void CloseScreen()
         {
             // from screen click
+            NeuroActionHandler.UnregisterActions("return_to_menu");
         }
 
         [HarmonyPatch(typeof(GameEventManager), "ShowStoneHero_CR")] // may not be called in other adventures
@@ -31,10 +34,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             while (__result.MoveNext()) yield return __result.Current;
             Plugin.Logger.LogMessage("ShowStoneHero_CR finished");
-            QuickTimerCallback timer = new(true, SelectButton, CreditScreen.Instance.gameObject, 10000f);
+            Context.Send($"the credits are finished, you have completed your adventure!");
+            NeuroActionHandler.RegisterActions(new EndScreenAction());
+            // QuickTimerCallback timer = new(true, SelectButton, CreditScreen.Instance.gameObject, 10000f);
         }
 
-        static void SelectButton()
+        public static void SelectButton()
         {
             if (!CreditScreen.Instance.gameObject.activeInHierarchy) return;
             CreditScreen.Instance.transform.Find("Button").GetComponent<Button>().OnSubmit(null);

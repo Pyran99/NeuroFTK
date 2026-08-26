@@ -40,7 +40,7 @@ namespace Pyran.NeuroFTK.Utils
             return StringReplace.ReplaceNewLineSpace(name);
         }
 
-        /// <returns>example => 0(2%) = Failure</returns>
+        /// <returns>example => - 0(2%) = Failure</returns>
         public static string GetDungeonSlotLegend(CharacterOverworld cow, VoteButton btn)
         {
             if (!cow.IsInDungeon() || !cow.m_CharacterStats.m_IsInCombat) return "";
@@ -95,7 +95,7 @@ namespace Pyran.NeuroFTK.Utils
             foreach (KeyValuePair<string, Dictionary<string, string>> outcome in data)
             {
                 // 0(2%) = Failure <= for each roll
-                sb.AppendLine($"{outcome.Key}({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
+                sb.AppendLine($"- {outcome.Key}({outcome.Value.Keys.First()}) = {outcome.Value.Values.First()}");
             }
             return sb.ToString();
         }

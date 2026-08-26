@@ -8,7 +8,6 @@ using StartGameFE;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
 using System.Text;
-using Pyran.NeuroFTK.GameConfigs;
 using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
