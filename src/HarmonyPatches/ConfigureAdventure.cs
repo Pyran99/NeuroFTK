@@ -17,6 +17,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class ConfigureAdventure
     {
+        public static readonly Dictionary<string, string> adventureCodes = new()
+        {
+            {"ftk", "For the King"},
+            {"fa", "Frost Adventure"},
+            {"id", "Into the Deep"},
+            {"dc", "Dungeon Crawl"},
+            {"hc", "Hildebrant's Cellar"},
+            {"gr", "Gold Rush"},
+        };
+
         static GameConfig instance;
 
         [HarmonyPatch(typeof(GameConfig), nameof(GameConfig.Show))]
@@ -62,18 +72,30 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string AdventuresContext(GameConfig instance)
         {
             string details = "## Adventure details ";
-            bool forceFirst = GlobalConfig.ForcedFirstAdventure();
             string description;
             foreach (GameDefButton btn in instance.m_GameDefButtons)
             {
                 GameDefinitionBase prev = btn.GetPreview();
-                if (forceFirst)
+                // if (GlobalConfig.ForcedFirstAdventure())
+                // {
+                //     if (prev.GetDisplayName() == "For the King")
+                //     {
+                //         description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
+                //         details += $"- {prev.GetDisplayName()}: {description}\n";
+                //         break;
+                //     }
+                //     continue;
+                // }
+                if (GlobalConfig.ForcedCustomAdventure())
                 {
-                    if (prev.GetDisplayName() == "For the King")
+                    if (adventureCodes.ContainsKey(GlobalConfig.AdventureCode))
                     {
-                        description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                        details += $"- {prev.GetDisplayName()}: {description}\n";
-                        break;
+                        if (prev.GetDisplayName() == adventureCodes[GlobalConfig.AdventureCode])
+                        {
+                            description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
+                            details += $"- {prev.GetDisplayName()}: {description}\n";
+                            break;
+                        }
                     }
                     continue;
                 }

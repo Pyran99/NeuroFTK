@@ -50,7 +50,11 @@ public class MainMenu
         List<string> availableActions = ["new game"];
         if (resumeBtn?.isActiveAndEnabled ?? false) availableActions.Add("resume game");
         if (HasPurchasableLore()) availableActions.Add("spend lore");
-        if (GlobalConfig.ResumeOnFirstLoad() && availableActions.Contains("resume game"))
+        if (GlobalConfig.ForcedCustomAdventure())
+        {
+            availableActions.Remove("resume game");
+        }
+        else if (GlobalConfig.ResumeOnFirstLoad() && availableActions.Contains("resume game"))
         {
             availableActions.Remove("new game");
         }

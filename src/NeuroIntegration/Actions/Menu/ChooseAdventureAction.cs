@@ -61,7 +61,11 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return ["For the King"];
             }
             List<string> names = [];
-            if (GlobalConfig.ForcedFirstAdventure()) names.Add("For the King");
+            if (GlobalConfig.ForcedCustomAdventure())
+            {
+                names.Add(ConfigureAdventure.adventureCodes[GlobalConfig.AdventureCode]);
+            }
+            // else if (GlobalConfig.ForcedFirstAdventure()) names.Add("For the King");
             else
             {
                 foreach (GameDefButton btn in instance.m_GameDefButtons)
