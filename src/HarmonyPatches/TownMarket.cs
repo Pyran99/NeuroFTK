@@ -44,15 +44,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Object.Destroy(activeWindow);
             if (Multiplayer.OtherPlayersAction(CharacterData.GetActiveCow())) return;
-            uiBuyMenuHud.Instance.StartCoroutine(AddData(null));
+            uiBuyMenuHud.Instance.StartCoroutine(AddData(null, uiBuyMenuHud.Instance.m_CurrentCow));
         }
 
-        static IEnumerator AddData(ItemContainer _itemContainer)
+        static IEnumerator AddData(ItemContainer _itemContainer, CharacterOverworld _cow)
         {
             if (isCreating) yield break;
             isCreating = true;
-            CharacterOverworld _cow = CharacterData.GetActiveCow(); // null in dungeon? or resume game in dungeon before market
-            if (_cow == null) _cow = uiBuyMenuHud.Instance.m_CurrentCow;
+            if (_cow == null)
+            {
+                Plugin.Logger.LogError("market cow was not set");
+                isCreating = false;
+                yield break;
+            }
             if (_itemContainer == _cow?.m_PlayerInventory.m_ContainerBackpack)
             {
                 Plugin.Logger.LogWarning("sell list. unsure when called");
@@ -117,7 +121,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CancelAction cancel = new(activeWindow, "close the market");
             cancel.OnCancelled += CloseMenu;
             activeWindow.AddAction(cancel);
-            activeWindow.SetForce(0, "buy/sell items at the market or close the menu if there is nothing you want", "you are at the market", true);
+            activeWindow.SetForce(0, "buy/sell items at the market or close the menu if there is nothing you want", "", true);
             activeWindow.Register();
         }
 
