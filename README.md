@@ -18,16 +18,15 @@ not distributed here
 Config files are automatically generated in the same folder as the dll
 Name | Default | Description
 --- | --- | ---
-`environment_web_socket` | ws://localhost:8000 | Websocket url
-`allow_cheats` | false | ok cheater
-`debug_mode` | false | some actions may be handled differently when `true`
-`use_custom_rules` | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
-`force_first_adventure` | true | ~~only let neuro choose the first adventure map For the King *(other maps not tested yet)*~~ **deprecated**
-`is_multiplayer` | false | disables normal main menu actions. *multiplayer NOT implemented as of v0.8.4*
-`launch_resume` | true | disables new game if there is a previous save to load. Only used for the initial game startup
-`max_hex_search` | 100 | the max amount of hexes to send for context & choice list of actions that require picking a hex (Airship movement can be 168+). For movement the removed hexes start from the furthest, for items that pick a hex it is based on the order the map was created (aka nobody knows)
-`force_custom_adventure` | false | force new games to only allow the specified adventure from `custom_adventure_code`. This **OVERRIDES** launch_resume & only allows new games
-`custom_adventure_code` | ftk | the [Config code](#adventure-details) for the forced adventure. Only used if `force_custom_adventure` is true
+environment_web_socket | ws://localhost:8000 | Websocket url
+allow_cheats | false | ok cheater
+debug_mode | false | some actions may be handled differently when `true`
+use_custom_rules | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
+is_multiplayer | false | disables normal main menu actions. *multiplayer NOT implemented as of v0.9.0*
+launch_resume | true | disables new game if there is a previous save to load. Only used for the initial game startup
+max_hex_search | 100 | the max amount of hexes to send for context & choice list of actions that require picking a hex (Airship movement can be 168+). For movement the removed hexes start from the furthest, for items that pick a hex it is based on the order the map was created (aka nobody knows)
+force_custom_adventure | false | force new games to only allow the specified adventure from `custom_adventure_code`. This **OVERRIDES** launch_resume & only allows new games
+custom_adventure_code | ftk | the [Config code](#adventure-details) for the forced adventure. Only used if `force_custom_adventure` is true
 
 > [!CAUTION]
 > Multiplayer has NOT been tested & *will* break things
