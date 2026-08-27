@@ -129,7 +129,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield return null;
             }
             GameDefinitionBase level = instance.GetCurrentGameDefPreview();
-            Context.Send($"you selected the adventure {level.GetDisplayName()}: {level.GetDisplayInfoText()}");
+            string name = level.GetDisplayName();
+            string dungeonRooms = "";
+            if (level.m_ModeType == GameDefinitionBase.ModeType.EndlessDungeon)
+            {
+                int? value = StatsAchievements.StatsAchievements.GetPlayerStatistic(FTK_statistic.ID.STAT_CELLAR_ROOM_COUNT).Value;
+                dungeonRooms = $" (your highest room clear for this adventure is {value ?? 0})";
+            }
+            Context.Send($"you selected the adventure {name}: {level.GetDisplayInfoText()} {dungeonRooms}");
             yield return new WaitForSeconds(1.0f);
             SetDifficulty(instance);
             SetGameMode(instance);

@@ -350,10 +350,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// <summary>
         /// display as [(position x,z) name/realm (quest name)(has dead) (POI: state) (distance)]
         /// </summary>
-        public static string GetTileContext(List<HexLand> _tiles, bool includeDistance = false)
+        public static string GetTileContext(List<HexLand> _tiles, bool includeDistance = false, bool isChooseCtx = true)
         {
             StringBuilder sb = new();
-            sb.AppendLine(StringMessages.HexContext);
+            if (isChooseCtx) sb.AppendLine(StringMessages.HexContext);
             CharacterOverworld cow = CharacterData.GetActiveCow();
             SortRealmThenDistance(_tiles, cow);
             hexPositions.Clear();

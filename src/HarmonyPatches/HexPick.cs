@@ -18,6 +18,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static ActionWindow window;
         public static FTK_itembase.ID itemUsed = FTK_itembase.ID.None;
         static bool boatReclaim = false;
+        static readonly bool sendPoiCtx = true;
 
         [HarmonyPatch(typeof(Movement), nameof(Movement.StartPickHex))]
         [HarmonyPostfix]
@@ -91,6 +92,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             Dictionary<string, HexLand> tiles = [];
+            List<HexLand> pois = [];
             FTKItem item = null;
             string errMsg = "";
             if (boatReclaim)
@@ -142,7 +144,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     FTKPickHexItem pickItem = item as FTKPickHexItem;
                     foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
-                        if (hex.HasPOI()) continue;
+                        if (hex.HasPOI())
+                        {
+                            pois.Add(hex);
+                            continue;
+                        }
                         if (pickItem.PickHexValidCallback(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
                     }
                 }
@@ -151,7 +157,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     FTKPickHexItem pickItem = item as FTKPickHexItem;
                     foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
-                        if (hex.HasPOI()) continue;
+                        if (hex.HasPOI())
+                        {
+                            pois.Add(hex);
+                            continue;
+                        }
                         if (pickItem.PickHexValidCallback(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
                     }
                 }
@@ -179,8 +189,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 QuickTimerCallback timer = new(DelayCancel, Movement.Instance.gameObject, 1500f);
                 return;
             }
+            if (sendPoiCtx)
+            {
+                string poiCtx = "## POIs in range (you cannot choose these directly. If you want to move to one of these, select a position with close x/z values). \n" + OverworldFlow.GetTileContext(pois, true, false);
+                Context.Send(poiCtx, true);
+            }
             string ctx = OverworldFlow.GetTileContext([.. tiles.Select(x => x.Value)], true);
-            QuickTimerCallback timer3 = new(() => Create(ctx, tiles), Movement.Instance.gameObject, 500f);
+            QuickTimerCallback timer3 = new(() => Create(ctx, tiles, itemUsed), Movement.Instance.gameObject, 500f);
             Reset();
         }
 
@@ -196,9 +211,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             boatReclaim = false;
         }
 
-        static void Create(string ctx, Dictionary<string, HexLand> tiles)
+        static void Create(string ctx, Dictionary<string, HexLand> tiles, FTK_itembase.ID _item)
         {
-            window = PickHexAction.CreateWindow(Movement.Instance.m_CharacterOverworld, ctx, tiles);
+            window = PickHexAction.CreateWindow(Movement.Instance.m_CharacterOverworld, ctx, tiles, _item);
         }
 
         // static void SendCtx(FTK_itembase.ID id)

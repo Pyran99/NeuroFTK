@@ -1,20 +1,22 @@
 using System.Collections.Generic;
 using System.Linq;
+using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
+using Pyran.NeuroFTK.Utils;
 using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class PickHexAction(Dictionary<string, HexLand> _hexPositions) : NeuroAction<HexLand>
+    public class PickHexAction(Dictionary<string, HexLand> _hexPositions, FTK_itembase.ID item) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, FTK_itembase.ID _item)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
-            window.AddAction(new PickHexAction(hexPositions));
+            window.AddAction(new PickHexAction(hexPositions, _item));
             window.SetContext(ctx);
             window.SetForce(0, "choose a hex to use the item on", "", true);
             window.Register();
@@ -22,7 +24,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
 
         public override string Name => "pick_hex";
-        protected override string Description => "select a hex position to use the item on";
+        protected override string Description => $"select a hex position to use {ItemData.GetItemName(item)} on";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -44,7 +46,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (parsedData == null)
             {
                 Plugin.Logger.LogError($"did not find {parsedData} in tiles");
-                return;
+                parsedData = CharacterData.GetActiveCow().GetHexLand();
             }
             HexPick.PickHex(parsedData);
         }
