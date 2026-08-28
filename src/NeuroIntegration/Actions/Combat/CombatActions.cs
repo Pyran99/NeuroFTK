@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     {
         static uiBattleStanceButtons instance;
 
-        public static ActionWindow RegisterCombatActions(uiBattleStanceButtons _instance, string ctx, List<INeuroAction> actions)
+        public static ActionWindow RegisterCombatActions(uiBattleStanceButtons _instance, string ctx, string state, List<INeuroAction> actions)
         {
             instance = _instance;
             if (actions.Count == 0)
@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 window.AddAction(action);
             }
-            window.SetForce(0, $"it is your turn with {CharacterData.GetCharacterName(instance.CombatCow)}, choose an action", "", true);
+            window.SetForce(0, $"it is your turn with {CharacterData.GetCharacterName(instance.CombatCow)}, choose an action", state, true);
             window.Register();
             return window;
         }
@@ -159,9 +159,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             yield return null;
             while (stats.m_FocusPoints > 0 && count > 0)
             {
-                Plugin.Logger.LogWarning("count = " + count);
-                Plugin.Logger.LogWarning("focus = " + stats.m_FocusPoints);
-                Plugin.Logger.LogWarning("spent = " + stats.SpentFocus);
                 count--;
                 btn.m_OnRightClick?.Invoke();
                 yield return new WaitForSeconds(VisualParams.Instance.FocusAnimTime + 0.01f);

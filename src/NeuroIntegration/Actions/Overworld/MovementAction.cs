@@ -16,7 +16,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, string state, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (isInteractable && !_cow.IsInBoat()) window.AddAction(new InteractWithCurrentHex(_cow));
             }
             window.SetContext(ctx);
-            window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", "", true);
+            window.SetForce(0, "choose an action for this movement turn. you should try to keep your team near eachother to make fights easier.", state, true);
             window.Register();
             return window;
         }

@@ -99,5 +99,23 @@ namespace Pyran.NeuroFTK.Utils
             }
             return sb.ToString();
         }
+
+        public static int GetMaxFocusUse(uiBattleButton.BattleButtonType type, FTK_proficiencyTable.ID id, FTK_weaponStats2 entry)
+        {
+            return type switch
+            {
+                uiBattleButton.BattleButtonType.flee or uiBattleButton.BattleButtonType.shieldtaunt => GameFlow.Instance.m_DefaultSlots,
+                uiBattleButton.BattleButtonType.attack => entry?._slots ?? 0,
+                uiBattleButton.BattleButtonType.proficiency => GetProfRolls(id, entry),
+                _ => 0,
+            };
+        }
+
+        public static int GetProfRolls(FTK_proficiencyTable.ID id, FTK_weaponStats2 entry)
+        {
+            if (id == FTK_proficiencyTable.ID.None || entry == null) Plugin.Logger.LogError("proficiency error");
+            FTK_proficiencyTable entry3 = FTK_proficiencyTableDB.GetDB().GetEntry(id);
+            return entry3.m_SlotOverride > 0 ? entry3.m_SlotOverride : entry._slots;
+        }
     }
 }

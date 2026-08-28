@@ -27,6 +27,7 @@ namespace Pyran.NeuroFTK.Utils
             {
                 AddValidQuests(q, cowHex);
             }
+            if (sbQuest.Length > 0) sbQuest.Insert(0, "## active quests \n");
             return sbQuest.ToString();
         }
 

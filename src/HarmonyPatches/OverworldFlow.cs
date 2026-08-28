@@ -471,35 +471,30 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             HexLand hex = _cow.GetHexLand();
-            string ctx = CharacterData.GetTeamPositionState(_cow, hex, lastDestinations);
-            
-            Context.Send(ctx);
-            ctx = QuestHelper.GetQuestData();
-            if (ctx.Contains("may require boat"))
-            {
-                ctx += BoatHelper.AddBoatTravelContext(hex);
-            }
+            string teamPositions = CharacterData.GetTeamPositionState(_cow, hex, lastDestinations);
+            string questCtx = QuestHelper.GetQuestData();
+            if (questCtx.Contains("may require boat")) questCtx += BoatHelper.AddBoatTravelContext(hex);
             string haunts = ScourgeEvents.GetScourgeContext();
-            if (haunts != "") ctx += "\n" + haunts;
-            if (ctx != "") Context.Send(ctx);
+            if (haunts != "") questCtx += "\n" + haunts;
+            string state = $"{teamPositions}\n{questCtx}";
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
             if (hexPositions.Count == 0)
             {
-                HandleInvalidMovement(_cow, validQuests, validCows);
+                HandleInvalidMovement(_cow, validQuests, validCows, tileCtx, state);
                 return;
             }
             MiniHexInfo poi = hex.GetPOI();
             bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
+            window = MovementAction.CreateWindow(_cow, tileCtx, state, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
         }
 
-        static bool HandleInvalidMovement(CharacterOverworld _cow, List<string> validQuests, IEnumerable<CharacterOverworld> validCows)
+        static bool HandleInvalidMovement(CharacterOverworld _cow, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, string ctx = "", string state = "")
         {
             if (_cow.IsInAirShip())
             {
-                window = MovementAction.CreateWindow(_cow, "", [], QuestHelper.questDict, validQuests, validCows, true);
+                window = MovementAction.CreateWindow(_cow, ctx, state, [], QuestHelper.questDict, validQuests, validCows, true);
                 return true;
             }
             Plugin.Logger.LogError("no hex positions found, forcing end turn");

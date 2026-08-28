@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GridEditor;
-using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -18,7 +17,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return $"[{CharacterData.GetCharacterName(_cow)} turn] {CharacterData.GetDataFor(_cow)}";
         }
 
-        public static void CtxCombatTurnBeginPlayer(CharacterOverworld _cow)
+        public static string CtxCombatTurnBeginPlayer(CharacterOverworld _cow)
         {
             StringBuilder sb = new();
             SerializedCharacterData data = SerializedCharacterData.Calculate(_cow);
@@ -32,7 +31,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // if (cow.Value.m_CharacterOverworld == _cow) continue;
             }
             sb.Append(ScourgeEvents.GetScourgeContext());
-            Context.Send(sb.ToString().TrimEnd(['\n']));
+            // Context.Send(sb.ToString().TrimEnd(['\n']));
+            return sb.ToString().TrimEnd(['\n']);
         }
 
         public static string GetSimplifiedTeamState()
@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return sb.ToString().TrimEnd(['\n']);
         }
 
-        public static void CtxCombatTurnBeginEnemy()
+        public static string CtxCombatTurnBeginEnemy()
         {
             StringBuilder sb = new();
             sb.Append("### enemy state \n");
@@ -75,7 +75,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine($"- {name}, lvl {lvl}, health {health}, armor {armor}, resist {resist}, {coherent} (immunities: {immunes}){(evasive ? ", dodges non perfect rolls" : "")}{(reflect > 0 ? $", reflects {reflect} dmg to melee attackers" : "")}, {suicidal}");
             }
             sb.Append($"(armor reduces physical dmg, resist reduces magic dmg)");
-            Context.Send(sb.ToString().TrimEnd(['\n']));
+            // Context.Send(sb.ToString().TrimEnd(['\n']));
+            return sb.ToString().TrimEnd(['\n']);
         }
 
         static string IsPriorityTarget(EnemyDummy dummy)
