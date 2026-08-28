@@ -288,49 +288,40 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             flavorData.Add(key, GameDescriptions.GetEncounterBtnFlavor(id));
-            FTK_slotOutput.ID slotId = FTK_slotOutput.ID.None;
-            if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Ambush)
-            {
-                slotId = RollSlotOutcomes._getAmbushType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetActiveCow());
-            }
-            else if (btn.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.Sneak)
-            {
-                slotId = RollSlotOutcomes._getSneakType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, CharacterData.GetActiveCow());
-            }
-            if (slotId == FTK_slotOutput.ID.None)
-            {
-                MiniEncounter hex = EncounterMenuInstance.m_ThisMiniHex as MiniEncounter;
-                if (EncounterMenuInstance.m_ActiveSubPanel is uiCarnivalMenu)
-                {
-                    switch (btn.m_ButtonInfo.m_ButtonType)
-                    {
-                        case SubPanelBaseBase.ButtonID.Gamble1:
-                            slotId = FTK_slotOutput.GetEnum(_CarnivalOptions[0].m_ID);
-                            break;
-                        case SubPanelBaseBase.ButtonID.Gamble2:
-                            slotId = FTK_slotOutput.GetEnum(_CarnivalOptions[1].m_ID);
-                            break;
-                        case SubPanelBaseBase.ButtonID.Gamble3:
-                            slotId = FTK_slotOutput.GetEnum(_CarnivalOptions[2].m_ID);
-                            break;
-                    };
-                }
-                else if (hex?.GetDBEntry() != null)
-                {
-                    slotId = hex.GetDBEntry().m_SlotRoll;
-                }
-            }
+            FTK_slotOutput.ID slotId = GetSlotId(btn.m_ButtonInfo.m_ButtonType, CharacterData.GetActiveCow());
             Dictionary<string, Dictionary<string, string>> outcome;
             // ExitFunc means no rolls?
-            if (string.IsNullOrEmpty(btn.m_ButtonInfo.m_ExitFunc))
-            {
-                outcome = [];
-            }
-            else
-            {
-                outcome = RollSlotOutcomes.GetOutcomes(CharacterData.GetActiveCow(), slotId);
-            }
+            if (string.IsNullOrEmpty(btn.m_ButtonInfo.m_ExitFunc)) outcome = [];
+            else outcome = RollSlotOutcomes.GetOutcomes(CharacterData.GetActiveCow(), slotId);
             rollData.Add(key, outcome);
+        }
+
+        public static FTK_slotOutput.ID GetSlotId(SubPanelBaseBase.ButtonID _id, CharacterOverworld cow)
+        {
+            switch (_id)
+            {
+                case SubPanelBaseBase.ButtonID.Ambush:
+                    return RollSlotOutcomes._getAmbushType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, cow);
+                case SubPanelBaseBase.ButtonID.Sneak:
+                    return RollSlotOutcomes._getSneakType((MiniHexEnemy)EncounterMenuInstance.m_ThisMiniHex, cow);
+                default:
+                    MiniEncounter hex = EncounterMenuInstance.m_ThisMiniHex as MiniEncounter;
+                    if (EncounterMenuInstance.m_ActiveSubPanel is uiCarnivalMenu)
+                    {
+                        switch (_id)
+                        {
+                            case SubPanelBaseBase.ButtonID.Gamble1:
+                                return FTK_slotOutput.GetEnum(_CarnivalOptions[0].m_ID);
+                            case SubPanelBaseBase.ButtonID.Gamble2:
+                                return FTK_slotOutput.GetEnum(_CarnivalOptions[1].m_ID);
+                            case SubPanelBaseBase.ButtonID.Gamble3:
+                                return FTK_slotOutput.GetEnum(_CarnivalOptions[2].m_ID);
+                        };
+                    }
+                    else if (hex?.GetDBEntry() != null) return hex.GetDBEntry().m_SlotRoll;
+                    break;
+            }
+            return FTK_slotOutput.ID.None;
         }
 
         static bool HandleAutoJournal(Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> _activeButtons)

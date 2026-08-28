@@ -336,8 +336,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
                 if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow));
             }
-            string focus = $"### {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 %";
-            string state = $"{BeginTurns.CtxCombatTurnBeginEnemy()} \n{BeginTurns.CtxCombatTurnBeginPlayer(cow)} \n{focus}";
+            string focus = $"### {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 % (all slots focused will be 100%)";
+            string state = $"{BeginTurns.CtxCombatTurnBeginPlayer(cow)} \n{BeginTurns.CtxCombatTurnBeginEnemy()} \n{focus}";
             window = CombatActions.RegisterCombatActions(_instance, ctx, state, actions);
             offense.Clear();
             defense.Clear();

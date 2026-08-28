@@ -10,6 +10,8 @@ namespace Pyran.NeuroFTK.Utils
         public const string DungeonRolls = "## roll chances displayed as: character [button (description)] total successful rolls(chance for this result) = outcome result. (buttons with no roll results will always succeed)";
         public const string BattleWon = "you have won the battle!";
         public const string GameOver = $"your team is all dead, you have lost this game. items can be purchased in the lore store to improve your combat capabilities.";
+        public const string FocusDetails = $"Focus is a limited resource that is used to increase the success chance of some actions, use them wisely. The max amount you can spend will either be the characters amount or the number of outcomes for an action";
+        public const string FocusUsage = $"focus is an optional property, ";
 
         
         public static readonly NeuroSdkFormatString ItemUsed = "you used {0}";

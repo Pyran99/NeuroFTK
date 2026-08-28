@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Google2u;
 using GridEditor;
+using NeuroSdk.Json;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
@@ -220,6 +221,23 @@ namespace Pyran.NeuroFTK.Utils
             int maxFocus = cow.m_CharacterStats.MaxFocus;
             result = $"{focus}/{maxFocus}";
             return result;
+        }
+
+        public static JsonSchema QuickFocusSchema(CharacterOverworld cow)
+        {
+            int max = cow.m_CharacterStats.m_FocusPoints;
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Integer,
+                Minimum = 0,
+                Maximum = max
+            };
+            return schema;
+        }
+
+        public static bool CanFocusAction(CharacterStats stats, int slots, int usedPoints)
+        {
+            return usedPoints > 0 && stats.CanFocus() && stats.SpentFocus < slots;
         }
     }
 
