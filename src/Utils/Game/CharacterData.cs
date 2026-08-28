@@ -44,12 +44,13 @@ namespace Pyran.NeuroFTK.Utils
             string _class = $"{stats.m_CharacterClass}";
             string lvl = $"{stats.m_PlayerLevel}";
             string health = $"{stats.GetHealthDisplayString()}";
+            string focus = $"{GetFocusAmount(cow)}";
             string coherent = "";
             if (stats.m_IsInCombat)
             {
                 coherent = dummy.IsCoherent() ? "" : "stunned";
             }
-            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, {coherent}.");
+            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, focus amount {focus}, {coherent}.");
             return sb.ToString();
         }
 
@@ -211,6 +212,15 @@ namespace Pyran.NeuroFTK.Utils
             }
             return items;
         }
+
+        public static string GetFocusAmount(CharacterOverworld cow)
+        {
+            string result;
+            int focus = cow.m_CharacterStats.m_FocusPoints;
+            int maxFocus = cow.m_CharacterStats.MaxFocus;
+            result = $"{focus}/{maxFocus}";
+            return result;
+        }
     }
 
     public sealed class SerializedCharacterData
@@ -222,6 +232,7 @@ namespace Pyran.NeuroFTK.Utils
         public readonly int Gold;
         public readonly string PipeItem;
         public readonly string Health;
+        public readonly string Focus;
         public readonly int Armor;
         public readonly int Resistance;
         public readonly List<string> StatusEffects = [];
@@ -238,6 +249,7 @@ namespace Pyran.NeuroFTK.Utils
             Level = cow.m_CharacterStats.m_PlayerLevel;
             Xp = cow.m_CharacterStats.m_PlayerXP;
             Health = CharacterData.GetCharacterHealth(cow);
+            Focus = CharacterData.GetFocusAmount(cow);
             Gold = cow.m_CharacterStats.m_Gold;
             FTK_pipe.ID pipeID = cow.m_CharacterStats.GetPipe();
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(pipeID);

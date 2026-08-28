@@ -338,6 +338,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
                 if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow));
             }
+            ctx += $"### {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 %";
             window = CombatActions.RegisterCombatActions(_instance, ctx, actions); //TODO combat tips in state?
             offense.Clear();
             defense.Clear();
@@ -348,7 +349,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             StringBuilder sb = new();
             if (items.Count == 0) return "";
-            sb.Append("\n### usable belt items \n");
+            sb.AppendLine("\n### usable belt items ");
             foreach (FTK_itembase.ID item in items)
             {
                 sb.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}");

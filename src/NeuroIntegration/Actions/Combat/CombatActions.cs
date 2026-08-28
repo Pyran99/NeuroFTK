@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
@@ -8,6 +9,7 @@ using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
+using UnityEngine;
 using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -108,6 +110,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         private JsonSchema GetSchema()
         {
+            CharacterOverworld cow = CharacterData.GetActiveCow();
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,
@@ -115,7 +118,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Properties = new()
                 {
                     ["ability"] = QJS.Enum(offense.Keys),
-                    ["target"] = QJS.Enum(GetListOfEnemies().Values)
+                    ["target"] = QJS.Enum(GetListOfEnemies().Values),
+                    ["focus"] = new()
+                    {
+                        Type = JsonSchemaType.Integer,
+                        Minimum = 0,
+                        Maximum = cow.m_CharacterStats.m_FocusPoints
+                    }
                 }
             };
             return schema;
@@ -123,7 +132,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(object[] parsedData)
         {
-            Plugin.Logger.LogMessage("execute attack: " + string.Join(", ", (string[])parsedData));
+            Plugin.Logger.LogMessage("execute attack: " + parsedData[0] + ", " + parsedData[1] + ", " + parsedData[2]);
             offense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
             FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
             if (target == null)
@@ -133,18 +142,47 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             btn.OnPointerEnter(null);
             CombatActions.SelectTarget(target);
+            CharacterStats stats = CharacterData.GetActiveCow().m_CharacterStats;
+            if (stats.CanFocus() && stats.SpentFocus < btn.m_Owner.m_CombatActionProfile.m_Slots && !btn.m_Owner.m_CombatActionProfile.m_NoFocus && (int)parsedData[2] > 0)
+            {
+                btn.StartCoroutine(Test((int)parsedData[2], btn, stats));
+            }
+            else
+            {
+                SelectButton.StartCoroutine(btn, 1.0f);
+            }
+        }
+
+        IEnumerator Test(int count, uiBattleButton btn, CharacterStats stats)
+        {
+            btn.OnPointerEnter(null);
+            yield return null;
+            while (stats.m_FocusPoints > 0 && count > 0)
+            {
+                Plugin.Logger.LogWarning("count = " + count);
+                Plugin.Logger.LogWarning("focus = " + stats.m_FocusPoints);
+                Plugin.Logger.LogWarning("spent = " + stats.SpentFocus);
+                count--;
+                btn.m_OnRightClick?.Invoke();
+                yield return new WaitForSeconds(VisualParams.Instance.FocusAnimTime + 0.01f);
+                yield return null;
+            }
             SelectButton.StartCoroutine(btn, 1.0f);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
         {
-            parsedData = new string[2];
+            parsedData = new object[3];
+            Plugin.Logger.LogWarning(actionData.Data);
             string target = actionData.Data?.Value<string>("target");
             if (target.IsNullOrEmpty() || !names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
             string ability = actionData.Data?.Value<string>("ability");
             if (ability.IsNullOrEmpty() || !offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
+            Plugin.Logger.LogWarning("test = " + actionData.Data?.Value<int?>("focus"));
+            int focus = actionData.Data?.Value<int>("focus") ?? 0;
             parsedData[0] = target;
             parsedData[1] = ability;
+            parsedData[2] = focus;
             return ExecutionResult.Success();
         }
 
