@@ -308,7 +308,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject);
         }
 
-        static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
+        public static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
         {
             HexLand initialHex = owner.GetHexLand();
             List<HexLand> validNeighbors = [];

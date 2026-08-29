@@ -73,7 +73,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             rollCount = success;
             CharacterDummy dummy = _cow.m_CurrentDummy;
             string ctx = StringMessages.RollResults.Format([CharacterData.GetCharacterName(dummy.m_CharacterOverworld), success, _results.Length]);
-            if (chosenBtn)
+            if (chosenBtn) // only set from action
             {
                 FTK_slotOutput.ID slotId = Encounters.GetSlotId(chosenBtn.m_ButtonInfo.m_ButtonType, _cow);
                 Dictionary<string, Dictionary<string, string>> outcomes = RollSlotOutcomes.GetOutcomes(_cow, slotId);
@@ -88,6 +88,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             chosenBtn = null;
             Context.Send(ctx);
             while (__result.MoveNext()) yield return __result.Current;
+        }
+
+        [HarmonyPatch(typeof(uiPoiButton), nameof(uiPoiButton.OnLeftClick))]
+        [HarmonyPrefix]
+        static void ButtonPressed(uiPoiButton __instance)
+        {
+            chosenBtn = __instance;
         }
 
         static CharacterDummy GetDummy(CharacterOverworld _cow, SlotControl _slots)
