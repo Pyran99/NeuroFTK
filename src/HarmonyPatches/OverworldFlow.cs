@@ -474,11 +474,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string teamPositions = CharacterData.GetTeamPositionState(_cow, hex, lastDestinations);
             string questCtx = QuestHelper.GetQuestData();
             if (questCtx.Contains("may require boat")) questCtx += BoatHelper.AddBoatTravelContext(hex);
-            string haunts = ScourgeEvents.GetScourgeContext();
+            string haunts = ScourgeEvents.GetScourgeContext(_cow);
             if (haunts != "") questCtx += "\n" + haunts;
             string state = $"{teamPositions}\n{questCtx}";
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
+            validQuests.AddRange([.. ScourgeEvents.GetActiveHaunts().Select(x => x.Key)]);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
             if (hexPositions.Count == 0)
             {
@@ -532,6 +533,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             HexLand dest = quest.GetHexLandDestination();
+            cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
+        }
+
+        public static void NeuroTryGoToHaunt(CharacterOverworld cow, MiniHexHaunt haunt)
+        {
+            if (haunt == null)
+            {
+                Plugin.Logger.LogError("chosen scourge was null");
+                Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2000f);
+                return;
+            }
+            HexLand dest = haunt.m_HexLand;
             cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
         }
 

@@ -16,7 +16,6 @@ namespace Pyran.NeuroFTK.GameConfigs
         public static bool AllowCheats { get; private set; } = false;
         public static int MaxHexSearch { get; private set; } = 100;
         public static float maxDistance = 2.8866f * 15f;
-        // public static bool ForcedDefaultAdventure = true;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
         {
@@ -29,13 +28,11 @@ namespace Pyran.NeuroFTK.GameConfigs
             { "max_hex_search", 100 },
             { "force_custom_adventure", false },
             { "custom_adventure_code", "ftk" },
-            // { "force_first_adventure", true },
         };
 
         public static bool IsDebugMode() => debugMode;
         public static bool ResumeOnFirstLoad() => FirstLoadResume;
         public static bool ForcedCustomAdventure() => ForceSpecificAdventure;
-        // public static bool ForcedFirstAdventure() => ForcedDefaultAdventure;
 
         public static void GameLoaded()
         {
@@ -59,7 +56,6 @@ namespace Pyran.NeuroFTK.GameConfigs
             FirstLoadResume = (bool)_config["launch_resume"];
             AllowCheats = (bool)_config["allow_cheats"];
             MaxHexSearch = Convert.ToInt32(_config["max_hex_search"]);
-            // ForcedDefaultAdventure = (bool)_config["force_first_adventure"];
 
             StringBuilder sb = new();
             sb.AppendLine($"Config set:");
@@ -67,7 +63,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             {
                 sb.AppendLine($"{kvp.Key}: {kvp.Value}");
             }
-            Plugin.Logger.LogMessage(sb.ToString());
+            Plugin.Logger.LogInfo(sb.ToString());
         }
     }
 }

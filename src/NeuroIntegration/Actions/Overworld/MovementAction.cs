@@ -25,7 +25,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
                 if (validQuests.Count > 0)
                 {
-                    window.AddAction(new GoToQuestAction(questDict, validQuests));
+                    window.AddAction(new GoToQuestAction(questDict, validQuests, ScourgeEvents.GetActiveHaunts()));
                 }
                 if (validCows.Count() > 0)
                 {
@@ -142,10 +142,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, List<string> validQuests) : NeuroAction<string>
+    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, List<string> validQuests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
-        protected override string Description => "choose a quest location to travel to. if the location is out of range you will move to the furthest tile along the path";
+        protected override string Description => "choose a quest or scourge location to travel to. if the location is out of range you will move to the furthest tile along the path";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -165,7 +165,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             CharacterOverworld cow = CharacterData.GetActiveCow();
-            OverworldFlow.NeuroTryGoToQuest(cow, _questDict.TryGetValue(parsedData, out QuestLogicBase quest) ? quest : null);
+            if (_questDict.ContainsKey(parsedData))
+            {
+                OverworldFlow.NeuroTryGoToQuest(cow, _questDict.TryGetValue(parsedData, out QuestLogicBase quest) ? quest : null);
+            }
+            else if (haunts.ContainsKey(parsedData))
+            {
+                OverworldFlow.NeuroTryGoToHaunt(cow, haunts.TryGetValue(parsedData, out MiniHexHaunt haunt) ? haunt : null);
+            }
+            else Plugin.Logger.LogError(StringMessages.ActionIssueOccured.Format(["go_to_quest"]));
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
@@ -174,7 +182,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string data = actionData.Data?.Value<string>("destination");
             if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
             if (data == "none") return ExecutionResult.Success();
-            if (!_questDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
+            if (!_questDict.ContainsKey(data) && !haunts.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
             parsedData = data;
             return ExecutionResult.Success();
         }
