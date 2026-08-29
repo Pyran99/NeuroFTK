@@ -31,7 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case MiniHexDungeon.EncounterType.Door:
                     Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
                     Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
-                    //TODO add use item to decision window
+                    // CharacterDecisionButtons.AddItemUse(true);
                     break;
             }
         }

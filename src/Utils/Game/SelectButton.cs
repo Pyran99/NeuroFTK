@@ -34,7 +34,7 @@ namespace Pyran.NeuroFTK.Utils
             {
                 count--;
                 btn.m_OnRightClick?.Invoke();
-                yield return new WaitForSeconds(VisualParams.Instance.FocusAnimTime + 0.01f);
+                yield return new WaitForSeconds(VisualParams.Instance.FocusAnimTime + 0.025f);
                 yield return null;
             }
             StartCoroutine(btn, 1.0f);

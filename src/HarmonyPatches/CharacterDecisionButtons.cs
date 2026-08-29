@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using Pyran.NeuroFTK.NeuroIntegration;
@@ -12,7 +14,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class CharacterDecisionButtons
     {
+
         static bool isShowing = false;
+        static bool addItemUse = false;
         // {character: valid buttons}
         public static readonly Dictionary<CharacterOverworld, List<VoteButton>> voteButtons = [];
         public static VoteButtonContainer instance;
@@ -73,6 +77,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 activeWindow.SetContext(sb.ToString());
             }
+            if (addItemUse)
+            {
+                foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
+                {
+                    if (!dummy.m_CharacterOverworld) continue;
+                    if (!dummy.m_IsAlive) continue;
+                    // unfinished
+                    // List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(dummy.m_CharacterOverworld);
+                    // Dictionary<string, FTK_itembase.ID> items2 = items.ToDictionary(ItemData.GetItemName, x => x);
+                    // if (items.Count > 0) activeWindow.AddAction(new UseBeltItemAction(items2, dummy.m_CharacterOverworld));
+                }
+            }
             activeWindow.Register();
         }
 
@@ -103,6 +119,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Insert(0, $"## encountered {StaticMessage.Message}\n");
             }
             return sb.ToString().TrimEnd(['\n']);
+        }
+
+        public static void AddItemUse(bool value)
+        {
+            addItemUse = value;
         }
     }
 }

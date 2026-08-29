@@ -44,7 +44,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (generating) return; // called twice
             if (Multiplayer.OtherPlayersAction(__instance.CurrentCow)) return;
-            Plugin.Logger.LogMessage("encounter type = " + __instance.GetType());
+            Plugin.Logger.LogMessage("panel encounter type = " + __instance.GetType());
             generating = true;
             EncounterMenuInstance = __instance.m_Owner;
             allButtons = new(__instance.m_Buttons);
@@ -272,7 +272,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             buttonsContext = sb.ToString();
             return true;
         }
-
 
         /// <summary>
         /// adds data to dictionaries

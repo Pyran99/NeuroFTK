@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
@@ -11,13 +10,13 @@ using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class EncounterAction(Dictionary<string, uiPoiButton> btns) : NeuroAction<object[]>
+    public class EncounterAction(Dictionary<string, uiPoiButton> btns, CharacterOverworld cow) : NeuroAction<object[]>
     {
         public static ActionWindow CreateWindow(MonoBehaviour _instance, Dictionary<string, uiPoiButton> _btns, string _context = "")
         {
             CharacterOverworld cow = CharacterData.GetActiveCow();
             ActionWindow window = ActionWindow.Create(_instance.gameObject);
-            window.AddAction(new EncounterAction(_btns));
+            window.AddAction(new EncounterAction(_btns, cow));
             window.SetForce(3, "choose an action for this encounter", $"{CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. {StringMessages.FocusDetails}", true);
             if (_context != "") window.SetContext(_context);
             window.Register();
@@ -38,7 +37,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Properties = new()
                 {
                     [prop] = QJS.Enum(btns.Keys),
-                    ["focus"] = CharacterData.QuickFocusSchema(CharacterData.GetActiveCow())
+                    ["focus"] = CharacterData.QuickFocusSchema(cow)
                 }
             };
             return schema;
@@ -50,16 +49,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 if (btn.Key == (string)parsedData[0])
                 {
-                    CharacterOverworld cow = CharacterData.GetActiveCow();
                     int slots = RollSlotOutcomes.GetOutcomes(cow, Encounters.GetSlotId(btn.Value.m_ButtonInfo.m_ButtonType, cow)).Count;
+                    RollSystem.chosenBtn = btn.Value;
                     if (CharacterData.CanFocusAction(cow.m_CharacterStats, slots, (int)parsedData[1]))
                     {
                         btn.Value.StartCoroutine(SelectButton.UseFocus((int)parsedData[1], btn.Value, cow.m_CharacterStats));
                     }
-                    else
-                    {
-                        SelectButton.StartCoroutine(btn.Value, 1.0f);
-                    }
+                    else SelectButton.StartCoroutine(btn.Value, 1.0f);
                     return;
                 }
             }
