@@ -30,7 +30,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine("- " + CharacterData.GetDataFor(cow.Value.m_CharacterOverworld));
                 // if (cow.Value.m_CharacterOverworld == _cow) continue;
             }
-            sb.Append(ScourgeEvents.GetScourgeContext());
+            sb.Append(ScourgeEvents.GetScourgeContext(_cow));
             return sb.ToString().TrimEnd(['\n']);
         }
 

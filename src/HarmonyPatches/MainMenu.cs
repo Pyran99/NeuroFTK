@@ -81,18 +81,10 @@ public class MainMenu
         int purchasableItemsCount = 0;
         foreach (FTK_loreItem loreItem in FTK_loreItemDB.GetDB().m_Array)
         {
-            if (!CanPurchaseItem(loreItem)) continue;
+            if (!LoreItemData.IsAvailable(loreItem)) continue;
             purchasableItemsCount += 1;
         }
         return purchasableItemsCount;
-    }
-
-    public static bool CanPurchaseItem(FTK_loreItem item)
-    {
-        if (!item.CanAfford()) return false;
-        if (item.IsPurchased()) return false;
-        if (!item.IsRevealed()) return false; // dlc is also checked here
-        return true;
     }
 
     public static void NeuroDecision(string decision)

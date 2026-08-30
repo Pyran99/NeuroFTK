@@ -63,7 +63,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             {
                 sb.AppendLine($"{kvp.Key}: {kvp.Value}");
             }
-            Plugin.Logger.LogInfo(sb.ToString());
+            Plugin.Logger.LogWarning(sb.ToString());
         }
     }
 }

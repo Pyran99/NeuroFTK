@@ -25,7 +25,7 @@ namespace Pyran.NeuroFTK.Utils
         ];
 
         /// <returns>{name: description}</returns>
-        public static Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
+        public static Dictionary<string, string> GetEquipmentDetails(FTK_itembase.ID itemId)
         {
             Dictionary<string, string> data = [];
             string trName = GetItemName(itemId);
@@ -43,11 +43,22 @@ namespace Pyran.NeuroFTK.Utils
         {
             FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
             string result;
-            if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon) result = GetWeaponData(_id);
-            else if (itemBase.m_Equippable) result = GetEquipmentData(_id);
-            else if (FTK_itembase.IsPipeItem(_id)) result = GetPipeData(_id);
-            else result = GetOtherData(_id, _cow);
-
+            if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon)
+            {
+                result = GetWeaponData(_id);
+            }
+            else if (itemBase.m_Equippable)
+            {
+                result = GetEquipmentData(_id);
+            }
+            else if (FTK_itembase.IsPipeItem(_id))
+            {
+                result = GetPipeData(_id);
+            }
+            else
+            {
+                result = GetOtherData(_id, _cow);
+            }
             if (removeStyling) result = StringReplace.RemoveStyling(result);
             if (replaceNewLine) return StringReplace.ReplaceNewLine(result);
             return result;

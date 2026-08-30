@@ -65,144 +65,145 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         // get every item that can be purchased
         Dictionary<string, string> UnlockableLoreItems()
         {
-            Dictionary<string, string> allLoreData = GetAllItemsDetails(uiLoreCards);
-            allLoreData.OrderByDescending(kvp => kvp.Key);
-            // string json = JsonConvert.SerializeObject(allLoreData, Formatting.Indented);
-            // Plugin.Logger.LogMessage("card title: item description\n" + json);
-            return allLoreData;
+            // Dictionary<string, string> allLoreData = GetAllItemsDetails(uiLoreCards);
+            // allLoreData.OrderByDescending(kvp => kvp.Key);
+            // // string json = JsonConvert.SerializeObject(allLoreData, Formatting.Indented);
+            // // Plugin.Logger.LogMessage("card title: item description\n" + json);
+            // return allLoreData;
+            return [];
         }
 
-        Dictionary<string, string> GetAllItemsDetails(List<uiLoreCard> cards)
-        {
-            Dictionary<string, string> allLoreData = [];
-            Dictionary<string, string> entry;
-            FTK_loreItem item;
-            foreach (uiLoreCard card in uiLoreCards)
-            {
-                item = card.m_LoreItem;
-                if (item.m_Category != categoryID) continue;
-                if (!item.IsRevealed()) continue;
-                if (item.IsPurchased()) continue;
-                if (!item.CanAfford()) continue;
-                if (item.m_Category != FTK_loreCategory.ID.items)
-                {
-                    // ShowOtherLoreItem
-                    entry = GetItemIdAndDescription(item);
-                }
-                else
-                {
-                    FTK_itembase itemBase = FTK_itembase.GetItemBase((FTK_itembase.ID)item.m_UnlockID);
-                    entry = ItemData.HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
-                }
-                if (allLoreData.ContainsKey(entry?.Keys?.First())) continue;
-                allLoreData.Add(entry?.Keys?.First(), entry?.Values?.First());
-            }
-            return allLoreData;
-        }
+        // Dictionary<string, string> GetAllItemsDetails(List<uiLoreCard> cards)
+        // {
+        //     Dictionary<string, string> allLoreData = [];
+        //     Dictionary<string, string> entry;
+        //     FTK_loreItem item;
+        //     foreach (uiLoreCard card in uiLoreCards)
+        //     {
+        //         item = card.m_LoreItem;
+        //         if (item.m_Category != categoryID) continue;
+        //         if (!item.IsRevealed()) continue;
+        //         if (item.IsPurchased()) continue;
+        //         if (!item.CanAfford()) continue;
+        //         if (item.m_Category != FTK_loreCategory.ID.items)
+        //         {
+        //             // ShowOtherLoreItem
+        //             entry = GetItemIdAndDescription(item);
+        //         }
+        //         else
+        //         {
+        //             FTK_itembase itemBase = FTK_itembase.GetItemBase((FTK_itembase.ID)item.m_UnlockID);
+        //             entry = ItemData.HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
+        //         }
+        //         if (allLoreData.ContainsKey(entry?.Keys?.First())) continue;
+        //         allLoreData.Add(entry?.Keys?.First(), entry?.Values?.First());
+        //     }
+        //     return allLoreData;
+        // }
 
-        Dictionary<string, string> GetItemIdAndDescription(FTK_loreItem item)
-        {
-            Dictionary<string, string> data = [];
-            string id = "";
-            string description = TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), item.m_CardDescription)]?.GetStringDataByIndex(0);
-            switch (item.m_Category)
-            {
-                case FTK_loreCategory.ID.classes:
-                    FTK_playerGameStart entry = FTK_playerGameStartDB.GetDB().GetEntry((FTK_playerGameStart.ID)item.m_UnlockID);
-                    id = entry.GetDisplayName();
-                    description = TextCharacters.Instance.Rows[(int)Enum.Parse(typeof(TextCharacters.rowIds), entry.m_Flavor)].GetStringDataByIndex(0);
-                    break;
-                case FTK_loreCategory.ID.items:
-                    // handled elsewhere
-                    break;
-                case FTK_loreCategory.ID.miniencounters:
-                    FTK_miniEncounter entry2 = FTK_miniEncounterDB.GetDB().GetEntry((FTK_miniEncounter.ID)item.m_UnlockID);
-                    id = entry2.GetDisplayName();
-                    break;
-                case FTK_loreCategory.ID.realms:
-                    // probably not implemented?
-                    FTK_realm entry3 = FTK_realmDB.GetDB().GetEntry((FTK_realm.ID)item.m_UnlockID);
-                    break;
-                case FTK_loreCategory.ID.pois:
-                    FTK_lorePois entry4 = FTK_lorePoisDB.GetDB().GetEntry((FTK_lorePois.ID)item.m_UnlockID);
-                    switch (entry4.m_POIType)
-                    {
-                        case FTK_lorePois.POIType.Utility:
-                        {
-                            FTK_utility.ID unlockID = (FTK_utility.ID)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_Utility" + unlockID + "Display")].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextLore>("STR_Utility" + unlockID + "Display");
-                            break;
-                        }
-                        case FTK_lorePois.POIType.POIs:
-                        {
-                            MiniHexInfo.MiniHexType unlockID2 = (MiniHexInfo.MiniHexType)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID2 + "Display")].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextLore>("STR_" + unlockID2 + "Display");
-                            break;
-                        }
-                        case FTK_lorePois.POIType.MiniEncounter:
-                        {
-                            FTK_miniEncounter entry5 = FTK_miniEncounterDB.GetDB().GetEntry((FTK_miniEncounter.ID)entry4.m_UnlockID);
-                            id = entry5.GetDisplayName();
-                            break;
-                        }
-                        case FTK_lorePois.POIType.StoneHero:
-                        {
-                            MiniHexStoneHero.StoneHeroType unlockID3 = (MiniHexStoneHero.StoneHeroType)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID3 + "Display")].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextLore>("STR_" + unlockID3 + "Display");
-                            break;
-                        }
-                        case FTK_lorePois.POIType.Sanctum:
-                        {
-                            FTK_sanctumStats.ID unlockID4 = (FTK_sanctumStats.ID)entry4.m_UnlockID;
-                            id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID4 + "Display")].GetStringDataByIndex(0);
-                            id = string.Format(TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_sanctumGrand")].GetStringDataByIndex(0), id);
-                            // id = FTKHub.Localized<TextLore>("STR_" + unlockID4 + "Display");
-                            // id = string.Format(FTKHub.Localized<TextMisc>("STR_sanctumGrand"), id);
-                            break;
-                        }
-                    }
-                    break;
-                case FTK_loreCategory.ID.extraSkin:
-                case FTK_loreCategory.ID.extraBackpack:
-                case FTK_loreCategory.ID.extraHelmet:
-                case FTK_loreCategory.ID.extraArmor:
-                    FTK_loreExtraUnlock.ID unlockID5 = (FTK_loreExtraUnlock.ID)item.m_UnlockID;
-                    FTK_loreExtraUnlock ftk_loreExtraUnlock = FTK_loreExtraUnlockDB.Get(unlockID5);
-                    switch (ftk_loreExtraUnlock.m_ExtraType)
-                    {
-                        case FTK_loreExtraUnlock.ExtraType.Skin:
-                            id = FTK_playerGameStart.GetSkinTypeDisplayName((FTK_playerGameStart.SkinType)ftk_loreExtraUnlock.m_UnlockID);
-                            break;
-                        case FTK_loreExtraUnlock.ExtraType.BackPack:
-                            id = FTK_customizeBackpackDB.Get((FTK_customizeBackpack.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
-                            id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextMenu>(id);
-                            break;
-                        case FTK_loreExtraUnlock.ExtraType.Helmet:
-                            id = FTK_customizeHelmetDB.Get((FTK_customizeHelmet.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
-                            id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextMenu>(id);
-                            break;
-                        case FTK_loreExtraUnlock.ExtraType.Armor:
-                            id = FTK_customizeArmorDB.Get((FTK_customizeArmor.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
-                            id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
-                            // id = FTKHub.Localized<TextMenu>(id);
-                            break;
-                    }
-                    break;
+        // Dictionary<string, string> GetItemIdAndDescription(FTK_loreItem item)
+        // {
+        //     Dictionary<string, string> data = [];
+        //     string id = "";
+        //     string description = TextLoreStore.Instance.Rows[(int)Enum.Parse(typeof(TextLoreStore.rowIds), item.m_CardDescription)]?.GetStringDataByIndex(0);
+        //     switch (item.m_Category)
+        //     {
+        //         case FTK_loreCategory.ID.classes:
+        //             FTK_playerGameStart entry = FTK_playerGameStartDB.GetDB().GetEntry((FTK_playerGameStart.ID)item.m_UnlockID);
+        //             id = entry.GetDisplayName();
+        //             description = TextCharacters.Instance.Rows[(int)Enum.Parse(typeof(TextCharacters.rowIds), entry.m_Flavor)].GetStringDataByIndex(0);
+        //             break;
+        //         case FTK_loreCategory.ID.items:
+        //             // handled elsewhere
+        //             break;
+        //         case FTK_loreCategory.ID.miniencounters:
+        //             FTK_miniEncounter entry2 = FTK_miniEncounterDB.GetDB().GetEntry((FTK_miniEncounter.ID)item.m_UnlockID);
+        //             id = entry2.GetDisplayName();
+        //             break;
+        //         case FTK_loreCategory.ID.realms:
+        //             // probably not implemented?
+        //             FTK_realm entry3 = FTK_realmDB.GetDB().GetEntry((FTK_realm.ID)item.m_UnlockID);
+        //             break;
+        //         case FTK_loreCategory.ID.pois:
+        //             FTK_lorePois entry4 = FTK_lorePoisDB.GetDB().GetEntry((FTK_lorePois.ID)item.m_UnlockID);
+        //             switch (entry4.m_POIType)
+        //             {
+        //                 case FTK_lorePois.POIType.Utility:
+        //                 {
+        //                     FTK_utility.ID unlockID = (FTK_utility.ID)entry4.m_UnlockID;
+        //                     id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_Utility" + unlockID + "Display")].GetStringDataByIndex(0);
+        //                     // id = FTKHub.Localized<TextLore>("STR_Utility" + unlockID + "Display");
+        //                     break;
+        //                 }
+        //                 case FTK_lorePois.POIType.POIs:
+        //                 {
+        //                     MiniHexInfo.MiniHexType unlockID2 = (MiniHexInfo.MiniHexType)entry4.m_UnlockID;
+        //                     id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID2 + "Display")].GetStringDataByIndex(0);
+        //                     // id = FTKHub.Localized<TextLore>("STR_" + unlockID2 + "Display");
+        //                     break;
+        //                 }
+        //                 case FTK_lorePois.POIType.MiniEncounter:
+        //                 {
+        //                     FTK_miniEncounter entry5 = FTK_miniEncounterDB.GetDB().GetEntry((FTK_miniEncounter.ID)entry4.m_UnlockID);
+        //                     id = entry5.GetDisplayName();
+        //                     break;
+        //                 }
+        //                 case FTK_lorePois.POIType.StoneHero:
+        //                 {
+        //                     MiniHexStoneHero.StoneHeroType unlockID3 = (MiniHexStoneHero.StoneHeroType)entry4.m_UnlockID;
+        //                     id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID3 + "Display")].GetStringDataByIndex(0);
+        //                     // id = FTKHub.Localized<TextLore>("STR_" + unlockID3 + "Display");
+        //                     break;
+        //                 }
+        //                 case FTK_lorePois.POIType.Sanctum:
+        //                 {
+        //                     FTK_sanctumStats.ID unlockID4 = (FTK_sanctumStats.ID)entry4.m_UnlockID;
+        //                     id = TextLore.Instance.Rows[(int)Enum.Parse(typeof(TextLore.rowIds), "STR_" + unlockID4 + "Display")].GetStringDataByIndex(0);
+        //                     id = string.Format(TextMisc.Instance.Rows[(int)Enum.Parse(typeof(TextMisc.rowIds), "STR_sanctumGrand")].GetStringDataByIndex(0), id);
+        //                     // id = FTKHub.Localized<TextLore>("STR_" + unlockID4 + "Display");
+        //                     // id = string.Format(FTKHub.Localized<TextMisc>("STR_sanctumGrand"), id);
+        //                     break;
+        //                 }
+        //             }
+        //             break;
+        //         case FTK_loreCategory.ID.extraSkin:
+        //         case FTK_loreCategory.ID.extraBackpack:
+        //         case FTK_loreCategory.ID.extraHelmet:
+        //         case FTK_loreCategory.ID.extraArmor:
+        //             FTK_loreExtraUnlock.ID unlockID5 = (FTK_loreExtraUnlock.ID)item.m_UnlockID;
+        //             FTK_loreExtraUnlock ftk_loreExtraUnlock = FTK_loreExtraUnlockDB.Get(unlockID5);
+        //             switch (ftk_loreExtraUnlock.m_ExtraType)
+        //             {
+        //                 case FTK_loreExtraUnlock.ExtraType.Skin:
+        //                     id = FTK_playerGameStart.GetSkinTypeDisplayName((FTK_playerGameStart.SkinType)ftk_loreExtraUnlock.m_UnlockID);
+        //                     break;
+        //                 case FTK_loreExtraUnlock.ExtraType.BackPack:
+        //                     id = FTK_customizeBackpackDB.Get((FTK_customizeBackpack.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
+        //                     id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+        //                     // id = FTKHub.Localized<TextMenu>(id);
+        //                     break;
+        //                 case FTK_loreExtraUnlock.ExtraType.Helmet:
+        //                     id = FTK_customizeHelmetDB.Get((FTK_customizeHelmet.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
+        //                     id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+        //                     // id = FTKHub.Localized<TextMenu>(id);
+        //                     break;
+        //                 case FTK_loreExtraUnlock.ExtraType.Armor:
+        //                     id = FTK_customizeArmorDB.Get((FTK_customizeArmor.ID)ftk_loreExtraUnlock.m_UnlockID).m_DisplayName;
+        //                     id = TextMenu.Instance.Rows[(int)Enum.Parse(typeof(TextMenu.rowIds), id)].GetStringDataByIndex(0);
+        //                     // id = FTKHub.Localized<TextMenu>(id);
+        //                     break;
+        //             }
+        //             break;
                 
-                default:
-                    id = "";
-                    description = "";
-                    break;
-            }
+        //         default:
+        //             id = "";
+        //             description = "";
+        //             break;
+        //     }
             
-            data.Add(id, description);
-            return data;
-        }
+        //     data.Add(id, description);
+        //     return data;
+        // }
 
 
         // // returns that values of a weapon

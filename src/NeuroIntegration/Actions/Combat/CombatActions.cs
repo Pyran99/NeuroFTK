@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
@@ -9,7 +8,6 @@ using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
-using UnityEngine;
 using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -110,7 +108,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (target.IsNullOrEmpty() || !names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
             string ability = actionData.Data?.Value<string>("ability");
             if (ability.IsNullOrEmpty() || !offense.ContainsKey(ability)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("ability"));
-            Plugin.Logger.LogWarning("test = " + actionData.Data?.Value<int?>("focus"));
             int focus = actionData.Data?.Value<int>("focus") ?? 0;
             parsedData[0] = target;
             parsedData[1] = ability;
@@ -166,9 +163,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(object[] parsedData)
         {
-            Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData));
+            Plugin.Logger.LogMessage("execute attack: " + string.Concat(parsedData[0], parsedData[1]));
             defense.TryGetValue((string)parsedData[0], out uiBattleButton btn);
-            ChooseRewardMenu.teamState = $"you can apply your action {parsedData} to \n" + BeginTurns.GetSimplifiedTeamState();
+            ChooseRewardMenu.teamState = $"you can apply your action {parsedData[0]} to \n" + BeginTurns.GetSimplifiedTeamState();
             CharacterOverworld cow = CharacterData.GetActiveCow();
             btn.OnPointerEnter(null);
             if (CharacterData.CanFocusAction(cow.m_CharacterStats, btn.m_Owner.m_CombatActionProfile.m_Slots, (int)parsedData[1]) && !btn.m_Owner.m_CombatActionProfile.m_NoFocus)

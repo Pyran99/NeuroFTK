@@ -672,7 +672,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string type = data[key]["type"];
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
-            string context = $"[{key}]{type}, {description}\n";
+            string context = $"({key}) {type}, {description}\n";
             string focus = data[key]["focus"];
             if (hasRolls) context = $"({key}) {type}, {description}, success chance for each roll: {rollChance}, max focus: {focus}\n";
             return context;

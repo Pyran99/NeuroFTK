@@ -212,10 +212,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     result = "remove buffs";
                     break;
                 case ProficiencyBase.Category.Rush:
-                    result = "rush NYI";
+                    result = "speed up next turn";
                     break;
                 case ProficiencyBase.Category.StealItem: // incinerate
                     result = "item steal";
+                    break;
+                case ProficiencyBase.Category.Focus:
+                    result = "remove focus points";
                     break;
                 // case ProficiencyBase.Category.Cure:
                 //     result = "";
