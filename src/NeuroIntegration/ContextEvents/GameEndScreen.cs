@@ -12,11 +12,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class GameEndScreen
     {
+        public enum EndType
+        {
+            StoneHero,
+            DungeonRun,
+        }
+
         [HarmonyPatch(typeof(CreditScreen), nameof(CreditScreen.ShowEndGame))]
         [HarmonyPostfix]
         static void OnGameFinished()
         {
-            Plugin.Logger.LogMessage("credits ShowEndGame");
             Context.Send("the credits are rolling");
         }
 
@@ -25,7 +30,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CloseScreen()
         {
             // from screen click
-            NeuroActionHandler.UnregisterActions("return_to_menu");
         }
 
         [HarmonyPatch(typeof(GameEventManager), "ShowStoneHero_CR")] // may not be called in other adventures
@@ -33,10 +37,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator ShowingStoneHero(IEnumerator __result)
         {
             while (__result.MoveNext()) yield return __result.Current;
-            Plugin.Logger.LogMessage("ShowStoneHero_CR finished");
             Context.Send($"the credits are finished, you have completed your adventure!");
-            NeuroActionHandler.RegisterActions(new EndScreenAction());
-            // QuickTimerCallback timer = new(true, SelectButton, CreditScreen.Instance.gameObject, 10000f);
+            ActionWindow window = ActionWindow.Create(CreditScreen.Instance.gameObject);
+            window.AddAction(new EndScreenAction(EndType.StoneHero));
+            window.SetForce(15, "finish the adventure", "", true);
+            UnregisterDisabledObject.QuickCreate(CreditScreen.Instance.gameObject, window);
         }
 
         public static void SelectButton()

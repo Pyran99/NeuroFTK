@@ -220,9 +220,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case ProficiencyBase.Category.Focus:
                     result = "remove focus points";
                     break;
-                // case ProficiencyBase.Category.Cure:
-                //     result = "";
-                //     break;
+                case ProficiencyBase.Category.Interrupt:
+                    result = "";
+                    break;
+                case ProficiencyBase.Category.Cure:
+                    result = "";
+                    break;
                 // case ProficiencyBase.Category.Curse:
                 //     //TODO type of curse. blind, clumsy, feeble, foolish, lethargic, unlucky, unwell, 
                 //     break;
