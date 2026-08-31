@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using Google2u;
 using GridEditor;
+using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -9,6 +10,10 @@ namespace Pyran.NeuroFTK.Utils
     {
         public static bool IsAvailable(FTK_loreItem item)
         {
+            if (LoreStoreUnlocks.skipCustomization)
+            {
+                if (item.m_Category == FTK_loreCategory.ID.extraArmor || item.m_Category == FTK_loreCategory.ID.extraBackpack || item.m_Category == FTK_loreCategory.ID.extraHelmet || item.m_Category == FTK_loreCategory.ID.extraSkin) return false;
+            }
             return item.IsRevealed() && !item.IsPurchased() && item.CanAfford();
         }
 

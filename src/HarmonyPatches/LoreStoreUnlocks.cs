@@ -17,9 +17,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class LoreStoreUnlocks
     {
         static ActionWindow activeWindow = null;
-        static uiLoreStore uiLoreStore;
         static List<uiLoreCard> uiLoreCards;
+        public static uiLoreStore uiLoreStore;
         public static bool isPurchasing = false;
+
+        public static bool skipCustomization = false;
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.Show))]
         [HarmonyPostfix]
@@ -39,6 +41,25 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(activeWindow);
         }
 
+        public static bool HasPurchasableLore()
+        {
+            int lorePoints = LorePersistence.Instance.GetLore();
+            int purchasableItemsCount = GetPurchasableLoreCount();
+            Context.Send($"You have {lorePoints} lore points and there are {purchasableItemsCount} items you can afford. These can be used in the lore store to unlock new events, characters, equipment, and cosmetics, if you have enough points, or saved for another time.");
+            return purchasableItemsCount > 0;
+        }
+
+        public static int GetPurchasableLoreCount()
+        {
+            int purchasableItemsCount = 0;
+            foreach (FTK_loreItem loreItem in FTK_loreItemDB.GetDB().m_Array)
+            {
+                if (!LoreItemData.IsAvailable(loreItem)) continue;
+                purchasableItemsCount += 1;
+            }
+            return purchasableItemsCount;
+        }
+
         public static void OnActionCancelled(ActionWindow window)
         {
             Object.Destroy(window);
@@ -49,9 +70,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             isPurchasing = false;
             Object.Destroy(activeWindow);
-            if (MainMenu.GetPurchasableLoreCount() > 0)
+            if (GetPurchasableLoreCount() > 0)
             {
-                MainMenu.HasPurchasableLore();
+                HasPurchasableLore();
                 CreateAction(uiLoreStore, uiLoreCards);
                 return;
             }

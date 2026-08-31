@@ -1,9 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using FTKItemName;
 using Google2u;
 using GridEditor;
-using HarmonyLib;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.Utils
@@ -89,6 +89,9 @@ namespace Pyran.NeuroFTK.Utils
             return false;
         }
 
+        internal static bool errorSkip = false;
+        internal static bool handlingError = false;
+
         /// <summary>
         /// return has styling
         /// </summary>
@@ -96,6 +99,12 @@ namespace Pyran.NeuroFTK.Utils
         /// <returns>$"{dmg} {dmgType}, {hands}, {breakable} [Abilities] {profs}";</returns>
         public static string GetWeaponData(FTK_itembase.ID _id)
         {
+            if (!handlingError) // PH #58 fix
+            {
+                handlingError = true;
+                errorSkip = true;
+                Plugin.Instance.StartCoroutine(HandleError());
+            }
             FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
             FTK_weaponStats2 stats = (FTK_weaponStats2)itemBase;
             string profs = "";
@@ -117,6 +126,7 @@ namespace Pyran.NeuroFTK.Utils
             string breakable = stats.m_CanBreak == true ? "Breaks on critical fail" : "";
             string stat = SwitchSkillTestName(stats._skilltest);
             string result = $"{dmg} {dmgType}, {hands}, {breakable} (Abilities) {profs}, (rolls with stat) {stat}";
+            errorSkip = false;
             return result;
         }
 
@@ -152,6 +162,23 @@ namespace Pyran.NeuroFTK.Utils
                 FTK_weaponStats2.SkillType.quickness => "speed",
                 _ => type.ToString()
             };
+        }
+
+        static IEnumerator HandleError()
+        {
+            yield return null;
+            yield return null;
+            yield return null;
+            if (errorSkip)
+            {
+                Plugin.Logger.LogError("encountered unity error, dont touch the error window");
+                Context.Send("an issue occured with the game (classic Unity), tell vedal to not touch the error window. you can retry to store action after i send you back to the menu");
+                if (LoreStoreUnlocks.uiLoreStore != null)
+                {
+                    QuickTimerCallback timer = new(() => LoreStoreUnlocks.OnActionCancelled(null), LoreStoreUnlocks.uiLoreStore.m_LoreRoot.gameObject, 3000f);
+                }
+            }
+            handlingError = false;
         }
     }
 }

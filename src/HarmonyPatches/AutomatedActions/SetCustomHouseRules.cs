@@ -8,7 +8,6 @@ using GridEditor;
 using System.Reflection;
 using System.IO;
 using Newtonsoft.Json;
-using Pyran.NeuroFTK.NeuroIntegration;
 using System.Linq;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
@@ -17,7 +16,7 @@ The values can be customized in NeuroFTKCustomHouseRules.json, located in the sa
 [HarmonyPatch]
 public class SetCustomHouseRules
 {
-    static bool skipRules = true;
+    static readonly bool skipRules = false;
     // // B:/Games/Epic Games/ForTheKing
     // var dir = Path.GetDirectoryName(Application.dataPath);
     readonly static string rulesConfigPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "NeuroFTKCustomHouseRules.json");
