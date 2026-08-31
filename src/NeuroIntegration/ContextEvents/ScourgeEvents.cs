@@ -27,7 +27,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Context.Send($"{FTKHub.Localized<TextEnemy>("STR_" + __instance.GetHauntDBEntry().m_Scourge)} scourge has been disabled");
         }
 
-        [HarmonyPatch(typeof(uiScourgeStatusHUD), nameof(uiScourgeStatusHUD.AlertScourge))]
+        [HarmonyPatch(typeof(uiScourgeStatusHUD), nameof(uiScourgeStatusHUD.AlertScourge))] // not called with sanctum crumble
         [HarmonyPostfix]
         static void OnScourgeTriggered(MiniHexHaunt _mhh)
         {
@@ -35,7 +35,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning($"verify scourge activate func => {_mhh.GetHauntDBEntry()?.m_ActivateFunction}");
         }
 
-        public static string GetScourgeContext()
+        public static string GetScourgeContext(CharacterOverworld cow)
         {
             StringBuilder sb = new();
             MiniHexHaunt haunt;
@@ -45,9 +45,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 haunt = scourge.Value;
                 if (!haunt.m_HauntActive) continue;
                 entry = haunt.m_ThisScourgeEntry;
-                sb.AppendLine($"- ({entry.m_ScourgeName.text} at {HexData.GetVec2Pos(haunt.m_HexLand)}) {FTKHub.Localized<TextInfo>(entry.m_ToolTip.m_Info)}");
+                string range = "";
+                if (HexLand.Distance(cow.m_HexLand, haunt.m_HexLand) > GlobalConfig.maxDistance)
+                {
+                    range = " (out of pathfinding range)";
+                }
+                sb.AppendLine($"- {entry.m_ScourgeName.text} at {HexData.GetVec2Pos(haunt.m_HexLand)}: {FTKHub.Localized<TextInfo>(entry.m_ToolTip.m_Info)}. {range}");
             }
-            if (sb.Length > 0) sb.Insert(0, $"### active scourge events \n");
+            if (sb.Length > 0) sb.Insert(0, $"## active scourge events \n");
             else return "";
             sb.Append($"(scourges can be cleared by defeating them)");
             return sb.ToString();
@@ -60,6 +65,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             //     sb.AppendLine($"- ({entry.m_ScourgeName.text} ({entry.})) {FTKHub.Localized<TextInfo>(entry.m_ToolTip.m_Info)}");
             // }
             // if (sb.Length == 0) return;
+        }
+
+        public static Dictionary<string, MiniHexHaunt> GetActiveHaunts()
+        {
+            Dictionary<string, MiniHexHaunt> result = [];
+            MiniHexHaunt haunt;
+            foreach (KeyValuePair<FTK_enemyCombat.ID, MiniHexHaunt> haunts in GameLogic.Instance.m_HauntManager.m_HauntDictionary)
+            {
+                haunt = haunts.Value;
+                if (!haunt.m_HauntActive) continue;
+                result.Add(HexData.GetVec2Pos(haunt.m_HexLand).ToString(), haunt);
+            }
+            return result;
         }
     }
 }

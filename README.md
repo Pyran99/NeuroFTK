@@ -49,6 +49,27 @@ other adventures use hex movement
 
 v0.9.0: Tony was let loose for a long time with no game breaking issues. praise be the rng gods  
 
+### Known issues  
+- unity access violation with lore store => unsure how to resolve  
+<details>
+  <summary>issue source</summary>
+  
+```csharp
+public static List<FTK_proficiencyTable.ID> GetWeaponProfIDs(FTK_weaponStats2 _weapon)
+{
+	FTK_itembase.ID @enum = FTK_itembase.GetEnum(_weapon.m_ID);
+	if (!uiWeaponDetail.m_WeaponProfLookUp.ContainsKey(@enum))
+	{
+		GameObject gameObject = global::UnityEngine.Object.Instantiate<GameObject>(_weapon._prefab);
+		Weapon componentInChildren = gameObject.GetComponentInChildren<Weapon>();
+		uiWeaponDetail.m_WeaponProfLookUp[@enum] = componentInChildren.GetProficiencyIDs();
+		global::UnityEngine.Object.Destroy(gameObject);
+	}
+	return uiWeaponDetail.m_WeaponProfLookUp[@enum];
+}
+```  
+</details>
+
 ### Todo  
 
 - [ ] Overworld flow

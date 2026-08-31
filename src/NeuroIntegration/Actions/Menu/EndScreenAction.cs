@@ -5,7 +5,7 @@ using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class EndScreenAction : NeuroAction
+    public class EndScreenAction(GameEndScreen.EndType endType) : NeuroAction
     {
         public override string Name => "return_to_menu";
         protected override string Description => "finish the adventure and return to the main menu";
@@ -13,7 +13,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            GameEndScreen.SelectButton();
+            switch (endType)
+            {
+                case GameEndScreen.EndType.StoneHero:
+                    GameEndScreen.SelectButton();
+                    break;
+                case GameEndScreen.EndType.DungeonRun:
+                    FTKClickAnywhere.Instance.OnClick();
+                    break;
+            }
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

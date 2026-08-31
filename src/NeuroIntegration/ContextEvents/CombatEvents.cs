@@ -31,7 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case MiniHexDungeon.EncounterType.Door:
                     Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
                     Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
-                    //TODO add use item to decision window
+                    // CharacterDecisionButtons.AddItemUse(true);
                     break;
             }
         }
@@ -49,8 +49,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void DungeonStairs()
         {
-            Context.Send("entered a dungeon room with stairs to the next floor. ", true);
-            BeginTurns.CtxCombatTurnBeginPlayer(CharacterData.GetActiveCow());
+            Context.Send($"entered a dungeon room with stairs to the next floor. [team state] {BeginTurns.CtxCombatTurnBeginPlayer(CharacterData.GetActiveCow())}");
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceEmptyRoom))]

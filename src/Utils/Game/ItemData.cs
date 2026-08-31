@@ -1,7 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
 using FTKItemName;
 using Google2u;
 using GridEditor;
+using NeuroSdk.Messages.Outgoing;
+using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -25,7 +28,7 @@ namespace Pyran.NeuroFTK.Utils
         ];
 
         /// <returns>{name: description}</returns>
-        public static Dictionary<string, string> HandleEquipmentDetails(FTK_itembase.ID itemId)
+        public static Dictionary<string, string> GetEquipmentDetails(FTK_itembase.ID itemId)
         {
             Dictionary<string, string> data = [];
             string trName = GetItemName(itemId);
@@ -43,11 +46,22 @@ namespace Pyran.NeuroFTK.Utils
         {
             FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
             string result;
-            if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon) result = GetWeaponData(_id);
-            else if (itemBase.m_Equippable) result = GetEquipmentData(_id);
-            else if (FTK_itembase.IsPipeItem(_id)) result = GetPipeData(_id);
-            else result = GetOtherData(_id, _cow);
-
+            if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon)
+            {
+                result = GetWeaponData(_id);
+            }
+            else if (itemBase.m_Equippable)
+            {
+                result = GetEquipmentData(_id);
+            }
+            else if (FTK_itembase.IsPipeItem(_id))
+            {
+                result = GetPipeData(_id);
+            }
+            else
+            {
+                result = GetOtherData(_id, _cow);
+            }
             if (removeStyling) result = StringReplace.RemoveStyling(result);
             if (replaceNewLine) return StringReplace.ReplaceNewLine(result);
             return result;
@@ -75,6 +89,9 @@ namespace Pyran.NeuroFTK.Utils
             return false;
         }
 
+        internal static bool errorSkip = false;
+        internal static bool handlingError = false;
+
         /// <summary>
         /// return has styling
         /// </summary>
@@ -82,25 +99,34 @@ namespace Pyran.NeuroFTK.Utils
         /// <returns>$"{dmg} {dmgType}, {hands}, {breakable} [Abilities] {profs}";</returns>
         public static string GetWeaponData(FTK_itembase.ID _id)
         {
+            if (!handlingError) // PH #58 fix
+            {
+                handlingError = true;
+                errorSkip = true;
+                Plugin.Instance.StartCoroutine(HandleError());
+            }
             FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
             FTK_weaponStats2 stats = (FTK_weaponStats2)itemBase;
+            string profs = "";
+            // uiWeaponDetail wpn = UnityEngine.Object.FindObjectOfType<uiWeaponDetail>();
+            List<FTK_proficiencyTable.ID> listProfs = [.. uiWeaponDetail.GetWeaponProfIDs(stats)]; //FIXME memory error #58
+            if (!stats.m_NoRegularAttack) listProfs.Insert(0, FTK_proficiencyTable.ID.None);
+            for (int i = 0; i < listProfs.Count; i++)
+            {
+                if (listProfs[i] == FTK_proficiencyTable.ID.None) profs += stats.GetAttackDisplay();
+                else
+                {
+                    profs += FTK_proficiencyTableDB.GetDB().GetEntry(listProfs[i]).GetLocalizedDisplayTitle();
+                }
+                if (i < listProfs.Count - 1) profs += ", ";
+            }
             string dmg = stats._maxdmg.ToString();
             string dmgType = stats._dmgtype == FTK_weaponStats2.DamageType.physical ? FTKHub.Localized<TextMisc>("STR_charModPhysicalDamage") : FTKHub.Localized<TextMisc>("STR_charModMagicDamage");
             string hands = stats.m_ObjectSlot == FTK_itembase.ObjectSlot.twoHands ? "Two-Handed" : "One-Handed";
             string breakable = stats.m_CanBreak == true ? "Breaks on critical fail" : "";
-            string profs = "";
-            List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(stats)];
-            if (!stats.m_NoRegularAttack) list.Insert(0, FTK_proficiencyTable.ID.None);
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (list[i] == FTK_proficiencyTable.ID.None) profs += stats.GetAttackDisplay();
-                else
-                {
-                    profs += FTK_proficiencyTableDB.GetDB().GetEntry(list[i]).GetLocalizedDisplayTitle();
-                }
-                if (i < list.Count - 1) profs += ", ";
-            }
-            string result = $"{dmg} {dmgType}, {hands}, {breakable} (Abilities) {profs}";
+            string stat = SwitchSkillTestName(stats._skilltest);
+            string result = $"{dmg} {dmgType}, {hands}, {breakable} (Abilities) {profs}, (rolls with stat) {stat}";
+            errorSkip = false;
             return result;
         }
 
@@ -125,6 +151,34 @@ namespace Pyran.NeuroFTK.Utils
                 return "";
             }
             return FTKItem.Get(_id)?.GetDescription(_cow);
+        }
+
+        public static string SwitchSkillTestName(FTK_weaponStats2.SkillType type)
+        {
+            return type switch
+            {
+                FTK_weaponStats2.SkillType.toughness => "strength",
+                FTK_weaponStats2.SkillType.fortitude => "intelligence",
+                FTK_weaponStats2.SkillType.quickness => "speed",
+                _ => type.ToString()
+            };
+        }
+
+        static IEnumerator HandleError()
+        {
+            yield return null;
+            yield return null;
+            yield return null;
+            if (errorSkip)
+            {
+                Plugin.Logger.LogError("encountered unity error, dont touch the error window");
+                Context.Send("an issue occured with the game (classic Unity), tell vedal to not touch the error window. you can retry to store action after i send you back to the menu");
+                if (LoreStoreUnlocks.uiLoreStore != null)
+                {
+                    QuickTimerCallback timer = new(() => LoreStoreUnlocks.OnActionCancelled(null), LoreStoreUnlocks.uiLoreStore.m_LoreRoot.gameObject, 3000f);
+                }
+            }
+            handlingError = false;
         }
     }
 }

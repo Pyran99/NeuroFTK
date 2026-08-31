@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
-using Google2u;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -8,7 +6,6 @@ using NeuroSdk.Messages.Outgoing;
 using StartGameFE;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.NeuroIntegration;
-using Newtonsoft.Json;
 using System.Collections;
 using NeuroSdk;
 using UnityEngine;
@@ -20,19 +17,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class LoreStoreUnlocks
     {
         static ActionWindow activeWindow = null;
-        static uiLoreStore uiLoreStore;
         static List<uiLoreCard> uiLoreCards;
-        // {"night market": {"description": "", "card": LoreCard}}
-        public static readonly Dictionary<string, Dictionary<string, object>> availableLoreData = [];
+        public static uiLoreStore uiLoreStore;
         public static bool isPurchasing = false;
+
+        public static bool skipCustomization = false;
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.Show))]
         [HarmonyPostfix]
         static void OnShow(uiLoreStore __instance, List<uiLoreCard> ___m_AllCards)
         {
-            string json = JsonConvert.SerializeObject(GetCategoryData(), Formatting.None);
-            json = StringReplace.ReplaceNewLine(json);
-            Context.Send($"[store categories] {json}");
             isPurchasing = false;
             uiLoreStore = __instance;
             uiLoreCards = ___m_AllCards;
@@ -43,9 +37,27 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void OnClosed()
         {
-            availableLoreData.Clear();
             uiLoreCards.Clear();
             Object.Destroy(activeWindow);
+        }
+
+        public static bool HasPurchasableLore()
+        {
+            int lorePoints = LorePersistence.Instance.GetLore();
+            int purchasableItemsCount = GetPurchasableLoreCount();
+            Context.Send($"You have {lorePoints} lore points and there are {purchasableItemsCount} items you can afford. These can be used in the lore store to unlock new events, characters, equipment, and cosmetics, if you have enough points, or saved for another time.");
+            return purchasableItemsCount > 0;
+        }
+
+        public static int GetPurchasableLoreCount()
+        {
+            int purchasableItemsCount = 0;
+            foreach (FTK_loreItem loreItem in FTK_loreItemDB.GetDB().m_Array)
+            {
+                if (!LoreItemData.IsAvailable(loreItem)) continue;
+                purchasableItemsCount += 1;
+            }
+            return purchasableItemsCount;
         }
 
         public static void OnActionCancelled(ActionWindow window)
@@ -54,30 +66,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             uiLoreStore.OnClose();
         }
 
-        public static Dictionary<string, string> GetCategoryData()
-        {
-            List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];
-            List<string> names = [.. categories.Select(c => c.m_DisplayName)];
-            Dictionary<string, string> categoryData = [];
-            string trName = "";
-            string trDescription = "";
-            foreach (FTK_loreCategory category in categories)
-            {
-                if (categoryData.ContainsKey(category.m_DisplayName)) continue;
-                trName = FTKHub.Localized<TextMisc>(category.m_DisplayName);
-                trDescription = FTKHub.Localized<TextLoreStore>(category.m_CategoryDescription);
-                categoryData[trName] = trDescription;
-            }
-            return categoryData;
-        }
-
         public static void OnItemPurchased()
         {
             isPurchasing = false;
             Object.Destroy(activeWindow);
-            if (MainMenu.GetPurchasableLoreCount() > 0)
+            if (GetPurchasableLoreCount() > 0)
             {
-                MainMenu.HasPurchasableLore();
+                HasPurchasableLore();
                 CreateAction(uiLoreStore, uiLoreCards);
                 return;
             }
@@ -86,68 +81,32 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateAction(uiLoreStore _instance, List<uiLoreCard> _uiLoreCards)
         {
-            availableLoreData.Clear();
-            Dictionary<string, string> schemaData = GetAllItemsDetails(_uiLoreCards);
+            Dictionary<FTK_loreCategory, List<uiLoreCard>> categoryData = GenerateCardList(_uiLoreCards);
             QuickTimerCallback timer = new(() =>
             {
-                activeWindow = PurchaseLoreItemAction.RegisterAction(_instance, schemaData);
+                activeWindow = PurchaseLoreItemAction.RegisterAction(_instance, categoryData);
                 UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
             }, _instance.m_LoreRoot.gameObject);
         }
 
-        // get every item that can be purchased
-        private static Dictionary<string, string> GetAllItemsDetails(List<uiLoreCard> cards)
+        public static Dictionary<FTK_loreCategory, List<uiLoreCard>> GenerateCardList(List<uiLoreCard> cards)
         {
-            Dictionary<string, string> loreData = [];
-            Dictionary<string, string> entry;
+            Dictionary<FTK_loreCategory, List<uiLoreCard>> categoryData = [];
+            foreach (FTK_loreCategory category in FTK_loreCategoryDB.GetDB().m_Array)
+            {
+                if (category.m_DisplayName == "STR_realms") continue; // no realm category data
+                categoryData[category] = [];
+            }
             FTK_loreItem item;
+            FTK_loreCategory cat;
             foreach (uiLoreCard card in cards)
             {
                 item = card.m_LoreItem;
-                if (!item.IsRevealed() || item.IsPurchased() || !item.CanAfford()) continue;
-                if (item.m_Category != FTK_loreCategory.ID.items)
-                {
-                    // ShowOtherLoreItem
-                    entry = LoreItemData.GetItemIdAndDescription(item);
-                }
-                else
-                {
-                    FTK_itembase itemBase = FTK_itembase.GetItemBase((FTK_itembase.ID)item.m_UnlockID);
-                    entry = ItemData.HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
-                }
-                string key = entry.Keys?.First().ToLower();
-                // some item sets use the same name
-                if (item.m_Category == FTK_loreCategory.ID.extraArmor || item.m_Category == FTK_loreCategory.ID.extraBackpack || item.m_Category == FTK_loreCategory.ID.extraHelmet || item.m_Category == FTK_loreCategory.ID.extraSkin)
-                {
-                    key = item.m_ID;
-                }
-                if (loreData.ContainsKey(key))
-                {
-                    Plugin.Logger.LogWarning($"duplicate key found {key}");
-                    continue;
-                }
-                key = FixName(key);
-                string value = entry.Values?.First();
-                loreData.Add(key, value);
-                Dictionary<string, object> _value = new()
-                {
-                    {"description", value},
-                    {"card", card}
-                };
-                availableLoreData.Add(key, _value);
+                if (!LoreItemData.IsAvailable(item)) continue;
+                cat = FTK_loreCategoryDB.Get(item.m_Category);
+                categoryData[cat].Add(card);
             }
-            return loreData;
-        }
-
-        private static string FixName(string name)
-        {
-            return name switch
-            {
-                "HelmetMask01" => "HelmetBeastman",
-                "HelmetMask02" => "HelmetOwlbear",
-                "HelmetMask03" => "HelmetTriclops",
-                _ => name,
-            };
+            return categoryData;
         }
 
         public static IEnumerator DoPurchase(uiLoreCard card, string itemName, float delay = 1.0f)
@@ -176,13 +135,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 isPurchasing = false;
                 yield break;
             }
-            string successMsg = $"you purchased {itemName}";
-            foreach (KeyValuePair<string, Dictionary<string, object>> item in availableLoreData)
-            {
-                if (item.Key.ToLower() != itemName.ToLower()) continue;
-                successMsg = $"you purchased {item.Key} {item.Value["description"]}";
-                break;
-            }
+            string successMsg = $"you purchased {itemName}: {LoreItemData.GetItemDescription(card.m_LoreItem)}";
             Context.Send(successMsg);
             yield return new WaitForSeconds(delay);
             if (!GlobalConfig.IsDebugMode()) card.CommitToLorePurchase(); // skips confirm popup, debugMode skips purchase fully
@@ -190,6 +143,69 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             OnItemPurchased();
             isPurchasing = false;
         }
+
+        // public static Dictionary<string, string> GetCategoryData()
+        // {
+        //     List<FTK_loreCategory> categories = [.. FTK_loreCategoryDB.GetDB().m_Array];
+        //     List<string> names = [.. categories.Select(c => c.m_DisplayName)];
+        //     Dictionary<string, string> categoryData = [];
+        //     string trName = "";
+        //     string trDescription = "";
+        //     foreach (FTK_loreCategory category in categories)
+        //     {
+        //         if (categoryData.ContainsKey(category.m_DisplayName)) continue;
+        //         trName = FTKHub.Localized<TextMisc>(category.m_DisplayName);
+        //         trDescription = FTKHub.Localized<TextLoreStore>(category.m_CategoryDescription);
+        //         categoryData[trName] = trDescription;
+        //     }
+        //     return categoryData;
+        // }
+
+
+        // // WORKING ON REMOVE
+        // // get every item that can be purchased
+        // private static Dictionary<string, string> GetAllItemsDetails(List<uiLoreCard> cards)
+        // {
+        //     Dictionary<string, string> loreData = [];
+        //     Dictionary<string, string> entry;
+        //     FTK_loreItem item;
+        //     foreach (uiLoreCard card in cards)
+        //     {
+        //         item = card.m_LoreItem;
+        //         if (!LoreItemData.IsAvailable(item)) continue;
+        //         if (item.m_Category != FTK_loreCategory.ID.items)
+        //         {
+        //             // ShowOtherLoreItem
+        //             entry = LoreItemData.GetItemIdAndDescription(item);
+        //         }
+        //         else
+        //         {
+        //             // FTK_itembase itemBase = FTK_itembase.GetItemBase((FTK_itembase.ID)item.m_UnlockID);
+        //             entry = ItemData.HandleEquipmentDetails((FTK_itembase.ID)item.m_UnlockID);
+        //         }
+        //         string key = entry.Keys?.First().ToLower();
+        //         // some item sets use the same name
+        //         if (item.m_Category == FTK_loreCategory.ID.extraArmor || item.m_Category == FTK_loreCategory.ID.extraBackpack || item.m_Category == FTK_loreCategory.ID.extraHelmet || item.m_Category == FTK_loreCategory.ID.extraSkin)
+        //         {
+        //             key = item.m_ID;
+        //         }
+        //         if (loreData.ContainsKey(key))
+        //         {
+        //             Plugin.Logger.LogWarning($"duplicate key found {key}");
+        //             continue;
+        //         }
+        //         key = FixName(key);
+        //         string value = entry.Values?.First();
+        //         loreData.Add(key, value);
+        //         Dictionary<string, object> _value = new()
+        //         {
+        //             {"description", value},
+        //             {"card", card}
+        //         };
+        //         availableLoreData.Add(key, _value);
+        //     }
+        //     return loreData;
+        // }
 
 
         // // test idea to put each category into its own action

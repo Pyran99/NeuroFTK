@@ -14,9 +14,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     {
         public static ActionWindow RegisterAction(GameObject owner, Dictionary<string, uiLocationMenuEntry> _buttons, string _context = "")
         {
+            CharacterOverworld cow = CharacterData.GetActiveCow();
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new LocationEncounterAction(_buttons));
-            window.SetForce(3, "choose an action for this location encounter", "you encountered something in the overworld and a menu appeared");
+            window.SetForce(3, "choose an action for this location encounter", $"{CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. {StringMessages.FocusDetails}", true);
             if (_context != "") window.SetContext(_context);
             window.Register();
             return window;
@@ -35,7 +36,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = [prop],
                 Properties = new()
                 {
-                    [prop] = QJS.Enum(_buttons.Keys.ToList())
+                    [prop] = QJS.Enum(_buttons.Keys.ToList()),
                 }
             };
             return schema;

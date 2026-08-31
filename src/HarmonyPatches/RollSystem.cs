@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using GridEditor;
 using HarmonyLib;
 using HutongGames.PlayMaker;
@@ -13,9 +15,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static CharacterOverworld currentCOW;
         public static int rollCount = 0;
 
-        [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))] // combat
+        public static uiPoiButton chosenBtn;
+
+        [HarmonyPatch(typeof(SlotControl), nameof(SlotControl.SetSlotResults))] // combat & movement
         [HarmonyPrefix]
-        static void MovementRollResults(SlotControl __instance, FTKPlayerID _player, string[] _slotResults)
+        static void RollResults(SlotControl __instance, FTKPlayerID _player, string[] _slotResults)
         {
             int success = 0;
             foreach (string result in _slotResults)
@@ -58,7 +62,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(uiEncounterSlots), nameof(uiEncounterSlots.DisplaySlots))]
         [HarmonyPostfix]
-        static IEnumerator EncounterSlotResults(IEnumerator __result, CharacterOverworld _cow, string[] _results, FTK_slotOutput.ID _slotOutputID, int _slotSuccess)
+        static IEnumerator EncounterRollResults(IEnumerator __result, CharacterOverworld _cow, string[] _results, FTK_slotOutput.ID _slotOutputID, int _slotSuccess)
         {
             int success = 0;
             foreach (string result in _results)
@@ -69,8 +73,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             rollCount = success;
             CharacterDummy dummy = _cow.m_CurrentDummy;
             string ctx = StringMessages.RollResults.Format([CharacterData.GetCharacterName(dummy.m_CharacterOverworld), success, _results.Length]);
-            Context.Send(ctx, true);
+            if (chosenBtn) // only set from action
+            {
+                FTK_slotOutput.ID slotId = Encounters.GetSlotId(chosenBtn.m_ButtonInfo.m_ButtonType, _cow);
+                Dictionary<string, Dictionary<string, string>> outcomes = RollSlotOutcomes.GetOutcomes(_cow, slotId);
+                if (outcomes.Count > 0)
+                {
+                    if (outcomes.TryGetValue(rollCount.ToString(), out Dictionary<string, string> result))
+                    {
+                        ctx += $". result is {result.Values.First()}";
+                    }
+                }
+            }
+            chosenBtn = null;
+            Context.Send(ctx);
             while (__result.MoveNext()) yield return __result.Current;
+        }
+
+        [HarmonyPatch(typeof(uiPoiButton), nameof(uiPoiButton.OnLeftClick))]
+        [HarmonyPrefix]
+        static void ButtonPressed(uiPoiButton __instance)
+        {
+            chosenBtn = __instance;
         }
 
         static CharacterDummy GetDummy(CharacterOverworld _cow, SlotControl _slots)

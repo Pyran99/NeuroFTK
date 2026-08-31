@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Google2u;
 using GridEditor;
+using NeuroSdk.Json;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
@@ -44,12 +45,13 @@ namespace Pyran.NeuroFTK.Utils
             string _class = $"{stats.m_CharacterClass}";
             string lvl = $"{stats.m_PlayerLevel}";
             string health = $"{stats.GetHealthDisplayString()}";
+            string focus = $"{GetFocusAmount(cow)}";
             string coherent = "";
             if (stats.m_IsInCombat)
             {
                 coherent = dummy.IsCoherent() ? "" : "stunned";
             }
-            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, {coherent}.");
+            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, focus amount {focus}, {coherent}.");
             return sb.ToString();
         }
 
@@ -211,6 +213,54 @@ namespace Pyran.NeuroFTK.Utils
             }
             return items;
         }
+
+        public static string GetFocusAmount(CharacterOverworld cow)
+        {
+            string result;
+            int focus = cow.m_CharacterStats.m_FocusPoints;
+            int maxFocus = cow.m_CharacterStats.MaxFocus;
+            result = $"{focus}/{maxFocus}";
+            return result;
+        }
+
+        public static JsonSchema QuickFocusSchema(CharacterOverworld cow)
+        {
+            int max = cow.m_CharacterStats.m_FocusPoints;
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Integer,
+                Minimum = 0,
+                Maximum = max
+            };
+            return schema;
+        }
+
+        public static bool CanFocusAction(CharacterStats stats, int slots, int usedPoints)
+        {
+            return usedPoints > 0 && stats.CanFocus() && stats.SpentFocus < slots;
+        }
+
+        public static string GetClassMainStat(FTK_playerGameStart.ID classId)
+        {
+            return classId switch
+            {
+                FTK_playerGameStart.ID.blacksmith => "strength/vitality",
+                FTK_playerGameStart.ID.hunter => "awareness/speed",
+                FTK_playerGameStart.ID.minstrel => "talent/intelligence",
+                FTK_playerGameStart.ID.scholar => "intelligence/talent",
+                FTK_playerGameStart.ID.busker => "talent/strength",
+                FTK_playerGameStart.ID.herbalist => "intelligence/awareness",
+                FTK_playerGameStart.ID.trapper => "awareness/talent",
+                FTK_playerGameStart.ID.woodcutter => "Strength/vitality",
+                FTK_playerGameStart.ID.hobo => "any",
+                FTK_playerGameStart.ID.monk => "intelligence/strength",
+                FTK_playerGameStart.ID.treasureHunter => "talent/awareness",
+                FTK_playerGameStart.ID.astronomer => "intelligence/vitality",
+                FTK_playerGameStart.ID.gladiator => "strength/awareness",
+                FTK_playerGameStart.ID.professor => "NYI",
+                _ => "",
+            };
+        }
     }
 
     public sealed class SerializedCharacterData
@@ -222,6 +272,7 @@ namespace Pyran.NeuroFTK.Utils
         public readonly int Gold;
         public readonly string PipeItem;
         public readonly string Health;
+        public readonly string Focus;
         public readonly int Armor;
         public readonly int Resistance;
         public readonly List<string> StatusEffects = [];
@@ -238,6 +289,7 @@ namespace Pyran.NeuroFTK.Utils
             Level = cow.m_CharacterStats.m_PlayerLevel;
             Xp = cow.m_CharacterStats.m_PlayerXP;
             Health = CharacterData.GetCharacterHealth(cow);
+            Focus = CharacterData.GetFocusAmount(cow);
             Gold = cow.m_CharacterStats.m_Gold;
             FTK_pipe.ID pipeID = cow.m_CharacterStats.GetPipe();
             FTK_pipe pipe = FTK_pipeDB.GetDB().GetEntry(pipeID);

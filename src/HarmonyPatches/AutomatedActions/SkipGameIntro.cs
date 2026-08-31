@@ -1,8 +1,9 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
-using Pyran.NeuroFTK.GameConfigs;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
@@ -46,7 +47,13 @@ public class SkipGameIntro
     static IEnumerator Wait()
     {
         Context.Send(PREPARE_TO_DIE_MSG);
-        Plugin.Logger.LogWarning($"debugMode is {GlobalConfig.IsDebugMode()}");
+        StringBuilder sb = new();
+        sb.AppendLine($"Config set:");
+        foreach (KeyValuePair<string, object> kvp in Plugin.config)
+        {
+            sb.AppendLine($"{kvp.Key}: {kvp.Value}");
+        }
+        Plugin.Logger.LogWarning(sb.ToString());
         Plugin.Logger.LogMessage("Character ID: " + WebsocketConnection.Instance.Character?.CharacterId);
         Plugin.Logger.LogMessage("display name: " + WebsocketConnection.Instance.Character?.DisplayName);
         yield return new WaitForSeconds(2f);

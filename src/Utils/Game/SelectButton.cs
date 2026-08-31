@@ -26,6 +26,20 @@ namespace Pyran.NeuroFTK.Utils
             button.OnControllerClick();
         }
 
+        public static IEnumerator UseFocus(int count, uiFTKButton btn, CharacterStats stats)
+        {
+            btn.OnPointerEnter(null);
+            yield return null;
+            while (stats.m_FocusPoints > 0 && count > 0)
+            {
+                count--;
+                btn.m_OnRightClick?.Invoke();
+                yield return new WaitForSeconds(VisualParams.Instance.FocusAnimTime + 0.025f);
+                yield return null;
+            }
+            StartCoroutine(btn, 1.0f);
+        }
+
         public static void StartCoroutine(uiFTKButton button, float wait = 1.0f)
         {
             button.StartCoroutine(SelectButtonWithDelay(button, wait));

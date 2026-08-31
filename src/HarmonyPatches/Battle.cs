@@ -323,8 +323,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
         {
             // CharacterOverworld cow = CharacterData.GetActiveCow();
-            BeginTurns.CtxCombatTurnBeginEnemy();
-            BeginTurns.CtxCombatTurnBeginPlayer(cow);
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
             actions.Clear();
@@ -338,7 +336,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
                 if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow));
             }
-            window = CombatActions.RegisterCombatActions(_instance, ctx, actions); //TODO combat tips in state?
+            string focus = $"### {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 % (all slots focused will be 100%)";
+            string state = $"{BeginTurns.CtxCombatTurnBeginPlayer(cow)} \n{BeginTurns.CtxCombatTurnBeginEnemy()} \n{focus}";
+            window = CombatActions.RegisterCombatActions(_instance, ctx, state, actions);
             offense.Clear();
             defense.Clear();
             initialized = false;
@@ -348,7 +348,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             StringBuilder sb = new();
             if (items.Count == 0) return "";
-            sb.Append("\n### usable belt items \n");
+            sb.AppendLine("\n### usable belt items ");
             foreach (FTK_itembase.ID item in items)
             {
                 sb.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}");
@@ -481,7 +481,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
         /// <summary>
-        /// dictionary style: "name": {"type": "target self", "description": "perfect(56%) = leave combat", "per_roll_chance": "50", "damage": "10"}
+        /// dictionary style: "name": {"type": "target self", "description": "perfect(56%) = leave combat", "per_roll_chance": "50", "damage": "10", "focus": "0"}
         /// </summary>
         public static Dictionary<string, Dictionary<string, string>> GetActionDetails(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> _Proficiencies)
         {
@@ -492,7 +492,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 			FTK_weaponStats2 entry = FTK_weaponStats2DB.GetDB().GetEntry(current.m_WeaponID);
 			FTK_proficiencyTable.ID id = FTK_proficiencyTable.ID.None;
             FTK_weaponStats2.SkillType skillType;
-            int maxRollSlots = GameFlow.Instance.m_DefaultSlots;
+            int maxRollSlots = 0;
             string text = "";
             string[] array = [null, FTKHub.Localized<TextMenu>("STR_battleButtonsStandardAttack")];
 
@@ -507,6 +507,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     }
                     else
                     {
+                        maxRollSlots = GameFlow.Instance.m_DefaultSlots;
                         text = FTKHub.Localized<TextMenu>("STR_battleButtonsFlee");
                     }
                     array[0] = FTKHub.Localized<TextMenu>("STR_battleButtonsTargetSelf");
@@ -545,14 +546,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     }
                     if (id == FTK_proficiencyTable.ID.None) Plugin.Logger.LogError("proficiency error");
 					FTK_proficiencyTable entry3 = FTK_proficiencyTableDB.GetDB().GetEntry(id);
-					if (entry3.m_SlotOverride > 0)
-					{
-						maxRollSlots = entry3.m_SlotOverride;
-					}
-					else
-					{
-						maxRollSlots = entry._slots;
-					}
+                    maxRollSlots = entry3.m_SlotOverride > 0 ? entry3.m_SlotOverride : entry._slots;
 					text = entry3.GetLocalizedDisplayTitle();
 					array = entry3.GetBattleButtonInfo(current);
                     break;
@@ -594,7 +588,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     Plugin.Logger.LogError("invalid button type or standard attack");
                     break;
             }
-            // maxRolls = maxRollSlots;
             data.Add(text, []);
             data[text]["type"] = array[0];
             data[text]["description"] = array[1];
@@ -602,6 +595,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             float accuracy = GetAccuracy(btn, _Proficiencies);
             if (accuracy > -1f) data[text]["per_roll_chance"] = FTKUtil.RoundToInt(accuracy * 100f).ToString() + "%";
             data[text]["damage"] = GetAttackDamage(btn, _Proficiencies).ToString();
+            data[text]["focus"] = maxRollSlots.ToString();
             return data;
         }
 
@@ -678,8 +672,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string type = data[key]["type"];
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
-            string context = $"[{key}]{type}, {description}\n";
-            if (hasRolls) context = $"({key}) {type}, {description}, success chance for each roll {rollChance}\n";
+            string context = $"({key}) {type}, {description}\n";
+            string focus = data[key]["focus"];
+            if (hasRolls) context = $"({key}) {type}, {description}, success chance for each roll: {rollChance}, max focus: {focus}\n";
             return context;
         }
 
@@ -690,7 +685,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string description = data[key]["description"];
             string rollChance = data[key]["per_roll_chance"];
             string dmg = data[key]["damage"];
-            string context = $"({key}) damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll {rollChance}\n";
+            string focus = data[key]["focus"];
+            string context = $"({key}) damage: {dmg}, {type}, {StringReplace.RemoveStyling(description)}, success chance for each roll: {rollChance}, max focus: {focus}\n";
             return context;
         }
 

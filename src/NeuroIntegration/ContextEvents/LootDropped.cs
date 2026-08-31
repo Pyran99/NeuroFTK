@@ -30,7 +30,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             if (___m_LootItem.Contains("_gold_") || ___m_LootItem.Contains("_lore_")) hasAmount = true;
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
             description = ItemData.GetItemDescription(id, CharacterData.GetActiveCow(), true, true);
-            string lootMsg = $"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}): {description}";
+            string lootMsg = $"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}): {description}. ";
             if (itemBase.m_Equippable)
             {
                 lootMsg += "\n";
@@ -95,6 +95,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             FTK_itembase lootItemBase = FTK_itembase.GetItemBase(id);
             FTK_itembase.ObjectType lootType = lootItemBase.m_ObjectType;
             FTK_itembase.ID equipped = FTK_itembase.ID.None;
+            string name = CharacterData.GetCharacterName(cow);
             switch (lootType)
             {
                 case FTK_itembase.ObjectType.weapon:
@@ -113,34 +114,35 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                 {
                     if (equippedShield != FTK_itembase.ID.None) // replace shield
                     {
-                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedShield)}: {ItemData.GetItemDescription(equippedShield, cow, true, true)}.");
+                        sb.Append($"{name} has {ItemData.GetItemName(equippedShield)}: {ItemData.GetItemDescription(equippedShield, cow, true, true)}.");
+                        sb.Append(StringMessages.CharacterEquipped.Format(name, ItemData.GetItemName(equippedShield), ItemData.GetItemDescription(equippedShield, cow, true, true)));
                     }
                     else if (equippedWeapon != FTK_itembase.ID.None)
                     {
                         // int equippedHands = FTK_itembase.GetItemBase(equippedWeapon).m_WeaponHands;
                         // if (equippedHands == 2) // shield replace 2hand
                         // {
-                        //     sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, true, cow)} (equipping the loot will unequip this weapon)");
+                        //     sb.Append($"{name} has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, true, cow)} (equipping the loot will unequip this weapon)");
                         // }
                         // else // shield with 1hand only
                         // {
-                            sb.Append($"({CharacterData.GetCharacterName(cow)}) has no item in {container}.");
+                            sb.Append($"{name} has no item in {container}.");
                         // }
                     }
                     else
                     {
-                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has no weapon equipped.");
+                        sb.Append($"{name} has no weapon equipped.");
                     }
                 }
                 else if (lootType == FTK_itembase.ObjectType.weapon)
                 {
                     if (equippedWeapon != FTK_itembase.ID.None)
                     {
-                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equippedWeapon)}: {ItemData.GetItemDescription(equippedWeapon, cow, true, true)}");
+                        sb.Append(StringMessages.CharacterEquipped.Format(name, ItemData.GetItemName(equippedWeapon), ItemData.GetItemDescription(equippedWeapon, cow, true, true)));
                     }
                     else
                     {
-                        sb.Append($"({CharacterData.GetCharacterName(cow)}) has no item in {container}.");
+                        sb.Append($"{name} has no item in {container}.");
                     }
                 }
             }
@@ -148,13 +150,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             {
                 if (equipped == FTK_itembase.ID.None)
                 {
-                    sb.Append($"({CharacterData.GetCharacterName(cow)}) has no {lootType} equipped");
+                    sb.Append($"{name} has no {lootType} equipped");
                 }
                 else
                 {
-                    sb.Append($"({CharacterData.GetCharacterName(cow)}) has {ItemData.GetItemName(equipped)}: {ItemData.GetItemDescription(equipped, cow, true, true)}");
+                    sb.Append(StringMessages.CharacterEquipped.Format(name, ItemData.GetItemName(equipped), ItemData.GetItemDescription(equipped, cow, true, true)));
                 }
             }
+            sb.Append($" (they want equipment that uses or increases {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stats)");
             return sb.ToString();
         }
     }

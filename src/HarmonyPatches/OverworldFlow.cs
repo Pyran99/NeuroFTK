@@ -308,7 +308,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject);
         }
 
-        static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
+        public static List<HexLand> LoopNeighbors(CharacterOverworld owner, int points, HexLand.SelectType type = HexLand.SelectType.Same)
         {
             HexLand initialHex = owner.GetHexLand();
             List<HexLand> validNeighbors = [];
@@ -471,35 +471,31 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             HexLand hex = _cow.GetHexLand();
-            string ctx = CharacterData.GetTeamPositionState(_cow, hex, lastDestinations);
-            
-            Context.Send(ctx);
-            ctx = QuestHelper.GetQuestData();
-            if (ctx.Contains("may require boat"))
-            {
-                ctx += BoatHelper.AddBoatTravelContext(hex);
-            }
-            string haunts = ScourgeEvents.GetScourgeContext();
-            if (haunts != "") ctx += "\n" + haunts;
-            if (ctx != "") Context.Send(ctx);
+            string teamPositions = CharacterData.GetTeamPositionState(_cow, hex, lastDestinations);
+            string questCtx = QuestHelper.GetQuestData();
+            if (questCtx.Contains("may require boat")) questCtx += BoatHelper.AddBoatTravelContext(hex);
+            string haunts = ScourgeEvents.GetScourgeContext(_cow);
+            if (haunts != "") questCtx += "\n" + haunts;
+            string state = $"{teamPositions}\n{questCtx}";
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
+            validQuests.AddRange([.. ScourgeEvents.GetActiveHaunts().Select(x => x.Key)]);
             IEnumerable<CharacterOverworld> validCows = CharacterData.GetCowsNotOnThisHex(_cow);
             if (hexPositions.Count == 0)
             {
-                HandleInvalidMovement(_cow, validQuests, validCows);
+                HandleInvalidMovement(_cow, validQuests, validCows, tileCtx, state);
                 return;
             }
             MiniHexInfo poi = hex.GetPOI();
             bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
+            window = MovementAction.CreateWindow(_cow, tileCtx, state, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
         }
 
-        static bool HandleInvalidMovement(CharacterOverworld _cow, List<string> validQuests, IEnumerable<CharacterOverworld> validCows)
+        static bool HandleInvalidMovement(CharacterOverworld _cow, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, string ctx = "", string state = "")
         {
             if (_cow.IsInAirShip())
             {
-                window = MovementAction.CreateWindow(_cow, "", [], QuestHelper.questDict, validQuests, validCows, true);
+                window = MovementAction.CreateWindow(_cow, ctx, state, [], QuestHelper.questDict, validQuests, validCows, true);
                 return true;
             }
             Plugin.Logger.LogError("no hex positions found, forcing end turn");
@@ -537,6 +533,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             HexLand dest = quest.GetHexLandDestination();
+            cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
+        }
+
+        public static void NeuroTryGoToHaunt(CharacterOverworld cow, MiniHexHaunt haunt)
+        {
+            if (haunt == null)
+            {
+                Plugin.Logger.LogError("chosen scourge was null");
+                Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
+                QuickTimerCallback timer = new(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2000f);
+                return;
+            }
+            HexLand dest = haunt.m_HexLand;
             cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
         }
 

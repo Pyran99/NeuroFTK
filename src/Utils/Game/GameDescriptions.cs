@@ -100,7 +100,7 @@ namespace Pyran.NeuroFTK.Utils
                 SubPanelBaseBase.ButtonID.GetHealed => "heal",
                 SubPanelBaseBase.ButtonID.Meditate => "recover focus points",
                 SubPanelBaseBase.ButtonID.Rest => "take a quick break and recover some health",
-                SubPanelBaseBase.ButtonID.SealHaunt => "seal the haunt",
+                SubPanelBaseBase.ButtonID.SealHaunt => "seal the scourge",
                 SubPanelBaseBase.ButtonID.Secure => "secure desc NYI",
                 SubPanelBaseBase.ButtonID.Train => "purchase a permanent stat increase",
                 SubPanelBaseBase.ButtonID.Tribute => "pay tribute to this statue",

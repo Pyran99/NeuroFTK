@@ -12,12 +12,9 @@ public class CustomHouseRules
         { "FrostAdventure", new CustomRuleValues(0f, 6f, 80f) }, // chaos is always 0
         { "Pirates", new CustomRuleValues(18f, 6f, 80f) }, // chaos is flood events
         { "DungeonCrawl", new CustomRuleValues(10f, 6f, 80f) },
-        // Cellar cant customize
-        { "HildebrantsCellar", new CustomRuleValues(8f, 6f, 80f) },
-        // chaos & life dont change | co-op only
-        { "GraveRobber", new CustomRuleValues(0f, 0f, 30f, 100f) },
-        // DLC
-        { "LostCiv", new CustomRuleValues(11f, 6f, 80f, 100f) },
+        { "HildebrantsCellar", new CustomRuleValues(8f, 6f, 80f) }, // Cellar cant customize
+        { "GraveRobber", new CustomRuleValues(0f, 0f, 30f, 100f) }, // chaos & life dont change | co-op only
+        { "LostCiv", new CustomRuleValues(11f, 6f, 80f, 100f) }, // DLC
     };
 
 }

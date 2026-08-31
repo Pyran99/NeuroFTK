@@ -243,6 +243,12 @@ namespace Pyran.NeuroFTK.Utils
             if (hex.GetPOI() && hex.GetPOI() is MiniHexHazard) return true;
             return false;
         }
+
+        public static List<HexLand> GetAllTilesWithinRange(int range, HexLand startingHex, CharacterOverworld cow)
+        {
+            List<HexLand> result = OverworldFlow.LoopNeighbors(cow, range, HexLand.SelectType.All);
+            return result;
+        }
         
     }
 }
