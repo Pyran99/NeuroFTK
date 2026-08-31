@@ -56,14 +56,6 @@ namespace Pyran.NeuroFTK.GameConfigs
             FirstLoadResume = (bool)_config["launch_resume"];
             AllowCheats = (bool)_config["allow_cheats"];
             MaxHexSearch = Convert.ToInt32(_config["max_hex_search"]);
-
-            StringBuilder sb = new();
-            sb.AppendLine($"Config set:");
-            foreach (KeyValuePair<string, object> kvp in _config)
-            {
-                sb.AppendLine($"{kvp.Key}: {kvp.Value}");
-            }
-            Plugin.Logger.LogWarning(sb.ToString());
         }
     }
 }

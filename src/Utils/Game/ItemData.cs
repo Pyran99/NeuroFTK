@@ -1,7 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using FTKItemName;
 using Google2u;
 using GridEditor;
+using HarmonyLib;
+using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.Utils
 {
@@ -95,23 +98,25 @@ namespace Pyran.NeuroFTK.Utils
         {
             FTK_itembase itemBase = FTK_itembase.GetItemBase(_id);
             FTK_weaponStats2 stats = (FTK_weaponStats2)itemBase;
+            string profs = "";
+            // uiWeaponDetail wpn = UnityEngine.Object.FindObjectOfType<uiWeaponDetail>();
+            List<FTK_proficiencyTable.ID> listProfs = [.. uiWeaponDetail.GetWeaponProfIDs(stats)]; //FIXME memory error #58
+            if (!stats.m_NoRegularAttack) listProfs.Insert(0, FTK_proficiencyTable.ID.None);
+            for (int i = 0; i < listProfs.Count; i++)
+            {
+                if (listProfs[i] == FTK_proficiencyTable.ID.None) profs += stats.GetAttackDisplay();
+                else
+                {
+                    profs += FTK_proficiencyTableDB.GetDB().GetEntry(listProfs[i]).GetLocalizedDisplayTitle();
+                }
+                if (i < listProfs.Count - 1) profs += ", ";
+            }
             string dmg = stats._maxdmg.ToString();
             string dmgType = stats._dmgtype == FTK_weaponStats2.DamageType.physical ? FTKHub.Localized<TextMisc>("STR_charModPhysicalDamage") : FTKHub.Localized<TextMisc>("STR_charModMagicDamage");
             string hands = stats.m_ObjectSlot == FTK_itembase.ObjectSlot.twoHands ? "Two-Handed" : "One-Handed";
             string breakable = stats.m_CanBreak == true ? "Breaks on critical fail" : "";
-            string profs = "";
-            List<FTK_proficiencyTable.ID> list = [.. uiWeaponDetail.GetWeaponProfIDs(stats)];
-            if (!stats.m_NoRegularAttack) list.Insert(0, FTK_proficiencyTable.ID.None);
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (list[i] == FTK_proficiencyTable.ID.None) profs += stats.GetAttackDisplay();
-                else
-                {
-                    profs += FTK_proficiencyTableDB.GetDB().GetEntry(list[i]).GetLocalizedDisplayTitle();
-                }
-                if (i < list.Count - 1) profs += ", ";
-            }
-            string result = $"{dmg} {dmgType}, {hands}, {breakable} (Abilities) {profs}";
+            string stat = SwitchSkillTestName(stats._skilltest);
+            string result = $"{dmg} {dmgType}, {hands}, {breakable} (Abilities) {profs}, (rolls with stat) {stat}";
             return result;
         }
 
@@ -136,6 +141,17 @@ namespace Pyran.NeuroFTK.Utils
                 return "";
             }
             return FTKItem.Get(_id)?.GetDescription(_cow);
+        }
+
+        public static string SwitchSkillTestName(FTK_weaponStats2.SkillType type)
+        {
+            return type switch
+            {
+                FTK_weaponStats2.SkillType.toughness => "strength",
+                FTK_weaponStats2.SkillType.fortitude => "intelligence",
+                FTK_weaponStats2.SkillType.quickness => "speed",
+                _ => type.ToString()
+            };
         }
     }
 }

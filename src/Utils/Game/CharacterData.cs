@@ -239,6 +239,28 @@ namespace Pyran.NeuroFTK.Utils
         {
             return usedPoints > 0 && stats.CanFocus() && stats.SpentFocus < slots;
         }
+
+        public static string GetClassMainStat(FTK_playerGameStart.ID classId)
+        {
+            return classId switch
+            {
+                FTK_playerGameStart.ID.blacksmith => "strength/vitality",
+                FTK_playerGameStart.ID.hunter => "awareness/speed",
+                FTK_playerGameStart.ID.minstrel => "talent/intelligence",
+                FTK_playerGameStart.ID.scholar => "intelligence/talent",
+                FTK_playerGameStart.ID.busker => "talent/strength",
+                FTK_playerGameStart.ID.herbalist => "intelligence/awareness",
+                FTK_playerGameStart.ID.trapper => "awareness/talent",
+                FTK_playerGameStart.ID.woodcutter => "Strength/vitality",
+                FTK_playerGameStart.ID.hobo => "any",
+                FTK_playerGameStart.ID.monk => "intelligence/strength",
+                FTK_playerGameStart.ID.treasureHunter => "talent/awareness",
+                FTK_playerGameStart.ID.astronomer => "intelligence/vitality",
+                FTK_playerGameStart.ID.gladiator => "strength/awareness",
+                FTK_playerGameStart.ID.professor => "NYI",
+                _ => "",
+            };
+        }
     }
 
     public sealed class SerializedCharacterData

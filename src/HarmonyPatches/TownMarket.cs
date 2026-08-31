@@ -94,6 +94,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 sb.AppendLine($"- ({item.Key}) {ItemData.GetItemName(item.Value)} {ItemData.GetItemDescription(item.Value, _cow, true, true)}. ");
             }
+            sb.AppendLine($" (they want equipment that uses or increases {CharacterData.GetClassMainStat(_cow.m_CharacterStats.m_CharacterClass)} stats)");
             Context.Send(sb.ToString());
             sb = new();
             sb.AppendLine("## market items ([name](cost) description) ");
