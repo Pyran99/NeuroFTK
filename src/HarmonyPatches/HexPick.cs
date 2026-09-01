@@ -74,6 +74,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void PickHex(HexLand hex, bool ok = true)
         {
+            FTKItem item = FTKItem.Get(itemUsed);
+            if (item is Movement.IPickHexClient)
+            {
+                if (!(item as Movement.IPickHexClient).PickHexValidCallback(hex))
+                {
+                    Plugin.Logger.LogError($"chosen hex is not valid for scroll item {itemUsed}");
+                    Context.Send($"chosen hex is not valid for scroll item {itemUsed}");
+                    Movement.Instance.PickHexCancelled();
+                    return;
+                }
+            }
             ReverseHexHover(Movement.Instance, hex);
             ReverseHexPick(Movement.Instance, hex, ok);
         }
@@ -199,7 +210,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 QuickTimerCallback timer = new(DelayCancel, Movement.Instance.gameObject, 1500f);
                 return;
             }
-            if (sendPoiCtx)
+            if (sendPoiCtx && pois.Count > 0)
             {
                 string poiCtx = "## POIs in range (you cannot choose these directly. If you want to move to one of these, select a position with close x/z values). \n" + OverworldFlow.GetTileContext(pois, true, false);
                 Context.Send(poiCtx, true);

@@ -352,12 +352,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// </summary>
         public static string GetTileContext(List<HexLand> _tiles, bool includeDistance = false, bool isChooseCtx = true)
         {
+            if (_tiles.Count == 0) return "";
             StringBuilder sb = new();
             if (isChooseCtx) sb.AppendLine(StringMessages.HexContext);
             CharacterOverworld cow = CharacterData.GetActiveCow();
             SortRealmThenDistance(_tiles, cow);
             hexPositions.Clear();
-            string realm = _tiles[0].GetRealmDisplayValue();
+            string realm = _tiles.First()?.GetRealmDisplayValue() ?? "";
             sb.AppendLine($"### {realm}");
             foreach (HexLand hex in _tiles)
             {
