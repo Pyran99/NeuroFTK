@@ -196,7 +196,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 if (tiles.Count == 0) errMsg += $"there were no hexes to pick for {ItemData.GetItemName(itemUsed)}";
             }
-            Plugin.Logger.LogWarning($"found {tiles.Count} tiles");
+            Plugin.Logger.LogWarning($"found {tiles.Count} pick tiles");
             if (tiles.Count > GlobalConfig.MaxHexSearch)
             {
                 tiles = tiles.Take(GlobalConfig.MaxHexSearch).ToDictionary(x => x.Key, x => x.Value);

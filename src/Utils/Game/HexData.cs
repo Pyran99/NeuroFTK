@@ -138,13 +138,13 @@ namespace Pyran.NeuroFTK.Utils
             if (inAirship) return true; // air can go anywhere
             bool isLand = hex.m_Type == HexLand.Type.Land;
             bool cowOnLand = cow.GetHexLand().m_Type == HexLand.Type.Land;
-            bool onBoat = cow.IsInBoat();
+            bool cowOnBoat = cow.IsInBoat();
             if (cowOnLand && hex.IsShoreWater() && hex.IsBoat()) return true; // land=>boat on shoreline
             if (!isLand && pathContainsBoat) return true;
             if (isLand && cowOnLand) return true; // land=>land
-            if (isLand && onBoat) return true; // boat=>land
+            if (!isLand && cowOnBoat) return true; // boat=>water
+            if (isLand && cowOnBoat) return true; // boat=>land
             if (!isLand && cowOnLand) return false; // land=>water
-            if (!isLand && onBoat) return true; // boat=>water
             // what would 2 boats do
             return false;
         }

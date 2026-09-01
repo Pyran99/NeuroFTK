@@ -4,6 +4,7 @@ using System.Text;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.GameConfigs;
 using UnityEngine;
 
 namespace Pyran.NeuroFTK.HarmonyPatches;
@@ -52,6 +53,11 @@ public class SkipGameIntro
         foreach (KeyValuePair<string, object> kvp in Plugin.config)
         {
             sb.AppendLine($"{kvp.Key}: {kvp.Value}");
+        }
+        if (GlobalConfig.MaxHexSearch <= 0)
+        {
+            Plugin.Logger.LogError($"invalid max_hex_search value {GlobalConfig.MaxHexSearch}. value is reset to 50");
+            GlobalConfig.ResetMaxSearch();
         }
         Plugin.Logger.LogWarning(sb.ToString());
         Plugin.Logger.LogMessage("Character ID: " + WebsocketConnection.Instance.Character?.CharacterId);

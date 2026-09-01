@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Pyran.NeuroFTK.HarmonyPatches;
 
 namespace Pyran.NeuroFTK.GameConfigs
@@ -14,7 +13,7 @@ namespace Pyran.NeuroFTK.GameConfigs
         public static bool IsMultiplayer { get; private set; } = false;
         public static bool FirstLoadResume { get; private set; } = true;
         public static bool AllowCheats { get; private set; } = false;
-        public static int MaxHexSearch { get; private set; } = 100;
+        public static int MaxHexSearch { get; private set; } = 50;
         public static float maxDistance = 2.8866f * 15f;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
@@ -25,7 +24,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             { "use_custom_rules", CustomHouseRules.SET_CUSTOM_RULES },
             { "is_multiplayer", false },
             { "launch_resume", true },
-            { "max_hex_search", 100 },
+            { "max_hex_search", 50 },
             { "force_custom_adventure", false },
             { "custom_adventure_code", "ftk" },
         };
@@ -33,6 +32,7 @@ namespace Pyran.NeuroFTK.GameConfigs
         public static bool IsDebugMode() => debugMode;
         public static bool ResumeOnFirstLoad() => FirstLoadResume;
         public static bool ForcedCustomAdventure() => ForceSpecificAdventure;
+        public static void ResetMaxSearch() => MaxHexSearch = 50;
 
         public static void GameLoaded()
         {

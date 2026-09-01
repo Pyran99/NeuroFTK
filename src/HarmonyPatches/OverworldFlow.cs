@@ -28,6 +28,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static readonly Dictionary<string, HexLand> hexPositions = [];
 
         static readonly bool removeEmptyWater = false;
+        static readonly bool removeRandomEmpty = true;
         static bool isRemake = false;
         static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = [];
 
@@ -275,11 +276,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Task task = Task.Factory.StartNew(() => tiles = [.. LoopNeighbors(currentCOW, points)]);
             yield return task.IsCompleted;
 
-            Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds");
-            if (removeEmptyWater)
+            Plugin.Logger.LogWarning($"found {tiles.Count} tiles: {Time.time - startTime} seconds. max limit set: {GlobalConfig.MaxHexSearch}");
+            bool removed = false;
+            List<HexLand> toRemove = [];
+            if (removeEmptyWater) // dont use anymore
             {
-                bool removed = false;
-                List<HexLand> toRemove = [];
                 for (int i = 0; i < tiles.Count; i++)
                 {
                     if (tiles[i].IsWater())
@@ -290,20 +291,37 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 foreach (HexLand hex in toRemove) tiles.Remove(hex);
                 if (removed) Plugin.Logger.LogWarning($"removed empty water tiles");
+                removed = false;
+                toRemove.Clear();
+            }
+            if (removeRandomEmpty)
+            {
+                int max = 200;
+                while (tiles.Count > GlobalConfig.MaxHexSearch && max > 0)
+                {
+                    max--;
+                    int rand = Random.Range(0, tiles.Count - 1);
+                    if (tiles[rand].HasPOI()) continue;
+                    int last = tiles.Count - 1;
+                    HexLand temp = tiles[rand];
+                    tiles[rand] = tiles[last];
+                    tiles[last] = temp;
+                    tiles.RemoveAt(last);
+                    removed = true;
+                }
+                if (tiles.Count > GlobalConfig.MaxHexSearch)
+                {
+                    int diff = tiles.Count - GlobalConfig.MaxHexSearch;
+                    tiles.RemoveRange(GlobalConfig.MaxHexSearch, diff);
+                }
+                if (removed) Plugin.Logger.LogWarning($"removed random empty tiles");
             }
             if (tiles.Count == 0)
             {
-                // if (currentCOW.GetHexLand().HasPOI())
-                // {
-                    
-                // }
-                // else
-                // {
                 Plugin.Logger.LogError("auto end turn from no tiles");
                 Context.Send($"there were no locations you could move to right now, your turn is ending automatically", true);
                 uiEndTurnButton.Instance.OnEndTurn();
                 yield break;
-                // }
             }
             QuickTimerCallback timer = new(() => CreateMovementActions(currentCOW), FTKUI.Instance.m_HexStatusOverworld.gameObject);
         }
@@ -338,12 +356,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 loopCount++;
             }
             if (validNeighbors.Count == 0) Plugin.Logger.LogError("no valid neighbors found");
-            if (validNeighbors.Count > GlobalConfig.MaxHexSearch)
-            {
-                Plugin.Logger.LogWarning($"hex count exceeded {GlobalConfig.MaxHexSearch}");
-                int diff = validNeighbors.Count - GlobalConfig.MaxHexSearch;
-                validNeighbors.RemoveRange(GlobalConfig.MaxHexSearch, diff);
-            }
+            // if (validNeighbors.Count > GlobalConfig.MaxHexSearch)
+            // {
+            //     Plugin.Logger.LogWarning($"hex count exceeded {GlobalConfig.MaxHexSearch}");
+            //     int diff = validNeighbors.Count - GlobalConfig.MaxHexSearch;
+            //     validNeighbors.RemoveRange(GlobalConfig.MaxHexSearch, diff);
+            // }
             return validNeighbors;
         }
 
@@ -378,13 +396,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             _tiles.Sort(sort);
         }
 
-        // static void SortDistance(List<HexLand> _tiles, CharacterOverworld cow)
-        // {
-        //     HexLand hex = cow.GetHexLand();
-        //     _tiles.Sort((a, b) => HexLand.Distance(hex, a).CompareTo(HexLand.Distance(hex, b)));
-        //     // _tiles.OrderBy(x => HexLand.Distance(hex, x)).ThenBy(x => x.GetLocationDisplayValue(cow));
-        // }
-
         public static void AddHexPosition(string pos, HexLand hex)
         {
             hexPositions.Add(pos, hex);
@@ -400,8 +411,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // hover destination to generate path list
             ReverseClearDrawPath(Movement.Instance, Movement.Instance.m_HexListPartial);
             ReverseCheckHoverPath(Movement.Instance, dest);
-            List<HexLand> hexes = [.. Movement.Instance.m_HexListPartial];
-            bool pathContainsBoat = hexes.Count(x => x.IsBoat()) > 0;
+            List<HexLand> pathList = [.. Movement.Instance.m_HexListPartial];
+            bool pathContainsBoat = pathList.Count(x => x.IsBoat()) > 0;
             if (!isTracking || GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
                 Plugin.Logger.LogError($"tried to execute move action while character is not in tracking state: tracking = {isTracking}, mode = {GameStates.mode}");
@@ -409,17 +420,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // QuickTimerCallback timer = new(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject);
                 yield break;
             }
-            bool isSameTarget = hexes.Contains(hex);
-            if (outOfRange && !isSameTarget && !isSameHex)
+            bool isSameTarget = pathList.Contains(dest); // path contains destination
+            if ((outOfRange || !isSameTarget) && !isSameHex)
             {
                 // the generated move path from hover
-                dest = hexes.Last();
+                dest = pathList.Last();
                 bool failed = true;
-                for (int i = hexes.Count-1; i >= 0; i--)
+                for (int i = pathList.Count-1; i >= 0; i--)
                 {
                     if (HexData.CanTravel(dest, curCow, pathContainsBoat))
                     {
-                        dest = hexes[i];
+                        dest = pathList[i];
                         failed = false;
                         break;
                     }

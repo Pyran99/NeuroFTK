@@ -82,7 +82,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(object[] parsedData)
         {
-            Plugin.Logger.LogMessage("execute attack: " + parsedData[0] + ", " + parsedData[1] + ", " + parsedData[2]);
+            // Plugin.Logger.LogMessage("execute attack: " + parsedData[0] + ", " + parsedData[1] + ", " + parsedData[2]);
             offense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
             FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
             if (target == null)
@@ -103,7 +103,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
         {
             parsedData = new object[3];
-            Plugin.Logger.LogWarning(actionData.Data);
+            // Plugin.Logger.LogWarning(actionData.Data);
             string target = actionData.Data?.Value<string>("target");
             if (target.IsNullOrEmpty() || !names.ContainsValue(target)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("target"));
             string ability = actionData.Data?.Value<string>("ability");
