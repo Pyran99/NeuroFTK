@@ -82,11 +82,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateAction(uiLoreStore _instance, List<uiLoreCard> _uiLoreCards)
         {
             Dictionary<FTK_loreCategory, List<uiLoreCard>> categoryData = GenerateCardList(_uiLoreCards);
-            QuickTimerCallback timer = new(() =>
+            // _instance.StartCoroutine(ActionWait(_instance, categoryData)); // potential #58 fix
+            _instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() =>
             {
                 activeWindow = PurchaseLoreItemAction.RegisterAction(_instance, categoryData);
-                UnregisterDisabledObject.QuickCreate(uiLoreStore.gameObject, activeWindow);
-            }, _instance.m_LoreRoot.gameObject);
+                UnregisterDisabledObject.QuickCreate(uiLoreStore.m_LoreRoot.gameObject, activeWindow);
+            }, _instance.m_LoreRoot.gameObject));
         }
 
         public static Dictionary<FTK_loreCategory, List<uiLoreCard>> GenerateCardList(List<uiLoreCard> cards)
@@ -107,6 +108,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 categoryData[cat].Add(card);
             }
             return categoryData;
+        }
+
+        static IEnumerator ActionWait(uiLoreStore _instance, Dictionary<FTK_loreCategory, List<uiLoreCard>> categoryData)
+        {
+            yield return new WaitForSeconds(1.0f);
+            activeWindow = PurchaseLoreItemAction.RegisterAction(_instance, categoryData);
+            UnregisterDisabledObject.QuickCreate(uiLoreStore.m_LoreRoot.gameObject, activeWindow);
         }
 
         public static IEnumerator DoPurchase(uiLoreCard card, string itemName, float delay = 1.0f)

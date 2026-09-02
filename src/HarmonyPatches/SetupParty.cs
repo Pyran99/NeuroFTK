@@ -46,7 +46,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Context.Send("your party has been randomized", true);
             SendPartyDetails();
-            QuickTimerCallback timer = new(() => ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject), characterCreateRoot.gameObject);
+            characterCreateRoot.StartCoroutine( QuickTimerCallback.WaitRoutine(() => ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject), characterCreateRoot.gameObject));
         }
 
         [HarmonyPatch(typeof(FTKHub), nameof(FTKHub.EnterFahrul))]
@@ -64,7 +64,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             SendPartyDetails();
-            QuickTimerCallback timer = new(() => ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject), characterCreateRoot.gameObject);
+            characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(() => ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject), characterCreateRoot.gameObject));
         }
 
         static void SendPartyDetails(bool addClassData = true)

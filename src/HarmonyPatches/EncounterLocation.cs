@@ -129,13 +129,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 ctx += $"\nthis encounters enemies are lvl {locationMenuInstance.m_Difficulty.text}";
             }
             Context.Send(ctx);
-            QuickTimerCallback timer = new(CreateActionWindow, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject);
+            uiLocationMenuDisplay.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(CreateActionWindow, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject));
         }
 
         public static void CreateActionWindow()
         {
             Dictionary<string, uiLocationMenuEntry> _buttons = GetLocEncounterButtons();
-            StringBuilder sb = new("## buttons ");
+            StringBuilder sb = new("## buttons \n");
             foreach (KeyValuePair<string, uiLocationMenuEntry> button in _buttons)
             {
                 string desc = button.Value.m_Text0.text;

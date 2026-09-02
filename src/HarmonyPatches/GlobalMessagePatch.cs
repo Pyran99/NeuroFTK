@@ -18,7 +18,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator PanelShown(IEnumerator __result, uiGlobalMessageHUD __instance)
         {
             while (__result.MoveNext()) yield return __result.Current;
-            QuickTimerCallback timer = new(() => GetButtons(__instance), __instance.m_MessagePanel.gameObject);
+            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => GetButtons(__instance), __instance.m_MessagePanel.gameObject));
         }
 
         [HarmonyPatch(typeof(uiGlobalMessageHUD), nameof(uiGlobalMessageHUD.UseOkayButton))]

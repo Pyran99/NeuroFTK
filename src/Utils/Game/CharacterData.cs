@@ -118,7 +118,7 @@ namespace Pyran.NeuroFTK.Utils
 
         public static string GetAllStatusEffects(CharacterOverworld cow)
         {
-            StringBuilder sb = new($"(status effects on {GetCharacterName(cow)})\n[Effects] ");
+            StringBuilder sb = new($"status effects on {GetCharacterName(cow)}:\n[Effects] ");
             string statusName;
             string statusDesc;
             List<ProficiencyBase> effects = GetStatusEffects(cow);

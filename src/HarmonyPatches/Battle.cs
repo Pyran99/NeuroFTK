@@ -71,7 +71,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StanceBtnInstance = __instance;
             beltActionUsed = false;
             ToggleDisposableActions.ToggleCombatActions(true, false);
-            QuickTimerCallback timer = new(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject);
+            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject));
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]

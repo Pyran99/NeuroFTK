@@ -6,7 +6,7 @@ namespace Pyran.NeuroFTK.Utils
     {
         public const string CultDeviceDestroyed = "you destroyed the evil cult device";
         public const string CultDeviceDestroyedFail = "you failed to destroy the evil cult device";
-        public const string HexContext = "## hexes to choose, organized by realm names, each displayed as: (position x,z) (quest name) (has dead) (POI: state) (distance). Empty hexes only show position. ";
+        public const string HexContext = "## hexes to choose, organized by realm names, each displayed as: (position x,z), with optional context including any of (quest name) (encounter) (distance). Empty hexes only show position. ";
         public const string DungeonRolls = "## roll chances displayed as: character [button (description)] total successful rolls(chance for this result) = outcome result. (buttons with no roll results will always succeed)";
         public const string BattleWon = "you have won the battle!";
         public const string GameOver = $"your team is all dead, you have lost this game. items can be purchased in the lore store to improve your combat capabilities.";

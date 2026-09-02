@@ -61,7 +61,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogMessage("reading journal");
                 yield break;
             }
-            QuickTimerCallback timer = new (() => CreateEncounterAction(EncounterMenuInstance.m_ActiveSubPanel), EncounterMenuInstance.m_ActiveSubPanel.gameObject);
+            EncounterMenuInstance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateEncounterAction(EncounterMenuInstance.m_ActiveSubPanel), EncounterMenuInstance.m_ActiveSubPanel.gameObject));
         }
 
         [HarmonyPatch(typeof(uiCarnivalMenu), "CreateCarnivalOptions")]

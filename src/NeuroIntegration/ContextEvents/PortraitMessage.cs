@@ -42,7 +42,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static IEnumerator PanelShown(IEnumerator __result, uiPortraitMessageHud __instance, float _delay)
         {
             while (__result.MoveNext()) yield return __result.Current;
-            QuickTimerCallback timer = new(() => ContinueAfterMessageSent(__instance), __instance.m_MessagePanel.gameObject, _delay*1000f);
+            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => ContinueAfterMessageSent(__instance), __instance.m_MessagePanel.gameObject, _delay));
         }
 
         [HarmonyPatch(typeof(FTKClickAnywhere), nameof(FTKClickAnywhere.OnClose))]

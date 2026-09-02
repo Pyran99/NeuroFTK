@@ -90,7 +90,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             ctx = sb.ToString();
             Context.Send(ctx);
-            QuickTimerCallback timer = new(CreateAction, uiGetQuestMenu.Instance.m_ListRoot.gameObject);
+            //  = new(CreateAction, uiGetQuestMenu.Instance.m_ListRoot.gameObject);
+            uiGetQuestMenu.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(CreateAction, uiGetQuestMenu.Instance.m_ListRoot.gameObject));
         }
 
         static string GetItemDetails(int count)

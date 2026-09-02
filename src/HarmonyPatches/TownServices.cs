@@ -22,7 +22,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // List<MiniHexServiceType> services = _hex.GetServices();
             neuroData.Clear();
             Object.Destroy(window);
-            QuickTimerCallback timer = new(CreateAction, uiTownServiceMenu.Instance.m_DisplayRoot.gameObject);
+            //  = new(CreateAction, uiTownServiceMenu.Instance.m_DisplayRoot.gameObject);
+            uiTownServiceMenu.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(CreateAction, uiTownServiceMenu.Instance.m_DisplayRoot.gameObject));
         }
 
         [HarmonyPatch(typeof(GeneralMenuBase), nameof(GeneralMenuBase.DisableMenu))]

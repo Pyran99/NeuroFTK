@@ -44,7 +44,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             isShowing = true;
             instance = __instance;
             Object.Destroy(activeWindow);
-            QuickTimerCallback timer = new(CreateAction, __instance.gameObject);
+            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(CreateAction, __instance.gameObject));
         }
 
         [HarmonyPatch(typeof(VoteButtonContainer), nameof(VoteButtonContainer.Hide))]

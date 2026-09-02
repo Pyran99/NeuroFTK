@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using NeuroSdk.Messages.Outgoing;
 using UnityEngine;
@@ -16,16 +17,27 @@ namespace Pyran.NeuroFTK.Utils
         static Quaternion initialCombatCamera;
         static Quaternion initialCowRotation;
         static Vector3 initialCowPos;
-        static readonly float cooldownMs = 10_000f;
+        static readonly float cooldown = 10f;
 
         private static bool SetCooldown(bool value)
         {
             onCooldown = value;
             if (value)
             {
-                QuickTimerCallback timer = new(Reset, null, cooldownMs);
+                Plugin.Instance.StartCoroutine(Wait());
+                static IEnumerator Wait()
+                {
+                    yield return new WaitForSeconds(cooldown);
+                    Reset();
+                }
             }
             return value;
+        }
+
+        static IEnumerator Test1(Action method, GameObject owner)
+        {
+            yield return null;
+            method?.Invoke();
         }
 
         public static void Reset() => OnCooldown = false;

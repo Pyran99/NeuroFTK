@@ -53,7 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string context = AdventuresContext(instance);
             window.SetContext(context);
             window.AddAction(new ChooseAdventureAction(instance));
-            window.SetForce(0, "select an adventure to play", "you are in the adventure select screen", true);
+            window.SetForce(2.0f, "select an adventure to play", "you are in the adventure select screen", true);
             UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
             window.Register();
         }

@@ -103,7 +103,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.AppendLine($"- [{ItemData.GetItemName(_item.m_ItemName)}]({_item.m_CostText?.text} gold) {ItemData.GetItemDescription(_item.m_ItemName, _cow, true, true)}");
             }
             Object.Destroy(activeWindow);
-            QuickTimerCallback timer = new(() => CreateAction(sb.ToString()), list.gameObject);
+            uiBuyMenuHud.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateAction(sb.ToString()), list.gameObject));
             isCreating = false;
         }
 

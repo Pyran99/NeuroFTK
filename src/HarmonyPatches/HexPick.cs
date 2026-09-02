@@ -141,7 +141,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     HexLand randHex = FTKHex.Instance.m_AllLandHexes[Random.Range(0, FTKHex.Instance.m_AllLandHexes.Count)];
                     if (randHex == null) Plugin.Logger.LogError("WTF");
                     Context.Send($"revealing hexes around {HexData.GetVec2Pos(randHex)}");
-                    QuickTimerCallback timer = new(() => PickHex(randHex), Movement.Instance.gameObject, 500f);
+                    Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => PickHex(randHex), Movement.Instance.gameObject, 0.5f));
                     Reset();
                     return;
                 }
@@ -207,7 +207,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Context.Send(errMsg);
                 Reset();
                 OverworldFlow.cancelBoatReclaim = true;
-                QuickTimerCallback timer = new(DelayCancel, Movement.Instance.gameObject, 1500f);
+                Movement.Instance.StartCoroutine( QuickTimerCallback.WaitRoutine(DelayCancel, Movement.Instance.gameObject, 1.5f));
                 return;
             }
             if (sendPoiCtx && pois.Count > 0)
@@ -216,7 +216,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Context.Send(poiCtx, true);
             }
             string ctx = OverworldFlow.GetTileContext([.. tiles.Select(x => x.Value)], true);
-            QuickTimerCallback timer3 = new(() => Create(ctx, tiles, itemUsed), Movement.Instance.gameObject, 500f);
+            Movement.Instance.StartCoroutine( QuickTimerCallback.WaitRoutine(() => Create(ctx, tiles, itemUsed), Movement.Instance.gameObject, 0.5f));
             Reset();
         }
 
