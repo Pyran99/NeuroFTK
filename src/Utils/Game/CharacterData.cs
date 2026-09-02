@@ -214,6 +214,25 @@ namespace Pyran.NeuroFTK.Utils
             return items;
         }
 
+        public static bool IsEquipmentEmpty(PlayerInventory.ContainerID container, CharacterOverworld cow)
+        {
+            PlayerInventory inv = cow.m_PlayerInventory;
+            return inv.Get(container).IsEmpty();
+        }
+
+        public static PlayerInventory.ContainerID GetContainerForItem(FTK_itembase.ObjectType type)
+        {
+            PlayerInventory.ContainerID containerID = PlayerInventory.ContainerID.Belt;
+			if (type == FTK_itembase.ObjectType.helmet) containerID = PlayerInventory.ContainerID.Head;
+			else if (type == FTK_itembase.ObjectType.boots) containerID = PlayerInventory.ContainerID.Foot;
+			else if (type == FTK_itembase.ObjectType.armor) containerID = PlayerInventory.ContainerID.Body;
+			else if (type == FTK_itembase.ObjectType.necklace) containerID = PlayerInventory.ContainerID.Neck;
+			else if (type == FTK_itembase.ObjectType.shield) containerID = PlayerInventory.ContainerID.LeftHand;
+			else if (type == FTK_itembase.ObjectType.weapon) containerID = PlayerInventory.ContainerID.RightHand;
+            else if (type == FTK_itembase.ObjectType.trinket) containerID = PlayerInventory.ContainerID.Trinket;
+            return containerID;
+        }
+
         public static string GetFocusAmount(CharacterOverworld cow)
         {
             string result;

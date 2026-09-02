@@ -58,32 +58,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         static string GetEquipmentCtx(FTK_itembase.ID id, CharacterOverworld cow)
         {
             StringBuilder sb = new();
-            PlayerInventory.ContainerID container = PlayerInventory.ContainerID.Belt;
+            // PlayerInventory.ContainerID container = PlayerInventory.ContainerID.Belt;
             FTK_itembase _item = FTK_itembase.GetItemBase(id);
-            switch (_item.m_ObjectType)
-            {
-                case FTK_itembase.ObjectType.helmet:
-                    container = PlayerInventory.ContainerID.Head;
-                    break;
-                case FTK_itembase.ObjectType.armor:
-                    container = PlayerInventory.ContainerID.Body;
-                    break;
-                case FTK_itembase.ObjectType.boots:
-                    container = PlayerInventory.ContainerID.Foot;
-                    break;
-                case FTK_itembase.ObjectType.necklace:
-                    container = PlayerInventory.ContainerID.Neck;
-                    break;
-                case FTK_itembase.ObjectType.shield:
-                    container = PlayerInventory.ContainerID.LeftHand;
-                    break;
-                case FTK_itembase.ObjectType.trinket:
-                    container = PlayerInventory.ContainerID.Trinket;
-                    break;
-                case FTK_itembase.ObjectType.weapon:
-                    container = PlayerInventory.ContainerID.RightHand;
-                    break;
-            }
+            PlayerInventory.ContainerID container = CharacterData.GetContainerForItem(_item.m_ObjectType);
             if (container != PlayerInventory.ContainerID.Belt) sb.AppendLine(GetEquippedItemData(id, cow, container));
             return sb.ToString();
         }
