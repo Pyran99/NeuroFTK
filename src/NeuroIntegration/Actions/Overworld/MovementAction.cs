@@ -47,6 +47,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 return null;
             }
             CharacterOverworld cow = CharacterData.GetActiveCow();
+            string charName = CharacterData.GetCharacterName(cow);
             ActionWindow window = ActionWindow.Create(cow.gameObject);
             List<INeuroAction> registerActions = [];
             registerActions.Add(new BeginMovementAction());
@@ -60,18 +61,48 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 foreach (FTK_itembase.ID item in beltItems)
                 {
                     items.Add(ItemData.GetItemName(item), item);
-                    beltCtx.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}");
+                    beltCtx.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}");
                 }
             }
-            if (items.Count > 0)
+            if (CharacterData.AnySlotEmpty(cow))
             {
-                registerActions.Add(new UseBeltItemAction(items, cow));
-                Context.Send(beltCtx.ToString());
+                Dictionary<PlayerInventory.ContainerID, List<FTK_itembase.ID>> equippableItems = [];
+                List<PlayerInventory.ContainerID> emptyContainers = CharacterData.GetEmptyContainers(cow);
+                if (emptyContainers.Count > 0)
+                {
+                    beltCtx.AppendLine("### empty equipment slots and items that can be equipped to them");
+                    foreach (PlayerInventory.ContainerID container in emptyContainers)
+                    {
+                        List<FTK_itembase.ID> backpackItems = CharacterData.GetItemsForContainer(cow.m_PlayerInventory, container);
+                        if (backpackItems.Count == 0 || equippableItems.ContainsKey(container)) continue;
+                        beltCtx.AppendLine($"#### {container}");
+                        equippableItems.Add(container, []);
+                        foreach (FTK_itembase.ID item in backpackItems)
+                        {
+                            if (equippableItems[container].Contains(item)) continue;
+                            beltCtx.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}");
+                            equippableItems[container].Add(item);
+                        }
+                    }
+                }
+                if (equippableItems.Count > 0)
+                {
+                    Dictionary<PlayerInventory.ContainerID, Dictionary<string, FTK_itembase.ID>> result = [];
+                    foreach (PlayerInventory.ContainerID container in equippableItems.Keys)
+                    {
+                        result.Add(container, equippableItems[container].ToDictionary(x => ItemData.GetItemName(x, true), x => x));
+                    }
+                    registerActions.Add(new ChangeEquipmentAction(result, cow));
+                    beltCtx.AppendLine($"{charName} prefers {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
+                }
             }
-            string query = $"your turn for {CharacterData.GetCharacterName(cow)} has started. use items or begin your movement choices";
+
+            if (items.Count > 0) registerActions.Add(new UseBeltItemAction(items, cow));
+            if (beltCtx.Length > 0) Context.Send(beltCtx.ToString());
+            string query = $"your turn for {charName} has started. use items or begin your movement choices";
             foreach (INeuroAction action in registerActions) window.AddAction(action);
-            window.SetContext(BeginTurns.CtxOverworldTurnBeginStats(cow));
-            window.SetForce(5, query, "", true);
+            // window.SetContext(BeginTurns.CtxOverworldTurnBeginStats(cow));
+            window.SetForce(5, query, $"{BeginTurns.CtxOverworldTurnBeginStats(cow)}", true);
             window.Register();
             return window;
         }
@@ -145,7 +176,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, List<string> validQuests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
-        protected override string Description => "choose a quest or scourge location to travel to. if the location is out of range you will move to the furthest tile along the path";
+        protected override string Description => "choose a quest or scourge location to travel to. if the location is out of range you will move to the furthest hex along the path";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()

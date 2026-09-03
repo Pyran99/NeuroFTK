@@ -1,89 +1,70 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
+using Newtonsoft.Json.Linq;
+using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
-    public class ChangeEquipmentAction(Dictionary<PlayerInventory.ContainerID, Dictionary<string, string>> _items) : NeuroAction<string>
+    public class ChangeEquipmentAction(Dictionary<PlayerInventory.ContainerID, Dictionary<string, FTK_itembase.ID>> _items, CharacterOverworld _cow) : NeuroAction<List<FTK_itembase.ID>>
     {
         public override string Name => "equip_items";
-        protected override string Description => "equip an item from your inventory";
+        protected override string Description => $"equip items from {CharacterData.GetCharacterName(_cow)} inventory. You can choose any number of types. if you select a left hand and right hand item at the same time, if the right hand is 2 handed it will remove the left hand item selected or already equipped";
         protected override JsonSchema Schema => GetSchema();
+
+        private readonly Dictionary<string, FTK_itembase.ID> props = [];
 
         private JsonSchema GetSchema()
         {
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,
-                Required = ["item"],
-                Properties = GetAvailableProperties(FTK_itembase.ObjectType.helmet, CharacterData.GetActiveCow())
+                Properties = GetAvailableProperties(_items)
             };
             return schema;
         }
 
-        protected override void Execute(string parsedData)
+        protected override ExecutionResult Validate(ActionJData actionData, out List<FTK_itembase.ID> parsedData)
         {
-            JsonSchema schema = new()
+            parsedData = [];
+            Plugin.Logger.LogMessage("change equipment data " + actionData.Data?.ToString());
+            string chosen;
+            foreach (JToken token in actionData.Data) // "Head": "Old Leather Helm"
             {
-                Type = JsonSchemaType.Object,
-                Properties = new()
+                foreach (JToken child in token.Children())
                 {
-                    ["item"] = QJS.Enum(["1","2"]),
-                    ["equip"] = QJS.Type(JsonSchemaType.Boolean),
-                    ["force"] = QJS.Type(JsonSchemaType.Boolean)
+                    chosen = child.Value<string>()?.ToLower() ?? ""; // Old Leather Helm
+                    if (props.TryGetValue(chosen, out FTK_itembase.ID itemID))
+                    {
+                        parsedData.Add(itemID);
+                    }
                 }
-            };
-            
-        }
-
-        protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
-        {
-            parsedData = "";
-            Plugin.Logger.LogWarning(actionData.Data?.ToString());
+            }
             return ExecutionResult.Success();
         }
 
-        Dictionary<string, JsonSchema> GetAvailableProperties(FTK_itembase.ObjectType type, CharacterOverworld cow)
+        protected override void Execute(List<FTK_itembase.ID> parsedData)
         {
-            FTK_itembase.ObjectType[] types =
-            {
-                FTK_itembase.ObjectType.weapon,
-                FTK_itembase.ObjectType.shield,
-                FTK_itembase.ObjectType.armor,
-                FTK_itembase.ObjectType.helmet,
-                FTK_itembase.ObjectType.trinket,
-                FTK_itembase.ObjectType.boots,
-                FTK_itembase.ObjectType.necklace,
-            };
-            Dictionary<string, JsonSchema> result = [];
-            foreach (FTK_itembase.ObjectType t in types)
-            {
-                if (t == FTK_itembase.ObjectType.weapon || t == FTK_itembase.ObjectType.shield)
-                {
-                    //TODO
-                    continue;
-                }
-                else
-                {
-                    if (!CharacterData.IsEquipmentEmpty(CharacterData.GetContainerForItem(t), cow)) continue;
-                }
-                List<FTK_itembase.ID> items2 = cow.m_CharacterStats.GetPackItems(t, true);
-                if (items2.Count > 0)
-                {
-                    result[t.ToString()] = QJS.Enum(items2.Select(ItemData.GetItemName).ToList());
-                }
-            }
-            return result;
+            _cow.StartCoroutine(EquipmentManager.EquipItemsRoutine(parsedData, _cow));
         }
 
-        static bool Test2()
+        Dictionary<string, JsonSchema> GetAvailableProperties(Dictionary<PlayerInventory.ContainerID, Dictionary<string, FTK_itembase.ID>> items)
         {
-            return false;
+            Dictionary<string, JsonSchema> result = [];
+            foreach (PlayerInventory.ContainerID container in items.Keys)
+            {
+                result.Add(container.ToString(), QJS.Enum(items[container].Keys.ToList()));
+                foreach (KeyValuePair<string, FTK_itembase.ID> kvp in items[container])
+                {
+                    props.Add(kvp.Key, kvp.Value);
+                }
+            }
+            if (result.Count == 0) Plugin.Logger.LogError("no equipment at action");
+            return result;
         }
     }
 }

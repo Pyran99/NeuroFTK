@@ -34,8 +34,9 @@ namespace Pyran.NeuroFTK.Utils
             return data;
         }
 
-        public static string GetItemName(FTK_itembase.ID _id)
+        public static string GetItemName(FTK_itembase.ID _id, bool lowerCase = false)
         {
+            if (lowerCase) return FTKHub.Instance.GetItemDisplayName(_id).ToLower();
             return FTKHub.Instance.GetItemDisplayName(_id);
         }
 

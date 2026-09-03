@@ -191,48 +191,6 @@ namespace Pyran.NeuroFTK.Utils
             return sb.ToString();
         }
 
-        /// <returns>item id with each slot</returns>
-        public static Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> GetAllEquipment(CharacterOverworld cow)
-        {
-            PlayerInventory.ContainerID[] containers =
-            [
-                PlayerInventory.ContainerID.LeftHand,
-                PlayerInventory.ContainerID.RightHand,
-                PlayerInventory.ContainerID.Head,
-                PlayerInventory.ContainerID.Body,
-                PlayerInventory.ContainerID.Foot,
-                PlayerInventory.ContainerID.Neck,
-                PlayerInventory.ContainerID.Trinket,
-            ];
-            PlayerInventory inv = cow.m_PlayerInventory;
-            Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> items = [];
-            foreach (PlayerInventory.ContainerID container in containers)
-            {
-                if (inv.Get(container).IsEmpty()) continue;
-                items.Add(container, inv.Get(container).GetOne());
-            }
-            return items;
-        }
-
-        public static bool IsEquipmentEmpty(PlayerInventory.ContainerID container, CharacterOverworld cow)
-        {
-            PlayerInventory inv = cow.m_PlayerInventory;
-            return inv.Get(container).IsEmpty();
-        }
-
-        public static PlayerInventory.ContainerID GetContainerForItem(FTK_itembase.ObjectType type)
-        {
-            PlayerInventory.ContainerID containerID = PlayerInventory.ContainerID.Belt;
-			if (type == FTK_itembase.ObjectType.helmet) containerID = PlayerInventory.ContainerID.Head;
-			else if (type == FTK_itembase.ObjectType.boots) containerID = PlayerInventory.ContainerID.Foot;
-			else if (type == FTK_itembase.ObjectType.armor) containerID = PlayerInventory.ContainerID.Body;
-			else if (type == FTK_itembase.ObjectType.necklace) containerID = PlayerInventory.ContainerID.Neck;
-			else if (type == FTK_itembase.ObjectType.shield) containerID = PlayerInventory.ContainerID.LeftHand;
-			else if (type == FTK_itembase.ObjectType.weapon) containerID = PlayerInventory.ContainerID.RightHand;
-            else if (type == FTK_itembase.ObjectType.trinket) containerID = PlayerInventory.ContainerID.Trinket;
-            return containerID;
-        }
-
         public static string GetFocusAmount(CharacterOverworld cow)
         {
             string result;
@@ -277,8 +235,133 @@ namespace Pyran.NeuroFTK.Utils
                 FTK_playerGameStart.ID.astronomer => "intelligence/vitality",
                 FTK_playerGameStart.ID.gladiator => "strength/awareness",
                 FTK_playerGameStart.ID.professor => "NYI",
-                _ => "",
+                _ => "any",
             };
+        }
+
+        /// <returns>item id with each slot</returns>
+        public static Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> GetAllEquipment(CharacterOverworld cow)
+        {
+            PlayerInventory.ContainerID[] containers = EquipmentManager.GetEquipmentContainers();
+            PlayerInventory inv = cow.m_PlayerInventory;
+            Dictionary<PlayerInventory.ContainerID, FTK_itembase.ID> items = [];
+            foreach (PlayerInventory.ContainerID container in containers)
+            {
+                if (inv.Get(container).IsEmpty()) continue;
+                items.Add(container, inv.Get(container).GetOne());
+            }
+            return items;
+        }
+
+        public static bool IsEquipmentEmpty(PlayerInventory.ContainerID container, PlayerInventory inv)
+        {
+            return inv.Get(container).IsEmpty();
+        }
+
+        public static bool AnySlotEmpty(CharacterOverworld cow)
+        {
+            PlayerInventory.ContainerID[] containers = EquipmentManager.GetEquipmentContainers();
+            PlayerInventory inv = cow.m_PlayerInventory;
+            foreach (PlayerInventory.ContainerID container in containers)
+            {
+                if (container == PlayerInventory.ContainerID.LeftHand)
+                {
+                    // shield
+                    if (IsEquipmentEmpty(PlayerInventory.ContainerID.RightHand, inv)) return true;
+                    FTK_itembase.ID weapon = inv.Get(PlayerInventory.ContainerID.RightHand).GetOne();
+                    if (weapon != FTK_itembase.ID.None)
+                    {
+                        if (FTK_itembase.GetItemBase(weapon).m_WeaponHands == 2) continue;
+                    }
+                }
+                if (IsEquipmentEmpty(container, inv)) return true;
+            }
+            return false;
+        }
+
+        public static List<PlayerInventory.ContainerID> GetEmptyContainers(CharacterOverworld cow)
+        {
+            List<PlayerInventory.ContainerID> result = [];
+            PlayerInventory.ContainerID[] containers = EquipmentManager.GetEquipmentContainers();
+            PlayerInventory inv = cow.m_PlayerInventory;
+            foreach (PlayerInventory.ContainerID container in containers)
+            {
+                if (result.Contains(container)) continue;
+                if (!IsEquipmentEmpty(container, inv)) continue;
+                if (container == PlayerInventory.ContainerID.LeftHand)
+                {
+                    // shield
+                    bool shieldEmpty = IsEquipmentEmpty(container, inv);
+                    if (!shieldEmpty) continue;
+                    bool weaponEmpty = IsEquipmentEmpty(PlayerInventory.ContainerID.RightHand, inv);
+                    if (weaponEmpty) result.Add(container);
+                    FTK_itembase.ID weapon = inv.Get(PlayerInventory.ContainerID.RightHand).GetOne();
+                    if (weapon != FTK_itembase.ID.None)
+                    {
+                        if (FTK_itembase.GetItemBase(weapon).m_WeaponHands == 2) continue;
+                    }
+                    result.Add(container);
+                    continue;
+                }
+                result.Add(container);
+            }
+            return result;
+        }
+
+        public static PlayerInventory.ContainerID GetContainerForItem(FTK_itembase.ObjectType type)
+        {
+            PlayerInventory.ContainerID containerID = PlayerInventory.ContainerID.Belt;
+			if (type == FTK_itembase.ObjectType.helmet) containerID = PlayerInventory.ContainerID.Head;
+			else if (type == FTK_itembase.ObjectType.boots) containerID = PlayerInventory.ContainerID.Foot;
+			else if (type == FTK_itembase.ObjectType.armor) containerID = PlayerInventory.ContainerID.Body;
+			else if (type == FTK_itembase.ObjectType.necklace) containerID = PlayerInventory.ContainerID.Neck;
+			else if (type == FTK_itembase.ObjectType.shield) containerID = PlayerInventory.ContainerID.LeftHand;
+			else if (type == FTK_itembase.ObjectType.weapon) containerID = PlayerInventory.ContainerID.RightHand;
+            else if (type == FTK_itembase.ObjectType.trinket) containerID = PlayerInventory.ContainerID.Trinket;
+            return containerID;
+        }
+
+        public static List<FTK_itembase.ID> GetItemsForContainer(PlayerInventory inventory, PlayerInventory.ContainerID containerID)
+        {
+            List<FTK_itembase.ID> items = [];
+            FTK_itembase.ObjectType type;
+            switch (containerID)
+            {
+                case PlayerInventory.ContainerID.LeftHand:
+                    type = FTK_itembase.ObjectType.shield;
+                    break;
+                case PlayerInventory.ContainerID.RightHand:
+                    type = FTK_itembase.ObjectType.weapon;
+                    break;
+                case PlayerInventory.ContainerID.Head:
+                    type = FTK_itembase.ObjectType.helmet;
+                    break;
+                case PlayerInventory.ContainerID.Body:
+                    type = FTK_itembase.ObjectType.armor;
+                    break;
+                case PlayerInventory.ContainerID.Foot:
+                    type = FTK_itembase.ObjectType.boots;
+                    break;
+                case PlayerInventory.ContainerID.Neck:
+                    type = FTK_itembase.ObjectType.necklace;
+                    break;
+                case PlayerInventory.ContainerID.Trinket:
+                    type = FTK_itembase.ObjectType.trinket;
+                    break;
+                default:
+                    return [];
+            }
+            FTK_itembase itemBase;
+            foreach (FTK_itembase.ID item in inventory.m_ContainerBackpack.m_CountDictionary.Keys)
+            {
+                itemBase = FTK_itembase.GetItemBase(item);
+                if (itemBase?.m_ObjectType == type)
+                {
+                    if (items.Contains(item)) continue;
+                    items.Add(item);
+                }
+            }
+            return items;
         }
     }
 
