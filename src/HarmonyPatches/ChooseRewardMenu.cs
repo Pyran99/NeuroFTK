@@ -113,6 +113,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 validChoices.Remove("Cancel");
             }
+            else if (_title == "Equip Weapon")
+            {
+                validChoices.Remove("Cancel");
+            }
             window = RewardMenuAction.RegisterActions(_instance, validChoices, _title);
             UnregisterDisabledObject.QuickCreate(_instance.gameObject, window, false);
         }

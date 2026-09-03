@@ -27,8 +27,19 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
 
         public override string Name => _menuName;
-        protected override string Description => "choose a reward or select a character";
+        protected override string Description => GetDescription();
         protected override JsonSchema Schema => GetSchema();
+
+        private string GetDescription()
+        {
+            return _menuName switch
+            {
+                "equip_weapon" => "choose a weapon to equip",
+                "respawn_in" => "choose a town to respawn at",
+                "revive_player" => "choose a player to revive",
+                _ => "choose a reward or select a character",
+            };
+        }
 
         private JsonSchema GetSchema()
         {

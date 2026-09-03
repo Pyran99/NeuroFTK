@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using GridEditor;
 using NeuroSdk;
 using NeuroSdk.Actions;
@@ -302,7 +303,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     {
         public override string Name => "change_weapon";
         protected override string Description => "equip a different weapon. this will also end your turn without attacking.";
-        protected override JsonSchema Schema => GetSchema();
+        protected override JsonSchema Schema => null;
 
         private JsonSchema GetSchema()
         {
@@ -311,8 +312,26 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            // TODO send context of available weapons
-            SelectButton.StartCoroutine(btn, 1.0f);
+            FTK_itembase itemBase;
+            List<FTK_itembase.ID> items = [];
+            CharacterOverworld cow = CharacterData.GetActiveCow();
+            foreach (FTK_itembase.ID item in cow.m_PlayerInventory.m_ContainerBackpack.m_CountDictionary.Keys)
+            {
+                itemBase = FTK_itembase.GetItemBase(item);
+                if (itemBase.m_ObjectType == FTK_itembase.ObjectType.weapon)
+                {
+                    if (items.Contains(item)) continue;
+                    items.Add(item);
+                }
+            }
+            StringBuilder sb = new($"## available weapons \n");
+            foreach (FTK_itembase.ID item in items)
+            {
+                sb.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}");
+            }
+            sb.Append($"{CharacterData.GetCharacterName(cow)} prefers weapons that roll with {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stat");
+            Context.Send(sb.ToString());
+            SelectButton.StartCoroutine(btn);
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)

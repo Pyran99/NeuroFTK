@@ -71,6 +71,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StanceBtnInstance = __instance;
             beltActionUsed = false;
             ToggleDisposableActions.ToggleCombatActions(true, false);
+            uiPlayerMainHud.CloseItemCard();
             __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject, 1f, true));
         }
 
@@ -322,6 +323,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
         {
+            uiPlayerMainHud.CloseItemCard();
             // CharacterOverworld cow = CharacterData.GetActiveCow();
             GetOffenseAttackDetails(_instance, _proficiencies);
             GetDefenseAttackDetails(_instance, _proficiencies);
@@ -408,7 +410,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static bool CanUseBtn(uiBattleButton btn)
         {
-            return btn != null && btn.isActiveAndEnabled && btn.m_CanUse;
+            return btn != null && btn.m_CanUse && btn.gameObject.activeSelf;
         }
 
         static string HandleBtnContext(uiBattleButton btn, List<uiBattleStanceButtons.ProfValues> m_Proficiencies, bool hasRolls = true)
@@ -421,8 +423,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             offense.Clear();
             Dictionary<string, uiBattleButton> btns = [];
-            bool useDefault = _instance.m_AttackButton != null && _instance.m_AttackButton.m_CanUse; // this may act as normal attack with/out weapon
-            bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse;
+            bool useDefault = _instance.m_AttackButton != null && _instance.m_AttackButton.m_CanUse && _instance.m_AttackButton.gameObject.activeSelf; // this may act as normal attack with/out weapon
+            bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.gameObject.activeSelf;
             if (useDefault)
             {
                 FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(CharacterData.GetActiveCow().m_WeaponID);
@@ -447,7 +449,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 FTK_proficiencyTable entry = FTK_proficiencyTableDB.GetDB().GetEntry(prof.m_Prof);
                 if (entry.m_TargetFriendly) continue;
                 string name = entry.GetLocalizedDisplayTitle();
-                if (prof.m_Button == null || !prof.m_Button.m_CanUse) continue;// || !prof.m_Button.isActiveAndEnabled) continue; // btn doesnt need to be active at this point
+                if (prof.m_Button == null || !prof.m_Button.m_CanUse || !prof.m_Button.gameObject.activeSelf) continue;
                 if (btns.ContainsKey(name))
                 {
                     Plugin.Logger.LogWarning($"existing key {name}");
@@ -468,7 +470,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (prof.m_Prof == FTK_proficiencyTable.ID.None) continue;
                 FTK_proficiencyTable table = FTK_proficiencyTableDB.Get(prof.m_Prof);
                 if (!table.m_TargetFriendly) continue;
-                if (prof.m_Button == null || !prof.m_Button.m_CanUse) continue;// || !prof.m_Button.isActiveAndEnabled) continue;
+                if (prof.m_Button == null || !prof.m_Button.m_CanUse || !prof.m_Button.gameObject.activeSelf) continue;
                 string name = table.GetLocalizedDisplayTitle();
                 if (btns.ContainsKey(name))
                 {
