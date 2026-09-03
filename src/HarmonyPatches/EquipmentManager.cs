@@ -54,11 +54,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (PlayerInventory.CanForceEquip(item)) cow.ForceEquip(item);
                 else cow.EquipItem(item);
                 sb.Append($"{ItemData.GetItemName(item)}, ");
-                yield return new WaitForSeconds(0.25f);
+                yield return new WaitForSeconds(0.5f);
             }
             Context.Send(sb.ToString().TrimEnd([' ', ',']));
             Plugin.Logger.LogMessage("finished equipping items");
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(2f);
             OverworldFlow.BeginTurn2(cow);
         }
     }

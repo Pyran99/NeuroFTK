@@ -71,7 +71,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             StanceBtnInstance = __instance;
             beltActionUsed = false;
             ToggleDisposableActions.ToggleCombatActions(true, false);
-            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject));
+            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject, 1f, true));
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]
@@ -421,8 +421,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             offense.Clear();
             Dictionary<string, uiBattleButton> btns = [];
-            bool useDefault = _instance.m_AttackButton != null && _instance.m_AttackButton.m_CanUse && _instance.m_AttackButton.isActiveAndEnabled; // this may act as normal attack with/out weapon
-            bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse && _instance.m_ReloadButton.isActiveAndEnabled;
+            bool useDefault = _instance.m_AttackButton != null && _instance.m_AttackButton.m_CanUse; // this may act as normal attack with/out weapon
+            bool canReload = _instance.m_ReloadButton != null && _instance.m_ReloadButton.m_CanUse;
             if (useDefault)
             {
                 FTK_weaponStats2 entry1 = FTK_weaponStats2DB.GetDB().GetEntry(CharacterData.GetActiveCow().m_WeaponID);
@@ -447,7 +447,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 FTK_proficiencyTable entry = FTK_proficiencyTableDB.GetDB().GetEntry(prof.m_Prof);
                 if (entry.m_TargetFriendly) continue;
                 string name = entry.GetLocalizedDisplayTitle();
-                if (prof.m_Button == null || !prof.m_Button.m_CanUse || !prof.m_Button.isActiveAndEnabled) continue;
+                if (prof.m_Button == null || !prof.m_Button.m_CanUse) continue;// || !prof.m_Button.isActiveAndEnabled) continue; // btn doesnt need to be active at this point
                 if (btns.ContainsKey(name))
                 {
                     Plugin.Logger.LogWarning($"existing key {name}");
@@ -468,7 +468,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (prof.m_Prof == FTK_proficiencyTable.ID.None) continue;
                 FTK_proficiencyTable table = FTK_proficiencyTableDB.Get(prof.m_Prof);
                 if (!table.m_TargetFriendly) continue;
-                if (prof.m_Button == null || !prof.m_Button.m_CanUse || !prof.m_Button.isActiveAndEnabled) continue;
+                if (prof.m_Button == null || !prof.m_Button.m_CanUse) continue;// || !prof.m_Button.isActiveAndEnabled) continue;
                 string name = table.GetLocalizedDisplayTitle();
                 if (btns.ContainsKey(name))
                 {

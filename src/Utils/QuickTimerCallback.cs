@@ -10,11 +10,12 @@ namespace Pyran.NeuroFTK.Utils
     /// </summary>
     public class QuickTimerCallback
     {
-        public static IEnumerator WaitRoutine(Action method, GameObject owner, float waitTime = 1.0f)
+        public static IEnumerator WaitRoutine(Action method, GameObject owner, float waitTime = 1.0f, bool ignoreOwnerActive = false)
         {
             yield return new WaitForSeconds(waitTime);
             if (owner == null) method?.Invoke();
             else if (owner.activeInHierarchy) method?.Invoke();
+            else if (ignoreOwnerActive) method?.Invoke();
         }
 
 

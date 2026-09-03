@@ -83,6 +83,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(object[] parsedData)
         {
             // Plugin.Logger.LogMessage("execute attack: " + parsedData[0] + ", " + parsedData[1] + ", " + parsedData[2]);
+            uiPlayerMainHud.CloseItemCard();
             offense.TryGetValue((string)parsedData[1], out uiBattleButton btn);
             FTKPlayerID target = names.First(v => v.Value == (string)parsedData[0]).Key;
             if (target == null)

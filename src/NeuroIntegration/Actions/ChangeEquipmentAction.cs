@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
 using Newtonsoft.Json.Linq;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -41,6 +43,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     if (props.TryGetValue(chosen, out FTK_itembase.ID itemID))
                     {
                         parsedData.Add(itemID);
+                    }
+                    else if (!chosen.IsNullOrEmpty())
+                    {
+                        return ExecutionResult.Failure($"action failed. invalid item {chosen}, check your spelling");
                     }
                 }
             }
