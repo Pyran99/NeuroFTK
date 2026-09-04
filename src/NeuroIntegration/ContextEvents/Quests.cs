@@ -1,5 +1,4 @@
 using HarmonyLib;
-using NeuroSdk.Messages.Outgoing;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {

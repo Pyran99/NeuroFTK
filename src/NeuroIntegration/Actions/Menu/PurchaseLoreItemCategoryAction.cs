@@ -1,14 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using FTKItemName;
-using Google2u;
 using GridEditor;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Websocket;
-using Newtonsoft.Json;
-using Pyran.NeuroFTK.Utils;
 using StartGameFE;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
@@ -25,11 +20,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         FTK_loreCategory.ID categoryID = id;
         static bool isPurchasing = false;
 
-
         public override string Name => $"purchase_{category.ToLower().Replace(" ", "_")}_item";
-
         protected override string Description => "purchase an item from the store. these unlock various things that can appear in future runs.";
-
         protected override JsonSchema Schema => GenerateSchema();
 
         protected override void Execute(string parsedData)

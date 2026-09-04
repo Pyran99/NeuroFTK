@@ -1,6 +1,5 @@
 #nullable enable
 
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Pyran.NeuroFTK.Utils

@@ -15,8 +15,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class TownMarket
     {
         static ActionWindow activeWindow;
-        static readonly Dictionary<string, uiItemIcon> buyList = [];
         static bool isCreating = false;
+        static readonly Dictionary<string, uiItemIcon> buyList = [];
 
         [HarmonyPatch(typeof(uiBuyMenuHud), nameof(uiBuyMenuHud.EnableMenu))]
         [HarmonyPostfix]

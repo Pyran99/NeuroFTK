@@ -19,7 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             currentHover = _hexland;
             float dist = (_hexland.GetPosition() - CharacterData.GetActiveCow().GetHexLand().GetPosition()).magnitude;
-            Plugin.Logger.LogMessage($"check click path: ({_hexland.GetPosition()}) ({dist} ({dist < GlobalConfig.maxDistance}))");
+            // Plugin.Logger.LogMessage($"check click path: ({_hexland.GetPosition()}) ({dist} ({dist < GlobalConfig.maxDistance}))");
         }
 
         [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]

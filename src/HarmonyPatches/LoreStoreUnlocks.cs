@@ -16,12 +16,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class LoreStoreUnlocks
     {
-        static ActionWindow activeWindow = null;
-        static List<uiLoreCard> uiLoreCards;
         public static uiLoreStore uiLoreStore;
         public static bool isPurchasing = false;
-
         public static bool skipCustomization = false;
+        
+        static ActionWindow activeWindow = null;
+        static List<uiLoreCard> uiLoreCards;
 
         [HarmonyPatch(typeof(uiLoreStore), nameof(uiLoreStore.Show))]
         [HarmonyPostfix]

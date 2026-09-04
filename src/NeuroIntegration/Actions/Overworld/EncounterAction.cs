@@ -17,7 +17,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CharacterOverworld cow = CharacterData.GetActiveCow();
             ActionWindow window = ActionWindow.Create(_instance.gameObject);
             window.AddAction(new EncounterAction(_btns, cow));
-            window.SetForce(3, "choose an action for this encounter", $"{CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. {StringMessages.FocusDetails}", true);
+            window.SetForce(3, "choose an action for this encounter", $"{CharacterData.GetDataFor(cow)} {StringMessages.FocusDetails}", true);
             if (_context != "") window.SetContext(_context);
             window.Register();
             return window;
@@ -53,7 +53,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     RollSystem.chosenBtn = btn.Value;
                     if (CharacterData.CanFocusAction(cow.m_CharacterStats, slots, (int)parsedData[1]))
                     {
-                        btn.Value.StartCoroutine(SelectButton.UseFocus((int)parsedData[1], btn.Value, cow.m_CharacterStats));
+                        SelectButton.StartCoroutineWithFocus(btn.Value, (int)parsedData[1], cow.m_CharacterStats);
                     }
                     else SelectButton.StartCoroutine(btn.Value, 1.0f);
                     return;

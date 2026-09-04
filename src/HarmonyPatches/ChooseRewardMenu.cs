@@ -15,11 +15,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class ChooseRewardMenu
     {
+        public static string teamState = "";
+        
         static ActionWindow window = null;
         static List<uiChooseRewardButton> buttons = [];
         static string title = "";
         static bool isOwner = false;
-        public static string teamState = "";
         static readonly bool onlyOccupiedRealms = true;
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), "BaseInitialize")]

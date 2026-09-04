@@ -9,9 +9,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CowJumpAction : NeuroAction
     {
         public override string Name => "jump";
-
         protected override string Description => "Jump!";
-
         protected override JsonSchema Schema => null;
 
         protected override void Execute()

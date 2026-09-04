@@ -15,8 +15,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class HexPick
     {
-        static ActionWindow window;
         public static FTK_itembase.ID itemUsed = FTK_itembase.ID.None;
+        
+        static ActionWindow window;
         static bool boatReclaim = false;
         static readonly bool sendPoiCtx = true;
 

@@ -34,7 +34,8 @@ namespace Pyran.NeuroFTK.Utils
                 case MiniHexInfo.MiniHexType.Haunt:
                     return !(poi as MiniHexHaunt).m_HauntSealed;
                 case MiniHexInfo.MiniHexType.Utility:
-                    return !(poi as MiniHexUtility).m_UtilityActivated;
+                    interactable = IsUtilityInteractable(poi as MiniHexUtility);
+                    break;
                 case MiniHexInfo.MiniHexType.AlluringPool:
                     interactable = IsAlluringPoolInteractable(poi as MiniHexAlluringPool);
                     break;
@@ -62,7 +63,8 @@ namespace Pyran.NeuroFTK.Utils
                 MiniHexInfo.MiniHexType.MiniEncounter => !IsEncounterInteractable(poi as MiniEncounter, cow),
                 MiniHexInfo.MiniHexType.AlluringPool => !IsAlluringPoolInteractable(poi as MiniHexAlluringPool),
                 MiniHexInfo.MiniHexType.Sanctum => (poi as MiniHexSanctum).m_SanctumClaimed || (poi as MiniHexSanctum).m_SanctumBroken,
-                MiniHexInfo.MiniHexType.Utility => (poi as MiniHexUtility).m_UtilityActivated,
+                MiniHexInfo.MiniHexType.Utility => !IsUtilityInteractable(poi as MiniHexUtility),
+                // MiniHexInfo.MiniHexType.Utility => (poi as MiniHexUtility).m_UtilityActivated,
                 _ => false,
             };
         }
@@ -124,6 +126,15 @@ namespace Pyran.NeuroFTK.Utils
                 }
             }
 
+            return true;
+        }
+
+        public static bool IsUtilityInteractable(MiniHexUtility poi)
+        {
+            if (poi.m_ID == FTK_utility.ID.NightMarket)
+            {
+                return poi.CanSellItems();
+            }
             return true;
         }
 

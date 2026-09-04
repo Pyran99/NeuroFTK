@@ -26,26 +26,17 @@ namespace Pyran.NeuroFTK.Utils
             button.OnControllerClick();
         }
 
-        public static IEnumerator UseFocus(int count, uiFTKButton btn, CharacterStats stats)
-        {
-            btn.OnPointerEnter(null);
-            yield return null;
-            while (stats.m_FocusPoints > 0 && count > 0)
-            {
-                count--;
-                btn.m_OnRightClick?.Invoke();
-                yield return new WaitForSeconds(VisualParams.Instance.FocusAnimTime + 0.025f);
-                yield return null;
-            }
-            StartCoroutine(btn, 1.0f);
-        }
-
         public static void StartCoroutine(uiFTKButton button, float wait = 1.0f)
         {
             button.StartCoroutine(SelectButtonWithDelay(button, wait));
         }
 
-        static IEnumerator SelectButtonWithDelay(uiFTKButton button, float wait = 1.0f)
+        public static void StartCoroutineWithFocus(uiFTKButton button, int focusCount, CharacterStats stats, float wait = 1.0f)
+        {
+            button.StartCoroutine(SelectButtonWithDelay(button, wait, focusCount, stats));
+        }
+
+        static IEnumerator SelectButtonWithDelay(uiFTKButton button, float wait = 1.0f, int focusCount = 0, CharacterStats stats = null)
         {
             if (button == null)
             {
@@ -57,8 +48,22 @@ namespace Pyran.NeuroFTK.Utils
                 Plugin.Logger.LogWarning($"button {button.name} is disabled");
                 yield break;
             }
+            // if (EventSystem.current.currentSelectedGameObject != button.gameObject)
+            // {
+            // }
             button.OnPointerEnter(null);
             yield return new WaitForSeconds(wait);
+            if (focusCount > 0 && stats != null)
+            {
+                while (stats.m_FocusPoints > 0 && focusCount > 0)
+                {
+                    Plugin.Logger.LogWarning("focus used");
+                    focusCount--;
+                    button.m_OnRightClick?.Invoke();
+                    yield return new WaitForSeconds(VisualParams.Instance.FocusAnimTime + 0.025f);
+                    yield return null;
+                }
+            }
             if (!button.isActiveAndEnabled)
             {
                 Plugin.Logger.LogError($"button is disabled after waiting {button.name}");

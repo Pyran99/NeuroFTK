@@ -40,6 +40,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                     CharacterOverworld cow = dummy.m_CharacterOverworld;
                     lootMsg += GetEquipmentCtx(id, cow);
                 }
+                lootMsg += "armor/resistance/evasion is useful for any class.";
             }
             Context.Send(lootMsg);
             // [loot] Gold Coins (Common): Currency of Fahrul. Each coin worth its weight in gold.

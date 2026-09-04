@@ -10,7 +10,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class FloatingMsgAction : NeuroAction<string>
     {
         public override string Name => "send_msg";
-        protected override string Description => "send a random message to appear on the active character. this action is for chat engagement";
+        protected override string Description => "send a random message to appear on the active character for a short time. this action is for chat engagement";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -25,8 +25,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     {
                         Type = JsonSchemaType.String,
                         MinLength = 3,
-                        MaxLength = 30,
-                        Pattern = "^[a-zA-Z0-9_ ]+$"
+                        MaxLength = 30
+                        // Pattern = "^[a-zA-Z0-9_ ]+$"
                     }
                 }
             };

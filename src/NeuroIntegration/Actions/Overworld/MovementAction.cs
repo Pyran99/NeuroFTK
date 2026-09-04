@@ -67,15 +67,14 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (CharacterData.AnySlotEmpty(cow))
             {
                 StringBuilder equipSb = new();
-                Dictionary<PlayerInventory.ContainerID, List<FTK_itembase.ID>> equippableItems = [];
                 List<PlayerInventory.ContainerID> emptyContainers = CharacterData.GetEmptyContainers(cow);
-                equippableItems = EquipmentManager.GetEquippableItems(cow, emptyContainers, out string context);
+                Dictionary<PlayerInventory.ContainerID, List<FTK_itembase.ID>> equippableItems = EquipmentManager.GetEquippableItems(cow, emptyContainers, out string context);
                 equipSb.Append(context);
 
                 if (equippableItems.Count > 0)
                 {
                     registerActions.Add(new ChangeEquipmentAction(EquipmentManager.GetEquipDictionary(equippableItems), cow));
-                    beltCtx.AppendLine($"## ({charName}) empty equipment slots and items that can be equipped to them ");
+                    beltCtx.AppendLine($"## {charName} has empty equipment slots, these items can be equipped to them. ");
                     beltCtx.AppendLine(equipSb.ToString());
                     beltCtx.AppendLine($"{charName} prefers {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
                 }

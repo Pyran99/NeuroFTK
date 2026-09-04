@@ -14,11 +14,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class CharacterDecisionButtons
     {
-        static bool isShowing = false;
-        static bool addItemUse = false;
         // {character: valid buttons}
         public static readonly Dictionary<CharacterOverworld, List<VoteButton>> voteButtons = [];
         public static VoteButtonContainer instance;
+
+        static bool isShowing = false;
+        static bool addItemUse = false;
         static ActionWindow activeWindow;
         static readonly List<VoteButtonContainer> activeContainers = [];
 
@@ -55,50 +56,55 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Object.Destroy(activeWindow);
         }
 
+        public static void ResetData()
+        {
+            activeContainers.Clear();
+            voteButtons.Clear();
+            isShowing = false;
+            instance = null;
+            Object.Destroy(activeWindow);
+        }
+
         static void CreateAction()
         {
             activeWindow = ActionWindow.Create(instance.gameObject);
+            StringBuilder sbState = new();
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
-                activeWindow.AddAction(new CharacterDecisionAction(CharacterData.GetCharacterName(kvp.Key), kvp.Value));
+                activeWindow.AddAction(new CharacterDecisionAction(kvp.Key, CharacterData.GetCharacterName(kvp.Key), kvp.Value));
+                sbState.AppendLine($"{CharacterData.GetDataFor(kvp.Key)} ");
             }
-            activeWindow.SetForce(0, StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text), "");
+            sbState.Append($"{StringMessages.FocusDetails}");
+            activeWindow.SetForce(0, StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text), sbState.ToString(), true);
             StringBuilder sb = new(DungeonEncounterRolls());
             EncounterData encounter = EncounterSessionMC.Instance.GetCurrentEncounter();
             if (encounter != null)
             {
                 MiniHexDungeon.EncounterType _encounterType = encounter.EncounterType;
-                switch (_encounterType)
+                if (_encounterType == MiniHexDungeon.EncounterType.Next || _encounterType == MiniHexDungeon.EncounterType.Ready || _encounterType == MiniHexDungeon.EncounterType.Stair || _encounterType == MiniHexDungeon.EncounterType.EmptyRoom)
                 {
-                    case MiniHexDungeon.EncounterType.Next:
-                    case MiniHexDungeon.EncounterType.Ready:
-                    case MiniHexDungeon.EncounterType.Stair:
-                    case MiniHexDungeon.EncounterType.EmptyRoom:
-                    // case MiniHexDungeon.EncounterType.Door:
-                        Plugin.Logger.LogWarning($"change equipment in dungeon check {_encounterType}");
-                        StringBuilder sb2 = new();
-                        foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
-                        {
-                            if (!dummy.m_CharacterOverworld) continue;
-                            if (!dummy.m_IsAlive) continue;
-                            StringBuilder equipSb = new();
-                            Dictionary<PlayerInventory.ContainerID, List<FTK_itembase.ID>> equippableItems = [];
-                            List<PlayerInventory.ContainerID> emptyContainers = CharacterData.GetEmptyContainers(dummy.m_CharacterOverworld);
-                            equippableItems = EquipmentManager.GetEquippableItems(dummy.m_CharacterOverworld, emptyContainers, out string context);
-                            equipSb.Append(context);
+                    Plugin.Logger.LogWarning($"change equipment in dungeon check {_encounterType}");
+                    StringBuilder sb2 = new();
+                    foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
+                    {
+                        if (!dummy.m_CharacterOverworld) continue;
+                        if (!dummy.m_IsAlive) continue;
+                        StringBuilder equipSb = new();
+                        Dictionary<PlayerInventory.ContainerID, List<FTK_itembase.ID>> equippableItems = [];
+                        List<PlayerInventory.ContainerID> emptyContainers = CharacterData.GetEmptyContainers(dummy.m_CharacterOverworld);
+                        equippableItems = EquipmentManager.GetEquippableItems(dummy.m_CharacterOverworld, emptyContainers, out string context);
+                        equipSb.Append(context);
 
-                            if (equippableItems.Count > 0)
-                            {
-                                activeWindow.AddAction(new ChangeEquipmentAction(EquipmentManager.GetEquipDictionary(equippableItems), dummy.m_CharacterOverworld));
-                                string name = CharacterData.GetCharacterName(dummy.m_CharacterOverworld);
-                                sb2.AppendLine($"## ({name}) empty equipment slots and items that can be equipped to them ");
-                                sb2.AppendLine(equipSb.ToString());
-                                sb2.AppendLine($"{name} prefers {CharacterData.GetClassMainStat(dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
-                            }
+                        if (equippableItems.Count > 0)
+                        {
+                            activeWindow.AddAction(new ChangeEquipmentAction(EquipmentManager.GetEquipDictionary(equippableItems), dummy.m_CharacterOverworld));
+                            string name = CharacterData.GetCharacterName(dummy.m_CharacterOverworld);
+                            sb2.AppendLine($"## {name} has empty equipment slots, these items can be equipped to them. ");
+                            sb2.AppendLine(equipSb.ToString());
+                            sb2.AppendLine($"{name} prefers {CharacterData.GetClassMainStat(dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
                         }
-                        Context.Send(sb2.ToString(), true);
-                        // Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
-                        break;
+                    }
+                    Context.Send(sb2.ToString());
                 }
             }
 
@@ -106,7 +112,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (CombatUtils.Entry != null)
                 {
-                    sb.Append(StringMessages.RollSkillType.Format(CombatUtils.Entry.m_TestSkill.ToString()));
+                    sb.Append(StringMessages.RollSkillType.Format(ItemData.SwitchSkillTestName(CombatUtils.Entry.m_TestSkill)));
                 }
                 activeWindow.SetContext(sb.ToString());
             }
@@ -153,9 +159,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return sb.ToString().TrimEnd(['\n']);
         }
 
-        public static void AddItemUse(bool value)
-        {
-            addItemUse = value;
-        }
+        // public static void AddItemUse(bool value)
+        // {
+        //     addItemUse = value;
+        // }
     }
 }

@@ -78,11 +78,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     string serialized = Jason.Serialize(CharacterType.SerializeGameClass(db.GetEntry((FTK_playerGameStart.ID)player.m_ClassID)));
                     data += $"- {serialized}\n";
                 }
-                Context.Send($"[current party classes] {data}");
+                data = $"## current party classes \n{data} \n";
             }
             List<string> names = GetCharacterNames();
             List<string> classes = GetCharacterClasses();
-            data = "### party setup is \n";
+            data += "## party setup is \n";
             foreach (string name in names)
             {
                 data += $"- {name}: {classes[names.IndexOf(name)]} \n";

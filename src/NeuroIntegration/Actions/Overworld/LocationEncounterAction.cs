@@ -17,7 +17,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CharacterOverworld cow = CharacterData.GetActiveCow();
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new LocationEncounterAction(_buttons));
-            window.SetForce(3, "choose an action for this location encounter", $"{CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. {StringMessages.FocusDetails}", true);
+            window.SetForce(3, "choose an action for this location encounter", $"{CharacterData.GetDataFor(cow)} {StringMessages.FocusDetails}", true);
             if (_context != "") window.SetContext(_context);
             window.Register();
             return window;

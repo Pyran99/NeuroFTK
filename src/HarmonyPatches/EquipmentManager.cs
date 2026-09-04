@@ -48,7 +48,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     foreach (FTK_itembase.ID item in backpackItems)
                     {
                         if (result[container].Contains(item)) continue;
-                        equipSb.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}");
+                        equipSb.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}.");
                         result[container].Add(item);
                     }
                 }

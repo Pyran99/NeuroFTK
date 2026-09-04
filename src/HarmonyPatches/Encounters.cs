@@ -16,12 +16,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class Encounters
     {
-        static ActionWindow window;
         public static uiEncounterMenu EncounterMenuInstance { get; private set; }
         public static List<CharacterOverworld> involvedPlayers = [];
         public static Dictionary<string, Dictionary<string, string>> involvedEnemies = [];
         public static readonly Dictionary<string, uiPoiButton> activeButtons = [];
         public static Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> allButtons = [];
+        
+        static ActionWindow window;
         static string buttonsContext = "";
         static bool generating = false;
         static bool isJournal = false;
@@ -267,7 +268,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             MiniHexInfo.PoiProfile profile = EncounterMenuInstance.m_ThisMiniHex.GetPOIProfile();
             if (profile != null && profile.m_SkillRequired != FTK_weaponStats2.SkillType.none)
             {
-                sb.Append($"these roll chances are based on your {profile.m_SkillRequired} stat");
+                    sb.Append(StringMessages.RollSkillType.Format(ItemData.SwitchSkillTestName(profile.m_SkillRequired)));
             }
             buttonsContext = sb.ToString();
             return true;

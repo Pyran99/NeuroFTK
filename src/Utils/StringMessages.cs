@@ -20,7 +20,7 @@ namespace Pyran.NeuroFTK.Utils
         public static readonly NeuroSdkFormatString ActionIssueOccured = "an issue occured with the {0} action";
         public static readonly NeuroSdkFormatString CriticalError = "an issue occured with {0}, tell vedal there is a problem";
         public static readonly NeuroSdkFormatString PortraitMsg = "{0} ({1}) says: {2}";
-        public static readonly NeuroSdkFormatString DecisionButtonsPrompt = "[{0}] choose a character to perform the action with. if multiple characters can be chosen, only the character you choose to make the decision will act on it (collect will add to the chosen characters inventory, pass will skip for all characters, etc.). collected items can be sold at a market. discard should be avoided for most loot";
+        public static readonly NeuroSdkFormatString DecisionButtonsPrompt = "[{0}] choose a character to perform the action with. if multiple characters can be chosen, only the character you choose to make the decision will act on it (collect will add to the chosen characters inventory, pass will skip for all characters, etc.). collected items can be sold at a market. discard should be avoided for most loot.";
         public static readonly NeuroSdkFormatString RollSkillType = "these chances are based on your {0} stat";
         public static readonly NeuroSdkFormatString UnitDied = "{0} has died";
         public static readonly NeuroSdkFormatString UnitFled = "{0} has fled the battle";

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using FTKItemName;
 using Google2u;
 using GridEditor;
 using HarmonyLib;

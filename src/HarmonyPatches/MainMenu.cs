@@ -23,6 +23,7 @@ public class MainMenu
     [HarmonyPostfix]
     static void OnSetFocus(MainScreen __instance)
     {
+        CharacterDecisionButtons.ResetData();
         GlobalConfig.gameInitialized = false;
         ToggleDisposableActions.ToggleOverworldActions(false);
         ToggleDisposableActions.ToggleCombatActions(false);

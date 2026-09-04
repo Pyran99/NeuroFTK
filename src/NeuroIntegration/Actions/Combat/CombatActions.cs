@@ -97,7 +97,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CharacterStats stats = CharacterData.GetActiveCow().m_CharacterStats;
             if (CharacterData.CanFocusAction(stats, btn.m_Owner.m_CombatActionProfile.m_Slots, (int)parsedData[2]) && !btn.m_Owner.m_CombatActionProfile.m_NoFocus)
             {
-                btn.StartCoroutine(SelectButton.UseFocus((int)parsedData[2], btn, stats));
+                SelectButton.StartCoroutineWithFocus(btn, (int)parsedData[2], stats);
             }
             else SelectButton.StartCoroutine(btn, 1.0f);
         }
@@ -172,7 +172,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             btn.OnPointerEnter(null);
             if (CharacterData.CanFocusAction(cow.m_CharacterStats, btn.m_Owner.m_CombatActionProfile.m_Slots, (int)parsedData[1]) && !btn.m_Owner.m_CombatActionProfile.m_NoFocus)
             {
-                btn.StartCoroutine(SelectButton.UseFocus((int)parsedData[1], btn, cow.m_CharacterStats));
+                SelectButton.StartCoroutineWithFocus(btn, (int)parsedData[1], cow.m_CharacterStats);
             }
             else SelectButton.StartCoroutine(btn, 0.5f);
         }
@@ -210,7 +210,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CharacterStats stats = CharacterData.GetActiveCow().m_CharacterStats;
             if (CharacterData.CanFocusAction(stats, btn.m_Owner.m_CombatActionProfile.m_Slots, parsedData) && !btn.m_Owner.m_CombatActionProfile.m_NoFocus)
             {
-                btn.StartCoroutine(SelectButton.UseFocus(parsedData, btn, stats));
+                SelectButton.StartCoroutineWithFocus(btn, parsedData, stats);
             }
             else SelectButton.StartCoroutine(btn, 1.0f);
         }
@@ -244,7 +244,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             CharacterStats stats = CharacterData.GetActiveCow().m_CharacterStats;
             if (CharacterData.CanFocusAction(stats, btn.m_Owner.m_CombatActionProfile.m_Slots, parsedData) && !btn.m_Owner.m_CombatActionProfile.m_NoFocus)
             {
-                btn.StartCoroutine(SelectButton.UseFocus(parsedData, btn, stats));
+                SelectButton.StartCoroutineWithFocus(btn, parsedData, stats);
             }
             else SelectButton.StartCoroutine(btn, 1.0f);
         }
@@ -297,20 +297,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     }
 
     /// <summary>
-    /// change weapon
+    /// change weapon. brings up another action menu
     /// </summary>
-    public class CombatChangeWeaponAction(uiBattleButton btn): NeuroAction<string>
+    public class CombatChangeWeaponAction(uiBattleButton btn): NeuroAction
     {
         public override string Name => "change_weapon";
         protected override string Description => "equip a different weapon. this will also end your turn without attacking.";
         protected override JsonSchema Schema => null;
 
-        private JsonSchema GetSchema()
-        {
-            return null;
-        }
-
-        protected override void Execute(string parsedData)
+        protected override void Execute()
         {
             FTK_itembase itemBase;
             List<FTK_itembase.ID> items = [];
@@ -327,16 +322,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             StringBuilder sb = new($"## available weapons \n");
             foreach (FTK_itembase.ID item in items)
             {
-                sb.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}");
+                sb.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}. ");
             }
             sb.Append($"{CharacterData.GetCharacterName(cow)} prefers weapons that roll with {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stat");
             Context.Send(sb.ToString());
             SelectButton.StartCoroutine(btn);
         }
 
-        protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
+        protected override ExecutionResult Validate(ActionJData actionData)
         {
-            parsedData = actionData?.Data?.Value<string>("weapon") ?? "null";
+            // parsedData = actionData?.Data?.Value<string>("weapon") ?? "null";
             return ExecutionResult.Success();
         }
         
