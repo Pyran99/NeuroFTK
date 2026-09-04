@@ -134,7 +134,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                     sb.Append(StringMessages.CharacterEquipped.Format(name, ItemData.GetItemName(equipped), ItemData.GetItemDescription(equipped, cow, true, true)));
                 }
             }
-            sb.Append($" (they want equipment that uses or increases {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stats)");
+            sb.Append($" (they want equipment that uses or increases {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stats).");
             return sb.ToString();
         }
     }

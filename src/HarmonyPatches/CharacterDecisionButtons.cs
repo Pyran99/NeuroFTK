@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
@@ -14,7 +14,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class CharacterDecisionButtons
     {
-
         static bool isShowing = false;
         static bool addItemUse = false;
         // {character: valid buttons}
@@ -35,10 +34,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             VoteButton[] btns = __instance.GetComponentsInChildren<VoteButton>();
             foreach (VoteButton btn in btns)
             {
-                if (btn != null)
-                {
-                    voteButtons[cow].Add(btn);
-                }
+                if (btn != null) voteButtons[cow].Add(btn);
             }
             if (isShowing) return;
             isShowing = true;
@@ -51,14 +47,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void VoteContainerHide(VoteButtonContainer __instance)
         {
-            if (activeContainers.Contains(__instance)) activeContainers.Remove(__instance);
+            activeContainers.Remove(__instance);
             if (activeContainers.Count > 0) return;
             voteButtons.Clear();
             isShowing = false;
             instance = null;
             Object.Destroy(activeWindow);
         }
-
 
         static void CreateAction()
         {
@@ -69,6 +64,44 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             activeWindow.SetForce(0, StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text), "");
             StringBuilder sb = new(DungeonEncounterRolls());
+            EncounterData encounter = EncounterSessionMC.Instance.GetCurrentEncounter();
+            if (encounter != null)
+            {
+                MiniHexDungeon.EncounterType _encounterType = encounter.EncounterType;
+                switch (_encounterType)
+                {
+                    case MiniHexDungeon.EncounterType.Next:
+                    case MiniHexDungeon.EncounterType.Ready:
+                    case MiniHexDungeon.EncounterType.Stair:
+                    case MiniHexDungeon.EncounterType.EmptyRoom:
+                    // case MiniHexDungeon.EncounterType.Door:
+                        Plugin.Logger.LogWarning($"change equipment in dungeon check {_encounterType}");
+                        StringBuilder sb2 = new();
+                        foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
+                        {
+                            if (!dummy.m_CharacterOverworld) continue;
+                            if (!dummy.m_IsAlive) continue;
+                            StringBuilder equipSb = new();
+                            Dictionary<PlayerInventory.ContainerID, List<FTK_itembase.ID>> equippableItems = [];
+                            List<PlayerInventory.ContainerID> emptyContainers = CharacterData.GetEmptyContainers(dummy.m_CharacterOverworld);
+                            equippableItems = EquipmentManager.GetEquippableItems(dummy.m_CharacterOverworld, emptyContainers, out string context);
+                            equipSb.Append(context);
+
+                            if (equippableItems.Count > 0)
+                            {
+                                activeWindow.AddAction(new ChangeEquipmentAction(EquipmentManager.GetEquipDictionary(equippableItems), dummy.m_CharacterOverworld));
+                                string name = CharacterData.GetCharacterName(dummy.m_CharacterOverworld);
+                                sb2.AppendLine($"## ({name}) empty equipment slots and items that can be equipped to them ");
+                                sb2.AppendLine(equipSb.ToString());
+                                sb2.AppendLine($"{name} prefers {CharacterData.GetClassMainStat(dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
+                            }
+                        }
+                        Context.Send(sb2.ToString(), true);
+                        // Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
+                        break;
+                }
+            }
+
             if (sb.Length != 0)
             {
                 if (CombatUtils.Entry != null)
@@ -77,13 +110,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 activeWindow.SetContext(sb.ToString());
             }
-            if (addItemUse)
+            if (addItemUse) // unfinished
             {
                 foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
                 {
                     if (!dummy.m_CharacterOverworld) continue;
                     if (!dummy.m_IsAlive) continue;
-                    // unfinished
                     // List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(dummy.m_CharacterOverworld);
                     // Dictionary<string, FTK_itembase.ID> items2 = items.ToDictionary(ItemData.GetItemName, x => x);
                     // if (items.Count > 0) activeWindow.AddAction(new UseBeltItemAction(items2, dummy.m_CharacterOverworld));
@@ -100,13 +132,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
                 CharacterOverworld cow = kvp.Key;
-                sb.AppendLine($"### {CharacterData.GetCharacterName(cow)}");
+                sb.AppendLine($"## {CharacterData.GetCharacterName(cow)}");
                 foreach (VoteButton btn in kvp.Value)
                 {
                     string btnName = btn.GetComponentInChildren<Text>().text;
                     // if btn text doesnt work
                     // if (GameDescriptions.AlternateLocLookUp.ContainsKey(btn.m_Option.ToString())) btnName = GameDescriptions.AlternateLocLookUp[btn.m_Option.ToString()];
-                    sb.AppendLine($"#### {btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})"); // alternate
+                    sb.AppendLine($"### {btnName} ({GameDescriptions.VoteOptionDescriptions[btn.m_Option]})"); // alternate
                     string slotResults = CombatUtils.GetDungeonSlotLegend(cow, btn);
                     if (slotResults.Length == 0) continue;
                     sb.AppendLine($"{slotResults}");

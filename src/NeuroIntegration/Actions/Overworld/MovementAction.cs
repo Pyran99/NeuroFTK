@@ -69,31 +69,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 StringBuilder equipSb = new();
                 Dictionary<PlayerInventory.ContainerID, List<FTK_itembase.ID>> equippableItems = [];
                 List<PlayerInventory.ContainerID> emptyContainers = CharacterData.GetEmptyContainers(cow);
-                if (emptyContainers.Count > 0)
-                {
-                    foreach (PlayerInventory.ContainerID container in emptyContainers)
-                    {
-                        List<FTK_itembase.ID> backpackItems = CharacterData.GetItemsForContainer(cow.m_PlayerInventory, container);
-                        if (backpackItems.Count == 0 || equippableItems.ContainsKey(container)) continue;
-                        equipSb.AppendLine($"#### {container}");
-                        equippableItems.Add(container, []);
-                        foreach (FTK_itembase.ID item in backpackItems)
-                        {
-                            if (equippableItems[container].Contains(item)) continue;
-                            equipSb.AppendLine($"- {ItemData.GetItemName(item)}: {ItemData.GetItemDescription(item, cow, true, true)}");
-                            equippableItems[container].Add(item);
-                        }
-                    }
-                }
+                equippableItems = EquipmentManager.GetEquippableItems(cow, emptyContainers, out string context);
+                equipSb.Append(context);
+
                 if (equippableItems.Count > 0)
                 {
-                    Dictionary<PlayerInventory.ContainerID, Dictionary<string, FTK_itembase.ID>> result = [];
-                    foreach (PlayerInventory.ContainerID container in equippableItems.Keys)
-                    {
-                        result.Add(container, equippableItems[container].ToDictionary(x => ItemData.GetItemName(x, true), x => x));
-                    }
-                    registerActions.Add(new ChangeEquipmentAction(result, cow));
-                    beltCtx.AppendLine("### empty equipment slots and items that can be equipped to them ");
+                    registerActions.Add(new ChangeEquipmentAction(EquipmentManager.GetEquipDictionary(equippableItems), cow));
+                    beltCtx.AppendLine($"## ({charName}) empty equipment slots and items that can be equipped to them ");
                     beltCtx.AppendLine(equipSb.ToString());
                     beltCtx.AppendLine($"{charName} prefers {CharacterData.GetClassMainStat(cow.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
                 }

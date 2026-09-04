@@ -40,7 +40,7 @@ namespace Pyran.NeuroFTK.Utils
             return StringReplace.ReplaceNewLineSpace(name);
         }
 
-        /// <returns>example => - 0(2%) = Failure</returns>
+        /// <returns>example: - 0(2%) = Failure</returns>
         public static string GetDungeonSlotLegend(CharacterOverworld cow, VoteButton btn)
         {
             if (!cow.IsInDungeon() || !cow.m_CharacterStats.m_IsInCombat) return "";

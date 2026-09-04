@@ -103,17 +103,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (!btn.isActiveAndEnabled) return;
             }
             Dictionary<string, uiChooseRewardButton> validChoices = new(_buttons);
-            if (_title == "Respawn In")
+            if (_title == "Respawn In" && validChoices.Count > 1)
             {
                 validChoices.Remove("Cancel");
                 string ctx = GetRespawnData(validChoices);
                 Context.Send(ctx);
             }
-            else if (_title == "Revive Player")
+            else if (_title == "Revive Player" && validChoices.Count > 1)
             {
                 validChoices.Remove("Cancel");
             }
-            else if (_title == "Equip Weapon")
+            else if (_title == "Equip Weapon" && validChoices.Count > 1)
             {
                 validChoices.Remove("Cancel");
             }

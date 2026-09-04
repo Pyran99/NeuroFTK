@@ -27,7 +27,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case MiniHexDungeon.EncounterType.Next:
                 case MiniHexDungeon.EncounterType.Ready:
                 case MiniHexDungeon.EncounterType.Stair:
-                case MiniHexDungeon.EncounterType.EmptyRoom:
+                case MiniHexDungeon.EncounterType.EmptyRoom: //TODO maybe add equip change for each character with decision action
                 case MiniHexDungeon.EncounterType.Door:
                     Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
                     Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
