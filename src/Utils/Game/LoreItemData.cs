@@ -113,6 +113,9 @@ namespace Pyran.NeuroFTK.Utils
                 "HelmetMask01" => "HelmetBeastman",
                 "HelmetMask02" => "HelmetOwlbear",
                 "HelmetMask03" => "HelmetTriclops",
+                "HelmetBeastman" => "HelmetMask01",
+                "HelmetOwlbear" => "HelmetMask02",
+                "HelmetTriclops" => "HelmetMask03",
                 _ => name,
             };
         }

@@ -7,6 +7,8 @@ using UnityEngine;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.NeuroIntegration;
 using NeuroSdk.Internal;
+using Pyran.NeuroFTK.GameConfigs;
+using System.Linq;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -19,7 +21,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static bool shownOnce = false;
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
-        static readonly float waitTime = 3.0f;
 
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.Show))]
@@ -112,7 +113,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return names;
         }
 
-        static void ActionStartGame()
+        public static void ActionStartGame()
         {
             uiFTKButton btn = characterCreateRoot.transform.Find("UIRoot/ButtonRoot/StartButton").GetComponent<uiFTKButton>();
             SelectButton.StartCoroutine(btn, 0.5f);
@@ -145,9 +146,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             SendPartyDetails(false);
             Context.Send(msg);
-            Context.Send("tell chat about your party members while the game begins");
-            yield return new WaitForSeconds(waitTime);
-            ActionStartGame();
+            CharacterCustomize.players = [.. players];
+            CharacterCustomize.CustomizePlayer(CharacterCustomize.players.First());
+            yield break;
         }
 
         // wait for player canvas to be visible

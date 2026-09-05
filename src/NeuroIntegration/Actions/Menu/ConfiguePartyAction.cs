@@ -41,7 +41,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         readonly int max = 16;
 
         public override string Name => "choose_party_names";
-        protected override string Description => "pick 3 names for your party members then begin the game";
+        protected override string Description => "pick 3 names for your party members then move to customizing each character before beginning the game";
         protected override JsonSchema Schema => GetSchema();
 
         JsonSchema GetSchema()
