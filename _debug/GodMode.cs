@@ -88,7 +88,6 @@ namespace Pyran.NeuroFTK.ModDebug
         public static void Create()
         {
             if (Instance != null) return;
-            if (!GlobalConfig.IsDebugMode()) return;
             var obj = new GameObject("ToggleGodModeEffects");
             DontDestroyOnLoad(obj);
             Instantiate(obj);
