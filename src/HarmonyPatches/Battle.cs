@@ -30,7 +30,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static readonly Dictionary<string, int> playerHealths = [];
         static readonly bool allowFleeing = true;
-        static readonly int healthForFlee = 30;
+        static readonly float healthForFleePercent = 0.35f;
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceBattleRPC))]
         [HarmonyPostfix]
@@ -385,7 +385,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.IsDebugMode() && allowFleeing)
             {
-                if ((_instance.CombatCow?.m_CharacterStats.GetHealthPercent() ?? 100) < healthForFlee)
+                if ((_instance.CombatCow?.m_CharacterStats.GetHealthPercent() ?? 1) < healthForFleePercent)
                 {
                     sb.Append("- " + HandleBtnContext(_instance.m_FleeButton, _proficiencies));
                     actions.Add(new CombatFleeAction(_instance.m_FleeButton));

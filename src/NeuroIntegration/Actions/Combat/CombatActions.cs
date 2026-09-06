@@ -194,7 +194,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CombatFleeAction(uiBattleButton btn): NeuroAction<int>
     {
         public override string Name => "flee_combat";
-        protected override string Description => "try to run away from combat. only the character this is used with will exit combat. this should be used for emergencies.";
+        protected override string Description => "try to run away from combat. only the character this is used with will exit combat. this should only be used for emergencies.";
         protected override JsonSchema Schema => new()
         {
             Type = JsonSchemaType.Object,

@@ -51,6 +51,8 @@ Gold Rush | gr | multiplayer only | untested
 
 ### Todo  
 - [ ] make auto travel work for quests that are to far for games pathfinding  
+- [ ] character customization
+- [ ] multiplayer
 
 ### Undecided actions  
 - market selling: equipment can be destroyed in battle, leaving this out would likely be more helpful
