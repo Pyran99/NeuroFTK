@@ -34,6 +34,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             {
                 if (instance.m_Mode != uiQuickPlayerCreate.Mode.Customize)
                 {
+                    if (instance.m_PlayerInfoRoot == null || instance.m_CustomizeRoot == null || instance.m_CharacterDetails == null) return;
                     instance.SetMode(uiQuickPlayerCreate.Mode.Customize);
                 }
             }
@@ -41,6 +42,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             {
                 if (instance.m_Mode != uiQuickPlayerCreate.Mode.PlayerInfo)
                 {
+                    if (instance.m_PlayerInfoRoot == null || instance.m_CustomizeRoot == null || instance.m_CharacterDetails == null) return;
                     instance.SetMode(uiQuickPlayerCreate.Mode.PlayerInfo);
                 }
             }
@@ -95,10 +97,16 @@ namespace Pyran.NeuroFTK.GameConfigs
             {
                 foreach (uiQuickPlayerCreate player in finishedPlayers)
                 {
+                    if (player == null)
+                    {
+                        Plugin.Logger.LogError($"player was null");
+                        continue;
+                    }
                     ToggleCustomizeMenu(player, false);
                 }
                 Context.Send($"finished setting up your party. Tell chat a quick backstory about each of your party members {string.Join(", ", [.. finishedPlayers.Select(x => x.m_PlayerNameStr)])}. (fantasy world setting)");
                 finishedPlayers.Clear();
+                Plugin.Logger.LogWarning("auto progressing after time");
                 yield return new WaitForSeconds(12f);
                 SetupParty.ActionStartGame();
             }
