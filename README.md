@@ -4,8 +4,12 @@ The mod uses a [Modified SDK](https://github.com/Pyran99/neuro-sdk-net35) due to
 
 <img src="assets\FTK banner.jpg" width="500" style="vertical-align:middle;"> 
 
-## Game Libraries (for building project yourself)
-not distributed here
+## Installation
+### Normal install
+Download the release file and add them to your For the king BepInEx plugins folder.
+
+### Build project
+**Required** game libraries not distributed here
 - Assembly-CSharp.dll
 - Assembly-CSharp-firstpass.dll
 - UnityEngine.UI.dll
@@ -16,6 +20,9 @@ not distributed here
 
 ## Config data
 > Config files are automatically generated in the same folder as the dll
+
+> [!CAUTION]
+> Multiplayer has NOT been tested & *will* break things
 
 Name | Default | Description
 --- | --- | ---
@@ -28,9 +35,6 @@ launch_resume | true | disables new game if there is a previous save to load. On
 max_hex_search | 50 | the max amount of hexes to send for context & choice list of actions that require picking a hex (late-game Airship movement can be 168+). For movement the removed hexes are chosen at random (only empty hexes), for items that pick a hex it is based on the order the map was created (aka nobody knows)
 force_custom_adventure | false | force new games to only allow the specified adventure from `custom_adventure_code`. This **OVERRIDES** launch_resume & only allows new games
 custom_adventure_code | ftk | the [Config code](#adventure-details) for the forced adventure. Only used if `force_custom_adventure` is true
-
-> [!CAUTION]
-> Multiplayer has NOT been tested & *will* break things
 
 ## Adventure details
 Adventure | Config code | Description | Integration State
