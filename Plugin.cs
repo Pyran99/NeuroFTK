@@ -58,7 +58,7 @@ public class Plugin : BaseUnityPlugin
         }
         else if (Input.GetKeyDown(KeyCode.BackQuote))
         {
-            Logger.LogWarning("backquote");
+            // Logger.LogWarning("backquote");
             // LoggerTest.Instance?.ToggleConsole();
             // devConsole.gameObject.SetActive(!devConsole.gameObject.activeSelf);
         }
