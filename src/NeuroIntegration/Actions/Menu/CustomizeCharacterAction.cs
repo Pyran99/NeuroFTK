@@ -18,13 +18,13 @@ namespace Pyran.NeuroFTK.GameConfigs
         {
             ActionWindow window = ActionWindow.Create(instance.transform.parent.gameObject);
             window.AddAction(new CustomizeCharacterAction(instance, instance.m_PlayerNameStr));
-            window.SetForce(0, "customize this characters model, clothes, and colors. Colors are shown as HTML codes. you should choose different clothes_color for each character to help chat distinguish them", "", true);
+            window.SetForce(0, "customize this characters model, clothes, and colors. you should choose different clothes_color for each character to help chat distinguish them", "", true);
             window.Register();
             return window;
         }
 
         public override string Name => $"customize_{characterName.Replace(" ", "_").ToLower()}";
-        protected override string Description => "customize the visual aspects of the character";
+        protected override string Description => $"customize the visual aspects of {characterName}. Colors are listed as HTML codes";
         protected override JsonSchema Schema => GetSchema();
 
         List<string> skinTypes = [];
@@ -61,9 +61,12 @@ namespace Pyran.NeuroFTK.GameConfigs
             if (actionData.Data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("data"));
             Plugin.Logger.LogWarning($"data: {actionData.Data}");
             parsedData[0] = skinTypes.Contains(actionData.Data.Value<string>("model")) ? actionData.Data.Value<string>("model") : FTK_playerGameStart.SkinType.Male.ToString();
-            parsedData[1] = CharacterCustomize.FixName( armorTypes.Contains(actionData.Data.Value<string>("clothes")) ? actionData.Data.Value<string>("clothes") : "default" );
-            parsedData[2] = CharacterCustomize.FixName( helmetTypes.Contains(actionData.Data.Value<string>("helmet")) ? actionData.Data.Value<string>("helmet") : "default" );  // "helmetBeastman" => "helmetMask01" for parsing
-            parsedData[3] = CharacterCustomize.FixName( backpackTypes.Contains(actionData.Data.Value<string>("backpack")) ? actionData.Data.Value<string>("backpack") : "default" );
+            string clothes = CharacterCustomize.FixName(actionData.Data.Value<string>("clothes") ?? "default");
+            string helmet = CharacterCustomize.FixName(actionData.Data.Value<string>("helmet") ?? "default"); // "helmetBeastman" => "helmetMask01" for parsing
+            string backpack = CharacterCustomize.FixName(actionData.Data.Value<string>("backpack") ?? "default");
+            parsedData[1] = armorTypes.Contains(clothes) ? clothes : "default";
+            parsedData[2] = helmetTypes.Contains(helmet) ? helmet : "default";
+            parsedData[3] = backpackTypes.Contains(backpack) ? backpack : "default";
             parsedData[4] = mainColors.Contains(actionData.Data.Value<string>("clothes_color")) ? actionData.Data.Value<string>("clothes_color") : ColorUtility.ToHtmlStringRGBA(_instance.m_MainColorArray.First());
             parsedData[5] = skinTones.Contains(actionData.Data.Value<string>("skin_tone")) ? actionData.Data.Value<string>("skin_tone") : ColorUtility.ToHtmlStringRGBA(_instance.m_SkinColorArray.First());
             parsedData[6] = hairColors.Contains(actionData.Data.Value<string>("hair_color")) ? actionData.Data.Value<string>("hair_color") : ColorUtility.ToHtmlStringRGBA(_instance.m_HairColorArray.First());
@@ -73,7 +76,6 @@ namespace Pyran.NeuroFTK.GameConfigs
         protected override void Execute(object[] parsedData)
         {
             string print = string.Join(", ", [.. parsedData.Select(x => x.ToString())]);
-            Plugin.Logger.LogWarning($"customize result = {print}");
             Context.Send($"customizing {_instance.m_PlayerNameStr} with values: {print}", true);
             _instance.StartCoroutine(CharacterCustomize.NeuroTryCustomize(_instance, parsedData));
         }
