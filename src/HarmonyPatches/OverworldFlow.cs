@@ -31,6 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly bool removeRandomEmpty = true;
         static bool isRemake = false;
         static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = [];
+        static int turnBeginCount = 0; //TODO send some general ctx every 3 or so new turns in overworld
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -59,6 +60,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 isTurnSkipped = false;
                 yield break;
+            }
+            turnBeginCount++;
+            if (turnBeginCount % 3 == 0)
+            {
+                Plugin.Logger.LogWarning($"NYI send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
+                if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
+                {
+                    QuestHelper.DungeonCrawlQuestHelper();
+                }
+                turnBeginCount = 0;
             }
             BeginTurn2(__instance);
             // GameDefinition gameDef = GameLogic.Instance.GetGameDef();

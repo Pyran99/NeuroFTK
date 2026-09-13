@@ -106,12 +106,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
-                Plugin.Logger.LogWarning("overworld equip");
+                Plugin.Logger.LogMessage("overworld equip");
                 OverworldFlow.BeginTurn2(cow);
             }
             else if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
             {
-                Plugin.Logger.LogWarning("combat equip");
+                Plugin.Logger.LogMessage("combat equip");
                 List<VoteButtonContainer> containers = [];
                 foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
                 {

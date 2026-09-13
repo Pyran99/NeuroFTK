@@ -127,6 +127,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy)
             {
                 ctx += $"\nthis encounters enemies are lvl {locationMenuInstance.m_Difficulty.text}";
+                //TODO compare # of units on each side + avg levels
+                // foreach (CharacterOverworld player in Encounters.involvedPlayers)
+                // {
+                //     ctx += $"- {CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})";
+                // }
             }
             Context.Send(ctx);
             uiLocationMenuDisplay.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(CreateActionWindow, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject));

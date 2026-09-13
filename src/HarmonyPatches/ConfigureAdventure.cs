@@ -49,6 +49,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CreateActionWindow(__instance);
         }
 
+        [HarmonyPatch(typeof(GameConfig), nameof(GameConfig.OnChangeValueGameDef))]
+        [HarmonyPostfix]
+        static void GameDefChanged(GameConfig __instance, string _gameDefName)
+        {
+            string name = __instance.GetCurrentGameDefPreview().GetDisplayName();
+            Plugin.Logger.LogMessage($"selected {name}");
+            QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), adventureCodes.First(x => x.Value == name).Key);
+        }
+
         static void CreateActionWindow(GameConfig instance)
         {
             ActionWindow window = ActionWindow.Create(instance.gameObject);
@@ -129,6 +138,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 dungeonRooms = $" (your highest room clear for this adventure is {value ?? 0})";
             }
             Context.Send($"you selected the adventure {name}: {level.GetDisplayInfoText()} {dungeonRooms}");
+            // QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), adventureCodes.First(x => x.Value == saveFileName).Key);
+            // Plugin.Logger.LogWarning($"set adventure to {QuestHelper.currentAdventure}");
             yield return new WaitForSeconds(1.0f);
             SetDifficulty(instance);
             SetGameMode(instance);

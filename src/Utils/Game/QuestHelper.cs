@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Pyran.NeuroFTK.GameConfigs;
 using UnityEngine;
@@ -7,6 +8,17 @@ namespace Pyran.NeuroFTK.Utils
 {
     public class QuestHelper
     {
+        public enum Adventure
+        {
+            ftk,
+            fa,
+            id,
+            dc,
+            hc,
+            gr
+        }
+        public static Adventure currentAdventure = Adventure.ftk;
+
         public static readonly Dictionary<string, QuestLogicBase> questDict = [];
 
         static readonly List<Vector3> questPositions = [];
@@ -104,6 +116,21 @@ namespace Pyran.NeuroFTK.Utils
                 }
             }
             return result;
+        }
+
+        public static void DungeonCrawlQuestHelper()
+        {
+            //TODO send location of all hidden dungeons for quest. may be cheaty
+            IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
+            List<Vector2> locations = [.. dungeons.Select(d => HexData.GetVec2Pos(d.m_HexLand))];
+            Plugin.Logger.LogWarning($"locations: {string.Join(", ", [.. locations.Select(x => x.ToString())])}");
+            Plugin.Logger.LogWarning($"types: {string.Join(", ", [.. dungeons.Select(x => x.GetDungeonType().ToString())])}");
+            Plugin.Logger.LogWarning($"locations has quest: {string.Join(", ", [.. dungeons.Where(x => x.HasEncounterQuest()).Select(x => HexData.GetVec2Pos(x.m_HexLand).ToString())])}");
+            Dictionary<int, QuestLogicBase> quests = GameLogic.Instance.GetQuestTable();
+            // maybe Main type is for quest
+// [Warning:Neuro For the King] locations: (127.0, 70.0), (90.9, 22.5), (67.8, 42.5), (89.5, 95.0), (142.9, 97.5), (135.6, 105.0), (109.7, 85.0), (99.6, 87.5), (70.7, 92.5), (77.9, 115.0), (59.2, 57.5), (50.5, 62.5), (128.4, 122.5), (56.3, 77.5), (102.5, 27.5), (96.7, 132.5), (64.9, 87.5), (77.9, 135.0), (140.0, 112.5), (85.1, 82.5)
+// [Warning:Neuro For the King] types: Mini, Main, Mini, Mini, Main, Mini, Main, Mini, Main, Mini, Main, Mini, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave
+// [Warning:Neuro For the King] locations has quest:
         }
         
     }
