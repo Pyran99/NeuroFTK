@@ -41,10 +41,10 @@ Adventure | Config code | Description | Integration State
 --- | --- | --- | ---
 For the King | ftk | main adventure with travelling by land, sea, air | working
 Frost Adventure | fa | similar to FTK, no air travel, damage taken at end of each turn | working
-Into the Deep | id | primarily sea travel | not fully tested
-Dungeon Crawl | dc | search for dungeons around map, mostly land travel, some boating | working
+Into the Deep | id | primarily sea travel | working, limited map navigation support
+Dungeon Crawl | dc | search for dungeons around map, mostly land travel, some boating | working, limited map navigation support
 Hildebrant's Cellar | hc | dungeon run only | working
-Gold Rush | gr | multiplayer only | untested  
+Gold Rush | gr | multiplayer only (local or online) | map not fully tested, solo play in local co-op can setup party & play  
 
 > hildebrants cellar is a dungeon runner only (no movement decisions)  
 > other adventures use hex movement  

@@ -23,6 +23,11 @@ namespace Pyran.NeuroFTK.Utils
             return false;
         }
 
+        public static bool IsYourPhotonId(int id)
+        {
+            return id == PhotonNetwork.player.ID;
+        }
+
         public static void SendOtherPlayerTurnCtx()
         {
             Context.Send($"another player is taking their turn", true);

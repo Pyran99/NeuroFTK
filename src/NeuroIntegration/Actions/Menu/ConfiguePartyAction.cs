@@ -13,12 +13,18 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class ConfiguePartyAction : NeuroAction
     {
-        public static void RegisterConfigurePartyActions(GameObject owner)
+        public static void RegisterConfigurePartyActions(GameObject owner, List<uiQuickPlayerCreate> players)
         {
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new ConfiguePartyAction());
-            window.AddAction(new ChoosePartyNamesAction());
-            window.SetForce(0, "choose to randomize the classes of your party or give 3 names for them and begin the game", "you are at the character party creation screen", true);
+            int count = 0;
+            foreach (uiQuickPlayerCreate player in players)
+            {
+                if (player.m_PhotonID != PhotonNetwork.player.ID) continue;
+                count++;
+            }
+            window.AddAction(new ChoosePartyNamesAction(count));
+            window.SetForce(0, $"choose to randomize the classes of your party or give {count} names for them and move to customizing each character", "", true);
             UnregisterDisabledObject.QuickCreate(owner, window);
             window.Register();
         }
@@ -35,13 +41,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class ChoosePartyNamesAction : NeuroAction<List<string>>
+    public class ChoosePartyNamesAction(int nameCount = 3) : NeuroAction<List<string>>
     {
         readonly int min = 3;
         readonly int max = 16;
 
         public override string Name => "choose_party_names";
-        protected override string Description => "pick 3 names for your party members then move to customizing each character before beginning the game";
+        protected override string Description => $"pick {nameCount} names for your party members then move to customizing each character before beginning the game";
         protected override JsonSchema Schema => GetSchema();
 
         JsonSchema GetSchema()
@@ -55,15 +61,15 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     ["names"] = new()
                     {
                         Type = JsonSchemaType.Array,
-                        MinItems = 3,
-                        MaxItems = 3,
+                        MinItems = nameCount,
+                        MaxItems = nameCount,
                         UniqueItems = true,
                         Items = new()
                         {
                             Type = JsonSchemaType.String,
                             MinLength = min,
                             MaxLength = max,
-                            Pattern = "^[a-zA-Z]+( [a-zA-Z0-9_]+)*$"
+                            Pattern = "^[a-zA-Z]+( [a-zA-Z0-9]+)*$" // start with letters, then optionally 0-1 space with 1+ letters, numbers (allows neuro sama)
                         }
                     }
                 }
@@ -90,9 +96,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
             }
             List<string> result = token.ToObject<List<string>>();
-            if (!result.Count().Equals(3))
+            if (!result.Count().Equals(nameCount))
             {
-                return ExecutionResult.Failure("choose_party_names action requires 3 names, you sent " + result.Count());
+                return ExecutionResult.Failure($"choose_party_names action requires {nameCount} names, you sent " + result.Count());
             }
             List<string> build = [];
             foreach (string name in result.Select(v => v))

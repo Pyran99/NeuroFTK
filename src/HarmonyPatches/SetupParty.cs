@@ -9,6 +9,7 @@ using Pyran.NeuroFTK.NeuroIntegration;
 using NeuroSdk.Internal;
 using Pyran.NeuroFTK.GameConfigs;
 using System.Linq;
+using System.Text;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -18,7 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class SetupParty
     {
-        static bool shownOnce = false;
+        static int partyMemberCount = 0;
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
 
@@ -27,18 +28,26 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void OnPartyScreenShown(uiCharacterCreateRoot __instance)
         {
-            shownOnce = false;
+            partyMemberCount = 0;
             characterCreateRoot = __instance;
+        }
+
+        [HarmonyPatch(typeof(uiStartGame), "WaitUntilPanningFinished")]
+        [HarmonyPostfix]
+        static IEnumerator PartySetupPanFinished(IEnumerator __result)
+        {
+            while (__result.MoveNext()) yield return __result.Current;
+            yield return null;
+            players = [.. characterCreateRoot.m_Players];
+            partyMemberCount = players.Count;
+            characterCreateRoot.StartCoroutine(WaitUntilInteractable());
         }
 
         [HarmonyPatch(typeof(uiQuickPlayerCreate), nameof(uiQuickPlayerCreate.Show))]
         [HarmonyPostfix]
-        static void AfterCameraPan(uiQuickPlayerCreate __instance)
+        static void OnMemberCreated(uiQuickPlayerCreate __instance)
         {
-            if (shownOnce) return; // prevent 3 calls
-            shownOnce = true;
-            players = [.. characterCreateRoot.m_Players];
-            __instance.StartCoroutine(WaitUntilInteractable());
+            players = [.. characterCreateRoot.m_Players]; // updated with instance awake
         }
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.RandomParty))]
@@ -46,8 +55,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void OnPartyRandomized()
         {
             Context.Send("your party has been randomized", true);
-            SendPartyDetails();
-            characterCreateRoot.StartCoroutine( QuickTimerCallback.WaitRoutine(() => ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject), characterCreateRoot.gameObject));
+            RegisterWindow(characterCreateRoot);
         }
 
         [HarmonyPatch(typeof(FTKHub), nameof(FTKHub.EnterFahrul))]
@@ -59,69 +67,95 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void OnPartyVisible()
         {
-            if (uiStartGame.Instance.m_IsResuming)
+            if (Multiplayer.IsMultiplayer())
             {
-                ActionStartGame();
-                return;
+                //TODO up to neuro create amount
+                for (int i = 0; i < (3 - partyMemberCount); i++)
+                {
+                    if (!characterCreateRoot.m_SelectSlotButton.gameObject.activeSelf) break;
+                    characterCreateRoot.OnSelectPlayerSlot();
+                }
+                players = [.. characterCreateRoot.m_Players];
+                partyMemberCount = players.Count;
+                RegisterWindow(characterCreateRoot);
             }
-            SendPartyDetails();
-            characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(() => ConfiguePartyAction.RegisterConfigurePartyActions(characterCreateRoot.gameObject), characterCreateRoot.gameObject));
+            else
+            {
+                if (uiStartGame.Instance.m_IsResuming)
+                {
+                    ActionStartGame();
+                    return;
+                }
+                RegisterWindow(characterCreateRoot);
+            }
         }
 
         static void SendPartyDetails(bool addClassData = true)
         {
-            string data = "";
+            StringBuilder sb = new();
             if (addClassData)
             {
                 FTK_playerGameStartDB db = FTK_playerGameStartDB.GetDB();
+                sb.AppendLine("## current party class info ");
                 foreach (uiQuickPlayerCreate player in players)
                 {
                     string serialized = Jason.Serialize(CharacterType.SerializeGameClass(db.GetEntry((FTK_playerGameStart.ID)player.m_ClassID)));
-                    data += $"- {serialized}\n";
+                    sb.AppendLine($"- {serialized}");
                 }
-                data = $"## current party classes \n{data} \n";
             }
-            List<string> names = GetCharacterNames();
-            List<string> classes = GetCharacterClasses();
-            data += "## party setup is \n";
-            foreach (string name in names)
+            sb.AppendLine("## party setup is ");
+            for (int i = 0; i < players.Count; i++)
             {
-                data += $"- {name}: {classes[names.IndexOf(name)]} \n";
+                string owner = Multiplayer.IsYourPhotonId(players[i].m_PhotonID) ? " (you control)" : " (another player controls)";
+                sb.AppendLine($"- {players[i].m_PlayerNameStr}: {players[i].m_PlayerClass.text}{owner} ");
             }
-            Context.Send(data);
-        }
-
-// [Message:Neuro For the King] Player 1, Player 2, Player 3
-        static List<string> GetCharacterNames()
-        {
-            List<string> names = [];
-            foreach (uiQuickPlayerCreate player in characterCreateRoot.m_Players)
-            {
-                names.Add(player.m_PlayerNameStr);
-            }
-            return names;
-        }
-
-// [Message:Neuro For the King] Hunter, Minstrel, Hunter
-        static List<string> GetCharacterClasses()
-        {
-            List<string> names = [];
-            foreach (uiQuickPlayerCreate player in characterCreateRoot.m_Players)
-            {
-                names.Add(player.m_PlayerClass.text);
-            }
-            return names;
+            Context.Send(sb.ToString().TrimEnd(['\r', '\n']));
         }
 
         public static void ActionStartGame()
         {
-            uiFTKButton btn = characterCreateRoot.transform.Find("UIRoot/ButtonRoot/StartButton").GetComponent<uiFTKButton>();
-            SelectButton.StartCoroutine(btn, 0.5f);
+            if (!Multiplayer.IsMultiplayer())
+            {
+                uiFTKButton btn = characterCreateRoot.transform.Find("UIRoot/ButtonRoot/StartButton").GetComponent<uiFTKButton>();
+                SelectButton.StartCoroutine(btn, 0.5f);
+                return;
+            }
+            SetAllReady();
+        }
+
+        public static void SetAllReady() // auto begins if 3 ready
+        {
+            bool hasOtherPlayer = false;
+            foreach (uiQuickPlayerCreate player in players)
+            {
+                if (!Multiplayer.IsYourPhotonId(player.m_PhotonID))
+                {
+                    hasOtherPlayer = true;
+                    continue;
+                }
+                player.SetPlayerReady();
+            }
+            if (!hasOtherPlayer)
+            {
+                if (players.Count < 3)
+                {
+                    Plugin.Logger.LogWarning("beginning game with less than full party");
+                    uiStartGame.Instance.EnterFahrul();
+                }
+            }
         }
 
         public static void NeuroRandomizeParty()
         {
-            characterCreateRoot.RandomParty();
+            if (!Multiplayer.IsMultiplayer()) characterCreateRoot.RandomParty();
+            else
+            {
+                foreach (uiQuickPlayerCreate player in players)
+                {
+                    if (Multiplayer.IsYourPhotonId(player.m_PhotonID)) player.RandomClass();
+                }
+                OnPartyRandomized();
+            }
         }
 
         public static void NeuroSetCharacterNames(List<string> names)
@@ -131,9 +165,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static IEnumerator ChangeNames(List<string> names)
         {
+            int count = 0;
             foreach (uiQuickPlayerCreate player in players)
             {
-                string name = names[players.IndexOf(player)];
+                if (!Multiplayer.IsYourPhotonId(player.m_PhotonID)) continue;
+                string name = names[count];
+                count++;
                 player.m_PlayerNameInput.OnTextButtonClick();
                 player.m_PlayerNameInput.OnTextChanged(name);
                 player.m_PlayerNameInput.OnEditFinished(name);
@@ -146,7 +183,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             SendPartyDetails(false);
             Context.Send(msg);
-            CharacterCustomize.players = [.. players];
+            CharacterCustomize.players = [.. players.Where(x => Multiplayer.IsYourPhotonId(x.m_PhotonID))];
             CharacterCustomize.CustomizePlayer(CharacterCustomize.players.First());
             yield break;
         }
@@ -165,8 +202,44 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 yield return null;
             }
-            yield return new WaitForEndOfFrame();
-            shownOnce = false;
         }
+
+        static void RegisterWindow(uiCharacterCreateRoot instance)
+        {
+            if (instance == null)
+            {
+                Plugin.Logger.LogError("character create root is null");
+                return;
+            }
+            SendPartyDetails();
+            if (Multiplayer.IsMultiplayer())
+            {
+                Plugin.Logger.LogWarning("local multiplayer setup");
+                // return;
+            }
+            instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => ConfiguePartyAction.RegisterConfigurePartyActions(instance.gameObject, players), instance.gameObject));
+        }
+
+// // [Message:Neuro For the King] Player 1, Player 2, Player 3
+//         static List<string> GetCharacterNames()
+//         {
+//             List<string> names = [];
+//             foreach (uiQuickPlayerCreate player in characterCreateRoot.m_Players)
+//             {
+//                 names.Add(player.m_PlayerNameStr);
+//             }
+//             return names;
+//         }
+
+// // [Message:Neuro For the King] Hunter, Minstrel, Hunter
+//         static List<string> GetCharacterClasses()
+//         {
+//             List<string> names = [];
+//             foreach (uiQuickPlayerCreate player in characterCreateRoot.m_Players)
+//             {
+//                 names.Add(player.m_PlayerClass.text);
+//             }
+//             return names;
+//         }
     }
 }
