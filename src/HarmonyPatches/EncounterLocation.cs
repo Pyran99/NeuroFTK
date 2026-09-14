@@ -123,17 +123,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateLocationAction()
         {
             Plugin.Logger.LogMessage("create location encounter window");
-            string ctx = GetLocationContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
-            if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy)
-            {
-                ctx += $"\nthis encounters enemies are lvl {locationMenuInstance.m_Difficulty.text}";
-                //TODO compare # of units on each side + avg levels
-                // foreach (CharacterOverworld player in Encounters.involvedPlayers)
-                // {
-                //     ctx += $"- {CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})";
-                // }
-            }
-            Context.Send(ctx);
+            StringBuilder sb = new(Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top, locationMenuInstance.m_Cost, locationMenuInstance.m_Difficulty));
+            Context.Send(sb.ToString());
             uiLocationMenuDisplay.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(CreateActionWindow, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject));
         }
 
@@ -175,7 +166,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             return buttons;
         }
 
-        static string GetLocationContext(string name, string description, string flavor)
+        static string GetLocationContext(string name, string description, string flavor) //TODO compare with GetEncounterContext
         {
             string encounter = $"## Encounter ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
             StringBuilder sbPlayers = new("### character involved \n");

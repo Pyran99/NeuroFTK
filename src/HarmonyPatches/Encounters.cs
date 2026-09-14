@@ -9,6 +9,7 @@ using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -18,6 +19,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         public static uiEncounterMenu EncounterMenuInstance { get; private set; }
         public static List<CharacterOverworld> involvedPlayers = [];
+        /// <summary>
+        /// involvedEnemies[unitDupeCount.ToString()] = new() { {entry.GetEnemyDisplay(), lvl}, };
+        /// </summary>
         public static Dictionary<string, Dictionary<string, string>> involvedEnemies = [];
         public static readonly Dictionary<string, uiPoiButton> activeButtons = [];
         public static Dictionary<SubPanelBaseBase.ButtonID, uiPoiButton> allButtons = [];
@@ -160,11 +164,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             allButtons.Clear();
             MiniHexInfo.MenuPOIDisplayValues values = EncounterMenuInstance.m_ThisMiniHex.GetMenuDisplayValues();
-            string ctx = GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top);
+            string ctx = GetEncounterContext(values.m_Title, values.m_Bottom, values.m_Top, EncounterMenuInstance.m_Cost, EncounterMenuInstance.m_EnemyLevel);
             Context.Send(ctx);
             generating = false;
             if (!instance.isActiveAndEnabled) return;
-            Plugin.Logger.LogMessage("create encounter window");
             window = EncounterAction.CreateWindow(instance, activeButtons.ToDictionary(k => k.Key, v => v.Value), buttonsContext);
         }
 
@@ -199,31 +202,40 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// <summary>
         /// info about encounter, characters involved
         /// </summary>
-        /// <returns>"{encounter}\n{_players}\n{_enemies}"</returns>
-        public static string GetEncounterContext(string name, string description, string flavor)
+        /// <returns>"encounter description, characters involved, enemies involved, cost, difficulty, team lvl"</returns>
+        public static string GetEncounterContext(string name, string description, string flavor, Text costObj, Text difficultyObj)
         {
-            string encounter = $"## Encounter ({name}) {StringReplace.RemoveStyling(flavor)}: {StringReplace.RemoveStyling(description)}\n";
-            StringBuilder sbPlayers = new("### character involved \n");
+            StringBuilder sb = new($"## Encounter ({name}) {StringReplace.RemoveStyling(flavor)}: {StringReplace.RemoveStyling(description)}\n");
+            sb.Append($"### characters involved: ");
+            int playerTotalLvl = 0;
             foreach (CharacterOverworld player in involvedPlayers)
             {
-                sbPlayers.AppendLine($"- {CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
+                sb.Append($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel}), ");
+                playerTotalLvl += player.m_CharacterStats.m_PlayerLevel;
             }
-            string _enemies = "";
+            sb.AppendLine();
+            int enemyTotalLvl = 0;
             if (involvedEnemies.Count > 0)
             {
-                _enemies = $"### enemies involved: {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
+                sb.AppendLine($"### enemies involved: {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}.");
+                involvedEnemies.Select(x => x.Value.Values.First()).ToList().ForEach(x => enemyTotalLvl += x.First());
             }
-            string cost = "";
-            if (EncounterMenuInstance.m_CostRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_Cost.text != string.Empty)
+            if (costObj.gameObject.activeInHierarchy && costObj.text != string.Empty)
             {
-                cost = $"\n### {StringMessages.EncounterCost.Format([EncounterMenuInstance.m_Cost?.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
+                sb.AppendLine($"### {StringMessages.EncounterCost.Format([costObj.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}.");
             }
-            string enemyLvl = "";
-            if (EncounterMenuInstance.m_EnemyLevelRoot.gameObject.activeInHierarchy && EncounterMenuInstance.m_EnemyLevel.text != string.Empty)
+            if (difficultyObj.gameObject.activeInHierarchy)
             {
-                enemyLvl = $"\n### enemy level: {EncounterMenuInstance.m_EnemyLevel.text}";
+                if (difficultyObj.text != string.Empty) sb.AppendLine($"### enemy average lvl: {difficultyObj.text}.");
             }
-            return $"{encounter}{sbPlayers}{_enemies}{cost}{enemyLvl}";
+            if (involvedEnemies.Count > 0 && involvedPlayers.Count > 0)
+            {
+                float avg = playerTotalLvl / involvedPlayers.Count;
+                sb.Append($"your involved teams average lvl is {avg:F1}.");
+                float diff = enemyTotalLvl - playerTotalLvl;
+                if (diff > 3 || involvedEnemies.Count - involvedPlayers.Count > 1) sb.Append($" This fight will be difficult.");
+            }
+            return sb.ToString();
         }
 
         /// <summary>
