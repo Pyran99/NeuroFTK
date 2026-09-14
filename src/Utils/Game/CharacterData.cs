@@ -188,6 +188,7 @@ namespace Pyran.NeuroFTK.Utils
                 pos = HexData.GetVec2Pos(player.GetHexLand());
                 sb.Append($" teammate {GetCharacterName(player)}{revive} is at hex {pos},");
             }
+            sb.Append(".");
             return sb.ToString();
         }
 

@@ -207,7 +207,7 @@ namespace Pyran.NeuroFTK.Utils
                     else if (hexInfo.m_Locked) poi += ": locked";
                     else poi += ": completed";
                 }
-                if (poi != "") poi = $"({poi})";
+                if (poi != "") poi = $" ({poi})";
             }
             if (addToList) OverworldFlow.AddHexPosition(pos.ToString(), hex);
             string dist = "";

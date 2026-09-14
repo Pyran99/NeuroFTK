@@ -31,7 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly bool removeRandomEmpty = true;
         static bool isRemake = false;
         static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = [];
-        static int turnBeginCount = 0; //TODO send some general ctx every 3 or so new turns in overworld
+        static int turnBeginCount = 0; // send some general ctx every 3 or so new turns in overworld
 
 
         [HarmonyPatch(typeof(uiMovementSlots), nameof(uiMovementSlots.InitializeSkipTurn))]
@@ -62,13 +62,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield break;
             }
             turnBeginCount++;
-            if (turnBeginCount % 3 == 0)
+            if (turnBeginCount % 4 == 0)
             {
-                Plugin.Logger.LogWarning($"NYI send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
-                if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
-                {
-                    QuestHelper.DungeonCrawlQuestHelper();
-                }
+                Plugin.Logger.LogWarning($"send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
+                // if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
+                // {
+                //     Context.Send(QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
+                // }
                 turnBeginCount = 0;
             }
             BeginTurn2(__instance);
@@ -496,8 +496,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             string questCtx = QuestHelper.GetQuestData();
             if (questCtx.Contains("may require boat")) questCtx += BoatHelper.AddBoatTravelContext(hex);
             string haunts = ScourgeEvents.GetScourgeContext(_cow);
-            if (haunts != "") questCtx += "\n" + haunts;
-            string state = $"{teamPositions}\n{questCtx}";
+            if (haunts != "") questCtx += "\n " + haunts;
+            string state = $"{teamPositions}\n {questCtx}";
             string tileCtx = GetTileContext(tiles);
             List<string> validQuests = QuestHelper.GetInRangeQuests(_cow);
             validQuests.AddRange([.. ScourgeEvents.GetActiveHaunts().Select(x => x.Key)]);
@@ -509,14 +509,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             MiniHexInfo poi = hex.GetPOI();
             bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
-            window = MovementAction.CreateWindow(_cow, tileCtx, state, hexPositions, QuestHelper.questDict, validQuests, validCows, isInteractable);
+            window = MovementAction.CreateWindow(_cow, tileCtx, state, hexPositions, QuestHelper.questHexes, validQuests, validCows, isInteractable);
         }
 
         static bool HandleInvalidMovement(CharacterOverworld _cow, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, string ctx = "", string state = "")
         {
             if (_cow.IsInAirShip())
             {
-                window = MovementAction.CreateWindow(_cow, ctx, state, [], QuestHelper.questDict, validQuests, validCows, true);
+                window = MovementAction.CreateWindow(_cow, ctx, state, [], QuestHelper.questHexes, validQuests, validCows, true);
                 return true;
             }
             Plugin.Logger.LogError("no hex positions found, forcing end turn");
@@ -544,17 +544,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
         }
 
-        public static void NeuroTryGoToQuest(CharacterOverworld cow, QuestLogicBase quest)
+        public static void NeuroTryGoToQuest(CharacterOverworld cow, HexLand hex)
         {
-            if (quest == null)
+            if (hex == null)
             {
                 Plugin.Logger.LogError("chosen quest was null");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_quest"]) + NeuroSdkStrings.ModFaultSuffix}", true);
                 Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2f));
                 return;
             }
-            HexLand dest = quest.GetHexLandDestination();
-            cow.StartCoroutine(MoveToHexCoroutine(cow, dest, true));
+            cow.StartCoroutine(MoveToHexCoroutine(cow, hex, true));
         }
 
         public static void NeuroTryGoToHaunt(CharacterOverworld cow, MiniHexHaunt haunt)

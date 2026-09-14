@@ -10,6 +10,7 @@ using NeuroSdk.Internal;
 using Pyran.NeuroFTK.GameConfigs;
 using System.Linq;
 using System.Text;
+using System;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -62,8 +63,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EnteringWorld()
         {
+            GameDefinitionPreview def = GameCache.Cache.GameDefinitions.GetPreview(uiStartGame.Instance.m_GameDefName);
+            if (def == null) Plugin.Logger.LogError($"invalid game def {uiStartGame.Instance.m_GameDefName}");
+            QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), ConfigureAdventure.adventureCodes.First(x => x.Value == def.GetDisplayName()).Key);
             Context.Send("entering the world of Fahrul", true);
         }
+
+        // [HarmonyPatch(typeof(MainScreen), nameof(MainScreen.OnResume))]
+        // [HarmonyPostfix]
+        // static void OnResume()
+        // {
+        // }
 
         static void OnPartyVisible()
         {

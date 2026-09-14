@@ -57,7 +57,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             if (instance == null)
             {
-                Plugin.Logger.LogError("instance is null");
+                Plugin.Logger.LogError("gameconfig instance is null");
                 return ["For the King"];
             }
             List<string> names = [];

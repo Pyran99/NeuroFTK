@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.GameConfigs;
 using UnityEngine;
 
@@ -18,8 +19,10 @@ namespace Pyran.NeuroFTK.Utils
             gr
         }
         public static Adventure currentAdventure = Adventure.ftk;
-
-        public static readonly Dictionary<string, QuestLogicBase> questDict = [];
+        /// <summary>
+        /// vector 2 string from HexData
+        /// </summary>
+        public static readonly Dictionary<string, HexLand> questHexes = [];
 
         static readonly List<Vector3> questPositions = [];
         static StringBuilder sbQuest = new();
@@ -27,19 +30,18 @@ namespace Pyran.NeuroFTK.Utils
 
         public static string GetQuestData()
         {
-            questDict.Clear();
+            questHexes.Clear();
             questPositions.Clear();
             sbQuest = new();
             Vector3 cowHex = CharacterData.GetActiveCow().GetHexLand().GetPosition();
-            foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>())
-            {
-                AddValidQuests(q, cowHex);
-            }
-            foreach (uiQuestItem q in uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>())
+            List<uiQuestItem> allQuests = [.. uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>()];
+            allQuests.AddRange(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
+            foreach (uiQuestItem q in allQuests)
             {
                 AddValidQuests(q, cowHex);
             }
             if (sbQuest.Length > 0) sbQuest.Insert(0, "## active quests \n");
+            if (currentAdventure == Adventure.dc) HandleDungeonCrawlQuest();
             return sbQuest.ToString();
         }
 
@@ -50,18 +52,16 @@ namespace Pyran.NeuroFTK.Utils
             QuestLogicBase quest = questItem.m_Quest;
             if (quest == null) return;
             if (quest.IsRawComplete()) return;
-            string type = "side";
-            if (quest.HasQuestDefID()) type = "main"; // only story quest ids
+            string type = quest.HasQuestDefID() ? "main" : "side";
             string description = StringReplace.RemoveStyling(quest.GetLocalizedOneLineDesc());
-            HexLand dest;
-            dest = quest.GetHexLandDestination();
+            HexLand dest = quest.GetHexLandDestination();
             if (dest != null)
             {
                 Vector2 pos = HexData.GetVec2Pos(dest);
-                if (questDict.ContainsKey(pos.ToString())) return;
+                if (questHexes.ContainsKey(pos.ToString())) return;
                 if (dest.GetPosition() == cowHex)
                 {
-                    questDict.Add(pos.ToString(), quest);
+                    questHexes.Add(pos.ToString(), dest);
                     questPositions.Add(dest.GetPosition());
                     sbQuest.AppendLine($"- {type} quest at {pos}: {description} (you are currently at this hex)");
                     return;
@@ -71,11 +71,9 @@ namespace Pyran.NeuroFTK.Utils
                 {
                     outOfRange = " (out of pathfinding range)";
                 }
-                questDict.Add(pos.ToString(), quest);
+                questHexes.Add(pos.ToString(), dest);
                 questPositions.Add(dest.GetPosition());
-                string boat = "";
-                if (HexData.IsBoatRequired(description)) boat = " (may require boat (can be bought at port), or an airship)";
-                else if (HexData.IsAirshipRequired(description)) boat = " (requires an airship to reach)";
+                string boat = GetBoatTravelCtx(description);
                 sbQuest.AppendLine($"- {type} quest at {pos}: {description}{outOfRange}{boat}");
                 // quest desc: Kill the Chaos Leader in The Guardian Forest
                 // quest pos: (85.1, 117.5)
@@ -102,36 +100,140 @@ namespace Pyran.NeuroFTK.Utils
         {
             List<string> result = [];
             List<Vector3> positions = GetQuestPositions();
-            foreach (KeyValuePair<string, QuestLogicBase> kvp in questDict)
+            Vector3 cowPos = cow.GetHexLand().GetPosition();
+            foreach (Vector3 pos in positions)
             {
-                Vector3 dest = kvp.Value.GetHexLandDestination()?.GetPosition() ?? Vector3.positiveInfinity;
-                Vector3 cowPos = cow.GetHexLand().GetPosition();
-                if (dest == cowPos) continue;
-                if (positions.Contains(dest))
+                if (pos == cowPos) continue;
+                if ((pos - cowPos).magnitude < GlobalConfig.maxDistance)
                 {
-                    if ((dest - cowPos).magnitude < GlobalConfig.maxDistance)
+                    result.Add(new Vector2(pos.x, pos.z).ToString());
+                }
+            }
+            if (currentAdventure == Adventure.dc)
+            {
+                IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
+                Vector2 pos;
+                foreach (MiniHexDungeon d in dungeons)
+                {
+                    if (d.GetDungeonType() == MiniHexDungeon.DungeonType.Main)
                     {
-                        result.Add(kvp.Key);
+                        if (d.IsDungeonCleared()) continue;
+                        pos = HexData.GetVec2Pos(d.m_HexLand);
+                        if (result.Contains(pos.ToString())) continue;
+                        if ((d.m_HexLand.GetPosition() - cowPos).magnitude < GlobalConfig.maxDistance)
+                        {
+                            result.Add(pos.ToString());
+                        }
                     }
                 }
             }
             return result;
         }
 
-        public static void DungeonCrawlQuestHelper()
+        public static string GetAdventuresMainQuestCtx(Adventure adventure, bool addLocations = false)
         {
-            //TODO send location of all hidden dungeons for quest. may be cheaty
-            IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
-            List<Vector2> locations = [.. dungeons.Select(d => HexData.GetVec2Pos(d.m_HexLand))];
-            Plugin.Logger.LogWarning($"locations: {string.Join(", ", [.. locations.Select(x => x.ToString())])}");
-            Plugin.Logger.LogWarning($"types: {string.Join(", ", [.. dungeons.Select(x => x.GetDungeonType().ToString())])}");
-            Plugin.Logger.LogWarning($"locations has quest: {string.Join(", ", [.. dungeons.Where(x => x.HasEncounterQuest()).Select(x => HexData.GetVec2Pos(x.m_HexLand).ToString())])}");
-            Dictionary<int, QuestLogicBase> quests = GameLogic.Instance.GetQuestTable();
-            // maybe Main type is for quest
-// [Warning:Neuro For the King] locations: (127.0, 70.0), (90.9, 22.5), (67.8, 42.5), (89.5, 95.0), (142.9, 97.5), (135.6, 105.0), (109.7, 85.0), (99.6, 87.5), (70.7, 92.5), (77.9, 115.0), (59.2, 57.5), (50.5, 62.5), (128.4, 122.5), (56.3, 77.5), (102.5, 27.5), (96.7, 132.5), (64.9, 87.5), (77.9, 135.0), (140.0, 112.5), (85.1, 82.5)
-// [Warning:Neuro For the King] types: Mini, Main, Mini, Mini, Main, Mini, Main, Mini, Main, Mini, Main, Mini, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave, SeaCave
-// [Warning:Neuro For the King] locations has quest:
+            return adventure switch
+            {
+                Adventure.ftk => GetMainQuestCtx(addLocations),
+                Adventure.fa => GetMainQuestCtx(addLocations),
+                Adventure.id => GetMainQuestCtx(addLocations),
+                Adventure.dc => GetDungeonCrawlQuestHelper(addLocations),
+                Adventure.hc => GetMainQuestCtx(addLocations),
+                Adventure.gr => GetMainQuestCtx(addLocations),
+                _ => GetMainQuestCtx(addLocations),
+            };
         }
-        
+
+        public static string GetMainQuestCtx(bool addLocations = false)
+        {
+            IEnumerable<uiQuestItem> allQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
+            allQuests.Concat(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
+
+            // IEnumerable<QuestLogicBase> quests = GameLogic.Instance.GetQuestTable().Values;
+            StringBuilder sb = new();
+            sb.AppendLine("## quest locations ");
+            foreach (uiQuestItem q in allQuests)
+            {
+                // if (!q.HasQuestDefID()) continue;
+                Plugin.Logger.LogWarning($"{q.m_Quest.m_StoryQuestID} : {q.m_Quest.GetLocalizedOneLineDesc()}");
+                if (addLocations && q.m_Quest.GetHexLandDestination() != null)
+                {
+                    string type = q.m_Quest.HasQuestDefID() ? "main" : "side";
+                    sb.AppendLine($"- {type}: {HexData.GetVec2Pos(q.m_Quest.GetHexLandDestination())}");
+                }
+            }
+            return sb.ToString();
+        }
+
+        static void HandleDungeonCrawlQuest()
+        {
+            IEnumerable<uiQuestItem> mainQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
+            string description = StringReplace.RemoveStyling(mainQuests.First().m_Display.text);
+            sbQuest.AppendLine($"main quest: {description}. ");
+            CharacterOverworld cow = CharacterData.GetActiveCow();
+            Vector3 cowHex = cow.GetHexLand().GetPosition();
+            IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
+            sbQuest.AppendLine("## dungeon locations ");
+            HexLand dest;
+            Vector3 pos;
+            string outOfRange;
+            string boat;
+            foreach (MiniHexDungeon d in dungeons)
+            {
+                if (d.GetDungeonType() == MiniHexDungeon.DungeonType.Main)
+                {
+                    outOfRange = "";
+                    dest = d.m_HexLand;
+                    pos = dest.GetPosition();
+                    if (questPositions.Contains(pos)) continue;
+                    questPositions.Add(pos);
+                    questHexes.Add(HexData.GetVec2Pos(dest).ToString(), dest);
+                    if ((pos - cowHex).magnitude > GlobalConfig.maxDistance)
+                    {
+                        outOfRange = " (out of pathfinding range)";
+                    }
+                    boat = GetBoatTravelCtx(dest.GetRealmDisplayValue());
+                    // dest.GetRealm();
+                    sbQuest.AppendLine($"- {HexData.GetVec2Pos(dest)}{outOfRange}{boat}.");
+                }
+            }
+        }
+
+        public static string GetDungeonCrawlQuestHelper(bool addLocations = false)
+        {
+            IEnumerable<uiQuestItem> allQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
+            // allQuests.Concat(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
+            string description = StringReplace.RemoveStyling(allQuests.First().m_Display.text);
+            IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
+            StringBuilder sb = new($"main quest: {description} \n");
+            if (addLocations)
+            {
+                sb.AppendLine("## quest locations");
+                foreach (MiniHexDungeon d in dungeons)
+                {
+                    if (d.GetDungeonType() == MiniHexDungeon.DungeonType.Main)
+                    {
+                        sb.AppendLine($"- {HexData.GetVec2Pos(d.m_HexLand)}");
+                    }
+                }
+            }
+            return sb.ToString();
+// main quest: Find and purge all realm dungeons
+// ## quest locations
+// - (90.9, 22.5)
+        }
+
+        static string GetBoatTravelCtx(string description)
+        {
+            if (HexData.IsBoatRequired(description))
+            {
+                if (currentAdventure == Adventure.ftk) return " (may require boat (can be bought at port), or an airship)";
+                else if (currentAdventure == Adventure.dc) return ""; // dc may not use boats, VERIFY
+                return " (may require boat (can be bought at port)";
+            }
+            else if (HexData.IsAirshipRequired(description)) return " (requires an airship to reach)";
+            return "";
+        }
+
     }
 }

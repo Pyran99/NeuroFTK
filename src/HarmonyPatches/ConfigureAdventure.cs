@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -54,7 +55,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void GameDefChanged(GameConfig __instance, string _gameDefName)
         {
             string name = __instance.GetCurrentGameDefPreview().GetDisplayName();
-            Plugin.Logger.LogMessage($"selected {name}");
             QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), adventureCodes.First(x => x.Value == name).Key);
         }
 
@@ -62,9 +62,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             string context = AdventuresContext(instance);
-            window.SetContext(context);
+            // window.SetContext(context);
             window.AddAction(new ChooseAdventureAction(instance));
-            window.SetForce(2.0f, "select an adventure to play", "", true);
+            window.SetForce(0f, "select an adventure to play", context, true);
             UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
             window.Register();
         }
@@ -82,7 +82,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static string AdventuresContext(GameConfig instance)
         {
-            string details = "## Adventure details ";
+            StringBuilder sb = new("## Adventure details \n");
             string description;
             foreach (GameDefButton btn in instance.m_GameDefButtons)
             {
@@ -94,7 +94,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (prev.GetDisplayName() == adventureCodes[GlobalConfig.AdventureCode])
                         {
                             description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                            details += $"- {prev.GetDisplayName()}: {description}\n";
+                            sb.AppendLine($"- {prev.GetDisplayName()}: {description}\n");
                             break;
                         }
                     }
@@ -104,9 +104,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 // gold rush is multiplayer only
                 // if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue; // also in action
                 description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                details += $"- {prev.GetDisplayName()}: {description}\n";
+                sb.AppendLine($"- {prev.GetDisplayName()}: {description}\n");
             }
-            return details;
+            return sb.ToString();
         }
 
         static IEnumerator SelectAdventureButton(GameConfig instance, string saveFileName)
@@ -137,7 +137,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 int? value = StatsAchievements.StatsAchievements.GetPlayerStatistic(FTK_statistic.ID.STAT_CELLAR_ROOM_COUNT).Value;
                 dungeonRooms = $" (your highest room clear for this adventure is {value ?? 0})";
             }
-            Context.Send($"you selected the adventure {name}: {level.GetDisplayInfoText()} {dungeonRooms}");
+            Context.Send($"you selected the adventure {name}: {level.GetDisplayInfoText()} {dungeonRooms}", true);
             // QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), adventureCodes.First(x => x.Value == saveFileName).Key);
             // Plugin.Logger.LogWarning($"set adventure to {QuestHelper.currentAdventure}");
             yield return new WaitForSeconds(1.0f);
@@ -160,7 +160,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             instance.m_Difficulty.value = 0;
         }
 
-        // always choose solo for now
+        
         static void SetGameMode(GameConfig instance)
         {
             if(GlobalConfig.IsDebugMode()) LogGameModes(instance);

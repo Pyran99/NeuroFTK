@@ -16,16 +16,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, string state, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, string state, Dictionary<string, HexLand> hexPositions, Dictionary<string, HexLand> questHexes, List<string> validVec2Quests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
             if (!OverworldFlow.isSneakMovement)
             {
                 if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
-                if (validQuests.Count > 0)
+                if (validVec2Quests.Count > 0)
                 {
-                    window.AddAction(new GoToQuestAction(questDict, validQuests, ScourgeEvents.GetActiveHaunts()));
+                    window.AddAction(new GoToQuestAction(questHexes, validVec2Quests, ScourgeEvents.GetActiveHaunts()));
                 }
                 if (validCows.Count() > 0)
                 {
@@ -156,7 +156,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, List<string> validQuests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
+    public class GoToQuestAction(Dictionary<string, HexLand> _questHexes, List<string> validVec2Quests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
         protected override string Description => "choose a quest or scourge location to travel to. if the location is out of range you will move to the furthest hex along the path";
@@ -170,7 +170,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = ["destination"],
                 Properties = new()
                 {
-                    ["destination"] = QJS.Enum(validQuests),
+                    ["destination"] = QJS.Enum(validVec2Quests),
                 }
             };
             return schema;
@@ -179,9 +179,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             CharacterOverworld cow = CharacterData.GetActiveCow();
-            if (_questDict.ContainsKey(parsedData))
+            if (_questHexes.ContainsKey(parsedData))
             {
-                OverworldFlow.NeuroTryGoToQuest(cow, _questDict.TryGetValue(parsedData, out QuestLogicBase quest) ? quest : null);
+                OverworldFlow.NeuroTryGoToQuest(cow, _questHexes.TryGetValue(parsedData, out HexLand hex) ? hex : null);
             }
             else if (haunts.ContainsKey(parsedData))
             {
@@ -196,7 +196,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string data = actionData.Data?.Value<string>("destination");
             if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
             if (data == "none") return ExecutionResult.Success();
-            if (!_questDict.ContainsKey(data) && !haunts.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
+            if (!_questHexes.ContainsKey(data) && !haunts.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
             parsedData = data;
             return ExecutionResult.Success();
         }
