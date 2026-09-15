@@ -73,14 +73,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (items.Count == 0)
             {
-                Context.Send("you sent no items to equip", true);
+                Context.Send("you sent no valid items to equip", true);
                 yield return new WaitForSeconds(1f);
                 ResetTurn(cow);
                 yield break;
             }
             StringBuilder sb = new($"{CharacterData.GetCharacterName(cow)} equipped: ");
             cow.m_UIPlayMainHud.m_OpenInventory.OnSubmit(null);
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(1f);
             foreach (FTK_itembase.ID item in items)
             {
                 if (item == FTK_itembase.ID.None) continue;

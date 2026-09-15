@@ -11,6 +11,7 @@ using Google2u;
 using System.Linq;
 using Pyran.NeuroFTK.GameConfigs;
 using System.Text;
+using System;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -62,7 +63,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (initialized) return;
             Plugin.Logger.LogMessage("player combat actions");
-            Object.Destroy(window);
+            UnityEngine.Object.Destroy(window);
             GlobalConfig.GameLoaded();
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             initialized = true;
@@ -89,7 +90,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void BtnsOff()
         {
-            Object.Destroy(window);
+            UnityEngine.Object.Destroy(window);
             m_Proficiencies = [];
             initialized = false;
         }
@@ -98,7 +99,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void CombatPlayerVictory()
         {
-            ToggleDisposableActions.ToggleCombatActions(false);
+            // ToggleDisposableActions.ToggleCombatActions(false);
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;  // changed before post-call
             if (isCombatEncounter) Context.Send(StringMessages.BattleWon);
             isCombatEncounter = false;
@@ -341,7 +342,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
                 if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow));
             }
-            string focus = $"### {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 % (all slots focused will be 100%)";
+            string focus = $"## {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 % (all slots focused will be 100%)";
             string state = $"{BeginTurns.CtxCombatTurnBeginPlayer(cow)} \n{BeginTurns.CtxCombatTurnBeginEnemy()} \n{focus}";
             window = CombatActions.RegisterCombatActions(_instance, ctx, state, actions);
             offense.Clear();
@@ -353,7 +354,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             StringBuilder sb = new();
             if (items.Count == 0) return "";
-            sb.AppendLine("\n### usable belt items ");
+            sb.AppendLine("\n## usable belt items ");
             foreach (FTK_itembase.ID item in items)
             {
                 sb.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}");
@@ -364,7 +365,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string GetAttackContextAndRegisterAction(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             StringBuilder sb = new();
-            sb.Append("### your attacks \n");
+            sb.Append("## your attacks \n");
             if (offense.Count > 0)
             {
                 foreach (string key in offense.Keys)
@@ -383,9 +384,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 actions.Add(new CombatFriendlyAction(defense));
             }
+            CharacterOverworld cow = _instance.CombatCow;
             if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.IsDebugMode() && allowFleeing)
             {
-                if ((_instance.CombatCow?.m_CharacterStats.GetHealthPercent() ?? 1) < healthForFleePercent)
+                float health = (float)cow.m_CharacterStats.m_HealthCurrent / cow.m_CharacterStats.MaxHealth;
+                if (health < healthForFleePercent)
                 {
                     sb.Append("- " + HandleBtnContext(_instance.m_FleeButton, _proficiencies));
                     actions.Add(new CombatFleeAction(_instance.m_FleeButton));
@@ -401,7 +404,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append("- " + HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
                 actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
-            if (CanUseBtn(_instance.m_EquipWeaponButton) && (_instance.CombatCow.m_WeaponID == FTK_itembase.ID.unarmed || _instance.CombatCow.m_WeaponID == FTK_itembase.ID.None) && !GlobalConfig.IsDebugMode())
+            if (CanUseBtn(_instance.m_EquipWeaponButton) && (cow.m_WeaponID == FTK_itembase.ID.unarmed || cow.m_WeaponID == FTK_itembase.ID.None) && !GlobalConfig.IsDebugMode())
             {
                 sb.Append("- " + HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
                 actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));

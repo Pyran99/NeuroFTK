@@ -9,7 +9,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     // send a message from the combat floating text
     public class FloatingMsgAction : NeuroAction<string>
     {
-        public override string Name => "send_msg";
+        public override string Name => "send_message";
         protected override string Description => "send a random message to appear on the active character for a short time. this action is for chat engagement";
         protected override JsonSchema Schema => GetSchema();
 
@@ -18,10 +18,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,
-                Required = ["action"],
+                Required = ["message"],
                 Properties = new()
                 {
-                    ["action"] = new()
+                    ["message"] = new()
                     {
                         Type = JsonSchemaType.String,
                         MinLength = 3,
@@ -35,17 +35,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(string parsedData)
         {
-            CharacterData.GetActiveCow().GetCurrentDummy()?.SpawnHudTextRPC(parsedData);
+            CharacterDummy dummy = CharacterData.GetActiveCow()?.GetCurrentDummy();
+            if (dummy == null) return;
+            dummy.SpawnHudTextRPC(parsedData);
+            Context.Send($"sent msg {parsedData}", true);
             if (uiChatBox.Instance)
             {
                 uiChatBox.Instance.AddMessage(UnityEngine.Color.white, CharacterData.GetActiveCow()?.m_CharacterStats.m_CharacterName, parsedData);
-                Context.Send($"sent msg {parsedData}", true);
             }
         }
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            parsedData = actionData.Data?.Value<string>("action") ?? "null";
+            parsedData = actionData.Data?.Value<string>("message") ?? "null";
+            CharacterDummy dummy = CharacterData.GetActiveCow()?.GetCurrentDummy();
+            if (dummy == null) return ExecutionResult.Success("could not send message right now, wait until you are in a battle");
             return ExecutionResult.Success();
         }
     }

@@ -75,7 +75,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sbState.AppendLine($"{CharacterData.GetDataFor(kvp.Key)} ");
             }
             sbState.Append($"{StringMessages.FocusDetails}");
-            activeWindow.SetForce(0, StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text), sbState.ToString(), true);
+            string query = Multiplayer.IsMultiplayer() ? StringMessages.DecisionButtonsPromptMultiplayer.Format(instance.m_Prompt.text) : StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text);
+            activeWindow.SetForce(0, query, sbState.ToString(), true);
             StringBuilder sb = new(DungeonEncounterRolls());
             EncounterData encounter = EncounterSessionMC.Instance.GetCurrentEncounter();
             if (encounter != null)

@@ -43,10 +43,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     {
                         parsedData.Add(itemID);
                     }
-                    else if (!chosen.IsNullOrEmpty())
-                    {
-                        return ExecutionResult.Failure($"action failed. invalid item {chosen}, check your spelling");
-                    }
+                    // else if (!chosen.IsNullOrEmpty()) // does not play well with testers & no required properties, generating random things
+                    // {
+                    //     return ExecutionResult.Failure($"action failed. invalid item {chosen}, check your spelling");
+                    // }
                 }
             }
             return ExecutionResult.Success();

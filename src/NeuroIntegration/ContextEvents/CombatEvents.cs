@@ -13,7 +13,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static bool isAcidDestroy = false;
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // main battle enter for normal & dungeon, also called for each dungeon encounter, including ready actions
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // main battle enter for normal & dungeon, also called for each dungeon encounter, including ready actions & looting from encounter
         [HarmonyPostfix]
         // static void EnteredBattle(MiniHexDungeon.EncounterType _encounterType)
         static void EnteredBattle()
@@ -81,6 +81,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void EncounterFinished()
         {
             Plugin.Logger.LogMessage("CombatEvents encounter finished");
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon) return;
+            ToggleDisposableActions.ToggleCombatActions(false);
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]

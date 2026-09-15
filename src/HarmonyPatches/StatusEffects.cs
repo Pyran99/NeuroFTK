@@ -21,7 +21,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void NewCurse(CharacterStats.CurseType _type, CharacterStats __instance)
         {
-            Context.Send($"curse {_type} applied to {CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}");
+            if (_type == CharacterStats.CurseType.None || _type == CharacterStats.CurseType.COUNT) return;
+            if (__instance.HasImmunity(ProficiencyBase.Category.Curse)) return;
+            statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format([_type, FTKHub.Localized<TextInfo>(GetCurseDescription(_type)), CharacterData.GetCharacterName(__instance.m_CharacterOverworld)]));
         }
 
         [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.RemoveAllActiveCurses))]
@@ -29,6 +31,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void RemovedAllCurses(CharacterStats __instance)
         {
             Context.Send($"removed all curses from {CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}");
+        }
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.UpdateDisease))]
+        [HarmonyPostfix]
+        static void UpdateDisease(string _diseaseType, int _plusLevel, CharacterStats __instance)
+        {
+            if (_diseaseType == string.Empty) return;
+            if (__instance.HasImmunity(ProficiencyBase.Category.Disease)) return;
+            statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format([_diseaseType, FTKHub.Localized<TextInfo>("STR_statusDiseasedInfo"), CharacterData.GetCharacterName(__instance.m_CharacterOverworld)]));
         }
 
         [HarmonyPatch(typeof(CharacterDummy), nameof(CharacterDummy.AddProfToDummy))]
@@ -40,6 +51,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 ProficiencyBase proficiencyBase = ProficiencyManager.Instance.Get(_prof[i]);
                 if (!proficiencyBase) continue;
+                if (proficiencyBase.m_Category == ProficiencyBase.Category.Curse) continue; // chosen at random after this method
+                if (proficiencyBase.m_Category == ProficiencyBase.Category.Disease) continue;
                 if (proficiencyBase.IsImmune(__instance))
                 {
                     Plugin.Logger.LogWarning($"immune to {_prof[i]}");
@@ -147,9 +160,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case ProficiencyBase.Category.Death:
                     result = "STR_statusDeathMarkedInfo";
                     break;
-                case ProficiencyBase.Category.Disease:
-                    result = "STR_statusDiseasedInfo";
-                    break;
                 case ProficiencyBase.Category.Entangle:
                     result = "STR_statusEntangledInfo";
                     break;
@@ -225,9 +235,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case ProficiencyBase.Category.Cure:
                     result = "";
                     break;
-                // case ProficiencyBase.Category.Curse:
-                //     //TODO type of curse. blind, clumsy, feeble, foolish, lethargic, unlucky, unwell, 
-                //     break;
                 // case ProficiencyBase.Category.Darkness:
                 //     result = "";
                 //     break;
@@ -241,6 +248,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (result == string.Empty) Plugin.Logger.LogError("no data for status effect " + prof.m_Category);
             if (!TextInfo.Instance.rowNames.Contains(result)) return result;
 			return FTKHub.Localized<TextInfo>(result);
+        }
+
+        static string GetCurseDescription(CharacterStats.CurseType type)
+        {
+            return type switch
+            {
+                CharacterStats.CurseType.Blind => "STR_statusBlindInfo",
+                CharacterStats.CurseType.Clumsy => "STR_statusClumsyInfo",
+                CharacterStats.CurseType.Feeble => "STR_statusFeebleInfo",
+                CharacterStats.CurseType.Foolish => "STR_statusFoolishInfo",
+                CharacterStats.CurseType.Lethargic => "STR_statusLethargicInfo",
+                CharacterStats.CurseType.Unlucky => "STR_statusUnluckyInfo",
+                CharacterStats.CurseType.Unwell => "STR_statusUnwellInfo",
+                _ => "",
+            };
         }
     }
 }

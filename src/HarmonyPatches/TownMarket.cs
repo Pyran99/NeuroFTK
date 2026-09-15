@@ -117,12 +117,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             else
             {
-                activeWindow.SetContext("you cannot afford anything at this market (vedal should give you a raise)");
+                activeWindow.SetContext("you cannot afford anything at this market (vedal should give you a raise). explore the map & defeat enemies to earn gold.");
             }
             CancelAction cancel = new(activeWindow, "close the market");
             cancel.OnCancelled += CloseMenu;
             activeWindow.AddAction(cancel);
-            activeWindow.SetForce(0, "buy/sell items at the market or close the menu if there is nothing you want", "", true);
+            activeWindow.SetForce(0, StringMessages.MarketQuery, "", true);
             activeWindow.Register();
         }
 

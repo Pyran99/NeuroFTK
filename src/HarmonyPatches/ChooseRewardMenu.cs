@@ -21,7 +21,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static List<uiChooseRewardButton> buttons = [];
         static string title = "";
         static bool isOwner = false;
-        static readonly bool onlyOccupiedRealms = true;
 
         [HarmonyPatch(typeof(uiChooseRewardMenu), "BaseInitialize")]
         [HarmonyPostfix]
@@ -45,14 +44,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             buttons = [.. ___m_AllButtons];
             Plugin.Logger.LogMessage($"{string.Join(", ", [.. buttons.Select(x => x.m_Text.text)])}");
             Dictionary<string, uiChooseRewardButton> dict = buttons.ToDictionary(x => x.m_Text.text);
-            // if (buttons.Count == 1) // only cancel
-            // {
-            //     uiChooseRewardButton first = buttons.First();
-            //     Plugin.Logger.LogWarning("only 1 reward button " + first.m_Text.text);
-            //     Context.Send($"only 1 option in this menu, selecting {first.m_Text.text}", true);
-            //     SelectButton.StartCoroutine(first, 1.0f);
-            //     return;
-            // }
             // if (buttons.Count > 1 && dict.ContainsKey("Cancel")) dict.Remove("Cancel"); // assume always choose valid
             if (dict.Count == 0)
             {
@@ -154,17 +145,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 sb.Append($" {CharacterData.GetCharacterName(cow)} is near {closest.GetPOIDisplayValue()}.");
             }
-            for (int i = 0; i < towns.Count; i++)
-            {
-                MiniHexTown town = (MiniHexTown)towns[i];
-                if (town.m_VisitedBy.Count > 0)
-                {
-                    if (onlyOccupiedRealms && !cowRealms.Contains(town.m_HexLand.GetRealm()))
-                    {
-                        validChoices.Remove(town.GetPOIDisplayValue());
-                    }
-                }
-            }
             if (validChoices.Count == 0) Plugin.Logger.LogError("there were no valid towns to revive in?");
             return sb.ToString();
         }
@@ -173,7 +153,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void LifePoolChanged(int _set)
         {
-            Context.Send($"life pool is now {Mathf.Clamp(_set, 0, GameFlow.Instance.MaxLifePool)}");
+            Context.Send($"life pool is now {Mathf.Clamp(_set, 0, GameFlow.Instance.MaxLifePool)}, if this reaches 0 you will not be able to revive any defeated character.");
         }
 
         [HarmonyPatch(typeof(GameFlow), nameof(GameFlow.RemoveScourge))]

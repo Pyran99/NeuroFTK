@@ -37,6 +37,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 "equip_weapon" => "choose a weapon to equip",
                 "respawn_in" => "choose a town to respawn at",
                 "revive_player" => "choose a player to revive",
+                "travel_to" => "choose a location to travel to",
                 _ => "choose a reward or select a character",
             };
         }

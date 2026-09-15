@@ -146,8 +146,8 @@ namespace Pyran.NeuroFTK.Utils
 
         public static string GetMainQuestCtx(bool addLocations = false)
         {
-            IEnumerable<uiQuestItem> allQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
-            allQuests.Concat(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
+            List<uiQuestItem> allQuests = [.. uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>()];
+            allQuests.AddRange(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
 
             // IEnumerable<QuestLogicBase> quests = GameLogic.Instance.GetQuestTable().Values;
             StringBuilder sb = new();
@@ -201,8 +201,8 @@ namespace Pyran.NeuroFTK.Utils
 
         public static string GetDungeonCrawlQuestHelper(bool addLocations = false)
         {
+            //side quests handled from normal data
             IEnumerable<uiQuestItem> allQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
-            // allQuests.Concat(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
             string description = StringReplace.RemoveStyling(allQuests.First().m_Display.text);
             IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
             StringBuilder sb = new($"main quest: {description} \n");
@@ -218,9 +218,6 @@ namespace Pyran.NeuroFTK.Utils
                 }
             }
             return sb.ToString();
-// main quest: Find and purge all realm dungeons
-// ## quest locations
-// - (90.9, 22.5)
         }
 
         static string GetBoatTravelCtx(string description)
@@ -228,7 +225,7 @@ namespace Pyran.NeuroFTK.Utils
             if (HexData.IsBoatRequired(description))
             {
                 if (currentAdventure == Adventure.ftk) return " (may require boat (can be bought at port), or an airship)";
-                else if (currentAdventure == Adventure.dc) return ""; // dc may not use boats, VERIFY
+                else if (currentAdventure == Adventure.dc) return ""; //TODO dc may not need boats, VERIFY
                 return " (may require boat (can be bought at port)";
             }
             else if (HexData.IsAirshipRequired(description)) return " (requires an airship to reach)";

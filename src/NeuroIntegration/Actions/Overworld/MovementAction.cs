@@ -57,7 +57,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             StringBuilder beltCtx = new();
             if (registerBelt && beltItems.Count > 0)
             {
-                beltCtx.Append("### usable belt items \n");
+                beltCtx.Append("## usable belt items \n");
                 foreach (FTK_itembase.ID item in beltItems)
                 {
                     items.Add(ItemData.GetItemName(item), item);

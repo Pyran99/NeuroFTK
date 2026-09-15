@@ -203,37 +203,38 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         /// info about encounter, characters involved
         /// </summary>
         /// <returns>"encounter description, characters involved, enemies involved, cost, difficulty, team lvl"</returns>
-        public static string GetEncounterContext(string name, string description, string flavor, Text costObj, Text difficultyObj)
+        public static string GetEncounterContext(string name, string description, string flavor, Text costObj, Text difficultyObj, bool isDungeon = false)
         {
             StringBuilder sb = new($"## Encounter ({name}) {StringReplace.RemoveStyling(flavor)}: {StringReplace.RemoveStyling(description)}\n");
-            sb.Append($"### characters involved: ");
+            sb.Append($"- characters involved: ");
             int playerTotalLvl = 0;
             foreach (CharacterOverworld player in involvedPlayers)
             {
                 sb.Append($"{CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel}), ");
                 playerTotalLvl += player.m_CharacterStats.m_PlayerLevel;
             }
-            sb.AppendLine();
+            sb.AppendLine(".");
             int enemyTotalLvl = 0;
             if (involvedEnemies.Count > 0)
             {
-                sb.AppendLine($"### enemies involved: {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}.");
-                involvedEnemies.Select(x => x.Value.Values.First()).ToList().ForEach(x => enemyTotalLvl += x.First());
+                sb.AppendLine($"- enemies involved: {string.Join(", ", [.. involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}.");
+                involvedEnemies.Select(x => x.Value.Values.First()).ToList().ForEach(x => enemyTotalLvl += int.TryParse(x, out int lvl) ? lvl : int.TryParse(involvedEnemies.First().Value.Values.First(), out int firstLvl) ? firstLvl : 0); // hidden enemies add visible enemies lvl
             }
             if (costObj.gameObject.activeInHierarchy && costObj.text != string.Empty)
             {
-                sb.AppendLine($"### {StringMessages.EncounterCost.Format([costObj.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}.");
+                sb.AppendLine($"- {StringMessages.EncounterCost.Format([costObj.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}.");
             }
-            if (difficultyObj.gameObject.activeInHierarchy)
+            if (difficultyObj.gameObject.activeInHierarchy && difficultyObj.text != string.Empty)
             {
-                if (difficultyObj.text != string.Empty) sb.AppendLine($"### enemy average lvl: {difficultyObj.text}.");
+                sb.AppendLine($"- enemy average lvl: {difficultyObj.text}.");
             }
-            if (involvedEnemies.Count > 0 && involvedPlayers.Count > 0)
+            if ((involvedEnemies.Count > 0 || isDungeon) && involvedPlayers.Count > 0)
             {
-                float avg = playerTotalLvl / involvedPlayers.Count;
+                float avg = (float)playerTotalLvl / involvedPlayers.Count;
                 sb.Append($"your involved teams average lvl is {avg:F1}.");
-                float diff = enemyTotalLvl - playerTotalLvl;
-                if (diff > 3 || involvedEnemies.Count - involvedPlayers.Count > 1) sb.Append($" This fight will be difficult.");
+                if (isDungeon) enemyTotalLvl = int.TryParse(difficultyObj.text, out int lvl) ? lvl*3 : 0;
+                int diff = enemyTotalLvl - playerTotalLvl;
+                if (diff > 3 || (involvedEnemies.Count - involvedPlayers.Count) > 1) sb.Append($" This fight will be difficult.");
             }
             return sb.ToString();
         }
@@ -269,7 +270,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             foreach (KeyValuePair<string, object> data in rollData)
             {
                 // [ambush (ambush flavor)]
-                sb.AppendLine($"### {data.Key} ({flavorData[data.Key]})");
+                sb.AppendLine($"## {data.Key} ({flavorData[data.Key]})");
                 foreach (KeyValuePair<string, Dictionary<string, string>> outcome in (Dictionary<string, Dictionary<string, string>>)data.Value)
                 {
                     // 0(2%) = Failure
