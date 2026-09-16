@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (validCows.Count() > 0)
                 {
                     window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x)));
+                }
+                if (PingHexData.activePings.Count > 0)
+                {
+                    List<HexLand> valid = [];
+                    foreach (HexLand hex in PingHexData.activePings)
+                    {
+                        if (hex == _cow.GetHexLand()) continue;
+                        valid.Add(hex);
+                    }
+                    if (valid.Count > 0) window.AddAction(new GoToPingAction(valid, _cow));
                 }
                 if (isInteractable && !_cow.IsInBoat()) window.AddAction(new InteractWithCurrentHex(_cow));
             }
@@ -237,6 +248,56 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (!_characterDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format(prop));
             parsedData = data;
             return ExecutionResult.Success();
+        }
+    }
+
+    public class GoToPingAction(List<HexLand> validHexes, CharacterOverworld cow) : NeuroAction<HexLand>
+    {
+        public override string Name => "go_to_pinged_hex";
+        protected override string Description => "choose a pinged location to travel to. if the location is out of range you will move to the furthest tile along the path.";
+        protected override JsonSchema Schema => GetSchema();
+        private Dictionary<string, HexLand> _hexPositions = [];
+
+        private JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["destination"],
+                Properties = new()
+                {
+                    ["destination"] = QJS.Enum(GetActivePings().Keys),
+                }
+            };
+            return schema;
+        }
+
+        protected override void Execute(HexLand parsedData)
+        {
+            cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, parsedData, true, false));
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData, out HexLand parsedData)
+        {
+            parsedData = null;
+            string data = actionData.Data?.Value<string>("destination");
+            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
+            if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
+            parsedData = _hexPositions.TryGetValue(data, out parsedData) ? parsedData : null;
+            if (parsedData == null) Plugin.Logger.LogError("invalid ping hex chosen");
+            return ExecutionResult.Success();
+        }
+
+        private Dictionary<string, HexLand> GetActivePings()
+        {
+            _hexPositions = [];
+            foreach (HexLand hex in validHexes)
+            {
+                if (cow.GetHexLand() == hex) continue;
+                _hexPositions.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+            }
+            if (_hexPositions.Count == 0) Plugin.Logger.LogError("invalid ping hex list");
+            return _hexPositions;
         }
     }
 

@@ -413,6 +413,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld curCow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
         {
+            if (hex == null)
+            {
+                Plugin.Logger.LogError("move to null hex");
+                Context.Send("there was an issue moving to a hex", true);
+                Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 4f));
+                yield break;
+            }
             HexLand dest = hex;
             if (!isSameHex)
             {
@@ -456,7 +463,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (failed)
                 {
                     Plugin.Logger.LogError("failed to auto travel to last hex");
-                    Context.Send(StringMessages.ActionIssueOccured.Format(["go_to_quest"]), true);
+                    Context.Send("an issue occurred with the movement action", true);
+                    // Context.Send(StringMessages.ActionIssueOccured.Format(["go_to_quest"]), true);
                     CreateMovementActions(curCow);
                     yield break;
                 }

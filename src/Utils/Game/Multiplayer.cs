@@ -34,11 +34,17 @@ namespace Pyran.NeuroFTK.Utils
         }
 
         /// <returns>IsOwner Cow or active if not multiplayer</returns>
-        public static CharacterOverworld GetOwnCow()
+        public static CharacterOverworld GetOwnCow(bool onlyIfActive = false) //TODO need option if controlling multiple in multiplayer
         {
+            CharacterOverworld active = CharacterData.GetActiveCow();
             if (!IsMultiplayer())
             {
-                return CharacterData.GetActiveCow();
+                return active;
+            }
+            else if (onlyIfActive)
+            {
+                if (IsYourCow(active)) return active;
+                return null;
             }
             foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
             {

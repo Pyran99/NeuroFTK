@@ -23,8 +23,7 @@ public class MainMenu
     [HarmonyPostfix]
     static void OnSetFocus(MainScreen __instance)
     {
-        CharacterDecisionButtons.ResetData();
-        GlobalConfig.gameInitialized = false;
+        ResetGameStatics();
         ToggleDisposableActions.ToggleOverworldActions(false);
         ToggleDisposableActions.ToggleCombatActions(false);
         if (GlobalConfig.IsMultiplayer)
@@ -89,5 +88,12 @@ public class MainMenu
     static void SelectedButton(uiFTKButton button)
     {
         SelectButton.StartCoroutine(button, 1.0f);
+    }
+
+    static void ResetGameStatics()
+    {
+        CharacterDecisionButtons.ResetData();
+        PingHexData.activePings.Clear();
+        GlobalConfig.gameInitialized = false;
     }
 }
