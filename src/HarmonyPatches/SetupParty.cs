@@ -77,34 +77,42 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void OnPartyVisible()
         {
-// co-op setup 1
-// co-op setup is mp
-// local multiplayer setup
-            Plugin.Logger.LogWarning($"co-op setup 1");
             if (Multiplayer.IsMultiplayer())
             {
-                //TODO up to neuro create amount
-                Plugin.Logger.LogWarning($"co-op setup is mp");
-                for (int i = 0; i < (3 - partyMemberCount); i++)
+                if (uiStartGame.Instance.m_GameConfig.m_IsResume) // set by resume online mp save
+                {
+                    Plugin.Logger.LogWarning("TODO online multiplayer resume");
+                }
+                else if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer)
+                {
+                    // //TODO up to neuro create amount
+                    // for (int i = 0; i < (3 - partyMemberCount); i++)
+                }
+                else
+                {
+                    Plugin.Logger.LogError("party setup error");
+                }
+                for (int i = 0; i < 3; i++) // assume neuro takes any remaining character
                 {
                     if (!characterCreateRoot.m_SelectSlotButton.gameObject.activeSelf) break;
                     characterCreateRoot.OnSelectPlayerSlot();
                 }
-                //TODO if resume, call select player slot
                 players = [.. characterCreateRoot.m_Players];
                 partyMemberCount = players.Count;
+                if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer || uiStartGame.Instance.m_GameConfig.m_IsResume)
+                {
+                    characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
+                    return;
+                }
                 RegisterWindow(characterCreateRoot);
             }
             else
             {
-                Plugin.Logger.LogWarning($"co-op setup is sp");
                 if (uiStartGame.Instance.m_IsResuming)
                 {
-                    Plugin.Logger.LogWarning($"co-op setup is sp resume");
-                    ActionStartGame();
+                    characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
                     return;
                 }
-                Plugin.Logger.LogWarning($"co-op setup is sp new");
                 RegisterWindow(characterCreateRoot);
             }
         }
@@ -161,20 +169,34 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     Plugin.Logger.LogWarning("beginning game with less than full party");
                     uiStartGame.Instance.EnterFahrul();
                 }
+                return;
+            }
+            foreach (uiQuickPlayerCreate player in players)
+            {
+                if (!player.m_IsReady)
+                {
+                    Context.Send("awaiting other players to be ready");
+                    break;
+                }
             }
         }
 
         public static void NeuroRandomizeParty()
         {
-            if (!Multiplayer.IsMultiplayer()) characterCreateRoot.RandomParty();
-            else
+            // if (!Multiplayer.IsMultiplayer()) characterCreateRoot.RandomParty();
+            // else
+            // {
+            //     foreach (uiQuickPlayerCreate player in players)
+            //     {
+            //         if (Multiplayer.IsYourPhotonId(player.m_PhotonID)) player.RandomClass();
+            //     }
+            //     OnPartyRandomized();
+            // }
+            foreach (uiQuickPlayerCreate player in players)
             {
-                foreach (uiQuickPlayerCreate player in players)
-                {
-                    if (Multiplayer.IsYourPhotonId(player.m_PhotonID)) player.RandomClass();
-                }
-                OnPartyRandomized();
+                if (Multiplayer.IsYourPhotonId(player.m_PhotonID)) player.RandomClass();
             }
+            OnPartyRandomized();
         }
 
         public static void NeuroSetCharacterNames(List<string> names)
@@ -234,7 +256,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (Multiplayer.IsMultiplayer())
             {
                 Plugin.Logger.LogWarning("local multiplayer setup");
-                //TODO if resume: return
                 // return;
             }
             instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => ConfiguePartyAction.RegisterConfigurePartyActions(instance.gameObject, players), instance.gameObject));

@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
+using System.Text;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -18,19 +19,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             ActionWindow window = ActionWindow.Create(owner);
             window.AddAction(new ConfiguePartyAction());
             int count = 0;
+            StringBuilder sb = new("you control the currently named characters:");
             foreach (uiQuickPlayerCreate player in players)
             {
-                if (player.m_PhotonID != PhotonNetwork.player.ID) continue;
+                if (!Multiplayer.IsYourPhotonId(player.m_PhotonID)) continue;
                 count++;
+                sb.Append($" '{player.m_PlayerNameStr} ({player.m_PlayerClass.text})',");
             }
             window.AddAction(new ChoosePartyNamesAction(count));
-            window.SetForce(0, $"choose to randomize the classes of your party or give {count} names for them and move to customizing each character", "", true);
+            window.SetForce(0, $"choose to randomize the classes of the characters you control or give {count} names for them and move to customizing each character", sb.ToString().TrimEnd([',']), true);
             UnregisterDisabledObject.QuickCreate(owner, window);
             window.Register();
         }
 
         public override string Name => "randomize_party";
-        protected override string Description => "randomize the classes of your party. you can choose names afterwards";
+        protected override string Description => "randomize the classes of the characters you control. you can choose names afterwards";
         protected override JsonSchema Schema => null;
 
         protected override void Execute() => SetupParty.NeuroRandomizeParty();
@@ -93,7 +96,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (name.Type != JTokenType.String) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("names"));
                 // if (name.Value<string>() is null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("names"));
                 test.Add(name.Value<string>());
-
             }
             List<string> result = token.ToObject<List<string>>();
             if (!result.Count().Equals(nameCount))
