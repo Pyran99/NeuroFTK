@@ -69,6 +69,11 @@ public class Plugin : BaseUnityPlugin
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             if (FTKUI.Instance.m_BattleStanceButtons.m_DisplayRoot.gameObject.activeSelf) FTKUI.Instance.m_BattleStanceButtons.CheatKillAll();
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha9))
+        {
+            if (!GlobalConfig.AllowCheats) return;
+            GameLogic.Instance.RevealMap();
+        }
     }
 
     void InitializeHarmony()

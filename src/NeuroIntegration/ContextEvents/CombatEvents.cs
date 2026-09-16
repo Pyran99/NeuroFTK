@@ -29,7 +29,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case MiniHexDungeon.EncounterType.Stair:
                 case MiniHexDungeon.EncounterType.EmptyRoom: //TODO maybe add equip change for each character with decision action
                 case MiniHexDungeon.EncounterType.Door:
-                    Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
                     Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
                     // CharacterDecisionButtons.AddItemUse(true);
                     break;
@@ -108,7 +107,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (_dummy is EnemyDummy) return;
             isAcidDestroy = true;
-            Plugin.Logger.LogWarning($"acid destroy {__result}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealBase), "DestroyRandomEquippedItem")]
+        [HarmonyPostfix]
+        static void ItemDestroyedPost(CharacterDummy _dummy, ref FTK_itembase.ID __result)
+        {
+            if (_dummy is EnemyDummy) return;
             Context.Send($"acid destroyed {ItemData.GetItemName(__result)} from {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
         }
 
@@ -119,7 +124,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning($"item stolen {_equippedItem}");
             if (isAcidDestroy)
             {
-                Plugin.Logger.LogWarning($"acid steal item {_equippedItem}");
                 isAcidDestroy = false;
                 return;
             }

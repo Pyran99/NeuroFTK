@@ -83,6 +83,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void StatusAppliedCtx(ProficiencyBase prof, CharacterDummy _dummy)
         {
+            if (prof is ProficiencyStealBase) return;
             string statusName = prof.m_ProficiencyData.GetLocalizedDisplayName(); // used for spawned text
             string desc = GetCategoryDescription(prof);
             // Burning (Take frequent light damage) applied to Goblin Assassin

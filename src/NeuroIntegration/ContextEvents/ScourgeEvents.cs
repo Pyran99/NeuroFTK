@@ -31,8 +31,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void OnScourgeTriggered(MiniHexHaunt _mhh)
         {
-            Plugin.Logger.LogWarning($"verify scourge alert => {FTKHub.Localized<TextInfo>("STR_" + _mhh.GetIDString() + "Effect")}"); // send context when scourge triggered
-            Plugin.Logger.LogWarning($"verify scourge activate func => {_mhh.GetHauntDBEntry()?.m_ActivateFunction}");
+            // Plugin.Logger.LogWarning($"verify scourge alert => {FTKHub.Localized<TextInfo>("STR_" + _mhh.GetIDString() + "Effect")}"); // send context when scourge triggered
+            // Plugin.Logger.LogWarning($"verify scourge activate func => {_mhh.GetHauntDBEntry()?.m_ActivateFunction}");
         }
 
         public static string GetScourgeContext(CharacterOverworld cow)

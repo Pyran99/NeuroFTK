@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             }
             ActionWindow window = ActionWindow.Create(_owner.gameObject);
             window.AddAction(msg);
-            window.SetForce(2f, query, ctx, true);
+            window.SetForce(2f, query, "", true);
             window.SetContext(ctx);
             window.Register();
             return window;

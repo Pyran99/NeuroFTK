@@ -234,7 +234,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append($"your involved teams average lvl is {avg:F1}.");
                 if (isDungeon) enemyTotalLvl = int.TryParse(difficultyObj.text, out int lvl) ? lvl*3 : 0;
                 int diff = enemyTotalLvl - playerTotalLvl;
-                if (diff > 3 || (involvedEnemies.Count - involvedPlayers.Count) > 1) sb.Append($" This fight will be difficult.");
+                if (diff > 3 || (involvedEnemies.Count - involvedPlayers.Count) > 1)
+                {
+                    sb.Append($" This fight will be difficult. It can be made easier by leveling up from easier fights or bringing all your party members to this location to join the fight.");
+                }
             }
             return sb.ToString();
         }
