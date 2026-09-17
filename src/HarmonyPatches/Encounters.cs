@@ -61,6 +61,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // wait for lower class to finish setup
             Object.Destroy(window);
             yield return null;
+            if (Multiplayer.OtherPlayersAction(CharacterData.GetActiveCow()))
+            {
+                generating = false;
+                yield break;
+            }
             if (!SetButtonData(_buttons))
             {
                 Plugin.Logger.LogMessage("reading journal");

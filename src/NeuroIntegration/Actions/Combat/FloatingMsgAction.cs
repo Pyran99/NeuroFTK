@@ -10,7 +10,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class FloatingMsgAction : NeuroAction<string>
     {
         public override string Name => "send_message";
-        protected override string Description => "send a random message to appear on the active character for a short time. this action is for chat engagement";
+        protected override string Description => "send a random message to appear on the active character for a short time. this action is for fun";
         protected override JsonSchema Schema => GetSchema();
 
         private JsonSchema GetSchema()
@@ -37,11 +37,21 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             CharacterDummy dummy = CharacterData.GetActiveCow()?.GetCurrentDummy();
             if (dummy == null) return;
+            CharacterOverworld cow = dummy.m_CharacterOverworld;
+            if (Multiplayer.OtherPlayersAction(cow))
+            {
+                cow = Multiplayer.GetOwnCow();
+                if (cow.GetCombatDummy() == null)
+                {
+                    Context.Send("your character is not in combat, you cannot send a message", true);
+                    return;
+                }
+            }
             dummy.SpawnHudTextRPC(parsedData);
             Context.Send($"sent msg {parsedData}", true);
             if (uiChatBox.Instance)
             {
-                uiChatBox.Instance.AddMessage(UnityEngine.Color.white, CharacterData.GetActiveCow()?.m_CharacterStats.m_CharacterName, parsedData);
+                uiChatBox.Instance.AddMessage(UnityEngine.Color.white, cow?.m_CharacterStats.m_CharacterName, parsedData);
             }
         }
 

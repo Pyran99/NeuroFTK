@@ -84,12 +84,12 @@ namespace Pyran.NeuroFTK.Utils
         }
 
 
-        public static IEnumerator CombatRotateCow()
+        public static IEnumerator CombatRotateCow(CharacterOverworld cow)
         {
             if (isRunning) yield break;
             isRunning = true;
             OnCooldown = true;
-            CharacterDummy dummy = CharacterData.GetActiveCow()?.m_CurrentDummy;
+            CharacterDummy dummy = cow?.m_CurrentDummy;
             if ((bool)!dummy?.m_CharacterOverworld?.m_CharacterStats.m_IsInCombat)
             {
                 isRunning = false;
@@ -116,13 +116,13 @@ namespace Pyran.NeuroFTK.Utils
         }
 
 
-        public static IEnumerator CombatJumpCow()
+        public static IEnumerator CombatJumpCow(CharacterOverworld cow)
         {
             if (isRunning) yield break;
             // if (Battle.StanceBtnInstance == null || !Battle.StanceBtnInstance.m_Initialized) yield break;
             isRunning = true;
             OnCooldown = true;
-            CharacterDummy dummy = CharacterData.GetActiveCow()?.m_CurrentDummy;
+            CharacterDummy dummy = cow?.m_CurrentDummy;
             if ((bool)!dummy?.m_CharacterOverworld?.m_CharacterStats.m_IsInCombat)
             {
                 isRunning = false;

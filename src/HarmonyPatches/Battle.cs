@@ -327,6 +327,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
         {
+            if (Multiplayer.OtherPlayersAction(cow)) return;
             uiPlayerMainHud.CloseItemCard();
             // CharacterOverworld cow = CharacterData.GetActiveCow();
             GetOffenseAttackDetails(_instance, _proficiencies);

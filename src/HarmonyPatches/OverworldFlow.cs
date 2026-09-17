@@ -53,6 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
             GlobalConfig.GameLoaded();
+            if (Multiplayer.OtherPlayersAction(__instance)) yield break;
             isFirstAction = true;
             isSearching = false;
             while (__result.MoveNext()) yield return __result.Current;
@@ -118,6 +119,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void OnFocusAction()
         {
+            if (Multiplayer.OtherPlayersAction(CharacterData.GetActiveCow())) return;
             if (RollSystem.rollCount == RollSystem.currentCOW.m_CharacterStats.m_ActionPoints) return; // no change
             if (isRemake) return;
             isRemake = true;
@@ -186,8 +188,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         [HarmonyPatch(typeof(CharacterSkills), nameof(CharacterSkills.Refocus))]
         [HarmonyPrefix]
-        static void Refocus(ref bool __result)
+        static void Refocus(CharacterOverworld _player, ref bool __result)
         {
+            if (Multiplayer.OtherPlayersAction(_player)) return;
             if (__result) Context.Send("gained focus points from end of turn skill", true);
         }
 
@@ -210,7 +213,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static void BeginTurn2(CharacterOverworld cow, bool registerBelt = true)
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld || cow.IsInDungeon() || cow.m_CharacterStats.m_IsInCombat) return;
-            if (!Multiplayer.IsYourCow(cow))
+            if (Multiplayer.OtherPlayersAction(cow))
             {
                 Multiplayer.SendOtherPlayerTurnCtx();
                 return;
@@ -246,7 +249,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (Movement.Instance.m_Mode == Movement.TrackingMode.PickHex) return;
             CharacterOverworld cow = CharacterData.GetActiveCow();
             RollSystem.currentCOW = cow;
-            if (!Multiplayer.IsYourCow(cow)) return;
+            if (Multiplayer.OtherPlayersAction(cow)) return;
             isTracking = true;
             if (isFirstAction) return;
             GetValidMoveTiles(cow);
@@ -416,6 +419,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static IEnumerator MoveToHexCoroutine(CharacterOverworld curCow, HexLand hex, bool outOfRange = false, bool isSameHex = false)
         {
+            if (Multiplayer.OtherPlayersAction(curCow))
+            {
+                Plugin.Logger.LogError("tried to move another players cow");
+                yield break;
+            }
             if (hex == null)
             {
                 Plugin.Logger.LogError("move to null hex");

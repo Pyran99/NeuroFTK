@@ -17,18 +17,30 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             if (CameraUtils.IsOnCooldown(Name)) return;
             Camera cam = OverworldCamera.Instance.m_Camera; // overworld
-            Context.Send("you are spinning!");
             if (cam.enabled)
             {
                 Plugin.Instance.StartCoroutine(CameraUtils.RotateCamera());
-                return;
             }
             else
             {
                 cam = OverworldCamera.Instance.m_OverlayCamera; // combat
                 // if (cam.enabled) Plugin.Instance.StartCoroutine(CameraUtils.CombatRotateCamera());
-                if (cam.enabled) Plugin.Instance.StartCoroutine(CameraUtils.CombatRotateCow());
+                if (cam.enabled)
+                {
+                    CharacterOverworld cow = CharacterData.GetActiveCow();
+                    if (Multiplayer.OtherPlayersAction(cow))
+                    {
+                        cow = Multiplayer.GetOwnCow();
+                        if (cow.GetCombatDummy() == null)
+                        {
+                            Context.Send($"your character is not in combat, they cannot spin right now", true);
+                            return;
+                        }
+                    }
+                    Plugin.Instance.StartCoroutine(CameraUtils.CombatRotateCow(cow));
+                }
             }
+            Context.Send("you are spinning!");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

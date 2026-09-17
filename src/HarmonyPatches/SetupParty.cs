@@ -85,7 +85,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 else if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer)
                 {
-                    // //TODO up to neuro create amount
                     // for (int i = 0; i < (3 - partyMemberCount); i++)
                 }
                 else

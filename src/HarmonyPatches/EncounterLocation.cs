@@ -14,17 +14,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class EncounterLocation
     {
         static uiLocationMenuDisplay locationMenuInstance;
+        static CharacterOverworld cow;
         static MiniHexInfo miniHexInfo;
         static MiniHexInfo.MenuPOIDisplayValues menuDisplayValues;
         static ActionWindow window;
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
         [HarmonyPrefix]
-        static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo, uiLocationMenuDisplay __instance)
+        static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo, CharacterOverworld _cow, uiLocationMenuDisplay __instance)
         {
             miniHexInfo = _miniHexInfo;
             menuDisplayValues = _miniHexInfo.GetMenuDisplayValues();
             locationMenuInstance = __instance;
+            cow = _cow;
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
@@ -36,14 +38,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2 skipped in dungeon mode");
                 return;
             }
-            CreateLocationAction();
+            CreateLocationAction(cow);
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Unhide))]
         [HarmonyPostfix]
         static void MenuDisplayUnhide()
         {
-            CreateLocationAction();
+            CreateLocationAction(cow);
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), "Shutdown2")]
@@ -116,9 +118,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;
         }
 
-        static void CreateLocationAction()
+        static void CreateLocationAction(CharacterOverworld _cow)
         {
             Plugin.Logger.LogMessage("create location encounter window");
+            if (!Multiplayer.OtherPlayersAction(_cow)) return;
             bool isDungeon = miniHexInfo is MiniHexDungeon;
             StringBuilder sb = new(Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top, locationMenuInstance.m_Cost, locationMenuInstance.m_Difficulty, isDungeon));
             Context.Send(sb.ToString());

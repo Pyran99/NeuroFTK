@@ -14,7 +14,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class ChangeEquipmentAction(Dictionary<PlayerInventory.ContainerID, Dictionary<string, FTK_itembase.ID>> _items, CharacterOverworld _cow) : NeuroAction<List<FTK_itembase.ID>>
     {
         public override string Name => $"equip_items_with_{CharacterData.GetCharacterName(_cow).Replace(" ", "_")}";
-        protected override string Description => $"equip items from {CharacterData.GetCharacterName(_cow)} inventory. You can choose any number of types. if you select a left hand and right hand item at the same time, if the right hand is 2 handed, you will not equip or unequip left hand";
+        protected override string Description => $"equip items from {CharacterData.GetCharacterName(_cow)} inventory. You can choose any number of types. if you select a left hand and right hand item at the same time, if the right hand is 2 handed, you will not equip or will unequip left hand";
         protected override JsonSchema Schema => GetSchema();
 
         private readonly Dictionary<string, FTK_itembase.ID> props = [];

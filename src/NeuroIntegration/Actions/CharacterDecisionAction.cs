@@ -15,7 +15,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
     public class CharacterDecisionAction(CharacterOverworld cow, string _key, List<VoteButton> _values) : NeuroAction<VoteButton>
     {
         public override string Name => $"{_key.Replace(" ", "_").ToLower()}_decision";
-        protected override string Description => $"choose a button with {_key}";
+        protected override string Description => $"choose a button with {_key}. focus is an optional property that will only be consumed if the button can be focused.";
         protected override JsonSchema Schema => GetSchema();
 
         int _focus = 0;
@@ -37,7 +37,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute(VoteButton parsedData)
         {
-            Context.Send($"selecting button {parsedData.GetComponentInChildren<Text>().text} with {_key}, using {_focus} focus points", true);
+            // Context.Send($"selecting button {parsedData.GetComponentInChildren<Text>().text} with {_key}, using {_focus} focus points", true);
             if (_focus <= 0)
             {
                 SelectButton.StartCoroutine(parsedData, 1.0f);
@@ -91,7 +91,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 if (btn.GetComponentInChildren<Text>().text == result)
                 {
                     parsedData = btn;
-                    return ExecutionResult.Success();
+                    return ExecutionResult.Success($"selecting button {parsedData.GetComponentInChildren<Text>().text} with {_key}, using {_focus} focus points");
                 }
             }
             return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("button"));

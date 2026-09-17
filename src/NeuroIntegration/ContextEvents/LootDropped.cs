@@ -42,6 +42,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                 {
                     if (!dummy.m_CharacterOverworld) continue;
                     CharacterOverworld cow = dummy.m_CharacterOverworld;
+                    if (!Multiplayer.IsYourCow(cow)) continue;
                     lootMsg += GetEquipmentCtx(id, cow);
                 }
                 lootMsg += " (armor/resistance/evasion is useful for any class).";

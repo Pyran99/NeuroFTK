@@ -55,6 +55,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void OnBoatReclain()
         {
+            if (Multiplayer.OtherPlayersAction(CharacterData.GetActiveCow())) return;
             Context.Send($"select a nearby boat to pickup and store in your backpack", true);
             boatReclaim = true;
         }
@@ -98,7 +99,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateNeuroAction()
         {
-            if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld))
+            if (Multiplayer.OtherPlayersAction(Movement.Instance.m_CharacterOverworld))
             {
                 Reset();
                 return;

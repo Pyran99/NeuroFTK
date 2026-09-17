@@ -43,7 +43,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void Refresh2()
         {
             Object.Destroy(activeWindow);
-            if (Multiplayer.OtherPlayersAction(CharacterData.GetActiveCow())) return;
+            if (Multiplayer.OtherPlayersAction(uiBuyMenuHud.Instance.m_CurrentCow)) return;
             uiBuyMenuHud.Instance.StartCoroutine(AddData(null, uiBuyMenuHud.Instance.m_CurrentCow));
         }
 
