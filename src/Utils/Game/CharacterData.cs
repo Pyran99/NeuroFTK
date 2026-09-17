@@ -177,8 +177,7 @@ namespace Pyran.NeuroFTK.Utils
             {
                 if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
                 {
-                    pos = HexData.GetVec2Pos(lastDestinations[_cow]);
-                    sb.Append($" the last hex you tried to move to with this character was {pos}.");
+                    sb.Append($" the last hex you tried to move to with this character was {HexData.GetContextForHex(_cow, lastDestinations[_cow], false, true)}.");
                 }
             }
             foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)

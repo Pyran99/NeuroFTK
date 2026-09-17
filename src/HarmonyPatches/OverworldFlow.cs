@@ -62,13 +62,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield break;
             }
             turnBeginCount++;
-            if (turnBeginCount % 4 == 0)
+            if (turnBeginCount % 10 == 0)
             {
                 Plugin.Logger.LogWarning($"send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
-                // if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
-                // {
-                //     Context.Send(QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
-                // }
+                if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
+                {
+                    // Context.Send(QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
+                    Context.Send(StringMessages.OverworldReminderCtx);
+                }
                 turnBeginCount = 0;
             }
             BeginTurn2(__instance);
@@ -226,7 +227,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (cow.m_WaitForRespawn || !cow.IsStillAlive())
             {
-                Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. they can choose to revive themself or wait for another character to revive them.");
+                string life = GameFlow.Instance.m_LifePool > 0 ? $"they can choose to revive themself or wait for another character to revive them. your remaining life pool is {GameFlow.Instance.m_LifePool}" : "you have no lives remaining to revive.";
+                Context.Send($"{CharacterData.GetCharacterName(cow)} is dead. {life}");
                 isFirstAction = false;
                 return;
             }
@@ -306,14 +308,15 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (removeRandomEmpty)
             {
-                int max = 200;
+                int max = 300;
+                HexLand temp;
                 while (tiles.Count > GlobalConfig.MaxHexSearch && max > 0)
                 {
                     max--;
                     int rand = Random.Range(0, tiles.Count - 1);
                     if (tiles[rand].HasPOI()) continue;
                     int last = tiles.Count - 1;
-                    HexLand temp = tiles[rand];
+                    temp = tiles[rand];
                     tiles[rand] = tiles[last];
                     tiles[last] = temp;
                     tiles.RemoveAt(last);

@@ -13,6 +13,7 @@ namespace Pyran.NeuroFTK.Utils
         public const string FocusDetails = $"Focus is a limited resource that is used to increase the success chance of some actions, use them wisely. The max amount you can spend will either be the characters amount or the number of outcomes for an action. send 0 or omit the property to not use focus, or if the action doesnt use focus any number you send wont be used.";
         public const string FocusUsage = $"focus is an optional property, ";
         public const string MarketQuery = $"buy items at the market or close the menu if there is nothing you want. If this character has a Two-Handed item in (RightHand), avoid equipping shields as this will unequip the weapon.";
+        public const string OverworldReminderCtx = $"explore the map and fight enemies to increase your level. if you need a boat to travel somewhere, they can be purchased at any port. gold can be gained from fights and some encounters. positions are sent in vector 2 (x,z) format, if a location is out of range you can try to choose a destination with the nearest values as an attempt to get within range.";
 
         public static readonly NeuroSdkFormatString ItemUsed = "you used {0}";
         public static readonly NeuroSdkFormatString ItemUsedTargetHex = "select a hex to use {0} on";

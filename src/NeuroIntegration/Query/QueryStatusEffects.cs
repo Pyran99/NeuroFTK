@@ -14,7 +14,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            CharacterOverworld cow = CharacterData.GetActiveCow();
+            CharacterOverworld cow = Multiplayer.IsMultiplayer() ? Multiplayer.GetOwnCow() : CharacterData.GetActiveCow();
             Context.Send(CharacterData.GetAllStatusEffects(cow));
         }
 
