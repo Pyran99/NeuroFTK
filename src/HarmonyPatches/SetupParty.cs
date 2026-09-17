@@ -20,7 +20,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class SetupParty
     {
-        static int partyMemberCount = 0;
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
 
@@ -29,7 +28,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void OnPartyScreenShown(uiCharacterCreateRoot __instance)
         {
-            partyMemberCount = 0;
             characterCreateRoot = __instance;
         }
 
@@ -40,7 +38,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             while (__result.MoveNext()) yield return __result.Current;
             yield return null;
             players = [.. characterCreateRoot.m_Players];
-            partyMemberCount = players.Count;
             characterCreateRoot.StartCoroutine(WaitUntilInteractable());
         }
 
@@ -79,25 +76,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (Multiplayer.IsMultiplayer())
             {
-                if (uiStartGame.Instance.m_GameConfig.m_IsResume) // set by resume online mp save
-                {
-                    Plugin.Logger.LogWarning("TODO online multiplayer resume");
-                }
-                else if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer)
-                {
-                    // for (int i = 0; i < (3 - partyMemberCount); i++)
-                }
-                else
-                {
-                    Plugin.Logger.LogError("party setup error");
-                }
-                for (int i = 0; i < 3; i++) // assume neuro takes any remaining character
+                // if (uiStartGame.Instance.m_GameConfig.m_IsResume) // set by resume online mp save
+                // {
+                // }
+                // else if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer)
+                // {
+                // }
+                // else
+                // {
+                // }
+                for (int i = 0; i < GlobalConfig.MultiplayerSlotsTaken; i++) // assume neuro takes any remaining character
                 {
                     if (!characterCreateRoot.m_SelectSlotButton.gameObject.activeSelf) break;
                     characterCreateRoot.OnSelectPlayerSlot();
                 }
                 players = [.. characterCreateRoot.m_Players];
-                partyMemberCount = players.Count;
                 if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer || uiStartGame.Instance.m_GameConfig.m_IsResume)
                 {
                     characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
