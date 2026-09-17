@@ -121,7 +121,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateLocationAction(CharacterOverworld _cow)
         {
             Plugin.Logger.LogMessage("create location encounter window");
-            if (!Multiplayer.OtherPlayersAction(_cow)) return;
+            if (Multiplayer.OtherPlayersAction(_cow)) return;
             bool isDungeon = miniHexInfo is MiniHexDungeon;
             StringBuilder sb = new(Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top, locationMenuInstance.m_Cost, locationMenuInstance.m_Difficulty, isDungeon));
             Context.Send(sb.ToString());

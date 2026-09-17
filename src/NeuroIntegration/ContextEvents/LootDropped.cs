@@ -11,7 +11,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
     [HarmonyPatch]
     public class LootDropped
     {
-        // in future see if possible to send ctx if neuro decision. also relevent to send when first shown for other players to discuss
         public static string lootMsg = "";
 
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.DisplayLootItem))]

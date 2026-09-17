@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -178,6 +179,76 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Insert(0, $"## encountered {StaticMessage.Message}\n");
             }
             return sb.ToString().TrimEnd(['\n']);
+        }
+
+        public static void NeuroTryDecisionBtn(VoteButton btn, CharacterOverworld cow, int focusUsed)
+        {
+            isShowing = false;
+            if (btn.m_Option == VoteButton.VoteOption.Ready)
+            {
+                if (GameLogic.Instance.IsMultiplayer())
+                {
+                    cow.StartCoroutine(CoroutineAllReadyPress());
+                    return;
+                }
+            }
+            if (focusUsed <= 0)
+            {
+                SelectButton.StartCoroutine(btn);
+                return;
+            }
+            FTK_slotOutput.ID id = FTK_slotOutput.ID.None;
+            if (EncounterSession.Instance.m_ActiveDiorama is DioramaDungeon dioramaDungeon)
+            {
+                switch (btn.m_Option)
+                {
+                    case VoteButton.VoteOption.Knockdown:
+                        id = dioramaDungeon.m_DoorToBash.GetComponent<DungeonDoor>().GetDoorBashOutput(btn.m_Hud.m_Cow);
+                        break;
+                    case VoteButton.VoteOption.Disarm:
+                        id = dioramaDungeon.m_ActiveTrap.GetDisarmOutput(btn.m_Hud.m_Cow);
+                        break;
+                    case VoteButton.VoteOption.Proceed:
+                        id = dioramaDungeon.m_ActiveTrap.GetProceedOutput(btn.m_Hud.m_Cow);
+                        break;
+                    case VoteButton.VoteOption.Attempt:
+                        id = dioramaDungeon.m_DungeonEncounter.m_EncounterObject.GetDBEntry().m_SlotRoll;
+                        break;
+                }
+            }
+            if (id == FTK_slotOutput.ID.None)
+            {
+                SelectButton.StartCoroutine(btn);
+                return;
+            }
+            FTK_slotOutput entry = FTK_slotOutputDB.GetDB().GetEntry(id);
+            if (!entry.m_CanFocus)
+            {
+                SelectButton.StartCoroutine(btn, 1.0f);
+                return;
+            }
+            if (CharacterData.CanFocusAction(cow.m_CharacterStats, entry.m_SlotAmount, focusUsed))
+            {
+                SelectButton.StartCoroutineWithFocus(btn, focusUsed, cow.m_CharacterStats);
+            }
+            else SelectButton.StartCoroutine(btn, 1.0f);
+        }
+
+        static IEnumerator CoroutineAllReadyPress()
+        {
+            Dictionary<CharacterOverworld, List<VoteButton>> copy = new(voteButtons);
+            foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in copy)
+            {
+                foreach (VoteButton btn in kvp.Value)
+                {
+                    if (btn.m_Option != VoteButton.VoteOption.Ready) continue;
+                    btn.OnPointerEnter(null);
+                    btn.OnControllerClick();
+                    break;
+                }
+                yield return null;
+            }
+            yield break;
         }
 
         // public static void AddItemUse(bool value)
