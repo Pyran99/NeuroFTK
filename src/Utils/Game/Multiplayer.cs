@@ -18,6 +18,7 @@ namespace Pyran.NeuroFTK.Utils
 
         public static bool IsYourCow(CharacterOverworld cow)
         {
+            if (cow == null) return false;
             if (cow.IsOwner) return true;
             if (cow.m_FTKPlayerID.IsLocal()) return true;
             return false;

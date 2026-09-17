@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
+using Pyran.NeuroFTK.NeuroIntegration.ContextEvents;
 using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,7 +30,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void VoteContainerShow(VoteButtonContainer __instance)
         {
             CharacterOverworld cow = __instance.m_PlayerHud.m_Cow;
-            if (!Multiplayer.IsYourCow(cow)) return;
+            if (Multiplayer.OtherPlayersAction(cow)) return;
             activeContainers.Add(__instance);
             string name = CharacterData.GetCharacterName(cow);
             voteButtons[cow] = [];
@@ -50,10 +52,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             activeContainers.Remove(__instance);
             if (activeContainers.Count > 0) return;
-            voteButtons.Clear();
-            isShowing = false;
-            instance = null;
-            Object.Destroy(activeWindow);
+            ResetData();
+        }
+
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.VoteButtonClick))]
+        [HarmonyPostfix]
+        static void Temp(VoteButton.VoteOption _voteOption)
+        {
+            switch (_voteOption)
+            {
+                case VoteButton.VoteOption.Pass:
+                    if (!Multiplayer.IsMultiplayer()) LootDropped.lootMsg = string.Empty;
+                    break;
+                default:
+                    LootDropped.lootMsg = string.Empty;
+                    break;
+            }
         }
 
         public static void ResetData()
@@ -69,13 +83,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             activeWindow = ActionWindow.Create(instance.gameObject);
             StringBuilder sbState = new();
+            bool lootDecision = false;
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
+                if (kvp.Value.Any(btn => ItemData.IsLootDecision(btn.m_Option))) lootDecision = true;
                 activeWindow.AddAction(new CharacterDecisionAction(kvp.Key, CharacterData.GetCharacterName(kvp.Key), kvp.Value));
                 sbState.AppendLine($"{CharacterData.GetDataFor(kvp.Key)} ");
             }
             sbState.Append($"{StringMessages.FocusDetails}");
             string query = Multiplayer.IsMultiplayer() ? StringMessages.DecisionButtonsPromptMultiplayer.Format(instance.m_Prompt.text) : StringMessages.DecisionButtonsPrompt.Format(instance.m_Prompt.text);
+            if (lootDecision && Multiplayer.IsMultiplayer())
+            {
+                if (LootDropped.lootMsg != string.Empty) sbState.Append($" loot to decide on: {LootDropped.lootMsg}.");
+            }
             activeWindow.SetForce(0, query, sbState.ToString(), true);
             StringBuilder sb = new(DungeonEncounterRolls());
             EncounterData encounter = EncounterSessionMC.Instance.GetCurrentEncounter();
