@@ -35,6 +35,24 @@ namespace Pyran.NeuroFTK.Utils
             return cow;
         }
 
+        public static Dictionary<string, CharacterOverworld> GetCows(bool ownOnly)
+        {
+            Dictionary<string, CharacterOverworld> result = [];
+            string name;
+            int dupes = 0;
+            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (ownOnly && !Multiplayer.IsYourCow(cow)) continue;
+                name = GetCharacterName(cow);
+                if (result.ContainsKey(name))
+                {
+                    name = $"{name} {++dupes}";
+                }
+                result.Add(name, cow);
+            }
+            return result;
+        }
+
         public static string GetDataFor(CharacterOverworld cow)
         {
             StringBuilder sb = new();

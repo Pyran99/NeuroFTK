@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,30 +16,29 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, string state, Dictionary<string, HexLand> hexPositions, Dictionary<string, HexLand> questHexes, List<string> validVec2Quests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, string state, Dictionary<string, HexLand> hexPositions, Dictionary<string, HexLand> questHexes, IEnumerable<string> validVec2Quests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
             if (!OverworldFlow.isSneakMovement)
             {
                 if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
-                if (validVec2Quests.Count > 0)
+                if (validVec2Quests.Any())
                 {
                     window.AddAction(new GoToQuestAction(questHexes, validVec2Quests, ScourgeEvents.GetActiveHaunts()));
                 }
-                if (validCows.Count() > 0)
+                if (validCows.Any())
                 {
-                    Dictionary<string, CharacterOverworld> validCowsDict = [];
-                    int count = 1;
-                    string name;
-                    foreach (CharacterOverworld cow in validCows)
+                    Dictionary<string, CharacterOverworld> validCowsDict = CharacterData.GetCows(false);
+                    validCowsDict.Remove(validCowsDict.First(x => x.Value == CharacterData.GetActiveCow()).Key);
+                    List<string> toRemove = [];
+                    foreach (KeyValuePair<string, CharacterOverworld> kvp in validCowsDict)
                     {
-                        name = CharacterData.GetCharacterName(cow);
-                        if (validCowsDict.ContainsKey(name)) name = $"{name} {count++}";
-                        validCowsDict.Add(name, cow);
+                        if (kvp.Value.GetHexLand() == _cow.GetHexLand()) toRemove.Add(kvp.Key);
                     }
-                    window.AddAction(new GoToCharacterAction(validCowsDict));
-                    // window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x))); //FIXME #62 => if character names are same
+                    foreach (string key in toRemove) validCowsDict.Remove(key);
+                    if (validCowsDict.Any()) window.AddAction(new GoToCharacterAction(validCowsDict));
+                    // window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x)));
                 }
                 if (PingHexData.activePings.Count > 0)
                 {
@@ -178,7 +176,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class GoToQuestAction(Dictionary<string, HexLand> _questHexes, List<string> validVec2Quests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
+    public class GoToQuestAction(Dictionary<string, HexLand> _questHexes, IEnumerable<string> validVec2Quests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
         protected override string Description => "choose a quest or scourge location to travel to. if the location is out of range you will move to the furthest hex along the path";

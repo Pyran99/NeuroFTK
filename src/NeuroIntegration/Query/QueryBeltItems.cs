@@ -1,60 +1,49 @@
 using System.Collections.Generic;
 using System.Text;
 using GridEditor;
+using NeuroSdk;
 using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
 using Pyran.NeuroFTK.Utils;
+using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class QueryBeltItems : NeuroAction<string>
     {
-        readonly List<string> names = Names();
+        readonly Dictionary<string, CharacterOverworld> cows = CharacterData.GetCows(true);
 
         public override string Name => "query_belt_items";
-        protected override string Description => "see what quick use items are on a characters belt. leave empty to choose the active character.";
+        protected override string Description => "see what quick use items are on a characters belt";
         protected override JsonSchema Schema => GetSchema();
+        readonly string prop = "character";
 
         private JsonSchema GetSchema()
         {
             JsonSchema schema = new()
             {
                 Type = JsonSchemaType.Object,
+                Required = [prop],
                 Properties = new()
                 {
-                    ["character"] = QJS.Enum(names),
+                    [prop] = QJS.Enum(cows.Keys),
                 }
             };
             return schema;
         }
 
-        static List<string> Names()
-        {
-            List<string> result = [];
-            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
-            {
-                if (!Multiplayer.IsYourCow(cow)) continue;
-                if (result.Contains(CharacterData.GetCharacterName(cow))) continue;
-                result.Add(CharacterData.GetCharacterName(cow));
-            }
-            return result;
-        }
-
         protected override void Execute(string parsedData)
         {
-            CharacterOverworld cow;
-            if (Multiplayer.IsMultiplayer() && !names.Contains(parsedData)) cow = Multiplayer.GetOwnCow();
-            else if (parsedData == string.Empty || !names.Contains(parsedData)) cow = CharacterData.GetActiveCow();
-            else cow = FTKHub.Instance.m_CharacterOverworlds.Find(cow => CharacterData.GetCharacterName(cow) == parsedData);
+            CharacterOverworld cow = cows.TryGetValue(parsedData, out cow) ? cow : null;
             if (cow == null)
             {
                 Plugin.Logger.LogError("invalid belt query");
                 Context.Send("invalid belt query", true);
                 return;
             }
-            string title = $"## {CharacterData.GetCharacterName(cow)} usable belt items ";
+            string title = $"[{CharacterData.GetCharacterName(cow)} usable belt items] ";
             StringBuilder sb = new(title);
             string blacklist;
             foreach (FTK_itembase.ID item in cow.m_CharacterStats.GetBeltItems())
@@ -69,7 +58,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override ExecutionResult Validate(ActionJData actionData, out string parsedData)
         {
-            parsedData = actionData.Data?.Value<string>("character") ?? "";
+            parsedData = actionData.Data?.Value<string>(prop) ?? "";
+            if (parsedData.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format(prop));
+            if (!cows.ContainsKey(parsedData)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format(prop));
             return ExecutionResult.Success();
         }
     }

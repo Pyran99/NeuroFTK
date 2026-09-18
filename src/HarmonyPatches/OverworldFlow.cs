@@ -531,7 +531,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             window = MovementAction.CreateWindow(_cow, tileCtx, state, hexPositions, QuestHelper.questHexes, validQuests, validCows, isInteractable);
         }
 
-        static bool HandleInvalidMovement(CharacterOverworld _cow, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, string ctx = "", string state = "")
+        static bool HandleInvalidMovement(CharacterOverworld _cow, IEnumerable<string> validQuests, IEnumerable<CharacterOverworld> validCows, string ctx = "", string state = "")
         {
             if (_cow.IsInAirShip())
             {
