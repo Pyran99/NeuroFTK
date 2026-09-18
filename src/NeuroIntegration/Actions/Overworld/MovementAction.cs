@@ -30,7 +30,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 }
                 if (validCows.Count() > 0)
                 {
-                    window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x)));
+                    Dictionary<string, CharacterOverworld> validCowsDict = [];
+                    int count = 1;
+                    string name;
+                    foreach (CharacterOverworld cow in validCows)
+                    {
+                        name = CharacterData.GetCharacterName(cow);
+                        if (validCowsDict.ContainsKey(name)) name = $"{name} {count++}";
+                        validCowsDict.Add(name, cow);
+                    }
+                    window.AddAction(new GoToCharacterAction(validCowsDict));
+                    // window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x))); //FIXME #62 => if character names are same
                 }
                 if (PingHexData.activePings.Count > 0)
                 {
@@ -38,6 +48,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     foreach (HexLand hex in PingHexData.activePings)
                     {
                         if (hex == _cow.GetHexLand()) continue;
+                        if (valid.Contains(hex)) continue;
                         valid.Add(hex);
                     }
                     if (valid.Count > 0) window.AddAction(new GoToPingAction(valid, _cow));
@@ -291,10 +302,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         private Dictionary<string, HexLand> GetActivePings()
         {
             _hexPositions = [];
+            string pos;
             foreach (HexLand hex in validHexes)
             {
                 if (cow.GetHexLand() == hex) continue;
-                _hexPositions.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+                pos = HexData.GetVec2Pos(hex).ToString();
+                if (_hexPositions.ContainsKey(pos)) continue;
+                _hexPositions.Add(pos, hex);
             }
             if (_hexPositions.Count == 0) Plugin.Logger.LogError("invalid ping hex list");
             return _hexPositions;

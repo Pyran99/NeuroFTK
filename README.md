@@ -22,7 +22,7 @@ Download the release file and add them to your For the king BepInEx plugins fold
 See [Config Readme](src/GameConfigs/README.md)
 
 ### Known issues  
-- 
+- duplicate character names can cause issues. not an issue if names are generated with an action as the schema requires unique values
 
 ### Todo  
 - [ ] make auto travel work for quests that are to far for games pathfinding  

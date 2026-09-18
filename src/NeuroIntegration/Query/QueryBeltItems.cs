@@ -36,6 +36,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
             {
                 if (!Multiplayer.IsYourCow(cow)) continue;
+                if (result.Contains(CharacterData.GetCharacterName(cow))) continue;
                 result.Add(CharacterData.GetCharacterName(cow));
             }
             return result;
