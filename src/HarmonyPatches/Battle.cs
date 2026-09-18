@@ -12,6 +12,7 @@ using System.Linq;
 using Pyran.NeuroFTK.GameConfigs;
 using System.Text;
 using System;
+using System.Reflection;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -30,6 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static bool initialized = false;
 
         static readonly Dictionary<string, int> playerHealths = [];
+        // static readonly Dictionary<string, int> playerlevels = [];
         static readonly bool allowFleeing = true;
         static readonly float healthForFleePercent = 0.35f;
 
@@ -143,29 +145,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // int dif = dmg.m_Damage;
         }
 
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
+        static readonly PropertyInfo eventListener = AccessTools.Property(typeof(CharacterDummyStatusFX), "_characterEventListener");
+
+        [HarmonyPatch(typeof(CharacterDummyStatusFX), nameof(CharacterDummyStatusFX.LevelUpFxOn))]
         [HarmonyPostfix]
-        static void PlayerLeveled(CharacterStats __instance)
+        static void LevelUp(CharacterDummyStatusFX __instance)
         {
-// level up is handled in Update
-// this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
-// this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
-// this.TallyCharacterHealth(this.m_PlayerLevel, true, false);
-            int level = __instance.m_PlayerLevel;
+            CharacterEventListener cel = (CharacterEventListener)eventListener.GetValue(__instance, null);
+            CharacterOverworld cow = cel.m_CharacterOverworld;
+            CharacterStats stats = cow.m_CharacterStats;
+            int level = stats.m_PlayerLevel;
             if (level == 0) return;
-            string name = __instance.m_CharacterName;
-            if (!playerHealths.ContainsKey(name) || playerHealths[name] == __instance.m_HealthCurrent) return;
-            playerHealths[name] = __instance.m_HealthCurrent;
-            string ctx = $"{name} leveled up to {level}! health {__instance.GetHealthDisplayString()}";
+            string name = stats.m_CharacterName;
+            if (levelUps.ContainsKey(name)) return;
+            string ctx = $"{name} leveled up to {level}! health {stats.GetHealthDisplayString()}";
             levelUps[name] = ctx;
-            // Context.Send(ctx);
             if (isLevelUpWait) return;
+            isLevelUpWait = true;
             GameLogic.Instance.StartCoroutine(LevelUpWait());
         }
         
         static IEnumerator LevelUpWait()
         {
-            isLevelUpWait = true;
             yield return null;
             isLevelUpWait = false;
             StringBuilder sb = new();

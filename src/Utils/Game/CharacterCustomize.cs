@@ -107,7 +107,7 @@ namespace Pyran.NeuroFTK.GameConfigs
                     sb.Append($"{player.m_PlayerNameStr} ({player.m_PlayerClass.text}), ");
                     ToggleCustomizeMenu(player, false);
                 }
-                Context.Send($"finished setting up your party. Tell chat a quick backstory about each of your party members {sb.ToString().TrimEnd([' ', ','])}. (fantasy world setting)");
+                Context.Send($"finished setting up your party. Tell us a quick backstory about each of your party members {sb.ToString().TrimEnd([' ', ','])}. (fantasy world setting)");
                 finishedPlayers.Clear();
                 Plugin.Logger.LogWarning("allowing time for neuro to yap a backstory, auto progressing after time");
                 yield return new WaitForSeconds(12f);

@@ -91,12 +91,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     characterCreateRoot.OnSelectPlayerSlot();
                 }
                 players = [.. characterCreateRoot.m_Players];
-                if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer || uiStartGame.Instance.m_GameConfig.m_IsResume)
+                // if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer || uiStartGame.Instance.m_GameConfig.m_IsResume)
+                // {//FIXME allow customization
+                //     characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
+                //     return;
+                // }
+                if (uiStartGame.Instance.m_GameConfig.m_IsResume)
                 {
+                    Plugin.Logger.LogWarning("auto resume");
                     characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
-                    return;
                 }
-                RegisterWindow(characterCreateRoot);
+                else RegisterWindow(characterCreateRoot);
             }
             else
             {

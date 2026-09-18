@@ -9,6 +9,7 @@ using Pyran.NeuroFTK.Utils;
 using Pyran.NeuroFTK.HarmonyPatches;
 using UnityEngine;
 using System.Text;
+using GridEditor;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -23,6 +24,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             foreach (uiQuickPlayerCreate player in players)
             {
                 if (!Multiplayer.IsYourPhotonId(player.m_PhotonID)) continue;
+                if (!FTK_playerGameStartDB.GetDB().IsUnlock((FTK_playerGameStart.ID)player.m_ClassID))
+                {
+                    window.SetForce(0, "1 of your classes is locked, you must change your classes", "", true);
+                    UnregisterDisabledObject.QuickCreate(owner, window);
+                    window.Register();
+                    return;
+                }
                 count++;
                 sb.Append($" '{player.m_PlayerNameStr} ({player.m_PlayerClass.text})',");
             }

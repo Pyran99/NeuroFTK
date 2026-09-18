@@ -53,6 +53,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (!proficiencyBase) continue;
                 if (proficiencyBase.m_Category == ProficiencyBase.Category.Curse) continue; // chosen at random after this method
                 if (proficiencyBase.m_Category == ProficiencyBase.Category.Disease) continue;
+                if (proficiencyBase.m_Category == ProficiencyBase.Category.Poison) continue;
                 if (proficiencyBase.IsImmune(__instance))
                 {
                     Plugin.Logger.LogWarning($"immune to {_prof[i]}");
@@ -78,7 +79,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PoisonUpdated(CharacterStats __instance, int _poison)
         {
-            Context.Send($"poison lvl {_poison} applied to {CharacterData.GetCharacterName(__instance.m_CharacterOverworld)}");
+            if (_poison > 0)
+            {
+                statusCtx.AppendLine(StringMessages.StatusEffectApplied.Format(["poison", FTKHub.Localized<TextInfo>("STR_statusPoisonInfo"), CharacterData.GetCharacterName(__instance.m_CharacterOverworld)]));
+            }
+            else
+            {
+                statusCtx.AppendLine(StringMessages.StatusEffectRemoved.Format(["poison", FTKHub.Localized<TextInfo>("STR_statusPoisonInfo"), CharacterData.GetCharacterName(__instance.m_CharacterOverworld)]));
+            }
+            if (statusWaiting) return;
+            statusWaiting = true;
+            __instance.StartCoroutine(StatusAppliedWait());
         }
 
         static void StatusAppliedCtx(ProficiencyBase prof, CharacterDummy _dummy)

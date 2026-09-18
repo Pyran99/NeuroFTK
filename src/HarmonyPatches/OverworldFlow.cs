@@ -26,9 +26,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static bool cancelBoatReclaim = false;
         public static List<HexLand> tiles = [];
         public static readonly Dictionary<string, HexLand> hexPositions = [];
+        public static readonly bool removeRandomEmpty = true;
 
         static readonly bool removeEmptyWater = false;
-        static readonly bool removeRandomEmpty = true;
         static bool isRemake = false;
         static readonly Dictionary<CharacterOverworld, HexLand> lastDestinations = [];
         static int turnBeginCount = 0; // send some general ctx every 3 or so new turns in overworld

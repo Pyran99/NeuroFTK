@@ -33,13 +33,12 @@ See [Config Readme](src/GameConfigs/README.md)
 
 ## Multiplayer  
 > [!Caution]
-> as of 17/09 multiplayer is considered incomplete, but partially implemented
+> as of 17/09 multiplayer is considered incomplete, but partially implemented. Should work if the mod only controls 1 or 3 characters
 - the mod will automatically claim any unclaimed player slots (up to config multiplayer_slots_taken)
 - neuro actions for customizing characters is checked for ownership
 - this mod cannot create an online game or select local co-op if single player mode is available for a map
 - joining an online game is handled by setting is_multiplayer to true, which disables main menu actions (or just stop responses to the sdk), then manually joining a game.
 - I do not know how or if direct friend invites work. The game uses a server list with name & password
-- the incomplete aspect is the result of not correctly checking for a specific character if neuro for some reason is allowed to control more than 1 character
 - 
 
 
