@@ -15,7 +15,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 
         protected override void Execute()
         {
-            CharacterOverworld current = CharacterData.GetActiveCow();
+            CharacterOverworld current = Multiplayer.IsMultiplayer() ? Multiplayer.GetOwnCow() : CharacterData.GetActiveCow();
             if (current == null)
             {
                 Plugin.Logger.LogError("query location failed: no active character?");

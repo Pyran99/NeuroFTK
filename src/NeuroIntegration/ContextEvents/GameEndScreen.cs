@@ -5,6 +5,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.NeuroIntegration;
 using Pyran.NeuroFTK.Utils;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
@@ -41,7 +42,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ActionWindow window = ActionWindow.Create(CreditScreen.Instance.gameObject);
             window.AddAction(new EndScreenAction(EndType.StoneHero));
             window.SetForce(15, "finish the adventure", "", true);
+            window.Register();
             UnregisterDisabledObject.QuickCreate(CreditScreen.Instance.gameObject, window);
+            Time.timeScale = 1f;
         }
 
         public static void SelectButton()

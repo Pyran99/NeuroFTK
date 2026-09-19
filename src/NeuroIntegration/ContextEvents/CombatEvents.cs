@@ -13,14 +13,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static bool isAcidDestroy = false;
 
-        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // main battle enter for normal & dungeon, also called for each dungeon encounter, including ready actions
+        [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateEncounterSessionRPC))] // main battle enter for normal & dungeon, also called for each dungeon encounter, including ready actions & looting from encounter
         [HarmonyPostfix]
         // static void EnteredBattle(MiniHexDungeon.EncounterType _encounterType)
         static void EnteredBattle()
         {
             Plugin.Logger.LogMessage("StartEncounterSession");
             Battle.isCombatEncounter = false;
-            ToggleDisposableActions.ToggleOverworldActions(false);
             MiniHexDungeon.EncounterType _encounterType = EncounterSessionMC.Instance.GetCurrentEncounter().EncounterType;
             switch (_encounterType)
             {
@@ -29,7 +28,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 case MiniHexDungeon.EncounterType.Stair:
                 case MiniHexDungeon.EncounterType.EmptyRoom: //TODO maybe add equip change for each character with decision action
                 case MiniHexDungeon.EncounterType.Door:
-                    Plugin.Logger.LogWarning($"encounter type = {_encounterType}");
                     Context.Send($"{BeginTurns.GetSimplifiedTeamState()}", true);
                     // CharacterDecisionButtons.AddItemUse(true);
                     break;
@@ -81,6 +79,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void EncounterFinished()
         {
             Plugin.Logger.LogMessage("CombatEvents encounter finished");
+            if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon) return;
+            ToggleDisposableActions.ToggleCombatActions(false);
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), "ReturnToOverworld")]
@@ -106,7 +106,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (_dummy is EnemyDummy) return;
             isAcidDestroy = true;
-            Plugin.Logger.LogWarning($"acid destroy {__result}");
+        }
+
+        [HarmonyPatch(typeof(ProficiencyStealBase), "DestroyRandomEquippedItem")]
+        [HarmonyPostfix]
+        static void ItemDestroyedPost(CharacterDummy _dummy, ref FTK_itembase.ID __result)
+        {
+            if (_dummy is EnemyDummy) return;
             Context.Send($"acid destroyed {ItemData.GetItemName(__result)} from {CharacterData.GetCharacterName(_dummy.m_CharacterOverworld)}");
         }
 
@@ -117,7 +123,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             Plugin.Logger.LogWarning($"item stolen {_equippedItem}");
             if (isAcidDestroy)
             {
-                Plugin.Logger.LogWarning($"acid steal item {_equippedItem}");
                 isAcidDestroy = false;
                 return;
             }
@@ -136,6 +141,34 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void ItemStolenPack(FTK_itembase.ID _packItem, CharacterStats __instance)
         {
             ItemStolenCtx(_packItem, __instance.m_CharacterOverworld);
+        }
+
+        static StringBuilder goldChangeSb = new();
+        static bool goldDelay = false;
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.ChangeGoldRPC))]
+        [HarmonyPostfix]
+        static void GoldChanged(CharacterStats __instance, int _amount)
+        {
+            if (_amount < 0)
+            {
+                goldChangeSb.AppendLine($"{CharacterData.GetCharacterName(__instance.m_CharacterOverworld)} lost {_amount} gold");
+            }
+            else if (_amount > 0)
+            {
+                goldChangeSb.AppendLine($"{CharacterData.GetCharacterName(__instance.m_CharacterOverworld)} gained {_amount} gold");
+            }
+            if (goldDelay) return;
+            goldDelay = true;
+            Plugin.Instance.StartCoroutine(GoldChangeDelay());
+        }
+
+        static IEnumerator GoldChangeDelay()
+        {
+            yield return null;
+            Context.Send(goldChangeSb.ToString());
+            goldChangeSb = new();
+            goldDelay = false;
         }
 
         static StringBuilder stolenSb = new();

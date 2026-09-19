@@ -14,10 +14,16 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             GlobalMessageAction msg = new(actions);
             msg.owner = _owner;
+            string ctx = "[Message] " + StringReplace.RemoveStyling(_owner.m_Message.text);
+            string query = "use action to continue to the next message";
+            if (ctx.Contains("Respawn"))
+            {
+                query = "choose to revive this character now for a cost, or wait. If another character reaches this location there will not be a cost.";
+            }
             ActionWindow window = ActionWindow.Create(_owner.gameObject);
             window.AddAction(msg);
-            window.SetForce(2f, "continue to the next message", "a message has appeared on screen", true);
-            window.SetContext("[Message] " + StringReplace.RemoveStyling(_owner.m_Message.text));
+            window.SetForce(2f, query, "", true);
+            window.SetContext(ctx);
             window.Register();
             return window;
         }

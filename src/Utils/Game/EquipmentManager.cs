@@ -73,14 +73,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (items.Count == 0)
             {
-                Context.Send("you sent no items to equip", true);
+                Context.Send("you sent no valid items to equip", true);
                 yield return new WaitForSeconds(1f);
                 ResetTurn(cow);
                 yield break;
             }
             StringBuilder sb = new($"{CharacterData.GetCharacterName(cow)} equipped: ");
             cow.m_UIPlayMainHud.m_OpenInventory.OnSubmit(null);
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(1f);
             foreach (FTK_itembase.ID item in items)
             {
                 if (item == FTK_itembase.ID.None) continue;
@@ -106,12 +106,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld)
             {
-                Plugin.Logger.LogWarning("overworld equip");
+                Plugin.Logger.LogMessage("overworld equip");
                 OverworldFlow.BeginTurn2(cow);
             }
             else if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Dungeon)
             {
-                Plugin.Logger.LogWarning("combat equip");
+                Plugin.Logger.LogMessage("combat equip");
                 List<VoteButtonContainer> containers = [];
                 foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
                 {

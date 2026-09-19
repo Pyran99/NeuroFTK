@@ -15,6 +15,7 @@ namespace Pyran.NeuroFTK.GameConfigs
         public static bool AllowCheats { get; private set; } = false;
         public static int MaxHexSearch { get; private set; } = 50;
         public static float maxDistance = 2.8866f * 15f;
+        public static int MultiplayerSlotsTaken { get; private set; } = 3;
 
         public readonly static Dictionary<string, object> defaultConfig = new()
         {
@@ -23,6 +24,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             { "debug_mode", false },
             { "use_custom_rules", CustomHouseRules.SET_CUSTOM_RULES },
             { "is_multiplayer", false },
+            { "multiplayer_slots_taken", 3 },
             { "launch_resume", true },
             { "max_hex_search", 50 },
             { "force_custom_adventure", false },
@@ -53,6 +55,7 @@ namespace Pyran.NeuroFTK.GameConfigs
                 AdventureCode = "ftk";
             }
             IsMultiplayer = (bool)_config["is_multiplayer"];
+            MultiplayerSlotsTaken = Convert.ToInt32(_config["multiplayer_slots_taken"]);
             FirstLoadResume = (bool)_config["launch_resume"];
             AllowCheats = (bool)_config["allow_cheats"];
             MaxHexSearch = Convert.ToInt32(_config["max_hex_search"]);

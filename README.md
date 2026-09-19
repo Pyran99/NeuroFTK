@@ -19,45 +19,27 @@ Download the release file and add them to your For the king BepInEx plugins fold
 > example: (your pc stuff)\ForTheKing\BepInEx\plugins\NeuroFTK
 
 ## Config data
-> Config files are automatically generated in the same folder as the dll
-
-> [!CAUTION]
-> Multiplayer has NOT been tested & *will* break things
-
-Name | Default | Description
---- | --- | ---
-environment_web_socket | ws://localhost:8000 | Websocket url
-allow_cheats | false | ok cheater
-debug_mode | false | some actions may be handled differently when `true`
-use_custom_rules | true | if an adventure will use the custom difficulty settings from `NeuroFTKCustomHouseRules.json` located in the same folder as the plugin dll. [rule info](src/GameConfigs/README.md)
-is_multiplayer | false | disables normal main menu actions. *multiplayer NOT implemented as of v1.1*
-launch_resume | true | disables new game if there is a previous save to load. Only used for the initial game startup
-max_hex_search | 50 | the max amount of hexes to send for context & choice list of actions that require picking a hex (late-game Airship movement can be 168+). For movement the removed hexes are chosen at random (only empty hexes), for items that pick a hex it is based on the order the map was created (aka nobody knows)
-force_custom_adventure | false | force new games to only allow the specified adventure from `custom_adventure_code`. This **OVERRIDES** launch_resume & only allows new games
-custom_adventure_code | ftk | the [Config code](#adventure-details) for the forced adventure. Only used if `force_custom_adventure` is true
-
-## Adventure details
-Adventure | Config code | Description | Integration State
---- | --- | --- | ---
-For the King | ftk | main adventure with travelling by land, sea, air | working
-Frost Adventure | fa | similar to FTK, no air travel, damage taken at end of each turn | working
-Into the Deep | id | primarily sea travel | not fully tested
-Dungeon Crawl | dc | search for dungeons around map, mostly land travel, some boating | working
-Hildebrant's Cellar | hc | dungeon run only | working
-Gold Rush | gr | multiplayer only | untested  
-
-> hildebrants cellar is a dungeon runner only (no movement decisions)  
-> other adventures use hex movement  
-
+See [Config Readme](src/GameConfigs/README.md)
 
 ### Known issues  
 - 
 
 ### Todo  
 - [ ] make auto travel work for quests that are to far for games pathfinding  
-- [ ] multiplayer
+- [ ] trading items to other characters
 
 ### Undecided actions  
 - market selling: equipment can be destroyed in battle, leaving this out would likely be more helpful
+
+## Multiplayer  
+> [!Caution]
+> as of 17/09 multiplayer is considered incomplete, but partially implemented. Should work if the mod only controls 1 or 3 characters (solo cellar run)
+- the mod will automatically claim any unclaimed player slots (up to config multiplayer_slots_taken)
+- neuro actions for customizing characters is checked for ownership
+- this mod cannot create an online game or select local co-op if single player mode is available for a map
+- joining an online game is handled by setting is_multiplayer to true, which disables main menu actions (or just stop responses to the sdk), then manually joining a game.
+- I do not know how or if direct friend invites work. The game uses a server list with name & password
+- 
+
 
 

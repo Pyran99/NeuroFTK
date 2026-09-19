@@ -14,14 +14,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void Popup1()
         {
-            Plugin.Logger.LogWarning("popupMenu.Show");
         }
 
         [HarmonyPatch(typeof(uiPopupMenu), "OnClick")] // btns from popup menu of item
         [HarmonyPostfix]
         static void Popup2(uiPopupMenu.Action _a)
         {
-            Plugin.Logger.LogWarning("popupMenu.OnClick " + _a); // close, equip
         }
 
         [HarmonyPatch(typeof(uiItemMenu), "ShowBuyMenu")]
@@ -35,44 +33,37 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void Popup5()
         {
-            Plugin.Logger.LogWarning("uiItemMenu.ShowPlayerInventory");
         }
 
         [HarmonyPatch(typeof(uiItemMenu), "CheckScroll")] // end of Show
         [HarmonyPostfix]
         static void Popup4()
         {
-            Plugin.Logger.LogWarning("uiItemMenu.CheckScroll");
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.DungeonMiniEncounterCompleteMC))]
         [HarmonyPostfix]
         static void Test2()
         {
-            Plugin.Logger.LogWarning("2 EncounterSessionMC.DungeonMiniEncounterCompleteMC");
             // after quest dungeon
-            
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.InitiateNextEncounter))]
         [HarmonyPostfix]
         static void Test31()
         {
-            Plugin.Logger.LogMessage("31 InitiateNextEncounter");
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceRevealBattle))]
         [HarmonyPostfix]
         static void Test35()
         {
-            Plugin.Logger.LogMessage("35 CommenceRevealBattle");
         }
 
         [HarmonyPatch(typeof(EncounterSessionMC), nameof(EncounterSessionMC.CommenceMiniEncounterBattle))]
         [HarmonyPostfix]
         static void Test36()
         {
-            Plugin.Logger.LogMessage("36 CommenceMiniEncounterBattle");
         }
 
         // [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.DungeonEncounter))]
@@ -123,7 +114,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void PortraitClosed2()
         {
-            Plugin.Logger.LogMessage("engage message type");
             // public enum EngageMessageType
             // {
             // 	EnemySet,

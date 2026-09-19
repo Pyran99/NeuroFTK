@@ -18,9 +18,15 @@ namespace Pyran.NeuroFTK.Utils
 
         public static bool IsYourCow(CharacterOverworld cow)
         {
+            if (cow == null) return false;
             if (cow.IsOwner) return true;
             if (cow.m_FTKPlayerID.IsLocal()) return true;
             return false;
+        }
+
+        public static bool IsYourPhotonId(int id)
+        {
+            return id == PhotonNetwork.player.ID;
         }
 
         public static void SendOtherPlayerTurnCtx()
@@ -29,11 +35,17 @@ namespace Pyran.NeuroFTK.Utils
         }
 
         /// <returns>IsOwner Cow or active if not multiplayer</returns>
-        public static CharacterOverworld GetOwnCow()
+        public static CharacterOverworld GetOwnCow(bool onlyIfActive = false) //TODO need option if controlling multiple in multiplayer
         {
+            CharacterOverworld active = CharacterData.GetActiveCow();
             if (!IsMultiplayer())
             {
-                return CharacterData.GetActiveCow();
+                return active;
+            }
+            else if (onlyIfActive)
+            {
+                if (IsYourCow(active)) return active;
+                return null;
             }
             foreach (CharacterOverworld _cow in FTKHub.Instance.m_CharacterOverworlds)
             {

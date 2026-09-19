@@ -16,20 +16,40 @@ namespace Pyran.NeuroFTK.NeuroIntegration
 {
     public class MovementAction(Dictionary<string, HexLand> _hexPositions, CharacterOverworld cow) : NeuroAction<HexLand>
     {
-        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, string state, Dictionary<string, HexLand> hexPositions, Dictionary<string, QuestLogicBase> questDict, List<string> validQuests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
+        public static ActionWindow CreateWindow(CharacterOverworld _cow, string ctx, string state, Dictionary<string, HexLand> hexPositions, Dictionary<string, HexLand> questHexes, IEnumerable<string> validVec2Quests, IEnumerable<CharacterOverworld> validCows, bool isInteractable = false)
         {
             ActionWindow window = ActionWindow.Create(_cow.gameObject);
             window.AddAction(new MovementAction(hexPositions, _cow));
             if (!OverworldFlow.isSneakMovement)
             {
                 if (!GlobalConfig.IsDebugMode()) window.AddAction(new EndTurnAction());
-                if (validQuests.Count > 0)
+                if (validVec2Quests.Any())
                 {
-                    window.AddAction(new GoToQuestAction(questDict, validQuests, ScourgeEvents.GetActiveHaunts()));
+                    window.AddAction(new GoToQuestAction(questHexes, validVec2Quests, ScourgeEvents.GetActiveHaunts()));
                 }
-                if (validCows.Count() > 0)
+                if (validCows.Any())
                 {
-                    window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x)));
+                    Dictionary<string, CharacterOverworld> validCowsDict = CharacterData.GetCows(false);
+                    validCowsDict.Remove(validCowsDict.First(x => x.Value == CharacterData.GetActiveCow()).Key);
+                    List<string> toRemove = [];
+                    foreach (KeyValuePair<string, CharacterOverworld> kvp in validCowsDict)
+                    {
+                        if (kvp.Value.GetHexLand() == _cow.GetHexLand()) toRemove.Add(kvp.Key);
+                    }
+                    foreach (string key in toRemove) validCowsDict.Remove(key);
+                    if (validCowsDict.Any()) window.AddAction(new GoToCharacterAction(validCowsDict));
+                    // window.AddAction(new GoToCharacterAction(validCows.ToDictionary(CharacterData.GetCharacterName, x => x)));
+                }
+                if (PingHexData.activePings.Count > 0)
+                {
+                    List<HexLand> valid = [];
+                    foreach (HexLand hex in PingHexData.activePings)
+                    {
+                        if (hex == _cow.GetHexLand()) continue;
+                        if (valid.Contains(hex)) continue;
+                        valid.Add(hex);
+                    }
+                    if (valid.Count > 0) window.AddAction(new GoToPingAction(valid, _cow));
                 }
                 if (isInteractable && !_cow.IsInBoat()) window.AddAction(new InteractWithCurrentHex(_cow));
             }
@@ -57,7 +77,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             StringBuilder beltCtx = new();
             if (registerBelt && beltItems.Count > 0)
             {
-                beltCtx.Append("### usable belt items \n");
+                beltCtx.Append("## usable belt items \n");
                 foreach (FTK_itembase.ID item in beltItems)
                 {
                     items.Add(ItemData.GetItemName(item), item);
@@ -156,7 +176,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
     }
 
-    public class GoToQuestAction(Dictionary<string, QuestLogicBase> _questDict, List<string> validQuests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
+    public class GoToQuestAction(Dictionary<string, HexLand> _questHexes, IEnumerable<string> validVec2Quests, Dictionary<string, MiniHexHaunt> haunts) : NeuroAction<string>
     {
         public override string Name => "go_to_quest";
         protected override string Description => "choose a quest or scourge location to travel to. if the location is out of range you will move to the furthest hex along the path";
@@ -170,7 +190,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 Required = ["destination"],
                 Properties = new()
                 {
-                    ["destination"] = QJS.Enum(validQuests),
+                    ["destination"] = QJS.Enum(validVec2Quests),
                 }
             };
             return schema;
@@ -179,9 +199,9 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute(string parsedData)
         {
             CharacterOverworld cow = CharacterData.GetActiveCow();
-            if (_questDict.ContainsKey(parsedData))
+            if (_questHexes.ContainsKey(parsedData))
             {
-                OverworldFlow.NeuroTryGoToQuest(cow, _questDict.TryGetValue(parsedData, out QuestLogicBase quest) ? quest : null);
+                OverworldFlow.NeuroTryGoToQuest(cow, _questHexes.TryGetValue(parsedData, out HexLand hex) ? hex : null);
             }
             else if (haunts.ContainsKey(parsedData))
             {
@@ -196,7 +216,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             string data = actionData.Data?.Value<string>("destination");
             if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
             if (data == "none") return ExecutionResult.Success();
-            if (!_questDict.ContainsKey(data) && !haunts.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
+            if (!_questHexes.ContainsKey(data) && !haunts.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
             parsedData = data;
             return ExecutionResult.Success();
         }
@@ -237,6 +257,59 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (!_characterDict.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format(prop));
             parsedData = data;
             return ExecutionResult.Success();
+        }
+    }
+
+    public class GoToPingAction(List<HexLand> validHexes, CharacterOverworld cow) : NeuroAction<HexLand>
+    {
+        public override string Name => "go_to_pinged_hex";
+        protected override string Description => "choose a pinged location to travel to. if the location is out of range you will move to the furthest tile along the path.";
+        protected override JsonSchema Schema => GetSchema();
+        private Dictionary<string, HexLand> _hexPositions = [];
+
+        private JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["destination"],
+                Properties = new()
+                {
+                    ["destination"] = QJS.Enum(GetActivePings().Keys),
+                }
+            };
+            return schema;
+        }
+
+        protected override void Execute(HexLand parsedData)
+        {
+            cow.StartCoroutine(OverworldFlow.MoveToHexCoroutine(cow, parsedData, true, false));
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData, out HexLand parsedData)
+        {
+            parsedData = null;
+            string data = actionData.Data?.Value<string>("destination");
+            if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
+            if (!_hexPositions.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
+            parsedData = _hexPositions.TryGetValue(data, out parsedData) ? parsedData : null;
+            if (parsedData == null) Plugin.Logger.LogError("invalid ping hex chosen");
+            return ExecutionResult.Success();
+        }
+
+        private Dictionary<string, HexLand> GetActivePings()
+        {
+            _hexPositions = [];
+            string pos;
+            foreach (HexLand hex in validHexes)
+            {
+                if (cow.GetHexLand() == hex) continue;
+                pos = HexData.GetVec2Pos(hex).ToString();
+                if (_hexPositions.ContainsKey(pos)) continue;
+                _hexPositions.Add(pos, hex);
+            }
+            if (_hexPositions.Count == 0) Plugin.Logger.LogError("invalid ping hex list");
+            return _hexPositions;
         }
     }
 

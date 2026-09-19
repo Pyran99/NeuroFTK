@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
@@ -95,6 +96,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             if (players.Count > 0) CustomizePlayer(players.First());
             else
             {
+                StringBuilder sb = new();
                 foreach (uiQuickPlayerCreate player in finishedPlayers)
                 {
                     if (player == null)
@@ -102,11 +104,12 @@ namespace Pyran.NeuroFTK.GameConfigs
                         Plugin.Logger.LogError($"player was null");
                         continue;
                     }
+                    sb.Append($"{player.m_PlayerNameStr} ({player.m_PlayerClass.text}), ");
                     ToggleCustomizeMenu(player, false);
                 }
-                Context.Send($"finished setting up your party. Tell chat a quick backstory about each of your party members {string.Join(", ", [.. finishedPlayers.Select(x => x.m_PlayerNameStr)])}. (fantasy world setting)");
+                Context.Send($"finished setting up your party. Tell us a quick backstory about each of your party members {sb.ToString().TrimEnd([' ', ','])}. (fantasy world setting)");
                 finishedPlayers.Clear();
-                Plugin.Logger.LogWarning("auto progressing after time");
+                Plugin.Logger.LogWarning("allowing time for neuro to yap a backstory, auto progressing after time");
                 yield return new WaitForSeconds(12f);
                 SetupParty.ActionStartGame();
             }

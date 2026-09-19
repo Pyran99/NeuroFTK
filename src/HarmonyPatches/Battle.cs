@@ -11,6 +11,8 @@ using Google2u;
 using System.Linq;
 using Pyran.NeuroFTK.GameConfigs;
 using System.Text;
+using System;
+using System.Reflection;
 
 namespace Pyran.NeuroFTK.HarmonyPatches
 {
@@ -29,6 +31,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static bool initialized = false;
 
         static readonly Dictionary<string, int> playerHealths = [];
+        // static readonly Dictionary<string, int> playerlevels = [];
         static readonly bool allowFleeing = true;
         static readonly float healthForFleePercent = 0.35f;
 
@@ -62,9 +65,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (initialized) return;
             Plugin.Logger.LogMessage("player combat actions");
-            Object.Destroy(window);
+            UnityEngine.Object.Destroy(window);
             GlobalConfig.GameLoaded();
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            ToggleDisposableActions.ToggleOverworldActions(false);
             initialized = true;
             if (Multiplayer.OtherPlayersAction(__instance.CombatCow))
             {
@@ -73,9 +77,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             StanceBtnInstance = __instance;
             beltActionUsed = false;
-            ToggleDisposableActions.ToggleCombatActions(true, false);
             uiPlayerMainHud.CloseItemCard();
-            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject, 1f, true));
+            __instance.StartCoroutine(CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow));
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]
@@ -89,7 +92,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void BtnsOff()
         {
-            Object.Destroy(window);
+            UnityEngine.Object.Destroy(window);
             m_Proficiencies = [];
             initialized = false;
         }
@@ -98,7 +101,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void CombatPlayerVictory()
         {
-            ToggleDisposableActions.ToggleCombatActions(false);
+            // ToggleDisposableActions.ToggleCombatActions(false);
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;  // changed before post-call
             if (isCombatEncounter) Context.Send(StringMessages.BattleWon);
             isCombatEncounter = false;
@@ -142,29 +145,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             // int dif = dmg.m_Damage;
         }
 
-        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.TallyCharacterHealth))] // called twice
+        static readonly PropertyInfo eventListener = AccessTools.Property(typeof(CharacterDummyStatusFX), "_characterEventListener");
+
+        [HarmonyPatch(typeof(CharacterDummyStatusFX), nameof(CharacterDummyStatusFX.LevelUpFxOn))]
         [HarmonyPostfix]
-        static void PlayerLeveled(CharacterStats __instance)
+        static void LevelUp(CharacterDummyStatusFX __instance)
         {
-// level up is handled in Update
-// this.TallyCharacterHealth(this.m_PlayerLevel, false, false);
-// this.m_HealthCurrent = this.MaxHealth - FTKUtil.RoundToInt((float)num2 * GameFlow.Instance.GameDif.m_LevelUpHealthDifference);
-// this.TallyCharacterHealth(this.m_PlayerLevel, true, false);
-            int level = __instance.m_PlayerLevel;
+            CharacterEventListener cel = (CharacterEventListener)eventListener.GetValue(__instance, null);
+            CharacterOverworld cow = cel.m_CharacterOverworld;
+            CharacterStats stats = cow.m_CharacterStats;
+            int level = stats.m_PlayerLevel;
             if (level == 0) return;
-            string name = __instance.m_CharacterName;
-            if (!playerHealths.ContainsKey(name) || playerHealths[name] == __instance.m_HealthCurrent) return;
-            playerHealths[name] = __instance.m_HealthCurrent;
-            string ctx = $"{name} leveled up to {level}! health {__instance.GetHealthDisplayString()}";
+            string name = stats.m_CharacterName;
+            if (levelUps.ContainsKey(name)) return;
+            string ctx = $"{name} leveled up to {level}! health {stats.GetHealthDisplayString()}";
             levelUps[name] = ctx;
-            // Context.Send(ctx);
             if (isLevelUpWait) return;
+            isLevelUpWait = true;
             GameLogic.Instance.StartCoroutine(LevelUpWait());
         }
         
         static IEnumerator LevelUpWait()
         {
-            isLevelUpWait = true;
             yield return null;
             isLevelUpWait = false;
             StringBuilder sb = new();
@@ -324,8 +326,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly List<INeuroAction> actions = [];
         static readonly List<INeuroAction> disposableActions = [];
 
-        public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
+        public static IEnumerator CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
         {
+            if (Multiplayer.OtherPlayersAction(cow)) yield break;
+            yield return new WaitForSeconds(1f);
+            ToggleDisposableActions.ToggleCombatActions(true, false);
             uiPlayerMainHud.CloseItemCard();
             // CharacterOverworld cow = CharacterData.GetActiveCow();
             GetOffenseAttackDetails(_instance, _proficiencies);
@@ -341,7 +346,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 foreach (FTK_itembase.ID item in usableItems) items.Add(ItemData.GetItemName(item), item);
                 if (items.Count > 0) actions.Add(new UseBeltItemAction(items, cow));
             }
-            string focus = $"### {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 % (all slots focused will be 100%)";
+            string focus = $"## {CharacterData.GetCharacterName(cow)} has {CharacterData.GetFocusAmount(cow)} focus. focus used increases attack success by 10/5/3/1 % (all slots focused will be 100%)";
             string state = $"{BeginTurns.CtxCombatTurnBeginPlayer(cow)} \n{BeginTurns.CtxCombatTurnBeginEnemy()} \n{focus}";
             window = CombatActions.RegisterCombatActions(_instance, ctx, state, actions);
             offense.Clear();
@@ -353,7 +358,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             StringBuilder sb = new();
             if (items.Count == 0) return "";
-            sb.AppendLine("\n### usable belt items ");
+            sb.AppendLine("\n## usable belt items ");
             foreach (FTK_itembase.ID item in items)
             {
                 sb.AppendLine($"- ({ItemData.GetItemName(item)}) {ItemData.GetItemDescription(item, cow, true, true)}");
@@ -364,7 +369,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static string GetAttackContextAndRegisterAction(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies)
         {
             StringBuilder sb = new();
-            sb.Append("### your attacks \n");
+            sb.Append("## your attacks \n");
             if (offense.Count > 0)
             {
                 foreach (string key in offense.Keys)
@@ -383,9 +388,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 actions.Add(new CombatFriendlyAction(defense));
             }
+            CharacterOverworld cow = _instance.CombatCow;
             if (CanUseBtn(_instance.m_FleeButton) && !GlobalConfig.IsDebugMode() && allowFleeing)
             {
-                if ((_instance.CombatCow?.m_CharacterStats.GetHealthPercent() ?? 1) < healthForFleePercent)
+                float health = (float)cow.m_CharacterStats.m_HealthCurrent / cow.m_CharacterStats.MaxHealth;
+                if (health < healthForFleePercent)
                 {
                     sb.Append("- " + HandleBtnContext(_instance.m_FleeButton, _proficiencies));
                     actions.Add(new CombatFleeAction(_instance.m_FleeButton));
@@ -401,7 +408,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 sb.Append("- " + HandleBtnContext(_instance.m_ShieldTauntButton, _proficiencies));
                 actions.Add(new CombatTauntAction(_instance.m_ShieldTauntButton));
             }
-            if (CanUseBtn(_instance.m_EquipWeaponButton) && (_instance.CombatCow.m_WeaponID == FTK_itembase.ID.unarmed || _instance.CombatCow.m_WeaponID == FTK_itembase.ID.None) && !GlobalConfig.IsDebugMode())
+            if (CanUseBtn(_instance.m_EquipWeaponButton) && (cow.m_WeaponID == FTK_itembase.ID.unarmed || cow.m_WeaponID == FTK_itembase.ID.None) && !GlobalConfig.IsDebugMode())
             {
                 sb.Append("- " + HandleBtnContext(_instance.m_EquipWeaponButton, _proficiencies, false));
                 actions.Add(new CombatChangeWeaponAction(_instance.m_EquipWeaponButton));

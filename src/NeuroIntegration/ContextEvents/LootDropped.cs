@@ -11,10 +11,13 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
     [HarmonyPatch]
     public class LootDropped
     {
+        public static string lootMsg = "";
+
         [HarmonyPatch(typeof(EncounterSession), nameof(EncounterSession.DisplayLootItem))]
         [HarmonyPostfix]
         static void CtxDisplayedLootItem(string _item, int ___m_LootItemCount, string ___m_LootItem)
         {
+            lootMsg = "";
             FTK_itembase.ID id = FTK_itembase.GetEnum(_item);
             if (id == FTK_itembase.ID.None && _item.Contains("_life_"))
             {
@@ -30,7 +33,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
             if (___m_LootItem.Contains("_gold_") || ___m_LootItem.Contains("_lore_")) hasAmount = true;
             if (hasAmount && ___m_LootItemCount > 0) amount = $"(x{___m_LootItemCount})";
             description = ItemData.GetItemDescription(id, CharacterData.GetActiveCow(), true, true);
-            string lootMsg = $"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}): {description}. ";
+            lootMsg = $"[Loot] {name}{amount} ({StringReplace.RemoveStyling(rarity)}): {description}. ";
             if (itemBase.m_Equippable)
             {
                 lootMsg += "\n";
@@ -38,9 +41,10 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
                 {
                     if (!dummy.m_CharacterOverworld) continue;
                     CharacterOverworld cow = dummy.m_CharacterOverworld;
+                    if (!Multiplayer.IsYourCow(cow)) continue;
                     lootMsg += GetEquipmentCtx(id, cow);
                 }
-                lootMsg += "armor/resistance/evasion is useful for any class.";
+                lootMsg += " (armor/resistance/evasion is useful for any class).";
             }
             Context.Send(lootMsg);
             // [loot] Gold Coins (Common): Currency of Fahrul. Each coin worth its weight in gold.

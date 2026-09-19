@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using HarmonyLib;
 using Pyran.NeuroFTK.GameConfigs;
 using Pyran.NeuroFTK.Utils;
@@ -12,29 +10,21 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static HexLand currentHover;
 
-        // left or right clicks
-        [HarmonyPatch(typeof(Movement), "TrackCheckClickPath")]
-        [HarmonyPostfix]
-        static void ClickTarget(HexLand _hexland)
-        {
-            currentHover = _hexland;
-            float dist = (_hexland.GetPosition() - CharacterData.GetActiveCow().GetHexLand().GetPosition()).magnitude;
-            // Plugin.Logger.LogMessage($"check click path: ({_hexland.GetPosition()}) ({dist} ({dist < GlobalConfig.maxDistance}))");
-        }
+        // // left or right clicks
+        // [HarmonyPatch(typeof(Movement), "TrackCheckClickPath")]
+        // [HarmonyPostfix]
+        // static void ClickTarget(HexLand _hexland)
+        // {
+        //     currentHover = _hexland;
+        // }
 
-        [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]
-        [HarmonyPostfix]
-        static void ValidOnHover(HexLand _hexland)
-        {
-            if (currentHover == _hexland) return;
-            currentHover = _hexland;
-            if (!Plugin.doSpam || !GlobalConfig.IsDebugMode()) return;
-            Vector2 pos = HexData.GetVec2Pos(_hexland);
-            if (QuestHelper.questDict.ContainsKey(pos.ToString()))
-            {
-                Plugin.Logger.LogMessage($"valid id {_hexland.GetPosition()}");
-            }
-        }
+        // [HarmonyPatch(typeof(Movement), "TrackCheckHoverPath")]
+        // [HarmonyPostfix]
+        // static void ValidOnHover(HexLand _hexland)
+        // {
+        //     if (currentHover == _hexland) return;
+        //     currentHover = _hexland;
+        // }
 
         // // was testing path finding
         // static void Test()

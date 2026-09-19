@@ -24,6 +24,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void BoardOpened(MiniHexInfo _hex)
         {
+            if (Multiplayer.OtherPlayersAction(uiGetQuestMenu.Instance.m_CurrentCow)) return;
             uiGetQuestMenu.Instance.StartCoroutine(Wait());
             static IEnumerator Wait()
             {

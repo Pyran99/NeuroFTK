@@ -49,7 +49,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             {
                 if (btn.Key == (string)parsedData[0])
                 {
-                    int slots = RollSlotOutcomes.GetOutcomes(cow, Encounters.GetSlotId(btn.Value.m_ButtonInfo.m_ButtonType, cow)).Count;
+                    // int slots = RollSlotOutcomes.GetOutcomes(cow, Encounters.GetSlotId(btn.Value.m_ButtonInfo.m_ButtonType, cow)).Count; // gamble den null ref
+                    int slots = (btn.Value.m_ButtonInfo.m_ButtonType == SubPanelBaseBase.ButtonID.BuyIn) ? 0 : RollSlotOutcomes.GetOutcomes(cow, Encounters.GetSlotId(btn.Value.m_ButtonInfo.m_ButtonType, cow)).Count;
                     RollSystem.chosenBtn = btn.Value;
                     if (CharacterData.CanFocusAction(cow.m_CharacterStats, slots, (int)parsedData[1]))
                     {

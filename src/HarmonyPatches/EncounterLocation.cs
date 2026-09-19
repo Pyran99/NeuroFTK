@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -15,17 +14,19 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     public class EncounterLocation
     {
         static uiLocationMenuDisplay locationMenuInstance;
+        static CharacterOverworld cow;
         static MiniHexInfo miniHexInfo;
         static MiniHexInfo.MenuPOIDisplayValues menuDisplayValues;
         static ActionWindow window;
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
         [HarmonyPrefix]
-        static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo, uiLocationMenuDisplay __instance)
+        static void MenuDisplayPreShow(MiniHexInfo _miniHexInfo, CharacterOverworld _cow, uiLocationMenuDisplay __instance)
         {
             miniHexInfo = _miniHexInfo;
             menuDisplayValues = _miniHexInfo.GetMenuDisplayValues();
             locationMenuInstance = __instance;
+            cow = _cow;
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Show2))]
@@ -37,14 +38,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogWarning("uiLocationMenuDisplay.Show2 skipped in dungeon mode");
                 return;
             }
-            CreateLocationAction();
+            CreateLocationAction(cow);
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), nameof(uiLocationMenuDisplay.Unhide))]
         [HarmonyPostfix]
         static void MenuDisplayUnhide()
         {
-            CreateLocationAction();
+            CreateLocationAction(cow);
         }
 
         [HarmonyPatch(typeof(uiLocationMenuDisplay), "Shutdown2")]
@@ -67,7 +68,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void MenuDisplaySlideOut() // remove main actions
         {
-            Plugin.Logger.LogWarning("uiLocationMenuDisplay.SlideOutMainMenu");
             Object.Destroy(window);
         }
 
@@ -75,7 +75,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void SwitchToSubMenu() // create new menu actions (unless handled elsewhere? shop uiBuyMenu)
         {
-            Plugin.Logger.LogWarning("uiLocationMenuDisplay.SwitchToSubMenu");
             Object.Destroy(window);
         }
 
@@ -83,8 +82,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void GenerateEntries(uiLocationMenu __instance)
         {
-            // Plugin.Logger.LogWarning("loc_menu_generate");
-            List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
+            // List<uiLocationMenu.Entry> entries = __instance.m_MenuEntries;
             // m_Text0 // btn name
             // m_Text1 // maybe mouseover description
             // m_Function // func to call when clicked
@@ -120,15 +118,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             GameStates.mode = uiGameTrackerHUD.GameTrackerMode.Dungeon;
         }
 
-        static void CreateLocationAction()
+        static void CreateLocationAction(CharacterOverworld _cow)
         {
             Plugin.Logger.LogMessage("create location encounter window");
-            string ctx = GetLocationContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top);
-            if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy)
-            {
-                ctx += $"\nthis encounters enemies are lvl {locationMenuInstance.m_Difficulty.text}";
-            }
-            Context.Send(ctx);
+            if (Multiplayer.OtherPlayersAction(_cow)) return;
+            bool isDungeon = miniHexInfo is MiniHexDungeon;
+            StringBuilder sb = new(Encounters.GetEncounterContext(menuDisplayValues.m_Title, menuDisplayValues.m_Bottom, menuDisplayValues.m_Top, locationMenuInstance.m_Cost, locationMenuInstance.m_Difficulty, isDungeon));
+            Context.Send(sb.ToString());
             uiLocationMenuDisplay.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(CreateActionWindow, uiLocationMenuDisplay.Instance.m_MenuPanel.gameObject));
         }
 
@@ -166,34 +162,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Text comp = child.GetComponentInChildren<Text>();
                 buttons.Add(comp.text, entry);
             }
-            Plugin.Logger.LogMessage("btns: " + string.Join(", ", [.. buttons.Select(x => x.Key)]));
             return buttons;
-        }
-
-        static string GetLocationContext(string name, string description, string flavor)
-        {
-            string encounter = $"## Encounter ({name}) {StringReplace.RemoveStyling(flavor)}; {StringReplace.RemoveStyling(description)}\n";
-            StringBuilder sbPlayers = new("### character involved \n");
-            foreach (CharacterOverworld player in Encounters.involvedPlayers)
-            {
-                sbPlayers.AppendLine($"- {CharacterData.GetCharacterName(player)} (lvl {player.m_CharacterStats.m_PlayerLevel})");
-            }
-            string _enemies = "";
-            if (Encounters.involvedEnemies.Count > 0)
-            {
-                _enemies = $"### enemies involved - {string.Join(", ", [.. Encounters.involvedEnemies.Select(key => key.Value.Keys.First() + "(lvl " + key.Value.Values.First() + ")")])}";
-            }
-            string cost = "";
-            if (locationMenuInstance.m_CostRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Cost.text != string.Empty)
-            {
-                cost = $"\n### {StringMessages.EncounterCost.Format([locationMenuInstance.m_Cost.text, CharacterData.GetActiveCow().m_CharacterStats.m_Gold])}";
-            }
-            string difficulty = "";
-            if (locationMenuInstance.m_DifficultyRoot.gameObject.activeInHierarchy && locationMenuInstance.m_Difficulty.text != string.Empty)
-            {
-                difficulty = $"\n### encounter difficulty - {locationMenuInstance.m_Difficulty.text}";
-            }
-            return $"{encounter}{sbPlayers}{_enemies}{cost}{difficulty}";
         }
     }
 }

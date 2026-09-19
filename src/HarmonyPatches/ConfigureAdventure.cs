@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Actions;
@@ -39,7 +42,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 ActionWindow window = ActionWindow.Create(__instance.gameObject);
                 window.AddAction(new ResumeAdventureAction(__instance));
-                window.SetForce(0, "resume your adventure", "you are in the adventure select screen", true);
+                window.SetForce(0, "resume your adventure", "", true);
                 UnregisterDisabledObject.QuickCreate(__instance.gameObject, window);
                 window.Register();
                 return;
@@ -47,20 +50,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             CreateActionWindow(__instance);
         }
 
+        [HarmonyPatch(typeof(GameConfig), nameof(GameConfig.OnChangeValueGameDef))]
+        [HarmonyPostfix]
+        static void GameDefChanged(GameConfig __instance, string _gameDefName)
+        {
+            string name = __instance.GetCurrentGameDefPreview().GetDisplayName();
+            QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), adventureCodes.First(x => x.Value == name).Key);
+        }
+
         static void CreateActionWindow(GameConfig instance)
         {
             ActionWindow window = ActionWindow.Create(instance.gameObject);
             string context = AdventuresContext(instance);
-            window.SetContext(context);
+            // window.SetContext(context);
             window.AddAction(new ChooseAdventureAction(instance));
-            window.SetForce(2.0f, "select an adventure to play", "you are in the adventure select screen", true);
+            window.SetForce(0f, "select an adventure to play", context, true);
             UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
             window.Register();
         }
 
         static void OnActionCancelled(ActionWindow window)
         {
-            Object.Destroy(window);
+            UnityEngine.Object.Destroy(window);
             instance.OnBack();
         }
 
@@ -71,21 +82,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static string AdventuresContext(GameConfig instance)
         {
-            string details = "## Adventure details ";
+            StringBuilder sb = new("## Adventure details \n");
             string description;
             foreach (GameDefButton btn in instance.m_GameDefButtons)
             {
                 GameDefinitionBase prev = btn.GetPreview();
-                // if (GlobalConfig.ForcedFirstAdventure())
-                // {
-                //     if (prev.GetDisplayName() == "For the King")
-                //     {
-                //         description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                //         details += $"- {prev.GetDisplayName()}: {description}\n";
-                //         break;
-                //     }
-                //     continue;
-                // }
                 if (GlobalConfig.ForcedCustomAdventure())
                 {
                     if (adventureCodes.ContainsKey(GlobalConfig.AdventureCode))
@@ -93,7 +94,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (prev.GetDisplayName() == adventureCodes[GlobalConfig.AdventureCode])
                         {
                             description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                            details += $"- {prev.GetDisplayName()}: {description}\n";
+                            sb.AppendLine($"- {prev.GetDisplayName()}: {description}\n");
                             break;
                         }
                     }
@@ -101,11 +102,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 if (!FTK_dlcDB.HasDLCBySaveFileName(prev.m_SaveFileName)) continue;
                 // gold rush is multiplayer only
-                if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
+                // if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue; // also in action
                 description = StringReplace.ReplaceNewLine(prev.GetDisplayInfoText());
-                details += $"- {prev.GetDisplayName()}: {description}\n";
+                sb.AppendLine($"- {prev.GetDisplayName()}: {description}\n");
             }
-            return details;
+            return sb.ToString();
         }
 
         static IEnumerator SelectAdventureButton(GameConfig instance, string saveFileName)
@@ -136,7 +137,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 int? value = StatsAchievements.StatsAchievements.GetPlayerStatistic(FTK_statistic.ID.STAT_CELLAR_ROOM_COUNT).Value;
                 dungeonRooms = $" (your highest room clear for this adventure is {value ?? 0})";
             }
-            Context.Send($"you selected the adventure {name}: {level.GetDisplayInfoText()} {dungeonRooms}");
+            Context.Send($"you selected the adventure {name}: {level.GetDisplayInfoText()} {dungeonRooms}", true);
+            // QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), adventureCodes.First(x => x.Value == saveFileName).Key);
+            // Plugin.Logger.LogWarning($"set adventure to {QuestHelper.currentAdventure}");
             yield return new WaitForSeconds(1.0f);
             SetDifficulty(instance);
             SetGameMode(instance);
@@ -150,18 +153,28 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             SelectButton.StartCoroutine(btn, 1.0f);
         }
 
-        // always choose apprentice for now
+        // always choose easiest for now
         static void SetDifficulty(GameConfig instance)
         {
             if(GlobalConfig.IsDebugMode()) LogDifficulties(instance);
             instance.m_Difficulty.value = 0;
         }
 
-        // always choose solo for now
+        
         static void SetGameMode(GameConfig instance)
         {
             if(GlobalConfig.IsDebugMode()) LogGameModes(instance);
-            instance.m_GameType.value = 0;
+            GameLogic.GameMode[] modes = instance.GetCurrentGameDefPreview().GetSupportedGameMode();
+            // string[] supportedModes = GameDefinitionBase.GetSupportedGameModeString(instance.GetCurrentGameDefPreview().GetSupportedGameMode());
+            int num;
+            if (modes.Contains(GameLogic.GameMode.SinglePlayer)) num = Array.IndexOf(modes, GameLogic.GameMode.SinglePlayer);
+            else
+            {
+                Plugin.Logger.LogWarning("no single player option");
+                num = Array.IndexOf(modes, GameLogic.GameMode.LocalMultiplayer);
+            }
+            if (num == -1) Plugin.Logger.LogError("invalid game mode");
+            instance.m_GameType.value = num;
         }
 
         static void SetRulesBeforeStartGame(GameConfig instance)

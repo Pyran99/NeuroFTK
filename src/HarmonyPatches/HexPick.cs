@@ -55,6 +55,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void OnBoatReclain()
         {
+            if (Multiplayer.OtherPlayersAction(CharacterData.GetActiveCow())) return;
             Context.Send($"select a nearby boat to pickup and store in your backpack", true);
             boatReclaim = true;
         }
@@ -98,7 +99,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void CreateNeuroAction()
         {
-            if (!Multiplayer.IsYourCow(Movement.Instance.m_CharacterOverworld))
+            if (Multiplayer.OtherPlayersAction(Movement.Instance.m_CharacterOverworld))
             {
                 Reset();
                 return;
@@ -198,10 +199,24 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (tiles.Count == 0) errMsg += $"there were no hexes to pick for {ItemData.GetItemName(itemUsed)}";
             }
             Plugin.Logger.LogWarning($"found {tiles.Count} pick tiles");
+            if (OverworldFlow.removeRandomEmpty)
+            {
+                int max = 300;
+                KeyValuePair<string, HexLand> result;
+                int initial = tiles.Count;
+                while (tiles.Count > GlobalConfig.MaxHexSearch && max > 0)
+                {
+                    max--;
+                    int index = Random.Range(0, tiles.Count);
+                    result = tiles.ElementAt(index);
+                    if (result.Value.HasPOI()) continue;
+                    tiles.Remove(result.Key);
+                }
+                if (initial != tiles.Count) Plugin.Logger.LogWarning($" (removed {initial - tiles.Count} empty tiles)");
+            }
             if (tiles.Count > GlobalConfig.MaxHexSearch)
             {
                 tiles = tiles.Take(GlobalConfig.MaxHexSearch).ToDictionary(x => x.Key, x => x.Value);
-                Plugin.Logger.LogWarning($"removed above limit of {GlobalConfig.MaxHexSearch} tiles");
             }
             if (tiles.Count == 0)
             {

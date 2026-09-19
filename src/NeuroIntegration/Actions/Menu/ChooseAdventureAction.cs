@@ -57,7 +57,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             if (instance == null)
             {
-                Plugin.Logger.LogError("instance is null");
+                Plugin.Logger.LogError("gameconfig instance is null");
                 return ["For the King"];
             }
             List<string> names = [];
@@ -73,7 +73,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     // if no dlc
                     if (!FTK_dlcDB.HasDLCBySaveFileName(prev.m_SaveFileName)) continue;
                     // gold rush is multiplayer only
-                    if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
+                    // if (prev.m_ExcludeGameMode.Contains(GameLogic.GameMode.SinglePlayer)) continue;
                     names.Add(prev.GetDisplayName());
                 }
             }

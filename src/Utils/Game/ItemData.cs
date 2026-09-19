@@ -138,5 +138,18 @@ namespace Pyran.NeuroFTK.Utils
                 _ => type.ToString()
             };
         }
+
+        public static bool IsLootDecision(VoteButton.VoteOption option)
+        {
+            return option switch
+            {
+                VoteButton.VoteOption.Collect => true,
+                VoteButton.VoteOption.Equip => true,
+                VoteButton.VoteOption.Pass => true,
+                VoteButton.VoteOption.Share => true,
+                VoteButton.VoteOption.Use => true,
+                _ => false
+            };
+        }
     }
 }

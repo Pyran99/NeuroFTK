@@ -15,7 +15,17 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute()
         {
             if (CameraUtils.IsOnCooldown(Name)) return;
-            Plugin.Instance.StartCoroutine(CameraUtils.CombatJumpCow());
+            CharacterOverworld cow = CharacterData.GetActiveCow();
+            if (Multiplayer.OtherPlayersAction(cow))
+            {
+                cow = Multiplayer.GetOwnCow();
+                if (cow.GetCombatDummy() == null)
+                {
+                    Context.Send($"your character is not in combat, they cannot jump right now", true);
+                    return;
+                }
+            }
+            Plugin.Instance.StartCoroutine(CameraUtils.CombatJumpCow(cow));
             Context.Send("you have jumped! to the moon!!");
         }
 

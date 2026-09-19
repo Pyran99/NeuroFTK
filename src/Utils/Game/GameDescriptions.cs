@@ -56,7 +56,7 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Collect, "loot the object"},
             {VoteButton.VoteOption.Equip, "equip the loot"},
             {VoteButton.VoteOption.Use, "use the item right away"},
-            {VoteButton.VoteOption.Pass, "throw away the loot or pass on the encounter"}, // discard
+            {VoteButton.VoteOption.Pass, "pass on this loot"}, // discard
             {VoteButton.VoteOption.Knockdown, "breakdown the object blocking your path"},
             {VoteButton.VoteOption.Disarm, "disarm the trap"},
             {VoteButton.VoteOption.Proceed, "attempt to pass the encounter"},
@@ -66,7 +66,7 @@ namespace Pyran.NeuroFTK.Utils
             {VoteButton.VoteOption.Shop, "view the shop"},
             {VoteButton.VoteOption.Destroy, "destroy the trap"},
             {VoteButton.VoteOption.PartyHeal, "heal all party members in this battle"},
-            {VoteButton.VoteOption.DungeonRest, "setup a tinder pouch camp to heal all party members (dont use all of them)"}, // party rest
+            {VoteButton.VoteOption.DungeonRest, "setup a tinder pouch camp to heal all party members (only use 1 if you need healing)"}, // party rest
             {VoteButton.VoteOption.Share, "split the rewards between all involved party members"},
             {VoteButton.VoteOption.AttemptNoRoll, "attemptnoroll NYI"},
         };

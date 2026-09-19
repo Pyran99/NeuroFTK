@@ -19,6 +19,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void ServiceOpened()
         {
+            if (Multiplayer.OtherPlayersAction(uiTownServiceMenu.Instance.m_CurrentCow)) return;
             // List<MiniHexServiceType> services = _hex.GetServices();
             neuroData.Clear();
             Object.Destroy(window);
@@ -40,7 +41,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void CreateAction()
         {
             string ctx = "";
-            CharacterOverworld cow = CharacterData.GetActiveCow();
+            CharacterOverworld cow = uiTownServiceMenu.Instance.m_CurrentCow;
             foreach (uiTownServiceMenu.ServiceButton btn in uiTownServiceMenu.Instance.m_ServiceButtons)
             {
                 if (!btn.m_RectTransform.gameObject.activeInHierarchy) continue;

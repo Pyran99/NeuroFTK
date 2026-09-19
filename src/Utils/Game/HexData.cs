@@ -81,7 +81,6 @@ namespace Pyran.NeuroFTK.Utils
 
         static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
         {
-            // Plugin.Logger.LogWarning("poi encounter type = " + encounter.m_Type);
             if (encounter.m_HasBeenConsumed) return false;
             if (encounter.m_CantUseThisTurn) return false;
             if (encounter.m_Type == FTK_miniEncounter.ID.kvHome && cow.GetHexLand() == encounter.m_HexLand)
@@ -138,6 +137,13 @@ namespace Pyran.NeuroFTK.Utils
             return true;
         }
 
+        public static bool IsGoldRushEnoughGold(CharacterOverworld cow, MiniEncounter encounter)
+        {
+            if (encounter == null) return false;
+            if (encounter.m_Type != FTK_miniEncounter.ID.LuckysVaultQuest) return false;
+            return cow.m_CharacterStats.m_Gold >= FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[FTK_gameParams.ID.deliver_gold]);
+        }
+
         public static bool IsUsedDeactivateCtx(MiniHexInfo.MiniHexType type)
         {
             return type == MiniHexInfo.MiniHexType.Dungeon || type == MiniHexInfo.MiniHexType.Sanctum || type == MiniHexInfo.MiniHexType.StoneHero;
@@ -171,7 +177,7 @@ namespace Pyran.NeuroFTK.Utils
         }
 
         /// <param name="addToList">adds to member OverworldFlow.hexPositions</param>
-        /// <returns>### The Guardian Forest - [(164.5, 20.0) (story quest) (has dead) (Cult Device: deactivated) (distance: 10.00)]</returns>
+        /// <returns> {pos}{questName}{hasDeadPlayers}{poi}{dist} --- [(164.5, 20.0) (story quest) (has dead) (Cult Device: deactivated) (distance: 10.00)]</returns>
         public static string GetContextForHex(CharacterOverworld cow, HexLand hex, bool addToList = false, bool includeDistance = false)
         {
             // FTK_realm.ID realm = hex.GetRealm(); // GuardianForest | GoldenPlains;
@@ -200,14 +206,14 @@ namespace Pyran.NeuroFTK.Utils
             {
                 MiniHexInfo.MiniHexType poiType = hexInfo.m_MiniHexType;
                 string type = GetHexTypeContext(poiType);
-                poi = hexInfo.GetPOIDisplayValue() + $" {type} ";
+                poi = hexInfo.GetPOIDisplayValue() + $"{type}";
                 if (IsPoiCompleted(hexInfo, cow))
                 {
                     if (hexInfo.m_Deactivated) poi += ": deactivated";
                     else if (hexInfo.m_Locked) poi += ": locked";
                     else poi += ": completed";
                 }
-                if (poi != "") poi = $"({poi})";
+                if (poi != "") poi = $" ({poi})";
             }
             if (addToList) OverworldFlow.AddHexPosition(pos.ToString(), hex);
             string dist = "";
@@ -219,10 +225,10 @@ namespace Pyran.NeuroFTK.Utils
         {
             return type switch
             {
-                MiniHexInfo.MiniHexType.Haunt => "(important to defeat)",
-                MiniHexInfo.MiniHexType.Poison or MiniHexInfo.MiniHexType.Chaos or MiniHexInfo.MiniHexType.Fire or MiniHexInfo.MiniHexType.Curse => "(dangerous, avoid)",
-                MiniHexInfo.MiniHexType.Portal => "(teleport)",
-                MiniHexInfo.MiniHexType.Town => "(town)",
+                MiniHexInfo.MiniHexType.Haunt => " (important to defeat)",
+                MiniHexInfo.MiniHexType.Poison or MiniHexInfo.MiniHexType.Chaos or MiniHexInfo.MiniHexType.Fire or MiniHexInfo.MiniHexType.Curse => " (dangerous, avoid)",
+                MiniHexInfo.MiniHexType.Portal => " (teleport)",
+                MiniHexInfo.MiniHexType.Town => " (town)",
                 _ => "",
             };
         }

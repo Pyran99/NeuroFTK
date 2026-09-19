@@ -35,6 +35,24 @@ namespace Pyran.NeuroFTK.Utils
             return cow;
         }
 
+        public static Dictionary<string, CharacterOverworld> GetCows(bool ownOnly)
+        {
+            Dictionary<string, CharacterOverworld> result = [];
+            string name;
+            int dupes = 0;
+            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (ownOnly && !Multiplayer.IsYourCow(cow)) continue;
+                name = GetCharacterName(cow);
+                if (result.ContainsKey(name))
+                {
+                    name = $"{name} {++dupes}";
+                }
+                result.Add(name, cow);
+            }
+            return result;
+        }
+
         public static string GetDataFor(CharacterOverworld cow)
         {
             StringBuilder sb = new();
@@ -46,12 +64,13 @@ namespace Pyran.NeuroFTK.Utils
             string lvl = $"{stats.m_PlayerLevel}";
             string health = $"{stats.GetHealthDisplayString()}";
             string focus = $"{GetFocusAmount(cow)}";
+            int gold = stats.m_Gold;
             string coherent = "";
             if (stats.m_IsInCombat)
             {
                 coherent = dummy.IsCoherent() ? "" : "stunned";
             }
-            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, focus amount {focus}, {coherent}.");
+            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, focus amount {focus}, gold {gold}, {coherent}.");
             return sb.ToString();
         }
 
@@ -177,8 +196,7 @@ namespace Pyran.NeuroFTK.Utils
             {
                 if (lastDestinations[_cow] != null && lastDestinations[_cow] != hex)
                 {
-                    pos = HexData.GetVec2Pos(lastDestinations[_cow]);
-                    sb.Append($" the last hex you tried to move to with this character was {pos}.");
+                    sb.Append($" the last hex you tried to move to with this character was {HexData.GetContextForHex(_cow, lastDestinations[_cow], false, true)}.");
                 }
             }
             foreach (CharacterOverworld player in FTKHub.Instance.m_CharacterOverworlds)
@@ -188,6 +206,7 @@ namespace Pyran.NeuroFTK.Utils
                 pos = HexData.GetVec2Pos(player.GetHexLand());
                 sb.Append($" teammate {GetCharacterName(player)}{revive} is at hex {pos},");
             }
+            sb.Append(".");
             return sb.ToString();
         }
 

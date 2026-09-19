@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using NeuroSdk;
 using UnityEngine;
 using NeuroSdk.Internal;
+using Pyran.NeuroFTK.Utils;
 
 namespace Pyran.NeuroFTK;
 
@@ -69,6 +70,16 @@ public class Plugin : BaseUnityPlugin
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             if (FTKUI.Instance.m_BattleStanceButtons.m_DisplayRoot.gameObject.activeSelf) FTKUI.Instance.m_BattleStanceButtons.CheatKillAll();
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha9))
+        {
+            if (!GlobalConfig.AllowCheats) return;
+            GameLogic.Instance.RevealMap();
+        }
+        // else if (Input.GetKeyDown(KeyCode.Alpha8))
+        // {
+        //     if (!GlobalConfig.AllowCheats) return;
+        //     CharacterData.GetActiveCow()?.m_CharacterStats.ChangeGold(1000);
+        // }
     }
 
     void InitializeHarmony()
