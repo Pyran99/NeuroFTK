@@ -81,7 +81,6 @@ namespace Pyran.NeuroFTK.Utils
 
         static bool IsEncounterInteractable(MiniEncounter encounter, CharacterOverworld cow)
         {
-            // Plugin.Logger.LogWarning("poi encounter type = " + encounter.m_Type);
             if (encounter.m_HasBeenConsumed) return false;
             if (encounter.m_CantUseThisTurn) return false;
             if (encounter.m_Type == FTK_miniEncounter.ID.kvHome && cow.GetHexLand() == encounter.m_HexLand)
@@ -136,6 +135,13 @@ namespace Pyran.NeuroFTK.Utils
                 return poi.CanSellItems();
             }
             return true;
+        }
+
+        public static bool IsGoldRushEnoughGold(CharacterOverworld cow, MiniEncounter encounter)
+        {
+            if (encounter == null) return false;
+            if (encounter.m_Type != FTK_miniEncounter.ID.LuckysVaultQuest) return false;
+            return cow.m_CharacterStats.m_Gold >= FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[FTK_gameParams.ID.deliver_gold]);
         }
 
         public static bool IsUsedDeactivateCtx(MiniHexInfo.MiniHexType type)

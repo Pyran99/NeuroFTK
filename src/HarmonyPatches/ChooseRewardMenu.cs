@@ -42,8 +42,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 return;
             }
             buttons = [.. ___m_AllButtons];
-            Plugin.Logger.LogMessage($"{string.Join(", ", [.. buttons.Select(x => x.m_Text.text)])}");
-            Dictionary<string, uiChooseRewardButton> dict = buttons.ToDictionary(x => x.m_Text.text);
+            Dictionary<string, uiChooseRewardButton> dict = [];
+            int dupe = 0;
+            string name;
+            foreach (uiChooseRewardButton btn in buttons)
+            {
+                if (btn.m_Text.text.IsNullOrEmpty()) continue;
+                name = btn.m_Text.text;
+                if (dict.ContainsKey(name)) name = $"{name} {++dupe}";
+                dict.Add(name, btn);
+            }
             // if (buttons.Count > 1 && dict.ContainsKey("Cancel")) dict.Remove("Cancel"); // assume always choose valid
             if (dict.Count == 0)
             {

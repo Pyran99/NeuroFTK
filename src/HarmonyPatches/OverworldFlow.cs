@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GridEditor;
 using HarmonyLib;
 using NeuroSdk;
 using NeuroSdk.Actions;
@@ -68,8 +69,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Plugin.Logger.LogWarning($"send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
                 if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
                 {
-                    // Context.Send(QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
-                    Context.Send(StringMessages.OverworldReminderCtx);
+                    Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
+                    // Context.Send(StringMessages.OverworldReminderCtx);
                 }
                 turnBeginCount = 0;
             }
@@ -528,6 +529,18 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             MiniHexInfo poi = hex.GetPOI();
             bool isInteractable = HexData.IsPoiInteractable(poi, _cow) || !HexData.IsPoiCompleted(poi, _cow);
+            if (QuestHelper.currentAdventure == QuestHelper.Adventure.gr)
+            {
+                if ((poi as MiniEncounter != null) && (poi as MiniEncounter).m_Type == FTK_miniEncounter.ID.LuckysVaultQuest)
+                {
+                    isInteractable = HexData.IsGoldRushEnoughGold(_cow, poi as MiniEncounter);
+                    if (!isInteractable)
+                    {
+                        float targetGold = FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[FTK_gameParams.ID.deliver_gold]);
+                        Context.Send($"{CharacterData.GetCharacterName(_cow)} does not have enough gold to complete the quest, they need {targetGold} gold", true);
+                    }
+                }
+            }
             window = MovementAction.CreateWindow(_cow, tileCtx, state, hexPositions, QuestHelper.questHexes, validQuests, validCows, isInteractable);
         }
 
@@ -560,6 +573,23 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject));
                 return;
             }
+            // if (QuestHelper.currentAdventure == QuestHelper.Adventure.gr) // should not happen
+            // {
+            //     MiniEncounter encounter = hex.GetPOI() as MiniEncounter;
+            //     if (encounter != null)
+            //     {
+            //         if (encounter.m_Type == GridEditor.FTK_miniEncounter.ID.LuckysVaultQuest)
+            //         {
+            //             float cowGold = cow.m_CharacterStats.m_Gold;
+            //             float targetGold = FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[GridEditor.FTK_gameParams.ID.deliver_gold]);
+            //             if (cowGold < targetGold)
+            //             {
+            //                 Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject));
+            //                 return;
+            //             }
+            //         }
+            //     }
+            // }
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
         }
 

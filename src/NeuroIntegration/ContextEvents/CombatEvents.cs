@@ -144,6 +144,34 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             ItemStolenCtx(_packItem, __instance.m_CharacterOverworld);
         }
 
+        static StringBuilder goldChangeSb = new();
+        static bool goldDelay = false;
+
+        [HarmonyPatch(typeof(CharacterStats), nameof(CharacterStats.ChangeGoldRPC))]
+        [HarmonyPostfix]
+        static void GoldChanged(CharacterStats __instance, int _amount)
+        {
+            if (_amount < 0)
+            {
+                goldChangeSb.AppendLine($"{CharacterData.GetCharacterName(__instance.m_CharacterOverworld)} lost {_amount} gold");
+            }
+            else if (_amount > 0)
+            {
+                goldChangeSb.AppendLine($"{CharacterData.GetCharacterName(__instance.m_CharacterOverworld)} gained {_amount} gold");
+            }
+            if (goldDelay) return;
+            goldDelay = true;
+            Plugin.Instance.StartCoroutine(GoldChangeDelay());
+        }
+
+        static IEnumerator GoldChangeDelay()
+        {
+            yield return null;
+            Context.Send(goldChangeSb.ToString());
+            goldChangeSb = new();
+            goldDelay = false;
+        }
+
         static StringBuilder stolenSb = new();
         static bool stealDelay = false;
 

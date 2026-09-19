@@ -64,12 +64,13 @@ namespace Pyran.NeuroFTK.Utils
             string lvl = $"{stats.m_PlayerLevel}";
             string health = $"{stats.GetHealthDisplayString()}";
             string focus = $"{GetFocusAmount(cow)}";
+            int gold = stats.m_Gold;
             string coherent = "";
             if (stats.m_IsInCombat)
             {
                 coherent = dummy.IsCoherent() ? "" : "stunned";
             }
-            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, focus amount {focus}, {coherent}.");
+            sb.Append($"({name}) {_class}, lvl {lvl}, health {health}, focus amount {focus}, gold {gold}, {coherent}.");
             return sb.ToString();
         }
 

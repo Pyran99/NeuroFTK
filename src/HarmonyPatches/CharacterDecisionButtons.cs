@@ -40,6 +40,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 if (btn != null) voteButtons[cow].Add(btn);
             }
+            if (voteButtons[cow].Count == 0) voteButtons.Remove(cow);
             if (isShowing) return;
             isShowing = true;
             instance = __instance;
@@ -51,7 +52,16 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPrefix]
         static void VoteContainerHide(VoteButtonContainer __instance)
         {
+            voteButtons.Remove(__instance.m_PlayerHud.m_Cow);
             activeContainers.Remove(__instance);
+            if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.Multiplayer)
+            {
+                if (voteButtons.Count > 0 && activeContainers.Count > 0)
+                {
+                    activeContainers.First().StartCoroutine(QuickTimerCallback.WaitRoutine(CreateAction, activeContainers.First().gameObject));
+                    return;
+                }
+            }
             if (activeContainers.Count > 0) return;
             ResetData();
         }
@@ -85,10 +95,17 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             activeWindow = ActionWindow.Create(instance.gameObject);
             StringBuilder sbState = new();
             bool lootDecision = false;
+            int dupe = 0;
+            List<string> usedNames = [];
+            string name;
             foreach (KeyValuePair<CharacterOverworld, List<VoteButton>> kvp in voteButtons)
             {
+                if (kvp.Value.Count == 0) Plugin.Logger.LogError($"no valid btns for {kvp.Key.m_PlayerName}");
                 if (kvp.Value.Any(btn => ItemData.IsLootDecision(btn.m_Option))) lootDecision = true;
-                activeWindow.AddAction(new CharacterDecisionAction(kvp.Key, CharacterData.GetCharacterName(kvp.Key), kvp.Value));
+                name = CharacterData.GetCharacterName(kvp.Key);
+                while (usedNames.Contains(name)) name = $"{name}{dupe++}";
+                usedNames.Add(name);
+                activeWindow.AddAction(new CharacterDecisionAction(kvp.Key, name, kvp.Value));
                 sbState.AppendLine($"{CharacterData.GetDataFor(kvp.Key)} ");
             }
             sbState.Append($"{StringMessages.FocusDetails}");
@@ -105,7 +122,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 MiniHexDungeon.EncounterType _encounterType = encounter.EncounterType;
                 if (_encounterType == MiniHexDungeon.EncounterType.Next || _encounterType == MiniHexDungeon.EncounterType.Ready || _encounterType == MiniHexDungeon.EncounterType.Stair || _encounterType == MiniHexDungeon.EncounterType.EmptyRoom)
                 {
-                    Plugin.Logger.LogWarning($"change equipment in dungeon check {_encounterType}");
+                    // Plugin.Logger.LogWarning($"change equipment in dungeon check {_encounterType}");
                     StringBuilder sb2 = new();
                     foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
                     {
@@ -120,10 +137,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (equippableItems.Count > 0)
                         {
                             activeWindow.AddAction(new ChangeEquipmentAction(EquipmentManager.GetEquipDictionary(equippableItems), dummy.m_CharacterOverworld));
-                            string name = CharacterData.GetCharacterName(dummy.m_CharacterOverworld);
-                            sb2.AppendLine($"## {name} has empty equipment slots, these items can be equipped to them. ");
+                            string _name = CharacterData.GetCharacterName(dummy.m_CharacterOverworld);
+                            sb2.AppendLine($"## {_name} has empty equipment slots, these items can be equipped to them. ");
                             sb2.AppendLine(equipSb.ToString());
-                            sb2.AppendLine($"{name} prefers {CharacterData.GetClassMainStat(dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
+                            sb2.AppendLine($"{_name} prefers {CharacterData.GetClassMainStat(dummy.m_CharacterOverworld.m_CharacterStats.m_CharacterClass)} stats, avoid equipping items that reduce them (if 'any' you can choose what stats to avoid).");
                         }
                     }
                     Context.Send(sb2.ToString());
@@ -140,14 +157,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             if (addItemUse) // unfinished
             {
-                foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
-                {
-                    if (!dummy.m_CharacterOverworld) continue;
-                    if (!dummy.m_IsAlive) continue;
-                    // List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(dummy.m_CharacterOverworld);
-                    // Dictionary<string, FTK_itembase.ID> items2 = items.ToDictionary(ItemData.GetItemName, x => x);
-                    // if (items.Count > 0) activeWindow.AddAction(new UseBeltItemAction(items2, dummy.m_CharacterOverworld));
-                }
+                // foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
+                // {
+                //     if (!dummy.m_CharacterOverworld) continue;
+                //     if (!dummy.m_IsAlive) continue;
+                //     // List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(dummy.m_CharacterOverworld);
+                //     // Dictionary<string, FTK_itembase.ID> items2 = items.ToDictionary(ItemData.GetItemName, x => x);
+                //     // if (items.Count > 0) activeWindow.AddAction(new UseBeltItemAction(items2, dummy.m_CharacterOverworld));
+                // }
             }
             activeWindow.Register();
         }

@@ -76,29 +76,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             if (Multiplayer.IsMultiplayer())
             {
-                // if (uiStartGame.Instance.m_GameConfig.m_IsResume) // set by resume online mp save
-                // {
-                // }
-                // else if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer)
-                // {
-                // }
-                // else
-                // {
-                // }
                 for (int i = 0; i < GlobalConfig.MultiplayerSlotsTaken; i++) // assume neuro takes any remaining character
                 {
                     if (!characterCreateRoot.m_SelectSlotButton.gameObject.activeSelf) break;
                     characterCreateRoot.OnSelectPlayerSlot();
                 }
                 players = [.. characterCreateRoot.m_Players];
-                // if (GameLogic.Instance.m_GameMode == GameLogic.GameMode.LocalMultiplayer || uiStartGame.Instance.m_GameConfig.m_IsResume)
-                // {//FIXME allow customization
-                //     characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
-                //     return;
-                // }
-                if (uiStartGame.Instance.m_GameConfig.m_IsResume)
+                if (uiStartGame.Instance.m_GameConfig.m_IsResume || uiStartGame.Instance.m_IsResuming) // online or local mp resume
                 {
-                    Plugin.Logger.LogWarning("auto resume");
                     characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
                 }
                 else RegisterWindow(characterCreateRoot);
@@ -108,9 +93,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (uiStartGame.Instance.m_IsResuming)
                 {
                     characterCreateRoot.StartCoroutine(QuickTimerCallback.WaitRoutine(ActionStartGame, characterCreateRoot.gameObject, 2f));
-                    return;
                 }
-                RegisterWindow(characterCreateRoot);
+                else RegisterWindow(characterCreateRoot);
             }
         }
 

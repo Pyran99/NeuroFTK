@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.GameConfigs;
 using UnityEngine;
 
@@ -130,41 +129,6 @@ namespace Pyran.NeuroFTK.Utils
             return result;
         }
 
-        public static string GetAdventuresMainQuestCtx(Adventure adventure, bool addLocations = false)
-        {
-            return adventure switch
-            {
-                Adventure.ftk => GetMainQuestCtx(addLocations),
-                Adventure.fa => GetMainQuestCtx(addLocations),
-                Adventure.id => GetMainQuestCtx(addLocations),
-                Adventure.dc => GetDungeonCrawlQuestHelper(addLocations),
-                Adventure.hc => GetMainQuestCtx(addLocations),
-                Adventure.gr => GetMainQuestCtx(addLocations),
-                _ => GetMainQuestCtx(addLocations),
-            };
-        }
-
-        public static string GetMainQuestCtx(bool addLocations = false)
-        {
-            List<uiQuestItem> allQuests = [.. uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>()];
-            allQuests.AddRange(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
-
-            // IEnumerable<QuestLogicBase> quests = GameLogic.Instance.GetQuestTable().Values;
-            StringBuilder sb = new();
-            sb.AppendLine("## quest locations ");
-            foreach (uiQuestItem q in allQuests)
-            {
-                // if (!q.HasQuestDefID()) continue;
-                Plugin.Logger.LogWarning($"{q.m_Quest.m_StoryQuestID} : {q.m_Quest.GetLocalizedOneLineDesc()}");
-                if (addLocations && q.m_Quest.GetHexLandDestination() != null)
-                {
-                    string type = q.m_Quest.HasQuestDefID() ? "main" : "side";
-                    sb.AppendLine($"- {type}: {HexData.GetVec2Pos(q.m_Quest.GetHexLandDestination())}");
-                }
-            }
-            return sb.ToString();
-        }
-
         static void HandleDungeonCrawlQuest()
         {
             IEnumerable<uiQuestItem> mainQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
@@ -199,24 +163,69 @@ namespace Pyran.NeuroFTK.Utils
             }
         }
 
+        public static string GetAdventuresMainQuestCtx(Adventure adventure, bool addLocations = false)
+        {
+            return adventure switch
+            {
+                Adventure.ftk => GetMainQuestCtx(addLocations),
+                Adventure.fa => GetMainQuestCtx(addLocations),
+                Adventure.id => GetMainQuestCtx(addLocations),
+                Adventure.dc => GetDungeonCrawlQuestHelper(addLocations),
+                Adventure.hc => GetMainQuestCtx(addLocations),
+                Adventure.gr => GetGoldRushCtx(addLocations),
+                _ => GetMainQuestCtx(addLocations),
+            };
+        }
+
+        public static string GetMainQuestCtx(bool addLocations = false)
+        {
+            return StringMessages.OverworldReminderCtx; // quest info is already sent in actions
+            // List<uiQuestItem> allQuests = [.. uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>()];
+            // allQuests.AddRange(uiGameTrackerHUD.Instance.m_SideQuestRoot.GetComponentsInChildren<uiQuestItem>());
+            // // IEnumerable<QuestLogicBase> quests = GameLogic.Instance.GetQuestTable().Values;
+            // StringBuilder sb = new();
+            // sb.AppendLine("## quest locations ");
+            // foreach (uiQuestItem q in allQuests)
+            // {
+            //     // if (!q.HasQuestDefID()) continue;
+            //     Plugin.Logger.LogWarning($"{q.m_Quest.m_StoryQuestID} : {q.m_Quest.GetLocalizedOneLineDesc()}");
+            //     if (addLocations && q.m_Quest.GetHexLandDestination() != null)
+            //     {
+            //         string type = q.m_Quest.HasQuestDefID() ? "main" : "side";
+            //         sb.AppendLine($"- {type}: {HexData.GetVec2Pos(q.m_Quest.GetHexLandDestination())}");
+            //     }
+            // }
+            // return sb.ToString();
+        }
+
         public static string GetDungeonCrawlQuestHelper(bool addLocations = false)
         {
-            //side quests handled from normal data
-            IEnumerable<uiQuestItem> allQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
-            string description = StringReplace.RemoveStyling(allQuests.First().m_Display.text);
-            IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
-            StringBuilder sb = new($"main quest: {description} \n");
-            if (addLocations)
-            {
-                sb.AppendLine("## quest locations");
-                foreach (MiniHexDungeon d in dungeons)
-                {
-                    if (d.GetDungeonType() == MiniHexDungeon.DungeonType.Main)
-                    {
-                        sb.AppendLine($"- {HexData.GetVec2Pos(d.m_HexLand)}");
-                    }
-                }
-            }
+            return $"{StringMessages.OverworldReminderCtx} you need to find and clear all 5 main quest dungeons to win. there is 1 dungeon in each realm.";
+            // //side quests handled from normal data
+            // IEnumerable<uiQuestItem> allQuests = uiGameTrackerHUD.Instance.m_StoryQuestRoot.GetComponentsInChildren<uiQuestItem>();
+            // string description = StringReplace.RemoveStyling(allQuests.First().m_Display.text);
+            // IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
+            // StringBuilder sb = new($"main quest: {description} \n");
+            // if (addLocations)
+            // {
+            //     sb.AppendLine("## quest locations");
+            //     foreach (MiniHexDungeon d in dungeons)
+            //     {
+            //         if (d.GetDungeonType() == MiniHexDungeon.DungeonType.Main)
+            //         {
+            //             sb.AppendLine($"- {HexData.GetVec2Pos(d.m_HexLand)}");
+            //         }
+            //     }
+            // }
+            // return sb.ToString();
+        }
+
+        static string GetGoldRushCtx(bool addLocations = false)
+        {
+            StringBuilder sb = new();
+            float gold = FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[GridEditor.FTK_gameParams.ID.deliver_gold]);
+            // string gold = GameFlow.Instance.GameDif.GetGoldDeliverText(GameFlow.Instance.m_Rules); // Gold Target: {0}
+            sb.Append($"explore the map to gather gold. if any character has {gold}, you should move them to the main quest location to win.");
             return sb.ToString();
         }
 
@@ -225,7 +234,7 @@ namespace Pyran.NeuroFTK.Utils
             if (HexData.IsBoatRequired(description))
             {
                 if (currentAdventure == Adventure.ftk) return " (may require boat (can be bought at port), or an airship)";
-                else if (currentAdventure == Adventure.dc) return ""; //TODO dc may not need boats, VERIFY
+                // else if (currentAdventure == Adventure.dc) return "";
                 return " (may require boat (can be bought at port)";
             }
             else if (HexData.IsAirshipRequired(description)) return " (requires an airship to reach)";
