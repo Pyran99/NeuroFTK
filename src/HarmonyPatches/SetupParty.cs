@@ -175,15 +175,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void NeuroRandomizeParty()
         {
-            // if (!Multiplayer.IsMultiplayer()) characterCreateRoot.RandomParty();
-            // else
-            // {
-            //     foreach (uiQuickPlayerCreate player in players)
-            //     {
-            //         if (Multiplayer.IsYourPhotonId(player.m_PhotonID)) player.RandomClass();
-            //     }
-            //     OnPartyRandomized();
-            // }
             foreach (uiQuickPlayerCreate player in players)
             {
                 if (Multiplayer.IsYourPhotonId(player.m_PhotonID)) player.RandomClass();
@@ -239,40 +230,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         static void RegisterWindow(uiCharacterCreateRoot instance)
         {
-            if (instance == null)
-            {
-                Plugin.Logger.LogError("character create root is null");
-                return;
-            }
             SendPartyDetails();
-            if (Multiplayer.IsMultiplayer())
-            {
-                Plugin.Logger.LogWarning("local multiplayer setup");
-                // return;
-            }
             instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => ConfiguePartyAction.RegisterConfigurePartyActions(instance.gameObject, players), instance.gameObject));
         }
-
-// // [Message:Neuro For the King] Player 1, Player 2, Player 3
-//         static List<string> GetCharacterNames()
-//         {
-//             List<string> names = [];
-//             foreach (uiQuickPlayerCreate player in characterCreateRoot.m_Players)
-//             {
-//                 names.Add(player.m_PlayerNameStr);
-//             }
-//             return names;
-//         }
-
-// // [Message:Neuro For the King] Hunter, Minstrel, Hunter
-//         static List<string> GetCharacterClasses()
-//         {
-//             List<string> names = [];
-//             foreach (uiQuickPlayerCreate player in characterCreateRoot.m_Players)
-//             {
-//                 names.Add(player.m_PlayerClass.text);
-//             }
-//             return names;
-//         }
     }
 }

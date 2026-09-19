@@ -22,7 +22,7 @@ Download the release file and add them to your For the king BepInEx plugins fold
 See [Config Readme](src/GameConfigs/README.md)
 
 ### Known issues  
-- duplicate character names can cause issues. not an issue if names are generated with an action as the schema requires unique values
+- 
 
 ### Todo  
 - [ ] make auto travel work for quests that are to far for games pathfinding  
@@ -33,7 +33,7 @@ See [Config Readme](src/GameConfigs/README.md)
 
 ## Multiplayer  
 > [!Caution]
-> as of 17/09 multiplayer is considered incomplete, but partially implemented. Should work if the mod only controls 1 or 3 characters
+> as of 17/09 multiplayer is considered incomplete, but partially implemented. Should work if the mod only controls 1 or 3 characters (solo cellar run)
 - the mod will automatically claim any unclaimed player slots (up to config multiplayer_slots_taken)
 - neuro actions for customizing characters is checked for ownership
 - this mod cannot create an online game or select local co-op if single player mode is available for a map

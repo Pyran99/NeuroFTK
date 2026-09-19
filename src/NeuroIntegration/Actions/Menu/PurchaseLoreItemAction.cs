@@ -25,7 +25,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             cancel.OnCancelled += LoreStoreUnlocks.OnActionCancelled;
             window.AddAction(cancel);
             // window.SetContext($"Items and their descriptions you can afford \n{cardsCtx}");
-            window.SetForce(0, "purchase items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now. Character customization isnt implemented for you yet, so ", $"Items you can afford \n{cardsCtx}", true);
+            window.SetForce(0, "purchase items from a category or cancel the action and go back to the main menu if you dont want to purchase anything right now. ", $"Items you can afford \n{cardsCtx}", true);
             window.Register();
             return window;
         }
