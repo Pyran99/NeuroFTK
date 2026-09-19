@@ -20,7 +20,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         {
             Plugin.Logger.LogMessage("StartEncounterSession");
             Battle.isCombatEncounter = false;
-            ToggleDisposableActions.ToggleOverworldActions(false);
             MiniHexDungeon.EncounterType _encounterType = EncounterSessionMC.Instance.GetCurrentEncounter().EncounterType;
             switch (_encounterType)
             {

@@ -22,7 +22,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 lastNeuroMsg = "";
                 return;
             }
-            Context.Send($"{_name} says: {_msg}");
+            Context.Send($"{_name} sent chat message: {_msg}");
         }
 
         public static void SendChatMsg(string msg = "")
@@ -37,7 +37,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static IEnumerator ShowMsg()
         {
             uiChatBox.Instance.OnButtonOpen();
-            yield return new WaitForSeconds(4f);
+            yield return new WaitForSeconds(5f);
             uiChatBox.Instance.OnButtonClose();
             routine = null;
             // if (uiChatBox.Instance.m_TextBoxRoot.gameObject.activeSelf) uiChatBox.Instance.OnButtonToggle();

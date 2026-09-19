@@ -68,6 +68,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             UnityEngine.Object.Destroy(window);
             GlobalConfig.GameLoaded();
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
+            ToggleDisposableActions.ToggleOverworldActions(false);
             initialized = true;
             if (Multiplayer.OtherPlayersAction(__instance.CombatCow))
             {
@@ -76,9 +77,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             StanceBtnInstance = __instance;
             beltActionUsed = false;
-            ToggleDisposableActions.ToggleCombatActions(true, false);
             uiPlayerMainHud.CloseItemCard();
-            __instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow), __instance.gameObject, 1f, true));
+            __instance.StartCoroutine(CreateActionWindow(StanceBtnInstance, m_Proficiencies, __instance.CombatCow));
         }
 
         [HarmonyPatch(typeof(uiBattleStanceButtons), "CreateWeaponProficiencyButtons")]
@@ -326,9 +326,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static readonly List<INeuroAction> actions = [];
         static readonly List<INeuroAction> disposableActions = [];
 
-        public static void CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
+        public static IEnumerator CreateActionWindow(uiBattleStanceButtons _instance, List<uiBattleStanceButtons.ProfValues> _proficiencies, CharacterOverworld cow)
         {
-            if (Multiplayer.OtherPlayersAction(cow)) return;
+            if (Multiplayer.OtherPlayersAction(cow)) yield break;
+            yield return new WaitForSeconds(1f);
+            ToggleDisposableActions.ToggleCombatActions(true, false);
             uiPlayerMainHud.CloseItemCard();
             // CharacterOverworld cow = CharacterData.GetActiveCow();
             GetOffenseAttackDetails(_instance, _proficiencies);

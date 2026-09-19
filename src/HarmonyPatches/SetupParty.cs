@@ -24,6 +24,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
 
+        public static INeuroAction chatAction;
+
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.Show))]
         [HarmonyPostfix]
@@ -65,7 +67,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (def == null) Plugin.Logger.LogError($"invalid game def {uiStartGame.Instance.m_GameDefName}");
             QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), ConfigureAdventure.adventureCodes.First(x => x.Value == def.GetDisplayName()).Key);
             Context.Send("entering the world of Fahrul", true);
-            if (GameLogic.Instance.m_GameMode != GameLogic.GameMode.SinglePlayer) NeuroActionHandler.RegisterActions(new SendChatAction());
+            if (GameLogic.Instance.m_GameMode != GameLogic.GameMode.SinglePlayer)
+            {
+                if (chatAction == null)
+                {
+                    chatAction = new SendChatAction();
+                    NeuroActionHandler.RegisterActions(new SendChatAction());
+                }
+            }
         }
 
         // [HarmonyPatch(typeof(MainScreen), nameof(MainScreen.OnResume))]

@@ -24,7 +24,11 @@ public class MainMenu
     static void OnSetFocus(MainScreen __instance)
     {
         ResetGameStatics();
-        NeuroActionHandler.UnregisterActions(["send_chat_message"]);
+        if (SetupParty.chatAction != null)
+        {
+            NeuroActionHandler.UnregisterActions(SetupParty.chatAction);
+            SetupParty.chatAction = null;
+        }
         ToggleDisposableActions.ToggleOverworldActions(false);
         ToggleDisposableActions.ToggleCombatActions(false);
         if (GlobalConfig.IsMultiplayer)

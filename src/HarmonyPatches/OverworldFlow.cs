@@ -67,11 +67,12 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (turnBeginCount % 10 == 0)
             {
                 Plugin.Logger.LogWarning($"send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
-                if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
-                {
-                    Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
-                    // Context.Send(StringMessages.OverworldReminderCtx);
-                }
+                Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
+                // if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
+                // {
+                //     Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
+                //     // Context.Send(StringMessages.OverworldReminderCtx);
+                // }
                 turnBeginCount = 0;
             }
             BeginTurn2(__instance);
