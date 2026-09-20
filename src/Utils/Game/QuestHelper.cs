@@ -15,7 +15,8 @@ namespace Pyran.NeuroFTK.Utils
             id,
             dc,
             hc,
-            gr
+            gr,
+            lc,
         }
         public static Adventure currentAdventure = Adventure.ftk;
         /// <summary>

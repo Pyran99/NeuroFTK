@@ -75,6 +75,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     NeuroActionHandler.RegisterActions(new SendChatAction());
                 }
             }
+            GlobalConfig.GameLoaded();
         }
 
         // [HarmonyPatch(typeof(MainScreen), nameof(MainScreen.OnResume))]

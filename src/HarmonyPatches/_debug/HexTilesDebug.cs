@@ -8,7 +8,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     [HarmonyPatch]
     public class HexTilesTesting
     {
-        static HexLand currentHover;
+        // static HexLand currentHover;
 
         // // left or right clicks
         // [HarmonyPatch(typeof(Movement), "TrackCheckClickPath")]

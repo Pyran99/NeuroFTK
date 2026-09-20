@@ -21,8 +21,9 @@ Download the release file and add them to your For the king BepInEx plugins fold
 ## Config data
 See [Config Readme](src/GameConfigs/README.md)
 
-### Known issues  
-- 
+## Known issues  
+- Lost civ dlc is not supported. It may work but is intentionally left out of adventure choices
+- The games pathfinding has a limited distance. This makes progressing some maps difficult. Multiplayer with a person can fix this
 
 ### Todo  
 - [ ] make auto travel work for quests that are to far for games pathfinding  
@@ -30,16 +31,15 @@ See [Config Readme](src/GameConfigs/README.md)
 
 ### Undecided actions  
 - market selling: equipment can be destroyed in battle, leaving this out would likely be more helpful
+- Combat fleeing: fleeing is currently set to only be an option if that character is below 35% health. The action description recommends only using in emergencies, but it could still be used to often at times that result in a worse outcome
 
 ## Multiplayer  
-> [!Caution]
-> as of 17/09 multiplayer is considered incomplete, but partially implemented. Should work if the mod only controls 1 or 3 characters (solo cellar run)
-- the mod will automatically claim any unclaimed player slots (up to config multiplayer_slots_taken)
-- neuro actions for customizing characters is checked for ownership
+- the mod will automatically claim any unclaimed player slots (up to config multiplayer_slots_taken).
 - this mod cannot create an online game or select local co-op if single player mode is available for a map
 - joining an online game is handled by setting is_multiplayer to true, which disables main menu actions (or just stop responses to the sdk), then manually joining a game.
 - I do not know how or if direct friend invites work. The game uses a server list with name & password
-- 
+- movement navigation can be assisted with another player (of the human variety) placing pings (alt+click), which the mod can move towards. Max game pathfind distance still applies. example use: bring neuro to a shoreline to get picked up by a boat.
+
 
 
 

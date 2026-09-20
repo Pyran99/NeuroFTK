@@ -17,16 +17,27 @@ namespace Pyran.NeuroFTK.Utils
         [HarmonyPostfix]
         static void Ping(HexLand __instance, bool _on, CharacterOverworld _cow)
         {
-            if (!GlobalConfig.gameInitialized) return;
+            if (!GlobalConfig.gameInitialized)
+            {
+                if (_on && !activePings.Contains(__instance)) activePings.Add(__instance);
+                return;
+            }
             if (!GlobalConfig.IsDebugMode()) return;
             float distance;
+            StringBuilder sb2 = new();
             if (Multiplayer.IsMultiplayer())
             {
-                distance = (float)Math.Round(HexLand.Distance(Multiplayer.GetOwnCow().m_HexLand, __instance), 1);
+                foreach (CharacterOverworld cow in Multiplayer.GetAllOwnCows())
+                {
+                    distance = (float)Math.Round(HexLand.Distance(cow.m_HexLand, __instance), 1);
+                    sb2.Append($"{CharacterData.GetCharacterName(cow)} is {distance} hexes away, ");
+                }
             }
             else
             {
-                distance = (float)Math.Round(HexLand.Distance(CharacterData.GetActiveCow().m_HexLand, __instance), 1);
+                CharacterOverworld active = CharacterData.GetActiveCow();
+                distance = (float)Math.Round(HexLand.Distance(active.m_HexLand, __instance), 1);
+                sb2.Append($"{CharacterData.GetCharacterName(active)} is {distance} hexes away");
             }
             StringBuilder sb = new();
             sb.AppendLine("ping data");
@@ -35,7 +46,7 @@ namespace Pyran.NeuroFTK.Utils
             sb.AppendLine($"realm: {__instance.GetRealm()}"); // GuardianForest
             sb.AppendLine($"boat: {__instance.IsBoat()}");
             sb.AppendLine($"loc display: {__instance.GetLocationDisplayValue(CharacterData.GetActiveCow())}"); // The Guardian Forest, is realm display if not dungeon
-            sb.AppendLine($"distance: {distance}");
+            sb.AppendLine($"distance: {sb2}");
             // _ = HexLand.FindPath(CharacterData.GetActiveCow().m_HexLand, __instance, HexLand.PathFindingStartState.OnLand, ref list);
             HexLand last = Movement.Instance.m_HexListPartial.Last();
             sb.AppendLine($"path end: {last?.GetPosition()}"); // is giving correct last valid move hex for hex's to far
@@ -75,15 +86,22 @@ namespace Pyran.NeuroFTK.Utils
 
             if (!activePings.Contains(__instance)) activePings.Add(__instance);
             float distance;
+            StringBuilder sb = new();
             if (Multiplayer.IsMultiplayer())
             {
-                distance = (float)Math.Round(HexLand.Distance(Multiplayer.GetOwnCow().m_HexLand, __instance), 1);
+                foreach (CharacterOverworld cow in Multiplayer.GetAllOwnCows())
+                {
+                    distance = (float)Math.Round(HexLand.Distance(cow.m_HexLand, __instance), 1);
+                    sb.Append($"{CharacterData.GetCharacterName(cow)} is {distance} hexes away, ");
+                }
             }
             else
             {
-                distance = (float)Math.Round(HexLand.Distance(CharacterData.GetActiveCow().m_HexLand, __instance), 1);
+                CharacterOverworld active = CharacterData.GetActiveCow();
+                distance = (float)Math.Round(HexLand.Distance(active.m_HexLand, __instance), 1);
+                sb.Append($"{CharacterData.GetCharacterName(active)} is {distance} hexes away");
             }
-            Context.Send($"{name} pinged {HexData.GetVec2Pos(__instance)}. you are {distance} hexes away");
+            Context.Send($"{name} pinged {HexData.GetVec2Pos(__instance)}. {sb}");
         }
 
         static bool TileHasQuestObjective(HexLand hex, out QuestLogicBase quest)

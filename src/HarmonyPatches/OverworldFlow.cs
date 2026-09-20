@@ -53,7 +53,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static IEnumerator BeginTurn(IEnumerator __result, bool _isLoadGame, CharacterOverworld __instance)
         {
-            GlobalConfig.GameLoaded();
             if (Multiplayer.OtherPlayersAction(__instance)) yield break;
             isFirstAction = true;
             isSearching = false;
@@ -64,7 +63,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 yield break;
             }
             turnBeginCount++;
-            if (turnBeginCount % 10 == 0)
+            if (turnBeginCount >= 8)
             {
                 Plugin.Logger.LogWarning($"send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
                 Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);

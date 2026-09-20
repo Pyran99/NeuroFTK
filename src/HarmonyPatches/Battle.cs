@@ -66,7 +66,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (initialized) return;
             Plugin.Logger.LogMessage("player combat actions");
             UnityEngine.Object.Destroy(window);
-            GlobalConfig.GameLoaded();
             if (GameStates.mode == uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             ToggleDisposableActions.ToggleOverworldActions(false);
             initialized = true;

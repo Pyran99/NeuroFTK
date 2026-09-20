@@ -80,7 +80,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                             Type = JsonSchemaType.String,
                             MinLength = min,
                             MaxLength = max,
-                            // Pattern = "^[a-zA-Z]+( [a-zA-Z0-9]+)*$" // start with letters, then optionally 0-1 space with 1+ letters, numbers (allows neuro sama)
+                            Pattern = "^[a-zA-Z]+( [a-zA-Z0-9]+)*$" // start with letters, then optionally 0-1 space with 1+ letters, numbers (allows neuro sama)
                         }
                     }
                 }

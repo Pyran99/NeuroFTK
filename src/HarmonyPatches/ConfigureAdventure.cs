@@ -28,6 +28,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {"dc", "Dungeon Crawl"},
             {"hc", "Hildebrant's Cellar"},
             {"gr", "Gold Rush"},
+            {"lc", "Lost Civilization"},
         };
 
         static GameConfig instance;

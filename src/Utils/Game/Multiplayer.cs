@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NeuroSdk.Messages.Outgoing;
 
 namespace Pyran.NeuroFTK.Utils
@@ -35,7 +36,7 @@ namespace Pyran.NeuroFTK.Utils
         }
 
         /// <returns>IsOwner Cow or active if not multiplayer</returns>
-        public static CharacterOverworld GetOwnCow(bool onlyIfActive = false) //TODO need option if controlling multiple in multiplayer
+        public static CharacterOverworld GetOwnCow(bool onlyIfActive = false)
         {
             CharacterOverworld active = CharacterData.GetActiveCow();
             if (!IsMultiplayer())
@@ -53,6 +54,16 @@ namespace Pyran.NeuroFTK.Utils
             }
             Plugin.Logger.LogError("could not find own cow");
             return null;
+        }
+
+        public static List<CharacterOverworld> GetAllOwnCows()
+        {
+            List<CharacterOverworld> result = [];
+            foreach (CharacterOverworld cow in FTKHub.Instance.m_CharacterOverworlds)
+            {
+                if (IsYourCow(cow)) result.Add(cow);
+            }
+            return result;
         }
     }
 }

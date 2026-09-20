@@ -14,18 +14,19 @@ max_hex_search | 50 | the max amount of hexes to send for context & choice list 
 force_custom_adventure | false | force new games to only allow the specified adventure from `custom_adventure_code`. This **OVERRIDES** launch_resume & only allows new games
 custom_adventure_code | ftk | the [Config code](#adventure-details) for the forced adventure. Only used if `force_custom_adventure` is true
 
-## Adventure details
+## Adventure details  
+> *Map navigation is limited for the large maps. [Map navigate support](README.md#multiplayer) is possible in multiplayer
+
 Adventure | Config code | Description | Integration State
 --- | --- | --- | ---
-For the King | ftk | main adventure with travelling by land, sea, air | working
-Frost Adventure | fa | similar to FTK, no air travel, damage taken at end of each turn | working
-Into the Deep | id | primarily sea travel | working, limited map navigation support
-Dungeon Crawl | dc | search for dungeons around map, mostly land travel, some boating | working, limited map navigation support
+For the King | ftk | main adventure with travelling by land, sea, air | working*
+Frost Adventure | fa | similar to FTK, no air travel, damage taken at end of each turn | working*
+Into the Deep | id | primarily sea travel | working*
+Dungeon Crawl | dc | search for dungeons around map, mostly land travel, some boating | working*
 Hildebrant's Cellar | hc | dungeon run only | working
-Gold Rush | gr | multiplayer only (local or online). small, land only map | working
+Gold Rush | gr | multiplayer only (local or online). small, land only map | working  
 
-> hildebrants cellar is a dungeon runner only (no movement decisions)  
-> other adventures use hex movement
+
 
 ## Map Rules  
 > [!CAUTION]
