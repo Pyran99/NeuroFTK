@@ -7,6 +7,7 @@ using NeuroSdk.Actions;
 using NeuroSdk.Json;
 using NeuroSdk.Messages.Outgoing;
 using NeuroSdk.Websocket;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using WebSocketSharp;
 
@@ -20,6 +21,7 @@ namespace Pyran.NeuroFTK.GameConfigs
             window.AddAction(new CustomizeCharacterAction(instance, instance.m_PlayerNameStr));
             window.SetForce(0, "customize this characters model, clothes, and colors. you should choose different clothes_color for each character to help chat distinguish them", "", true);
             window.Register();
+            UnregisterDisabledObject.QuickCreate(instance.gameObject, window);
             return window;
         }
 
