@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -103,6 +104,23 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             if (items.Count > 0) registerActions.Add(new UseBeltItemAction(items, cow));
             if (beltCtx.Length > 0) Context.Send(beltCtx.ToString());
             string query = $"your turn for {charName} has started. use items or begin your movement choices";
+            IEnumerable<CharacterOverworld> inRangeCows = cow.GetLinkedPlayers(false).Where(x => x != cow);
+            IEnumerable<FTK_itembase.ID> allItems = ItemData.GetAllBackpackItems(cow).Where(x => x != FTK_itembase.ID.townTeleport);
+            if (inRangeCows.Any() && allItems.Any())
+            {
+                Dictionary<string, CharacterOverworld> cows = [];
+                int dupe = 0;
+                string dupeStr = "";
+                foreach (CharacterOverworld _cow in inRangeCows)
+                {
+                    dupeStr = CharacterData.GetCharacterName(_cow);
+                    if (cows.ContainsKey(dupeStr)) dupeStr = $"{dupeStr}{++dupe}";
+                    cows.Add(dupeStr, _cow);
+                }
+                Dictionary<string, FTK_itembase.ID> items2 = allItems.ToDictionary(x => ItemData.GetItemName(x), x => x);
+                registerActions.Add(new TradeItemAction(items2, cows));
+            }
+//
             foreach (INeuroAction action in registerActions) window.AddAction(action);
             // window.SetContext(BeginTurns.CtxOverworldTurnBeginStats(cow));
             window.SetForce(5, query, $"{BeginTurns.CtxOverworldTurnBeginStats(cow)}", true);

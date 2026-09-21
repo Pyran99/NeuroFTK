@@ -24,7 +24,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     {
                         Type = JsonSchemaType.String,
                         MinLength = 3,
-                        MaxLength = 150
+                        MaxLength = 150 //TODO pattern?
                     }
                 }
             };
