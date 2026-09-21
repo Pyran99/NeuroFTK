@@ -67,15 +67,9 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogWarning($"send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
                 Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
-                // if (QuestHelper.currentAdventure == QuestHelper.Adventure.dc)
-                // {
-                //     Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
-                //     // Context.Send(StringMessages.OverworldReminderCtx);
-                // }
                 turnBeginCount = 0;
             }
             BeginTurn2(__instance);
-            // GameDefinition gameDef = GameLogic.Instance.GetGameDef();
         }
 
         // when movement choice starts
@@ -244,7 +238,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         }
 
         // if move action unexpectedly doesnt work isFirstAction or isSearching may still be true
-        static void ResumeTurnMovement()
+        public static void ResumeTurnMovement()
         {
             if (GameStates.mode != uiGameTrackerHUD.GameTrackerMode.Overworld) return;
             if (Movement.Instance.m_Mode == Movement.TrackingMode.PickHex) return;

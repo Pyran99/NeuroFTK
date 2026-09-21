@@ -44,7 +44,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         {
             JsonSchema schema = new()
             {
-                Type = JsonSchemaType.String,
+                Type = JsonSchemaType.Object,
                 Required = ["item"],
                 Properties = new Dictionary<string, JsonSchema>
                 {

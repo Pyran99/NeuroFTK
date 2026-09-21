@@ -65,6 +65,16 @@ namespace Pyran.NeuroFTK.Utils
             return list;
         }
 
+        public static List<FTK_itembase.ID> GetAllBackpackItems(CharacterOverworld _cow)
+        {
+            List<FTK_itembase.ID> list = [];
+            foreach (FTK_itembase.ID item in _cow.m_PlayerInventory.m_ContainerBackpack.m_CountDictionary.Keys)
+            {
+                list.Add(item);
+            }
+            return list;
+        }
+
         public static bool IsBlacklistItem(FTK_itembase.ID id)
         {
             if (blacklistItems.Contains(id))

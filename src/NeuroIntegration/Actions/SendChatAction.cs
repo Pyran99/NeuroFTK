@@ -24,7 +24,8 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                     {
                         Type = JsonSchemaType.String,
                         MinLength = 3,
-                        MaxLength = 150
+                        MaxLength = 150,
+                        // Pattern = "^[a-zA-Z]+( [a-zA-Z0-9]+)*$"
                     }
                 }
             };
