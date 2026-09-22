@@ -32,14 +32,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void OnTreasureSpawned(HexLandID _hexID)
         {
-            Context.Send($"a treasure chest appeared at {HexData.GetVec2Pos(FTKHex.Instance.GetHexLand(_hexID))}");
+            Context.Send($"a treasure chest appeared at {HexData.GetVec2String(FTKHex.Instance.GetHexLand(_hexID))}");
         }
 
         [HarmonyPatch(typeof(MiscManager), nameof(MiscManager.CreateTwoPortalsRPC))]
         [HarmonyPostfix]
         static void CreatedPortals(HexLandID _portalID1, HexLandID _portalID2)
         {
-            Context.Send($"portals created between {HexData.GetVec2Pos(FTKHex.Instance.GetHexLand(_portalID1))} and {HexData.GetVec2Pos(FTKHex.Instance.GetHexLand(_portalID2))}");
+            Context.Send($"portals created between {HexData.GetVec2String(FTKHex.Instance.GetHexLand(_portalID1))} and {HexData.GetVec2String(FTKHex.Instance.GetHexLand(_portalID2))}");
         }
     }
 }

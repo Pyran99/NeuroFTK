@@ -7,7 +7,6 @@ using NeuroSdk.Websocket;
 using Newtonsoft.Json.Linq;
 using Pyran.NeuroFTK.HarmonyPatches;
 using Pyran.NeuroFTK.Utils;
-using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.NeuroIntegration
 {
@@ -65,6 +64,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 result.Add(container.ToString(), QJS.Enum(items[container].Keys.ToList()));
                 foreach (KeyValuePair<string, FTK_itembase.ID> kvp in items[container])
                 {
+                    if (props.ContainsKey(kvp.Key)) continue;
                     props.Add(kvp.Key, kvp.Value);
                 }
             }

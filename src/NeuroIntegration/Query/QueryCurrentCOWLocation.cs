@@ -37,7 +37,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
                 }
                 hexData = $"{hexInfo.GetPOIDisplayValue()}: {hexInfo.m_MiniHexType}{complete}";
             }
-            Context.Send($"{name} is at {HexData.GetVec2Pos(hex)} {hex}. This hex contains ({hexData})");
+            Context.Send($"{name} is at {HexData.GetVec2String(hex)} {hex}. This hex contains ({hexData})");
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

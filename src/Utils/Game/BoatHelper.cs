@@ -92,7 +92,7 @@ namespace Pyran.NeuroFTK.Utils
                 }
             }
             if (target == null) return;
-            Context.Send($"{CharacterData.GetCharacterName(cow)} is in a boat, {CharacterData.GetCharacterName(_cow)} wants to be picked up at {HexData.GetVec2Pos(target)}", true);
+            Context.Send($"{CharacterData.GetCharacterName(cow)} is in a boat, {CharacterData.GetCharacterName(_cow)} wants to be picked up at {HexData.GetVec2String(target)}", true);
         }
 
         public static string AddBoatTravelContext(HexLand currentHex)
@@ -101,12 +101,12 @@ namespace Pyran.NeuroFTK.Utils
             HexLand closestBoat = GetClosestBoat(currentHex);
             if (closestBoat != null)
             {
-                sb.Append($"the closest boat is at {HexData.GetVec2Pos(closestBoat)}. ");
+                sb.Append($"the closest boat is at {HexData.GetVec2String(closestBoat)}. ");
             }
             HexLand closestPort = GetClosestPort(currentHex);
             if (closestPort != null)
             {
-                sb.Append($"the closest port is at {HexData.GetVec2Pos(closestPort)}.");
+                sb.Append($"the closest port is at {HexData.GetVec2String(closestPort)}.");
             }
             return sb.ToString();
         }

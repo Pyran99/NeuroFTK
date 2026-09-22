@@ -22,7 +22,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         public static VoteButtonContainer instance;
 
         static bool isShowing = false;
-        static bool addItemUse = false;
         static ActionWindow activeWindow;
         static readonly List<VoteButtonContainer> activeContainers = [];
 
@@ -155,17 +154,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 }
                 activeWindow.SetContext(sb.ToString());
             }
-            if (addItemUse) // unfinished
-            {
-                // foreach (CharacterDummy dummy in EncounterSession.Instance.m_PlayerDummies.Values)
-                // {
-                //     if (!dummy.m_CharacterOverworld) continue;
-                //     if (!dummy.m_IsAlive) continue;
-                //     // List<FTK_itembase.ID> items = ItemData.GetUsableBeltItems(dummy.m_CharacterOverworld);
-                //     // Dictionary<string, FTK_itembase.ID> items2 = items.ToDictionary(ItemData.GetItemName, x => x);
-                //     // if (items.Count > 0) activeWindow.AddAction(new UseBeltItemAction(items2, dummy.m_CharacterOverworld));
-                // }
-            }
             activeWindow.Register();
         }
 
@@ -187,7 +175,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     string slotResults = CombatUtils.GetDungeonSlotLegend(cow, btn);
                     if (slotResults.Length == 0) continue;
                     sb.AppendLine($"{slotResults}");
-                    //expected => ### Cow #### Disarm (desc) - 0(2%) = Failure
                 }
             }
             string encounterMsg = StaticMessage.Message;
@@ -267,10 +254,5 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             }
             yield break;
         }
-
-        // public static void AddItemUse(bool value)
-        // {
-        //     addItemUse = value;
-        // }
     }
 }

@@ -189,7 +189,7 @@ namespace Pyran.NeuroFTK.Utils
         public static string GetTeamPositionState(CharacterOverworld _cow, HexLand hex, Dictionary<CharacterOverworld, HexLand> lastDestinations)
         {
             Vector2 pos = HexData.GetVec2Pos(hex);
-            StringBuilder sb = new($"you are controlling {GetCharacterName(_cow)} at hex {pos}.");
+            StringBuilder sb = new($"you are controlling {GetCharacterName(_cow)} at hex {HexData.Vec2ToString(pos)}.");
             if (_cow.IsInBoat()) sb.Append(" you are in a boat.");
             else if (_cow.IsInAirShip()) sb.Append(" you are in an airship, you can leave it by moving onto an empty land hex then choosing the interact with hex action and 'Land' choice. you must leave the airship to interact with any point of interest on a hex.");
             if (lastDestinations.ContainsKey(_cow))
@@ -203,8 +203,7 @@ namespace Pyran.NeuroFTK.Utils
             {
                 if (player == _cow) continue;
                 string revive = player.m_WaitForRespawn ? " (waiting for revive)" : "";
-                pos = HexData.GetVec2Pos(player.GetHexLand());
-                sb.Append($" teammate {GetCharacterName(player)}{revive} is at hex {pos},");
+                sb.Append($" teammate {GetCharacterName(player)}{revive} is at hex {HexData.GetVec2String(player.GetHexLand())},");
             }
             sb.Append(".");
             return sb.ToString();
