@@ -124,10 +124,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                             if (poi is not MiniHexBoat) continue;
                             if ((poi as MiniHexBoat).IsBoatDamaged())
                             {
-                                errMsg += $"nearby boat at {HexData.GetVec2Pos(tile)} must be repaired first.";
+                                errMsg += $"nearby boat at {HexData.GetVec2String(tile)} must be repaired first.";
                                 continue;
                             }
-                            tiles.Add(HexData.GetVec2Pos(tile).ToString(), tile);
+                            tiles.Add(HexData.GetVec2String(tile), tile);
                         }
                     }
                     if (tiles.Count == 0) errMsg += " there were no boats to pick up, if there are damaged boats nearby they must be repaired first.";
@@ -142,7 +142,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     HexLand randHex = FTKHex.Instance.m_AllLandHexes[Random.Range(0, FTKHex.Instance.m_AllLandHexes.Count)];
                     if (randHex == null) Plugin.Logger.LogError("WTF");
-                    Context.Send($"revealing hexes around {HexData.GetVec2Pos(randHex)}");
+                    Context.Send($"revealing hexes around {HexData.GetVec2String(randHex)}");
                     Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => PickHex(randHex), Movement.Instance.gameObject, 0.5f));
                     Reset();
                     return;
@@ -151,7 +151,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
-                        if (HexData.IsHexCorrupted(hex)) tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+                        if (HexData.IsHexCorrupted(hex)) tiles.Add(HexData.GetVec2String(hex), hex);
                     }
                 }
                 else if (itemUsed == FTK_itembase.ID.scrollportal)
@@ -163,7 +163,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                         if (pickItem.PickHexValidCallback(hex))
                         {
                             if (HexLand.Distance(cowHex, hex) < 2.1) continue;
-                            tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+                            tiles.Add(HexData.GetVec2String(hex), hex);
                         }
                     }
                     foreach (HexLand hex in HexData.GetAllTilesWithinRange(6, cowHex, cow))
@@ -178,7 +178,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     {
                         if (hex.HasPOI()) continue;
                         if (HexLand.Distance(cowHex, hex) < 2.1) continue;
-                        tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+                        tiles.Add(HexData.GetVec2String(hex), hex);
                         // if (pickItem.PickHexValidCallback(hex))
                         // {
                         // }
@@ -193,7 +193,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                     FTKPickHexItem pickItem = item as FTKPickHexItem;
                     foreach (HexLand hex in InRangeDrawer.gPickRadiusHexList)
                     {
-                        tiles.Add(HexData.GetVec2Pos(hex).ToString(), hex);
+                        tiles.Add(HexData.GetVec2String(hex), hex);
                     }
                 }
                 if (tiles.Count == 0) errMsg += $"there were no hexes to pick for {ItemData.GetItemName(itemUsed)}";

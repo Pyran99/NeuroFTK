@@ -11,7 +11,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void OnBoatRepaired(MiniHexBoat __instance)
         {
-            Context.Send($"boat repaired at {HexData.GetVec2Pos(__instance.m_HexLand)}", true);
+            Context.Send($"boat repaired at {HexData.GetVec2String(__instance.m_HexLand)}", true);
         }
         
     }

@@ -12,8 +12,17 @@ namespace Pyran.NeuroFTK.Utils
         public static Vector2 GetVec2Pos(HexLand hex)
         {
             Vector3 pos = hex.GetPosition();
-            return new Vector2(pos.x, pos.z);
+            Vector2 result = new((int)pos.x, (int)pos.z);
+            return result;
         }
+
+        public static string GetVec2String(HexLand hex)
+        {
+            Vector2 pos = GetVec2Pos(hex);
+            return $"{pos.x:0},{pos.y:0}";
+        }
+
+        public static string Vec2ToString(Vector2 pos) => $"{pos.x:0},{pos.y:0}";
 
         public static bool IsPoiInteractable(MiniHexInfo poi, CharacterOverworld cow)
         {
@@ -185,7 +194,7 @@ namespace Pyran.NeuroFTK.Utils
             string hasDeadPlayers = "";
             string questName = "";
             // string name = hex.GetLocationDisplayValue(cow);
-            Vector2 pos = GetVec2Pos(hex);
+            // Vector2 pos = GetVec2Pos(hex);
             QuestLogicBase _quest = TileHasQuestObjective(hex);
             if (_quest != null && !_quest.IsConsiderComplete())
             {
@@ -215,7 +224,8 @@ namespace Pyran.NeuroFTK.Utils
                 }
                 if (poi != "") poi = $" ({poi})";
             }
-            if (addToList) OverworldFlow.AddHexPosition(pos.ToString(), hex);
+            string pos = GetVec2String(hex);
+            if (addToList) OverworldFlow.AddHexPosition(pos, hex);
             string dist = "";
             if (includeDistance) dist = $" (distance: {(float)Math.Round(HexLand.Distance(cow.m_HexLand, hex), 2)})";
             return $"{pos}{questName}{hasDeadPlayers}{poi}{dist}";

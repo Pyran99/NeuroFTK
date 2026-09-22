@@ -50,7 +50,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     range = " (out of pathfinding range)";
                 }
-                sb.AppendLine($"- {entry.m_ScourgeName.text} at {HexData.GetVec2Pos(haunt.m_HexLand)}: {FTKHub.Localized<TextInfo>(entry.m_ToolTip.m_Info)}. {range}");
+                sb.AppendLine($"- {entry.m_ScourgeName.text} at {HexData.GetVec2String(haunt.m_HexLand)}: {FTKHub.Localized<TextInfo>(entry.m_ToolTip.m_Info)}. {range}");
             }
             if (sb.Length > 0) sb.Insert(0, $"## active scourge events \n");
             else return "";
@@ -75,7 +75,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 haunt = haunts.Value;
                 if (!haunt.m_HauntActive) continue;
-                result.Add(HexData.GetVec2Pos(haunt.m_HexLand).ToString(), haunt);
+                result.Add(HexData.GetVec2String(haunt.m_HexLand), haunt);
             }
             return result;
         }

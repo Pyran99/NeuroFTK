@@ -79,7 +79,7 @@ namespace Pyran.NeuroFTK.Utils
                 activePings.Remove(_cow.m_PingHex.GetHexLand());
                 if (_cow.m_PingHex == __instance.GetHexLandID())
                 {
-                    Context.Send($"{name} remove ping from {HexData.GetVec2Pos(_cow.m_PingHex.GetHexLand())}", true);
+                    Context.Send($"{name} remove ping from {HexData.GetVec2String(_cow.m_PingHex.GetHexLand())}", true);
                     return;
                 }
             }
@@ -101,7 +101,7 @@ namespace Pyran.NeuroFTK.Utils
                 distance = (float)Math.Round(HexLand.Distance(active.m_HexLand, __instance), 1);
                 sb.Append($"{CharacterData.GetCharacterName(active)} is {distance} hexes away");
             }
-            Context.Send($"{name} pinged {HexData.GetVec2Pos(__instance)}. {sb}");
+            Context.Send($"{name} pinged {HexData.GetVec2String(__instance)}. {sb}");
         }
 
         static bool TileHasQuestObjective(HexLand hex, out QuestLogicBase quest)

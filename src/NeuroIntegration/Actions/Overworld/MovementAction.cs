@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -129,7 +128,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         }
 
         public override string Name => "overworld_movement";
-        protected override string Description => "choose a hex position to move the current character to. you may encounter enemies along the way.";
+        protected override string Description => "choose a hex position to move the current character to. you may encounter events along the way.";
         protected override JsonSchema Schema => GetSchema();
 
         JsonSchema GetSchema()
@@ -233,7 +232,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             parsedData = "";
             string data = actionData.Data?.Value<string>("destination");
             if (data.IsNullOrEmpty()) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("destination"));
-            if (data == "none") return ExecutionResult.Success();
             if (!_questHexes.ContainsKey(data) && !haunts.ContainsKey(data)) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("destination"));
             parsedData = data;
             return ExecutionResult.Success();
@@ -322,7 +320,7 @@ namespace Pyran.NeuroFTK.NeuroIntegration
             foreach (HexLand hex in validHexes)
             {
                 if (cow.GetHexLand() == hex) continue;
-                pos = HexData.GetVec2Pos(hex).ToString();
+                pos = HexData.GetVec2String(hex);
                 if (_hexPositions.ContainsKey(pos)) continue;
                 _hexPositions.Add(pos, hex);
             }
@@ -357,23 +355,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration
         protected override void Execute()
         {
             OverworldFlow.BeginMovementTurn();
-        }
-
-        protected override ExecutionResult Validate(ActionJData actionData)
-        {
-            return ExecutionResult.Success();
-        }
-    }
-
-    public class ChangeEquipment : NeuroAction
-    {
-        public override string Name => "change_equipment";
-        protected override string Description => "";
-        protected override JsonSchema Schema => null;
-
-        protected override void Execute()
-        {
-            
         }
 
         protected override ExecutionResult Validate(ActionJData actionData)

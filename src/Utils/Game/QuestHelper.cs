@@ -57,11 +57,11 @@ namespace Pyran.NeuroFTK.Utils
             HexLand dest = quest.GetHexLandDestination();
             if (dest != null)
             {
-                Vector2 pos = HexData.GetVec2Pos(dest);
-                if (questHexes.ContainsKey(pos.ToString())) return;
+                string pos = HexData.GetVec2String(dest); // inaccurate position
+                if (questHexes.ContainsKey(pos)) return;
                 if (dest.GetPosition() == cowHex)
                 {
-                    questHexes.Add(pos.ToString(), dest);
+                    questHexes.Add(pos, dest);
                     questPositions.Add(dest.GetPosition());
                     sbQuest.AppendLine($"- {type} quest at {pos}: {description} (you are currently at this hex)");
                     return;
@@ -71,7 +71,7 @@ namespace Pyran.NeuroFTK.Utils
                 {
                     outOfRange = " (out of pathfinding range)";
                 }
-                questHexes.Add(pos.ToString(), dest);
+                questHexes.Add(pos, dest);
                 questPositions.Add(dest.GetPosition());
                 string boat = GetBoatTravelCtx(description);
                 sbQuest.AppendLine($"- {type} quest at {pos}: {description}{outOfRange}{boat}");
@@ -101,28 +101,31 @@ namespace Pyran.NeuroFTK.Utils
             List<string> result = [];
             List<Vector3> positions = GetQuestPositions();
             Vector3 cowPos = cow.GetHexLand().GetPosition();
+            Vector2 vec2 = new();
             foreach (Vector3 pos in positions)
             {
                 if (pos == cowPos) continue;
                 if ((pos - cowPos).magnitude < GlobalConfig.maxDistance)
                 {
-                    result.Add(new Vector2(pos.x, pos.z).ToString());
+                    vec2.x = (int)pos.x;
+                    vec2.y = (int)pos.z;
+                    result.Add(HexData.Vec2ToString(vec2));
                 }
             }
             if (currentAdventure == Adventure.dc)
             {
                 IEnumerable<MiniHexDungeon> dungeons = FTKHex.Instance.GetPOIList(MiniHexInfo.MiniHexType.Dungeon).Cast<MiniHexDungeon>();
-                Vector2 pos;
+                string pos;
                 foreach (MiniHexDungeon d in dungeons)
                 {
                     if (d.GetDungeonType() == MiniHexDungeon.DungeonType.Main)
                     {
                         if (d.IsDungeonCleared()) continue;
-                        pos = HexData.GetVec2Pos(d.m_HexLand);
-                        if (result.Contains(pos.ToString())) continue;
+                        pos = HexData.GetVec2String(d.m_HexLand);
+                        if (result.Contains(pos)) continue;
                         if ((d.m_HexLand.GetPosition() - cowPos).magnitude < GlobalConfig.maxDistance)
                         {
-                            result.Add(pos.ToString());
+                            result.Add(pos);
                         }
                     }
                 }
@@ -152,14 +155,14 @@ namespace Pyran.NeuroFTK.Utils
                     pos = dest.GetPosition();
                     if (questPositions.Contains(pos)) continue;
                     questPositions.Add(pos);
-                    questHexes.Add(HexData.GetVec2Pos(dest).ToString(), dest);
+                    questHexes.Add(HexData.GetVec2String(dest), dest);
                     if ((pos - cowHex).magnitude > GlobalConfig.maxDistance)
                     {
                         outOfRange = " (out of pathfinding range)";
                     }
                     boat = GetBoatTravelCtx(dest.GetRealmDisplayValue());
                     // dest.GetRealm();
-                    sbQuest.AppendLine($"- {HexData.GetVec2Pos(dest)}{outOfRange}{boat}.");
+                    sbQuest.AppendLine($"- {HexData.GetVec2String(dest)}{outOfRange}{boat}.");
                 }
             }
         }
@@ -226,7 +229,7 @@ namespace Pyran.NeuroFTK.Utils
             StringBuilder sb = new();
             float gold = FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[GridEditor.FTK_gameParams.ID.deliver_gold]);
             // string gold = GameFlow.Instance.GameDif.GetGoldDeliverText(GameFlow.Instance.m_Rules); // Gold Target: {0}
-            sb.Append($"explore the map to gather gold. if any character has {gold}, you should move them to the main quest location to win.");
+            sb.Append($"explore the map to gather gold. if any character has {gold} gold, you should move them to the main quest location to win.");
             return sb.ToString();
         }
 

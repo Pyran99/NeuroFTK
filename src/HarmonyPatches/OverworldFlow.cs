@@ -65,7 +65,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             turnBeginCount++;
             if (turnBeginCount >= 8)
             {
-                Plugin.Logger.LogWarning($"send ctx after {turnBeginCount} turns: {QuestHelper.currentAdventure}");
                 Context.Send("[Reminder] " + QuestHelper.GetAdventuresMainQuestCtx(QuestHelper.currentAdventure, false), true);
                 turnBeginCount = 0;
             }
@@ -160,7 +159,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             if (!GlobalConfig.gameInitialized) return;
             // skip types that dont matter
             if (!HexData.IsUsedDeactivateCtx(__instance.m_MiniHexType)) return;
-            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
+            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2String(__instance.m_HexLand)} has been deactivated", true);
         }
 
         [HarmonyPatch(typeof(MiniHexAlluringPool), nameof(MiniHexAlluringPool.DeactivateHex))]
@@ -168,14 +167,14 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         static void HexDeactivatedPool(MiniHexAlluringPool __instance)
         {
             if (!GlobalConfig.gameInitialized) return;
-            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2Pos(__instance.m_HexLand)} has been deactivated", true);
+            Context.Send($"{__instance.GetPOIDisplayValue()} at {HexData.GetVec2String(__instance.m_HexLand)} has been deactivated", true);
         }
 
         [HarmonyPatch(typeof(CharacterOverworld), nameof(CharacterOverworld.PortalMoveTo))]
         [HarmonyPostfix]
         static void OnTeleported(HexLand _newLand, CharacterOverworld __instance)
         {
-            Context.Send($"{CharacterData.GetCharacterName(__instance)} teleported to {HexData.GetVec2Pos(_newLand)}");
+            Context.Send($"{CharacterData.GetCharacterName(__instance)} teleported to {HexData.GetVec2String(_newLand)}");
         }
 
 
@@ -213,10 +212,10 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Multiplayer.SendOtherPlayerTurnCtx();
                 return;
             }
-            if (cow.m_FirstStopAtHex) // is this useful
-            {
-                Plugin.Logger.LogWarning("first stop");
-            }
+            // if (cow.m_FirstStopAtHex) // is this useful
+            // {
+            //     Plugin.Logger.LogWarning("first stop");
+            // }
             if (cow.IsInBoat() && GameLogic.Instance.GetActivePlayersInAreaOnLand(cow.GetHexLand(), GameFlow.Instance.m_PartyEnterRadius).Count > 0)
             {
                 Plugin.Logger.LogMessage("boat players in range should gen location menu");
@@ -409,6 +408,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
 
         public static void AddHexPosition(string pos, HexLand hex)
         {
+            if (hexPositions.ContainsKey(pos))
+            {
+                Plugin.Logger.LogError($"duplicate positions {pos} : {hex.GetHexLandID().m_BigIndex}-{hex.GetHexLandID().m_SmallIndex} vs {hexPositions[pos].GetHexLandID().m_BigIndex}-{hexPositions[pos].GetHexLandID().m_SmallIndex}");
+                return;
+            }
             hexPositions.Add(pos, hex);
         }
 
@@ -470,7 +474,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 {
                     Plugin.Logger.LogError("failed to auto travel to last hex");
                     Context.Send("an issue occurred with the movement action", true);
-                    // Context.Send(StringMessages.ActionIssueOccured.Format(["go_to_quest"]), true);
                     CreateMovementActions(curCow);
                     yield break;
                 }
@@ -552,7 +555,7 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Context.Send(StringMessages.CriticalError.Format(["movement"]));
                 return true;
             }
-            Context.Send($"{StringMessages.ActionIssueOccured.Format(["movement"])}, your turn is ending automatically, sorry");
+            Context.Send($"you cannot make any movement actions right now, your turn is ending automatically", true);
             uiEndTurnButton.Instance.OnEndTurn();
             return true;
         }
@@ -567,21 +570,13 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject));
                 return;
             }
-            // if (QuestHelper.currentAdventure == QuestHelper.Adventure.gr) // should not happen
+            // if (QuestHelper.currentAdventure == QuestHelper.Adventure.gr)
             // {
             //     MiniEncounter encounter = hex.GetPOI() as MiniEncounter;
-            //     if (encounter != null)
+            //     if (encounter.m_Type == GridEditor.FTK_miniEncounter.ID.LuckysVaultQuest)
             //     {
-            //         if (encounter.m_Type == GridEditor.FTK_miniEncounter.ID.LuckysVaultQuest)
-            //         {
-            //             float cowGold = cow.m_CharacterStats.m_Gold;
-            //             float targetGold = FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[GridEditor.FTK_gameParams.ID.deliver_gold]);
-            //             if (cowGold < targetGold)
-            //             {
-            //                 Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateMovementActions(cow), FTKUI.Instance.m_HexStatusOverworld.gameObject));
-            //                 return;
-            //             }
-            //         }
+            //         float cowGold = cow.m_CharacterStats.m_Gold;
+            //         float targetGold = FTKUtil.RoundToInt(GameFlow.Instance.m_Rules.GetParams()[GridEditor.FTK_gameParams.ID.deliver_gold]);
             //     }
             // }
             cow.StartCoroutine(MoveToHexCoroutine(cow, hex, false, true));
@@ -619,7 +614,6 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             {
                 Plugin.Logger.LogError("invalid cow");
                 Context.Send($"{StringMessages.ActionIssueOccured.Format(["go_to_character"]) + NeuroSdkStrings.ModFaultSuffix}", true);
-                //  = new(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2000f);
                 Movement.Instance.StartCoroutine(QuickTimerCallback.WaitRoutine(() => CreateMovementActions(curCow), FTKUI.Instance.m_HexStatusOverworld.gameObject, 2f));
                 return;
             }
