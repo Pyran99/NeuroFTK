@@ -11,6 +11,7 @@ using NeuroSdk;
 using UnityEngine;
 using NeuroSdk.Internal;
 using Pyran.NeuroFTK.Utils;
+using System.Text;
 
 namespace Pyran.NeuroFTK;
 
@@ -23,10 +24,6 @@ public class Plugin : BaseUnityPlugin
     readonly string configPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "NeuroFTKConfig.json");
     public static Dictionary<string, object> config = [];
     public static Plugin Instance { get; private set; }
-    /// <summary>
-    /// toggle message spam from update related calls
-    /// </summary>
-    public static bool doSpam = false;
 
 
     private void Awake()
@@ -39,19 +36,14 @@ public class Plugin : BaseUnityPlugin
         SetCustomHouseRules.LoadCustomRules();
         SetSettingsOptions.InitializeCustomSettings();
         NeuroSdkSetup.Initialize("For the King");
+        LogConfigData();
         // devConsole = Instantiate(new DeveloperConsole(), Instance.transform);
         // Logger.LogWarning("dev console = " + devConsole);
         // devConsole?.gameObject?.SetActive(false);
     }
 
     private void Update() {
-        if (Input.GetKeyDown(KeyCode.Equals))
-        {
-            if (!GlobalConfig.IsDebugMode()) return;
-            doSpam = !doSpam;
-            Logger.LogWarning("CHANGED DEBUG SPAM TO " + doSpam);
-        }
-        else if (Input.GetKeyDown(KeyCode.Minus))
+        if (Input.GetKeyDown(KeyCode.Minus))
         {
             if (!GlobalConfig.AllowCheats) return;
             GlobalConfig.debugMode = !GlobalConfig.debugMode;
@@ -75,11 +67,11 @@ public class Plugin : BaseUnityPlugin
             if (!GlobalConfig.AllowCheats) return;
             GameLogic.Instance.RevealMap();
         }
-        // else if (Input.GetKeyDown(KeyCode.Alpha8))
-        // {
-        //     if (!GlobalConfig.AllowCheats) return;
-        //     CharacterData.GetActiveCow()?.m_CharacterStats.ChangeGold(1000);
-        // }
+        else if (Input.GetKeyDown(KeyCode.Alpha8))
+        {
+            if (!GlobalConfig.AllowCheats) return;
+            CharacterData.GetActiveCow()?.m_CharacterStats.ChangeGold(1000);
+        }
     }
 
     void InitializeHarmony()
@@ -129,5 +121,21 @@ public class Plugin : BaseUnityPlugin
     void SetConfigValues(Dictionary<string, object> _config)
     {
         GlobalConfig.SetValues(_config);
+    }
+
+    void LogConfigData()
+    {
+        StringBuilder sb = new();
+        sb.AppendLine($"Config set:");
+        foreach (KeyValuePair<string, object> kvp in config)
+        {
+            sb.AppendLine($"{kvp.Key}: {kvp.Value}");
+        }
+        if (GlobalConfig.MaxHexSearch <= 0)
+        {
+            Logger.LogError($"invalid max_hex_search value {GlobalConfig.MaxHexSearch}. value is reset to 50");
+            GlobalConfig.ResetMaxSearch();
+        }
+        Logger.LogWarning(sb.ToString());
     }
 }

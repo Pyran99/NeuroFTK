@@ -48,18 +48,6 @@ public class SkipGameIntro
     static IEnumerator Wait()
     {
         Context.Send(PREPARE_TO_DIE_MSG);
-        StringBuilder sb = new();
-        sb.AppendLine($"Config set:");
-        foreach (KeyValuePair<string, object> kvp in Plugin.config)
-        {
-            sb.AppendLine($"{kvp.Key}: {kvp.Value}");
-        }
-        if (GlobalConfig.MaxHexSearch <= 0)
-        {
-            Plugin.Logger.LogError($"invalid max_hex_search value {GlobalConfig.MaxHexSearch}. value is reset to 50");
-            GlobalConfig.ResetMaxSearch();
-        }
-        Plugin.Logger.LogWarning(sb.ToString());
         Plugin.Logger.LogMessage("Character ID: " + WebsocketConnection.Instance.Character?.CharacterId);
         Plugin.Logger.LogMessage("display name: " + WebsocketConnection.Instance.Character?.DisplayName);
         yield return new WaitForSeconds(2f);

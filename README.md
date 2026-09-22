@@ -27,7 +27,6 @@ See [Config Readme](src/GameConfigs/README.md)
 
 ### Todo  
 - [ ] make auto travel work for quests that are to far for games pathfinding  
-- [ ] trading items to other characters
 
 ### Undecided actions  
 - market selling: equipment can be destroyed in battle, leaving this out would likely be more helpful

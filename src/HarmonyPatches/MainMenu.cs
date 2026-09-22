@@ -75,18 +75,18 @@ public class MainMenu
     {
         switch (decision)
         {
-                case "new game":
-                    SelectedButton(newGameBtn);
-                    break;
-                case "resume game":
-                    SelectedButton(resumeBtn);
-                    break;
-                case "spend lore":
-                    SelectedButton(loreBtn);
-                    break;
-                default:
-                    Plugin.Logger.LogError($"invalid main menu action '{decision}'");
-                    break;
+            case "new game":
+                SelectedButton(newGameBtn);
+                break;
+            case "resume game":
+                SelectedButton(resumeBtn);
+                break;
+            case "spend lore":
+                SelectedButton(loreBtn);
+                break;
+            default:
+                Plugin.Logger.LogError($"invalid main menu action '{decision}'");
+                break;
         }
     }
 
