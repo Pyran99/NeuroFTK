@@ -100,5 +100,8 @@ public class MainMenu
         CharacterDecisionButtons.ResetData();
         PingHexData.activePings.Clear();
         GlobalConfig.gameInitialized = false;
+        CharacterCustomize.ResetFinishedPlayers();
+        if (NeuroActionHandler.GetRegistered("change_class") != null)
+            NeuroActionHandler.UnregisterActions(["change_class"]);
     }
 }

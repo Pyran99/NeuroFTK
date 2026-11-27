@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using GridEditor;
@@ -13,6 +14,95 @@ using WebSocketSharp;
 
 namespace Pyran.NeuroFTK.GameConfigs
 {
+    public class ChangeClass(List<uiQuickPlayerCreate> _instances) : NeuroAction<object[]>
+    {
+        public override string Name => "change_class";
+        protected override string Description => "change any of your characters class. (Use this if your partner wants you to change your class)";
+        protected override JsonSchema Schema => GetSchema();
+
+        List<string> classes = [];
+
+        private JsonSchema GetSchema()
+        {
+            JsonSchema schema = new()
+            {
+                Type = JsonSchemaType.Object,
+                Required = ["character", "class"],
+                Properties = new()
+                {
+                    ["character"] = QJS.Enum(_instances.Select(x => x.m_PlayerNameInput.text)),
+                    ["class"] = QJS.Enum(GetValidClasses()),
+                }
+            };
+            return schema;
+        }
+
+        protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
+        {
+            parsedData = new object[2];
+            if (actionData.Data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedNoData);
+            string character = actionData.Data.Value<string>("character");
+            if (!_instances.Any(x => x.m_PlayerNameInput.text == character))
+            {
+                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("character"));
+            }
+            string _class = actionData.Data.Value<string>("class");
+            if (!classes.Contains(_class))
+            {
+                return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedInvalidParameter.Format("class"));
+            }
+            parsedData[0] = character;
+            parsedData[1] = _class;
+            return ExecutionResult.Success();
+        }
+
+        protected override void Execute(object[] parsedData)
+        {
+            foreach (uiQuickPlayerCreate player in _instances)
+            {
+                if (player.m_PlayerNameInput.text != (string)parsedData[0]) continue;
+                player.StartCoroutine(CycleToClass(player, (string)parsedData[1]));
+                break;
+            }
+        }
+
+        IEnumerable<string> GetValidClasses()
+        {
+            classes = [];
+            FTK_playerGameStartDB db = FTK_playerGameStartDB.GetDB();
+            foreach (FTK_playerGameStart.ID type in Enum.GetValues(typeof(FTK_playerGameStart.ID)))
+            {
+                if (type == FTK_playerGameStart.ID.None || type == FTK_playerGameStart.ID.professor) continue;
+                if (db.IsUnlock(type) && db.IsReveal(type)) classes.Add(type.ToString());
+            }
+            Plugin.Logger.LogMessage(string.Join(", ", [.. classes.Select(x => x)]));
+            return classes;
+        }
+
+        IEnumerator CycleToClass(uiQuickPlayerCreate player, string _class)
+        {
+            player.RPCAllSelf("SetReady", [false]);
+            FTK_playerGameStart.ID target = (FTK_playerGameStart.ID)Enum.Parse(typeof(FTK_playerGameStart.ID), _class, true);
+            Plugin.Logger.LogMessage($"Current class: {player.m_PlayerClass.text}, Target class: {target}");
+            int count = 0;
+            while (player.m_ClassID != (int)target)
+            {
+                player.OnClassClick();
+                count++;
+                if (count > 20)
+                {
+                    Plugin.Logger.LogError($"Failed to find class: {_class}");
+                    Context.Send($"Failed to find class {_class}, resetting to blacksmith", true);
+                    target = FTK_playerGameStart.ID.blacksmith;
+                    count = 0;
+                }
+                yield return new WaitForSeconds(0.5f);
+            }
+            player.RPCAllSelf("SetReady", [true]);
+            Context.Send($"Set {player.m_PlayerNameStr} to {_class}", true);
+        }
+    }
+
     public class CustomizeCharacterAction(uiQuickPlayerCreate _instance, string characterName) : NeuroAction<object[]>
     {
         public static ActionWindow RegisterWindow(uiQuickPlayerCreate instance)
@@ -47,7 +137,7 @@ namespace Pyran.NeuroFTK.GameConfigs
                 {
                     ["model"] = QJS.Enum(GetSkins().Select(x => x.ToString())),
                     ["clothes"] = QJS.Enum(GetArmors().Select(x => CharacterCustomize.FixName(x.ToString()))),
-                    ["helmet"] = QJS.Enum(GetHelmets().Select(x => CharacterCustomize.FixName(x.ToString()))), // "helmetMask01" => "helmetBeastman"
+                    ["helmet"] = QJS.Enum(GetHelmets().Select(x => CharacterCustomize.FixName(x.ToString()))),
                     ["backpack"] = QJS.Enum(GetBackpacks().Select(x => CharacterCustomize.FixName(x.ToString()))),
                     ["clothes_color"] = QJS.Enum(GetMainColors(_instance).Select(x => x)),
                     ["skin_tone"] = QJS.Enum(GetSkinTones(_instance).Select(x => x)),
@@ -60,7 +150,7 @@ namespace Pyran.NeuroFTK.GameConfigs
         protected override ExecutionResult Validate(ActionJData actionData, out object[] parsedData)
         {
             parsedData = new object[7];
-            if (actionData.Data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedMissingRequiredParameter.Format("data"));
+            if (actionData.Data == null) return ExecutionResult.Failure(NeuroSdkStrings.ActionFailedNoData);
             Plugin.Logger.LogWarning($"data: {actionData.Data}");
             parsedData[0] = skinTypes.Contains(actionData.Data.Value<string>("model")) ? actionData.Data.Value<string>("model") : FTK_playerGameStart.SkinType.Male.ToString();
             string clothes = CharacterCustomize.FixName(actionData.Data.Value<string>("clothes") ?? "default");

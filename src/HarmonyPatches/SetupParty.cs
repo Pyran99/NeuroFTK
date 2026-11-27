@@ -23,8 +23,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
     {
         static List<uiQuickPlayerCreate> players;
         static uiCharacterCreateRoot characterCreateRoot;
-
         public static INeuroAction chatAction;
+        static INeuroAction changeClassAction;
 
 
         [HarmonyPatch(typeof(uiCharacterCreateRoot), nameof(uiCharacterCreateRoot.Show))]
@@ -63,6 +63,11 @@ namespace Pyran.NeuroFTK.HarmonyPatches
         [HarmonyPostfix]
         static void EnteringWorld()
         {
+            if (changeClassAction != null && NeuroActionHandler.GetRegistered(changeClassAction.Name) != null)
+            {
+                NeuroActionHandler.UnregisterActions(changeClassAction);
+                changeClassAction = null;
+            }
             GameDefinitionPreview def = GameCache.Cache.GameDefinitions.GetPreview(uiStartGame.Instance.m_GameDefName);
             if (def == null) Plugin.Logger.LogError($"invalid game def {uiStartGame.Instance.m_GameDefName}");
             QuestHelper.currentAdventure = (QuestHelper.Adventure)Enum.Parse(typeof(QuestHelper.Adventure), ConfigureAdventure.adventureCodes.First(x => x.Value == def.GetDisplayName()).Key);
@@ -143,7 +148,8 @@ namespace Pyran.NeuroFTK.HarmonyPatches
             SetAllReady();
         }
 
-        public static void SetAllReady() // auto begins if 3 ready
+        // multiplayer ready
+        public static void SetAllReady()
         {
             bool hasOtherPlayer = false;
             foreach (uiQuickPlayerCreate player in players)
@@ -160,15 +166,22 @@ namespace Pyran.NeuroFTK.HarmonyPatches
                 if (players.Count < 3)
                 {
                     Plugin.Logger.LogWarning("beginning game with less than full party");
-                    uiStartGame.Instance.EnterFahrul();
                 }
+                uiStartGame.Instance.EnterFahrul();
                 return;
             }
+            if (changeClassAction != null)
+            {
+                NeuroActionHandler.UnregisterActions(changeClassAction);
+                Plugin.Logger.LogError("change class action already exists");
+            }
+            changeClassAction = new ChangeClass([.. players.Where(x => Multiplayer.IsYourPhotonId(x.m_PhotonID))]);
+            NeuroActionHandler.RegisterActions(changeClassAction);
             foreach (uiQuickPlayerCreate player in players)
             {
                 if (!player.m_IsReady)
                 {
-                    Context.Send("awaiting other players to be ready");
+                    Context.Send("waiting for other players to be ready");
                     break;
                 }
             }
