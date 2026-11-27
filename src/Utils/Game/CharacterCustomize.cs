@@ -7,6 +7,7 @@ using GridEditor;
 using HarmonyLib;
 using NeuroSdk.Messages.Outgoing;
 using Pyran.NeuroFTK.HarmonyPatches;
+using Pyran.NeuroFTK.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,6 +30,11 @@ namespace Pyran.NeuroFTK.GameConfigs
             else Plugin.Logger.LogError($"invalid customize player {player.m_PlayerNameStr}");
         }
 
+        public static void ResetFinishedPlayers()
+        {
+            finishedPlayers.Clear();
+        }
+
         static void ToggleCustomizeMenu(uiQuickPlayerCreate instance, bool enable = false)
         {
             if (enable)
@@ -49,6 +55,12 @@ namespace Pyran.NeuroFTK.GameConfigs
             }
         }
 
+        /// <summary>
+        /// Fixes the name of the item to match the expected format for the game.
+        /// "helmetBeastman" => "helmetMask01" for parsing
+        /// </summary>
+        /// <param name="name">The name of the item to fix.</param>
+        /// <returns>The fixed name of the item.</returns>
         public static string FixName(string name)
         {
             return name switch
@@ -107,10 +119,13 @@ namespace Pyran.NeuroFTK.GameConfigs
                     sb.Append($"{player.m_PlayerNameStr} ({player.m_PlayerClass.text}), ");
                     ToggleCustomizeMenu(player, false);
                 }
-                Context.Send($"finished setting up your party. Tell us a quick backstory about each of your party members {sb.ToString().TrimEnd([' ', ','])}. (fantasy world setting)");
-                finishedPlayers.Clear();
-                Plugin.Logger.LogWarning("allowing time for neuro to yap a backstory, auto progressing after time");
-                yield return new WaitForSeconds(12f);
+                ResetFinishedPlayers();
+                if (!Multiplayer.IsMultiplayer())
+                {
+                    Context.Send($"finished setting up your party. Tell us a quick backstory about each of your party members {sb.ToString().TrimEnd([' ', ','])}. (fantasy world setting)");
+                    Plugin.Logger.LogWarning("allowing time for neuro to yap a backstory, auto progressing after arbitrary time of 12s");
+                    yield return new WaitForSeconds(12f);
+                }
                 SetupParty.ActionStartGame();
             }
         }

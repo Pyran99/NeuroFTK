@@ -21,7 +21,6 @@ namespace Pyran.NeuroFTK.NeuroIntegration.ContextEvents
         [HarmonyPostfix]
         static void NPCTalking(uiPortraitMessageHud __instance, string _message)
         {
-            Plugin.Logger.LogMessage("npc talking");
             string msg = StringReplace.RemoveStyling(_message);
             Context.Send(StringMessages.PortraitMsg.Format([__instance.m_Speaker.text, __instance.m_SpeakerTitle.text, msg]));
         }
